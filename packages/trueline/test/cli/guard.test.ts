@@ -134,9 +134,7 @@ const refusalFor = async (path: string): Promise<string> => {
 
 describe("refusing to let the rules be edited", () => {
   it("blocks the config the rules are read from", async () => {
-    expect(await refusalFor(join(PROJECT, "architecture.config.ts"))).toContain(
-      `${CLAIM}  architecture.config.ts`,
-    );
+    expect(await refusalFor(join(PROJECT, "trueline.config.ts"))).toContain(`${CLAIM}  trueline.config.ts`);
   });
 
   it("blocks the baseline, so a violation cannot be recorded away", async () => {
@@ -152,7 +150,7 @@ describe("refusing to let the rules be edited", () => {
   });
 
   it("asks rather than refuses, so setup is still possible", async () => {
-    const { output } = await guard(writing(join(PROJECT, "architecture.config.ts"), "whatever"));
+    const { output } = await guard(writing(join(PROJECT, "trueline.config.ts"), "whatever"));
     const { hookSpecificOutput: result } = JSON.parse(output);
 
     expect(result.permissionDecision).toBe("ask");
@@ -167,7 +165,7 @@ describe("refusing to let the rules be edited", () => {
     const { output } = await guard({
       hook_event_name: "PostToolUse",
       tool_name: "mcp__serena__replace_symbol_body",
-      tool_input: { relative_path: "architecture.config.ts" },
+      tool_input: { relative_path: "trueline.config.ts" },
     });
     const { hookSpecificOutput: result } = JSON.parse(output);
 

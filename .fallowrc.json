@@ -2,8 +2,8 @@
   "entry": [
     "packages/trueline/src/index.ts",
     "packages/trueline/bin/trueline.js",
-    "packages/trueline/architecture.config.ts",
-    "architecture.config.ts"
+    "packages/trueline/trueline.config.ts",
+    "trueline.config.ts"
   ],
   "ignorePatterns": ["**/test/fixtures/**"]
 }

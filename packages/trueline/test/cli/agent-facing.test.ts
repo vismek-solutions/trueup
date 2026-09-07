@@ -67,6 +67,6 @@ describe("the block a project pastes into its agent instructions", () => {
     const code = await runAgentInstructions({ cwd: "/", write: (line) => (output += line) });
 
     expect(code).toBe(3);
-    expect(output).toContain("no architecture.config.ts");
+    expect(output).toContain("no trueline.config.ts");
   });
 });

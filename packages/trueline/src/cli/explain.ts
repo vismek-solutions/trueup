@@ -24,7 +24,7 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
 
   const configPath = findConfig(cwd);
   if (configPath === null) {
-    write("no architecture.config.ts found");
+    write("no trueline.config.ts found");
     return 3;
   }
 

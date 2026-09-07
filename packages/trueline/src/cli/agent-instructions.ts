@@ -9,7 +9,7 @@ export interface RunAgentInstructionsInput {
 export async function runAgentInstructions({ cwd, write }: RunAgentInstructionsInput): Promise<number> {
   const path = findConfig(cwd);
   if (path === null) {
-    write("no architecture.config.ts found");
+    write("no trueline.config.ts found");
     return 3;
   }
 

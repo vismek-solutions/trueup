@@ -6,7 +6,7 @@ import { toPosix } from "../paths/posix.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 import type { MemberConfig } from "./model.ts";
 
-const CONFIG_NAMES = ["architecture.config.ts", "architecture.config.js", "architecture.config.mjs"];
+const CONFIG_NAMES = ["trueline.config.ts", "trueline.config.js", "trueline.config.mjs"];
 
 const SKIPPED = new Set([".git", "node_modules", "dist", "build", "out", "coverage"]);
 

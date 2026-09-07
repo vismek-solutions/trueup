@@ -6,7 +6,7 @@ The tool and its documentation live in [`packages/trueline`](packages/trueline/R
 
 ```
 packages/trueline    the checker, the CLI, and the write-time guard
-architecture.config  what this repo asserts about itself
+trueline.config.ts   what this repo asserts about itself
 ```
 
 Run it on this repo:

@@ -29,7 +29,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   const path = explicit ?? findConfig(cwd);
 
   if (path === null || path === undefined) {
-    write("no architecture.config.ts found");
+    write("no trueline.config.ts found");
     return EXIT_NO_CONFIG;
   }
 

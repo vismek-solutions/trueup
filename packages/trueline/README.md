@@ -55,7 +55,7 @@ Requires Node 22.18 or newer.
 npm install --save-dev trueline
 ```
 
-Now create `architecture.config.ts` at the root of your project.
+Now create `trueline.config.ts` at the root of your project.
 
 ```ts
 import { defineConfig } from "trueline";
@@ -101,7 +101,7 @@ Put your tests in their own zone, ahead of everything else. Left inside a source
 A monorepo does not need one file listing every zone in every package. The root names its members. Each member names its own zones and what it reaches.
 
 ```ts
-// architecture.config.ts
+// trueline.config.ts
 export default defineConfig({
   members: ["packages/*", "apps/*"],
 });
@@ -110,7 +110,7 @@ export default defineConfig({
 No `include` needed. Left out, the whole repo is analysed, so a directory no member claims fails as unclassified rather than going quietly unchecked. Narrowing `include` is how you *stop* seeing something, which is rarely what you want.
 
 ```ts
-// packages/lib/architecture.config.ts
+// packages/lib/trueline.config.ts
 export default defineMember({
   zones: [
     { name: "api", patterns: ["src/index.ts"], role: "api" },
@@ -130,7 +130,7 @@ A member may only constrain itself. Everything it names is its own.
 Nothing, until it says so. A member reaching another it did not name is an error.
 
 ```ts
-// apps/docs/architecture.config.ts
+// apps/docs/trueline.config.ts
 export default defineMember({
   mayReach: ["lib", "ui"],
   zones: [{ name: "pages", patterns: ["src/**"] }],
@@ -440,7 +440,7 @@ The default is a permission prompt, not a refusal.
 ```
 This edit needs your approval under the project's architecture rules.
 
-no-edit-changes-the-rules-themselves  architecture.config.ts
+no-edit-changes-the-rules-themselves  trueline.config.ts
   An agent is asking to change a file the project's rules are read from. Approve it if this is
   setup, or a change to the rules you meant to make. Refuse it if a check was failing just before
   this: editing the rulebook is how a failing check gets switched off, and it leaves no trace that

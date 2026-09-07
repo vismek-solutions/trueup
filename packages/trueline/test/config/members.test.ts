@@ -9,7 +9,7 @@ import { fixtureAt } from "../support/fixtures.ts";
 import { messagesIn } from "../support/report.ts";
 
 const ROOT = fixtureAt("federated");
-const CONFIG = join(ROOT, "architecture.config.ts");
+const CONFIG = join(ROOT, "trueline.config.ts");
 const BOUNDARY = "every-import-respects-its-zone-boundary";
 
 const loaded = () => loadConfig(CONFIG);
@@ -48,9 +48,9 @@ describe("a root that names members", () => {
   it("reports every member's rulebook, so the guard can protect them all", async () => {
     const { memberConfigs } = await loaded();
     expect(memberConfigs.map((path) => path.slice(ROOT.length + 1))).toEqual([
-      "apps/docs/architecture.config.ts",
-      "packages/lib/architecture.config.ts",
-      "packages/ui/architecture.config.ts",
+      "apps/docs/trueline.config.ts",
+      "packages/lib/trueline.config.ts",
+      "packages/ui/trueline.config.ts",
     ]);
   });
 
@@ -87,7 +87,7 @@ describe("naming a member that is not there", () => {
   const wanting = (name: string, mayReach: readonly string[]): Member => ({
     name,
     directory: `packages/${name}`,
-    configPath: `packages/${name}/architecture.config.ts`,
+    configPath: `packages/${name}/trueline.config.ts`,
     config: { zones: [], mayReach },
   });
 
@@ -142,12 +142,12 @@ describe("protecting the rulebooks", () => {
   };
 
   it("refuses an edit to a member's own rulebook, not only the root's", async () => {
-    expect(await proposeTo("packages/lib/architecture.config.ts")).toContain(
+    expect(await proposeTo("packages/lib/trueline.config.ts")).toContain(
       "no-edit-changes-the-rules-themselves",
     );
   });
 
   it("still refuses the root rulebook", async () => {
-    expect(await proposeTo("architecture.config.ts")).toContain("no-edit-changes-the-rules-themselves");
+    expect(await proposeTo("trueline.config.ts")).toContain("no-edit-changes-the-rules-themselves");
   });
 });
