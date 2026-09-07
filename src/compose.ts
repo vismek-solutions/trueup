@@ -16,6 +16,7 @@ import { buildLexicon } from "./lexicon/build.ts";
 import type { ModuleRecord } from "./ports/module-record.ts";
 import type { Runner } from "./ports/runner.ts";
 import { buildProject } from "./project/build.ts";
+import type { Project } from "./project/model.ts";
 import type { Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
 import type { ZoneDefinition } from "./zones/model.ts";
@@ -35,6 +36,32 @@ const parseAll = (sources: ReadonlyMap<string, string>): ModuleRecord[] =>
 export function analyze(options: DiscoverFilesOptions): SymbolGraph {
   return buildSymbolGraph({ modules: parseAll(readSources(options)), resolve: createResolver() });
 }
+
+export interface InspectOptions {
+  readonly root: string;
+  readonly roots?: readonly string[] | undefined;
+  readonly zones: readonly ZoneDefinition[];
+  readonly extensions?: readonly string[] | undefined;
+  readonly ignoreDirectories?: readonly string[] | undefined;
+  readonly overlay?: Overlay | undefined;
+}
+
+const analyseProject = ({ root, roots, zones, extensions, ignoreDirectories, overlay }: InspectOptions) => {
+  const sources = readSources({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
+  const modules = parseAll(sources);
+  const graph = buildSymbolGraph({ modules, resolve: createResolver() });
+  const assignment = assignZones({ root, files: [...graph.files], zones });
+  const lexicon = buildLexicon({ modules, sources, readMentions });
+
+  return {
+    graph,
+    zones: assignment,
+    lexicon,
+    project: buildProject({ root, graph, zones: assignment, lexicon }),
+  };
+};
+
+export const inspect = (options: InspectOptions): Project => analyseProject(options).project;
 
 export interface CheckOptions {
   readonly root: string;
@@ -63,12 +90,14 @@ export function check({
   extensions,
   ignoreDirectories,
 }: CheckOptions): Report {
-  const sources = readSources({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
-  const modules = parseAll(sources);
-  const graph = buildSymbolGraph({ modules, resolve: createResolver() });
-  const assignment = assignZones({ root, files: [...graph.files], zones });
-  const lexicon = buildLexicon({ modules, sources, readMentions });
-  const project = buildProject({ root, graph, zones: assignment, lexicon });
+  const { graph, zones: assignment, lexicon, project } = analyseProject({
+    root,
+    roots,
+    zones,
+    extensions,
+    ignoreDirectories,
+    overlay,
+  });
 
   const claims = [
     ...standardClaims,
