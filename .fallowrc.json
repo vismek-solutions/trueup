@@ -1,9 +1,14 @@
 {
+  "$schema": "./node_modules/fallow/schema.json",
   "entry": [
     "packages/trueline/src/index.ts",
     "packages/trueline/bin/trueline.js",
     "packages/trueline/trueline.config.ts",
     "trueline.config.ts"
   ],
-  "ignorePatterns": ["**/test/fixtures/**"]
+  "ignorePatterns": ["**/test/fixtures/**"],
+  "rules": {
+    "private-type-leaks": "error",
+    "require-suppression-reason": "error"
+  }
 }
