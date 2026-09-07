@@ -274,6 +274,32 @@ Anything already in the baseline does not block either.
 
 An unusable payload, a missing config, a file type you do not analyse — all of those allow the write. A guard that errors would block *every* edit rather than the wrong ones.
 
+### The rulebook is off limits
+
+Every other rule can be switched off by editing the config, so the guard refuses edits to it outright.
+
+Two files are protected with no configuration at all: the config the rules were read from, and the baseline. An agent cannot widen a boundary to make a check pass, and cannot record a fresh violation as pre-existing.
+
+```
+no-edit-changes-the-rules-themselves  architecture.config.ts
+  This file is the rulebook the other checks are read from, so an edit to it is not governed by
+  anything. Changing it to make a check pass switches the check off, and leaves no trace that it
+  ever failed. If the code is wrong, fix the code. If the rule is genuinely wrong, say so, leave
+  the check failing, and let a person decide — that judgement is not this edit's to make.
+```
+
+Add anything else that should be yours alone.
+
+```ts
+protect: [".claude/settings.json", ".github/workflows/**", "CLAUDE.md"]
+```
+
+Protecting the hook settings is the one worth copying. Without it, the fastest way past the guard is to turn the guard off.
+
+This check runs before anything else, so it covers files the analysis would never look at — a `.json`, a `.yml`, a path outside `include`. It is the only rule with no counterpart in a full run, because "the config was edited" is not something a snapshot of the code can show.
+
+You still edit these files yourself. The hook only sees what the agent does.
+
 ### Why there are two hooks
 
 To judge an edit before it happens, the guard has to work out what the file would look like afterwards.

@@ -123,6 +123,54 @@ describe("guarding a proposed edit", () => {
   });
 });
 
+const CLAIM = "no-edit-changes-the-rules-themselves";
+
+const refusalFor = async (path: string): Promise<string> => {
+  const { output } = await guard(writing(path, "whatever"));
+  return output === "" ? "" : JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+};
+
+describe("refusing to let the rules be edited", () => {
+  it("blocks the config the rules are read from", async () => {
+    expect(await refusalFor(join(PROJECT, "architecture.config.ts"))).toContain(
+      `${CLAIM}  architecture.config.ts`,
+    );
+  });
+
+  it("blocks the baseline, so a violation cannot be recorded away", async () => {
+    expect(await refusalFor(BASELINE)).toContain(CLAIM);
+  });
+
+  it("blocks whatever else the project listed as protected", async () => {
+    expect(await refusalFor(join(PROJECT, "locked/thing.ts"))).toContain(`${CLAIM}  locked/thing.ts`);
+  });
+
+  it("protects files the analysis would never have looked at", async () => {
+    expect(await refusalFor(join(PROJECT, "locked/notes.md"))).toContain(CLAIM);
+  });
+
+  it("says that switching the check off is not the fix", async () => {
+    expect(await refusalFor(join(PROJECT, "architecture.config.ts"))).toContain("fix the code");
+  });
+
+  it("leaves every other file to the ordinary rules", async () => {
+    expect(await refusalFor(join(PROJECT, "src/engine/spare.ts"))).toBe("");
+  });
+
+  it("reports rather than denies once the write has already happened", async () => {
+    const { output } = await guard({
+      hook_event_name: "PostToolUse",
+      tool_name: "mcp__serena__replace_symbol_body",
+      tool_input: { relative_path: "architecture.config.ts" },
+    });
+    const { hookSpecificOutput: result } = JSON.parse(output);
+
+    expect(result.hookEventName).toBe("PostToolUse");
+    expect(result.permissionDecision).toBeUndefined();
+    expect(result.additionalContext).toContain(CLAIM);
+  });
+});
+
 const RUNNER = "src/engine/runner.ts";
 const IMPORTS_DOMAIN = 'import { thing } from "../domain/thing.js";';
 

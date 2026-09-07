@@ -12,6 +12,7 @@ export interface ArchitectureConfig {
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
   readonly isolate?: readonly IsolationRule[] | undefined;
+  readonly protect?: readonly string[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;

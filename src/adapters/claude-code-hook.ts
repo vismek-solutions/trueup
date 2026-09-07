@@ -83,7 +83,7 @@ export function denialFor(decision: Decision): string | null {
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason: [
-        "This edit would break the project's architecture.",
+        "This edit is refused by the project's architecture rules.",
         "",
         ...decision.reasons,
       ].join("\n"),
@@ -98,7 +98,7 @@ export function contextFor(decision: Decision): string | null {
     hookSpecificOutput: {
       hookEventName: "PostToolUse",
       additionalContext: [
-        "That edit broke the project's architecture. Repair it before moving on.",
+        "That edit broke one of the project's architecture rules. Repair it before moving on.",
         "",
         ...decision.reasons,
       ].join("\n"),
