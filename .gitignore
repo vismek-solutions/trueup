@@ -4,5 +4,5 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
-test/fixtures/project/architecture.baseline.json
+test/fixtures/*/architecture.baseline.json
 .DS_Store

@@ -20,8 +20,14 @@ import type { Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
 import type { ZoneDefinition } from "./zones/model.ts";
 
-const readModules = (options: DiscoverFilesOptions): ModuleRecord[] =>
-  discoverFiles(options).map((path) => parseModule(path, readSource(path)));
+export type Overlay = ReadonlyMap<string, string>;
+
+const NO_OVERLAY: Overlay = new Map();
+
+const readModules = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): ModuleRecord[] => {
+  const paths = [...new Set([...discoverFiles(options), ...overlay.keys()])].sort();
+  return paths.map((path) => parseModule(path, overlay.get(path) ?? readSource(path)));
+};
 
 export function analyze(options: DiscoverFilesOptions): SymbolGraph {
   return buildSymbolGraph({ modules: readModules(options), resolve: createResolver() });
@@ -35,6 +41,7 @@ export interface CheckOptions {
   readonly seams?: readonly SeamRule[] | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
+  readonly overlay?: Overlay | undefined;
   readonly extensions?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
 }
@@ -49,10 +56,11 @@ export function check({
   seams = [],
   rules = [],
   runners = [],
+  overlay,
   extensions,
   ignoreDirectories,
 }: CheckOptions): Report {
-  const modules = readModules({ roots: roots ?? [root], extensions, ignoreDirectories });
+  const modules = readModules({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
   const graph = buildSymbolGraph({ modules, resolve: createResolver() });
   const assignment = assignZones({ root, files: [...graph.files], zones });
   const lexicon = buildLexicon(modules);

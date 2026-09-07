@@ -8,6 +8,7 @@ const LAYERS = [
   "project",
   "report",
   "ratchet",
+  "guard",
   "claims",
   "config",
   "cli",
@@ -26,6 +27,7 @@ export default defineConfig({
     { name: "project", patterns: ["src/project/**"] },
     { name: "report", patterns: ["src/report/**"] },
     { name: "ratchet", patterns: ["src/ratchet/**"] },
+    { name: "guard", patterns: ["src/guard/**"] },
     { name: "claims", patterns: ["src/claims/**"] },
     { name: "config", patterns: ["src/config/**"] },
     { name: "cli", patterns: ["src/cli/**"] },
@@ -41,9 +43,10 @@ export default defineConfig({
     { from: "project", mayNotReach: allBut("project", "graph", "zones", "lexicon", "report") },
     { from: "report", mayNotReach: allBut("report", "graph", "zones") },
     { from: "ratchet", mayNotReach: allBut("ratchet", "report") },
+    { from: "guard", mayNotReach: allBut("guard", "report") },
     { from: "claims", mayNotReach: allBut("claims", "graph", "zones", "lexicon", "project", "report") },
     { from: "config", mayNotReach: allBut("config", "claims", "zones", "project") },
-    { from: "cli", mayNotReach: allBut("cli", "config", "report", "ratchet", "adapters", "root") },
+    { from: "cli", mayNotReach: allBut("cli", "config", "report", "ratchet", "guard", "adapters", "root") },
   ],
   rules: [
     defineRule("no-two-zones-import-each-other", (project) => {
