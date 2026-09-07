@@ -1,0 +1,7 @@
+node_modules/
+.idea/
+.serena/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store

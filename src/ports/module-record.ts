@@ -1,0 +1,55 @@
+export type BindingKind = "value" | "type";
+
+export const NAMESPACE = "*";
+export const DEFAULT = "default";
+
+export interface ImportBinding {
+  readonly imported: string;
+  readonly local: string;
+  readonly kind: BindingKind;
+  readonly start: number;
+}
+
+export interface ImportStatement {
+  readonly specifier: string;
+  readonly start: number;
+  readonly bindings: readonly ImportBinding[];
+}
+
+export type ExportEntry =
+  | {
+      readonly form: "local";
+      readonly exported: string;
+      readonly local: string;
+      readonly kind: BindingKind;
+      readonly start: number;
+    }
+  | {
+      readonly form: "re-export-named";
+      readonly exported: string;
+      readonly imported: string;
+      readonly specifier: string;
+      readonly kind: BindingKind;
+      readonly start: number;
+    }
+  | {
+      readonly form: "re-export-namespace";
+      readonly exported: string;
+      readonly specifier: string;
+      readonly kind: BindingKind;
+      readonly start: number;
+    }
+  | {
+      readonly form: "re-export-star";
+      readonly specifier: string;
+      readonly kind: BindingKind;
+      readonly start: number;
+    };
+
+export interface ModuleRecord {
+  readonly path: string;
+  readonly imports: readonly ImportStatement[];
+  readonly exports: readonly ExportEntry[];
+}
+
+export type ParseModule = (path: string, text: string) => ModuleRecord;
