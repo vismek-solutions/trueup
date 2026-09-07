@@ -1,5 +1,5 @@
 import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
-import { parseModule } from "./adapters/oxc-parse.ts";
+import { parseModule, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
@@ -24,13 +24,16 @@ export type Overlay = ReadonlyMap<string, string>;
 
 const NO_OVERLAY: Overlay = new Map();
 
-const readModules = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): ModuleRecord[] => {
+const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): Map<string, string> => {
   const paths = [...new Set([...discoverFiles(options), ...overlay.keys()])].sort();
-  return paths.map((path) => parseModule(path, overlay.get(path) ?? readSource(path)));
+  return new Map(paths.map((path) => [path, overlay.get(path) ?? readSource(path)]));
 };
 
+const parseAll = (sources: ReadonlyMap<string, string>): ModuleRecord[] =>
+  [...sources].map(([path, text]) => parseModule(path, text));
+
 export function analyze(options: DiscoverFilesOptions): SymbolGraph {
-  return buildSymbolGraph({ modules: readModules(options), resolve: createResolver() });
+  return buildSymbolGraph({ modules: parseAll(readSources(options)), resolve: createResolver() });
 }
 
 export interface CheckOptions {
@@ -60,10 +63,11 @@ export function check({
   extensions,
   ignoreDirectories,
 }: CheckOptions): Report {
-  const modules = readModules({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
+  const sources = readSources({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
+  const modules = parseAll(sources);
   const graph = buildSymbolGraph({ modules, resolve: createResolver() });
   const assignment = assignZones({ root, files: [...graph.files], zones });
-  const lexicon = buildLexicon(modules);
+  const lexicon = buildLexicon({ modules, sources, readMentions });
   const project = buildProject({ root, graph, zones: assignment, lexicon });
 
   const claims = [

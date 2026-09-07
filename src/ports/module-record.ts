@@ -58,7 +58,8 @@ export interface ModuleRecord {
   readonly path: string;
   readonly imports: readonly ImportStatement[];
   readonly exports: readonly ExportEntry[];
-  readonly mentions: readonly Mention[];
 }
 
 export type ParseModule = (path: string, text: string) => ModuleRecord;
+
+export type ReadMentions = (path: string, text: string) => readonly Mention[];

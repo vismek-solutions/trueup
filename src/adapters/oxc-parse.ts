@@ -8,6 +8,7 @@ import {
   type Mention,
   type ModuleRecord,
   type ParseModule,
+  type ReadMentions,
 } from "../ports/module-record.ts";
 
 interface AstNode {
@@ -57,8 +58,10 @@ const collectMentions = (program: unknown): Mention[] => {
   return mentions;
 };
 
+export const readMentions: ReadMentions = (path, text) => collectMentions(parseSync(path, text).program);
+
 export const parseModule: ParseModule = (path, text): ModuleRecord => {
-  const { module, program } = parseSync(path, text);
+  const { module } = parseSync(path, text);
 
   const imports: ImportStatement[] = module.staticImports.map((statement) => {
     const bindings: ImportBinding[] = statement.entries.map((entry) => ({
@@ -114,5 +117,5 @@ export const parseModule: ParseModule = (path, text): ModuleRecord => {
     }
   }
 
-  return { path, imports, exports, mentions: collectMentions(program) };
+  return { path, imports, exports };
 };
