@@ -16,8 +16,8 @@ export const IGNORED_DIRECTORIES = [
 
 export interface DiscoverFilesOptions {
   readonly roots: readonly string[];
-  readonly extensions?: readonly string[];
-  readonly ignoreDirectories?: readonly string[];
+  readonly extensions?: readonly string[] | undefined;
+  readonly ignoreDirectories?: readonly string[] | undefined;
 }
 
 export function discoverFiles({

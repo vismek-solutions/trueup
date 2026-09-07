@@ -1,0 +1,18 @@
+export interface ZoneDefinition {
+  readonly name: string;
+  readonly patterns: readonly string[];
+}
+
+export interface DeadPattern {
+  readonly zone: string;
+  readonly pattern: string;
+}
+
+export interface ZoneAssignment {
+  readonly zoneOf: (path: string) => string | null;
+  readonly declaredNames: readonly string[];
+  readonly filesIn: (zone: string) => readonly string[];
+  readonly unclassified: readonly string[];
+  readonly emptyZones: readonly string[];
+  readonly deadPatterns: readonly DeadPattern[];
+}

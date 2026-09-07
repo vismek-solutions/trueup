@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
-import { analyze } from "../src/compose.js";
+import type { EdgeAnchor } from "../src/claims/boundary.js";
+import { analyze, check } from "../src/compose.js";
 import { consumersOf } from "../src/graph/model.js";
 
 const GAIME = "/Users/marianvismek/Dev/Vismek/gaime";
@@ -29,5 +30,38 @@ describe.skipIf(!existsSync(GAIME))("gaime: symbols resolved through the shared 
       "apps/web/src/components/prikaz/prikazView.ts",
       "apps/web/src/components/prikaz/warrantEvidence.ts",
     ]);
+  });
+});
+
+const offendingFiles = (anchor: EdgeAnchor): string[] => {
+  const report = check({
+    root: GAIME,
+    roots: [join(GAIME, "apps/web/src"), SHARED],
+    zones: [
+      { name: "warrants", patterns: ["packages/shared/src/warrants.ts"] },
+      { name: "shared", patterns: ["packages/shared/src/**"] },
+      { name: "components", patterns: ["apps/web/src/components/**"] },
+      { name: "web", patterns: ["apps/web/src/**"] },
+    ],
+    rules: [{ from: "components", mayNotReach: ["warrants"], anchor }],
+  });
+
+  const findings =
+    report.claims.find((claim) => claim.claim === "every-import-respects-its-zone-boundary")?.findings ?? [];
+  return [...new Set(findings.map((finding) => relative(GAIME, finding.file ?? "")))].sort();
+};
+
+describe.skipIf(!existsSync(GAIME))("gaime: a boundary rule against one module of a shared package", () => {
+  it("names the four component files that reach warrants through the barrel", () => {
+    expect(offendingFiles("declaring-file")).toEqual([
+      "apps/web/src/components/prikaz/Prikaz.tsx",
+      "apps/web/src/components/prikaz/PrikazVysledek.tsx",
+      "apps/web/src/components/prikaz/prikazView.ts",
+      "apps/web/src/components/prikaz/warrantEvidence.ts",
+    ]);
+  });
+
+  it("finds nothing at all when anchored on the module the specifier named", () => {
+    expect(offendingFiles("imported-module")).toEqual([]);
   });
 });

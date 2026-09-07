@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "oxc-parser": "^0.148.0",
-    "oxc-resolver": "^11.24.2"
+    "oxc-resolver": "^11.24.2",
+    "picomatch": "^4.0.7"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/picomatch": "^4.0.3",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
