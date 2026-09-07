@@ -1,6 +1,7 @@
 import { biomeRunner } from "./src/adapters/biome-runner.ts";
 import { fallowRunner } from "./src/adapters/fallow-runner.ts";
 import { IGNORED_DIRECTORIES } from "./src/adapters/node-files.ts";
+import { oxlintRunner } from "./src/adapters/oxlint-runner.ts";
 import { defineRule } from "./src/claims/custom.ts";
 import { defineConfig } from "./src/config/model.ts";
 
@@ -37,6 +38,11 @@ export default defineConfig({
       write: process.env.CI === undefined,
     }),
     fallowRunner({ command: ["node_modules/.bin/fallow"] }),
+    oxlintRunner({
+      command: ["node_modules/.bin/oxlint"],
+      paths: ["src", "test", "bin"],
+      categories: ["eslint/max-params"],
+    }),
   ],
   zones: [
     { name: "spec", patterns: ["test/**"], role: "tests" },

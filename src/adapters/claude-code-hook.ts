@@ -12,7 +12,15 @@ interface HookPayload {
   readonly tool_input?: Record<string, unknown>;
 }
 
-const editedText = (path: string, from: string, to: string, all: boolean): string | null => {
+interface Replacement {
+  readonly from: string | null;
+  readonly to: string | null;
+  readonly all: boolean;
+}
+
+const editedText = (path: string, { from, to, all }: Replacement): string | null => {
+  if (from === null || to === null) return null;
+
   let current: string;
   try {
     current = readFileSync(path, "utf8");
@@ -23,14 +31,8 @@ const editedText = (path: string, from: string, to: string, all: boolean): strin
   return all ? current.replaceAll(from, to) : current.replace(from, to);
 };
 
-const replacementIn = (
-  path: string,
-  from: string | null,
-  to: string | null,
-  all: boolean,
-): Proposal | null => {
-  if (from === null || to === null) return null;
-  const text = editedText(path, from, to, all);
+const replacementIn = (path: string, replacement: Replacement): Proposal | null => {
+  const text = editedText(path, replacement);
   return text === null ? null : { path, text };
 };
 
@@ -54,12 +56,12 @@ const proposalIn = (tool: string, input: Record<string, unknown>, root: string):
 
   if (tool === "Edit") {
     const all = input.replace_all === true;
-    return replacementIn(path, stringOf(input.old_string), stringOf(input.new_string), all);
+    return replacementIn(path, { from: stringOf(input.old_string), to: stringOf(input.new_string), all });
   }
 
   if (tool === SERENA_REPLACE && input.mode === "literal") {
     const all = input.allow_multiple_occurrences === true;
-    return replacementIn(path, stringOf(input.needle), stringOf(input.repl), all);
+    return replacementIn(path, { from: stringOf(input.needle), to: stringOf(input.repl), all });
   }
 
   return null;

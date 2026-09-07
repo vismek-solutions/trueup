@@ -27,12 +27,13 @@ const groupReader = (root: string, pattern: string): GroupOf => {
   };
 };
 
-const breachOf = (
-  edge: ResolvedImport,
-  groupOf: GroupOf,
-  excepted: ReadonlySet<string>,
-  project: Project,
-): Finding | null => {
+interface Grouping {
+  readonly groupOf: GroupOf;
+  readonly excepted: ReadonlySet<string>;
+  readonly project: Project;
+}
+
+const breachOf = (edge: ResolvedImport, { groupOf, excepted, project }: Grouping): Finding | null => {
   if (edge.declaredIn === null) return null;
 
   const from = groupOf(edge.from);
@@ -63,10 +64,10 @@ const findingsFor = (rule: IsolationRule, root: string, project: Project): reado
     ];
   }
 
-  const excepted = new Set(rule.except ?? []);
+  const grouping: Grouping = { groupOf, excepted: new Set(rule.except ?? []), project };
   return project
     .imports()
-    .map((edge) => breachOf(edge, groupOf, excepted, project))
+    .map((edge) => breachOf(edge, grouping))
     .filter((finding) => finding !== null);
 };
 

@@ -18,6 +18,11 @@ export interface RunGuardInput {
   readonly write: (line: string) => void;
 }
 
+interface Site {
+  readonly root: string;
+  readonly config: ArchitectureConfig;
+}
+
 interface Rulebook {
   readonly root: string;
   readonly config: string;
@@ -35,7 +40,7 @@ const targetOf = (request: HookRequest): string | null =>
 const overlayOf = (request: HookRequest): Map<string, string> =>
   request.kind === "propose" ? new Map([[request.proposal.path, request.proposal.text]]) : new Map();
 
-const withReach = (decision: Decision, path: string | null, config: ArchitectureConfig, root: string) => {
+const withReach = (decision: Decision, path: string | null, { root, config }: Site) => {
   if (decision.verdict === "allow" || path === null) return decision;
 
   const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries ?? [] });
@@ -122,7 +127,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     recorded.entries.length === 0 ? report : applyBaseline({ report, baseline: recorded, root }).report;
 
   const decision = decideOnProposal({ report: effective, path: target, root });
-  const output = answerTo(request, withReach(decision, target, config, root));
+  const output = answerTo(request, withReach(decision, target, { root, config }));
   if (output !== null) write(output);
   return 0;
 }

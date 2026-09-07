@@ -64,11 +64,15 @@ const readPayload = (stdout: string): Payload => {
   return { kind: "payload", summary, diagnostics };
 };
 
+interface Attempt {
+  readonly paths: readonly string[];
+  readonly stderr: string;
+  readonly maxDiagnostics: number;
+}
+
 const unusable = (
   summary: Record<string, unknown>,
-  paths: readonly string[],
-  stderr: string,
-  maxDiagnostics: number,
+  { paths, stderr, maxDiagnostics }: Attempt,
 ): string | null => {
   const changed = numberOf(summary.changed);
   const unchanged = numberOf(summary.unchanged);
@@ -165,7 +169,7 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
       const payload = readPayload(captured.stdout);
       if (payload.kind === "failed") return payload;
 
-      const reason = unusable(payload.summary, paths, captured.stderr, maxDiagnostics);
+      const reason = unusable(payload.summary, { paths, stderr: captured.stderr, maxDiagnostics });
       if (reason !== null) return { kind: "failed", reason };
 
       return collect(payload.diagnostics, { root, offsetOf: createOffsetReader(root), categories });

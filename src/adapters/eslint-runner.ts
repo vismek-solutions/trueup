@@ -67,12 +67,16 @@ const suppressedMessageOf = (raw: RawMessage): string => {
   return justification === "" ? messageOf(raw) : `${messageOf(raw)} suppressed because: ${justification}`;
 };
 
+interface Located {
+  readonly file: string;
+  readonly category: string;
+  readonly offsetOf: OffsetOf;
+}
+
 const findingOf = (
   raw: RawMessage,
-  file: string,
-  category: string,
   message: string,
-  offsetOf: OffsetOf,
+  { file, category, offsetOf }: Located,
 ): RunnerFinding => {
   const line = typeof raw.line === "number" ? raw.line : null;
   const column = typeof raw.column === "number" ? raw.column : 1;
@@ -113,7 +117,7 @@ const fromMessages = (messages: readonly RawMessage[], file: string, input: Coll
 
     const category = ruleIdOf(raw);
     if (keeps(input.categories, category)) {
-      findings.push(findingOf(raw, file, category, messageOf(raw), input.offsetOf));
+      findings.push(findingOf(raw, messageOf(raw), { file, category, offsetOf: input.offsetOf }));
     }
   }
 
@@ -128,7 +132,9 @@ const fromSuppressed = (
   suppressed
     .map((raw) => ({ raw, category: `${SUPPRESSED}/${ruleIdOf(raw)}` }))
     .filter(({ category }) => keeps(input.categories, category))
-    .map(({ raw, category }) => findingOf(raw, file, category, suppressedMessageOf(raw), input.offsetOf));
+    .map(({ raw, category }) =>
+      findingOf(raw, suppressedMessageOf(raw), { file, category, offsetOf: input.offsetOf }),
+    );
 
 const fromResult = (entry: RawResult, input: CollectInput): RunnerOutcome => {
   const file = typeof entry.filePath === "string" ? entry.filePath : null;
