@@ -1,8 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
+import { createOffsetReader } from "./source-offset.ts";
 
 export const FALLOW_CHECK_SCHEMA = 9;
 
@@ -29,26 +29,6 @@ interface RawFinding {
   readonly name?: unknown;
   readonly cycle?: unknown;
 }
-
-const offsetOf = (root: string, path: string, line: number, column: number, cache: Map<string, string[]>): number | null => {
-  const absolute = isAbsolute(path) ? path : join(root, path);
-  let lines = cache.get(absolute);
-  if (lines === undefined) {
-    try {
-      lines = readFileSync(absolute, "utf8").split("\n");
-    } catch {
-      lines = [];
-    }
-    cache.set(absolute, lines);
-  }
-  if (lines.length === 0 || line < 1) return null;
-
-  let offset = 0;
-  for (let index = 0; index < line - 1 && index < lines.length; index += 1) {
-    offset += (lines[index]?.length ?? 0) + 1;
-  }
-  return offset + Math.max(column, 0);
-};
 
 const describe = (category: string, raw: RawFinding): string => {
   const named = typeof raw.export_name === "string" ? raw.export_name : typeof raw.name === "string" ? raw.name : null;
@@ -97,7 +77,7 @@ export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
         };
       }
 
-      const cache = new Map<string, string[]>();
+      const offsetOf = createOffsetReader(root);
       const findings: RunnerFinding[] = [];
 
       for (const category of categories) {
@@ -114,7 +94,7 @@ export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
             category,
             message: describe(category, raw),
             file: path,
-            start: path === null || line === null ? null : offsetOf(root, path, line, column, cache),
+            start: path === null || line === null ? null : offsetOf(path, line, column),
             severity,
           });
         }

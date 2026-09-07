@@ -11,6 +11,7 @@ export { check, type CheckOptions } from "./compose.ts";
 export type { Baseline, BaselineEntry } from "./ports/baseline.ts";
 export type { Runner, RunnerFinding, RunnerOutcome } from "./ports/runner.ts";
 export { fallowRunner, DEFAULT_FALLOW_CATEGORIES, type FallowRunnerOptions } from "./adapters/fallow-runner.ts";
+export { eslintRunner, type EslintRunnerOptions } from "./adapters/eslint-runner.ts";
 export { RUNNERS_RAN_CLAIM } from "./claims/delegated.ts";
 export { decideOnProposal } from "./guard/decide.ts";
 export type { Decision, Proposal } from "./ports/proposal.ts";

@@ -201,17 +201,21 @@ vocabulary  domain owns names this file may not use:
 
 A path in no zone is reported as such, which is the answer you want before creating a directory nothing covers.
 
-## Delegating dead code, duplication and complexity
+## Delegating to other analyzers
 
-Another analyzer's findings become claims of their own and land in the same baseline:
+The rules here cover what a linter cannot express. Everything else is delegated, and the findings become claims of their own in the same report and the same baseline:
 
 ```ts
-import { fallowRunner } from "acs";
+import { eslintRunner, fallowRunner } from "acs";
 
-runners: [fallowRunner()]
+runners: [eslintRunner(), fallowRunner()]
 ```
 
-The adapter pins the output schema it was written against. An unrecognised schema, unparseable output, a silent tool or a missing binary fails the run rather than reporting nothing found, and a tool that could not run is never recorded in a baseline.
+A finding's category becomes its own claim — `eslint/no-unused-vars`, `fallow/unused_exports` — so a baseline entry pins one rule rather than a whole tool. eslint runs with the project root as its working directory and keeps its own severities, so a rule you set to `warn` stays a warning here. Narrow a wide tool with `categories`, point it somewhere other than `.` with `patterns`, and replace `npx` with your own invocation through `command`.
+
+An adapter distrusts the tool it wraps. Unparseable output, an unexpected shape, a silent tool, a missing binary, a configuration error, a file eslint could not parse, or a run that linted nothing all fail the check rather than reporting nothing found — and a tool that could not run is never recorded in a baseline. fallow additionally pins the output schema it was written against.
+
+Runners are gate-time only. The write-time guard skips them, since spawning a whole-repo lint on every edit costs more than it catches.
 
 ## Exit codes
 
