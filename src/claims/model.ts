@@ -1,6 +1,6 @@
-import type { SymbolGraph } from "../graph/model.js";
-import type { Finding } from "../report/model.js";
-import type { ZoneAssignment } from "../zones/model.js";
+import type { SymbolGraph } from "../graph/model.ts";
+import type { Finding } from "../report/model.ts";
+import type { ZoneAssignment } from "../zones/model.ts";
 
 export interface CheckContext {
   readonly root: string;

@@ -1,9 +1,9 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { EdgeAnchor } from "../src/claims/boundary.js";
-import { analyze, check } from "../src/compose.js";
-import { consumersOf } from "../src/graph/model.js";
+import type { EdgeAnchor } from "../src/claims/boundary.ts";
+import { analyze, check } from "../src/compose.ts";
+import { consumersOf } from "../src/graph/model.ts";
 
 const GAIME = "/Users/marianvismek/Dev/Vismek/gaime";
 const SHARED = join(GAIME, "packages/shared/src");

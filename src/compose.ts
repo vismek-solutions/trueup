@@ -1,16 +1,16 @@
-import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.js";
-import { parseModule } from "./adapters/oxc-parse.js";
-import { createResolver } from "./adapters/oxc-resolve.js";
-import { boundaryClaim, ruleZonesExistClaim, type BoundaryRule } from "./claims/boundary.js";
-import { completenessClaims } from "./claims/completeness.js";
-import type { Claim } from "./claims/model.js";
-import { resolutionClaims } from "./claims/resolution.js";
-import { buildSymbolGraph } from "./graph/build.js";
-import type { SymbolGraph } from "./graph/model.js";
-import type { Report } from "./report/model.js";
-import { runClaims } from "./report/run.js";
-import { assignZones } from "./zones/assign.js";
-import type { ZoneDefinition } from "./zones/model.js";
+import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
+import { parseModule } from "./adapters/oxc-parse.ts";
+import { createResolver } from "./adapters/oxc-resolve.ts";
+import { boundaryClaim, ruleZonesExistClaim, type BoundaryRule } from "./claims/boundary.ts";
+import { completenessClaims } from "./claims/completeness.ts";
+import type { Claim } from "./claims/model.ts";
+import { resolutionClaims } from "./claims/resolution.ts";
+import { runClaims } from "./claims/run.ts";
+import { buildSymbolGraph } from "./graph/build.ts";
+import type { SymbolGraph } from "./graph/model.ts";
+import type { Report } from "./report/model.ts";
+import { assignZones } from "./zones/assign.ts";
+import type { ZoneDefinition } from "./zones/model.ts";
 
 export function analyze(options: DiscoverFilesOptions): SymbolGraph {
   const files = discoverFiles(options);

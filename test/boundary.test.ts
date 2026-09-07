@@ -1,9 +1,9 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { BoundaryRule } from "../src/claims/boundary.js";
-import { check } from "../src/compose.js";
-import type { Finding } from "../src/report/model.js";
+import type { BoundaryRule } from "../src/claims/boundary.ts";
+import { check } from "../src/compose.ts";
+import type { Finding } from "../src/report/model.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "boundary");
 

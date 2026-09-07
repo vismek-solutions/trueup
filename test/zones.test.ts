@@ -1,8 +1,8 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { check, standardClaims } from "../src/compose.js";
-import { assignZones } from "../src/zones/assign.js";
+import { check, standardClaims } from "../src/compose.ts";
+import { assignZones } from "../src/zones/assign.ts";
 
 const ROOT = "/project";
 const at = (...parts: string[]): string => join(ROOT, ...parts);

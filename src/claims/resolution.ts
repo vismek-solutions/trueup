@@ -1,5 +1,5 @@
 import { relative } from "node:path";
-import type { Claim } from "./model.js";
+import type { Claim } from "./model.ts";
 
 export const theAnalysisReachedFiles: Claim = {
   name: "the-analysis-reached-files",

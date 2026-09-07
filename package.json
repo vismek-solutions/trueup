@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
+  },
+  "bin": {
+    "acs": "./bin/acs.js"
   },
   "scripts": {
+    "check": "node ./bin/acs.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

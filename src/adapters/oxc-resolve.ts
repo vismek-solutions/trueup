@@ -1,6 +1,6 @@
 import { dirname } from "node:path";
 import { ResolverFactory } from "oxc-resolver";
-import type { ResolveSpecifier } from "../ports/resolve.js";
+import type { ResolveSpecifier } from "../ports/resolve.ts";
 
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".json"];
 

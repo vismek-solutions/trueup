@@ -7,7 +7,7 @@ import {
   type ImportStatement,
   type ModuleRecord,
   type ParseModule,
-} from "../ports/module-record.js";
+} from "../ports/module-record.ts";
 
 export const parseModule: ParseModule = (path, text): ModuleRecord => {
   const { module } = parseSync(path, text);

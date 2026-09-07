@@ -1,7 +1,7 @@
-import { NAMESPACE, type ModuleRecord } from "../ports/module-record.js";
-import type { ResolveSpecifier } from "../ports/resolve.js";
-import { createExportResolver } from "./exports.js";
-import type { SymbolGraph, SymbolImportEdge, UnresolvedImport } from "./model.js";
+import { NAMESPACE, type ModuleRecord } from "../ports/module-record.ts";
+import type { ResolveSpecifier } from "../ports/resolve.ts";
+import { createExportResolver } from "./exports.ts";
+import type { SymbolGraph, SymbolImportEdge, UnresolvedImport } from "./model.ts";
 
 export interface BuildSymbolGraphDeps {
   readonly modules: readonly ModuleRecord[];

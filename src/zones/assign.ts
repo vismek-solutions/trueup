@@ -1,6 +1,6 @@
 import { relative, sep } from "node:path";
 import picomatch from "picomatch";
-import type { DeadPattern, ZoneAssignment, ZoneDefinition } from "./model.js";
+import type { DeadPattern, ZoneAssignment, ZoneDefinition } from "./model.ts";
 
 export interface AssignZonesInput {
   readonly root: string;

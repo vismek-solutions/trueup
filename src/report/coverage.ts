@@ -1,7 +1,13 @@
-import type { CheckContext } from "../claims/model.js";
-import type { Coverage } from "./model.js";
+import type { SymbolGraph } from "../graph/model.ts";
+import type { ZoneAssignment } from "../zones/model.ts";
+import type { Coverage } from "./model.ts";
 
-export function coverageOf({ graph, zones }: CheckContext): Coverage {
+export interface CoverageInput {
+  readonly graph: SymbolGraph;
+  readonly zones: ZoneAssignment;
+}
+
+export function coverageOf({ graph, zones }: CoverageInput): Coverage {
   const counts = { symbol: 0, external: 0, builtin: 0, namespace: 0 };
   for (const edge of graph.edges) {
     if (edge.to.kind in counts) counts[edge.to.kind as keyof typeof counts] += 1;

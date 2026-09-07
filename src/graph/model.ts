@@ -1,4 +1,4 @@
-import type { BindingKind } from "../ports/module-record.js";
+import type { BindingKind } from "../ports/module-record.ts";
 
 export interface SymbolRef {
   readonly path: string;

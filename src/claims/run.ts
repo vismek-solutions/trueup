@@ -1,6 +1,6 @@
-import type { CheckContext, Claim } from "../claims/model.js";
-import { coverageOf } from "./coverage.js";
-import type { Report } from "./model.js";
+import { coverageOf } from "../report/coverage.ts";
+import type { Report } from "../report/model.ts";
+import type { CheckContext, Claim } from "./model.ts";
 
 export function runClaims(claims: readonly Claim[], context: CheckContext): Report {
   return {
