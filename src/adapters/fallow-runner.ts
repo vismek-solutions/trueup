@@ -1,7 +1,7 @@
-import { isAbsolute, join } from "node:path";
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
+import { absoluteIn, numberOf, stringOf } from "./tool-output.ts";
 import { captureTool } from "./tool-process.ts";
 
 export const FALLOW_CHECK_SCHEMA = 9;
@@ -41,11 +41,10 @@ interface FindingInput {
 }
 
 const describe = (category: string, raw: RawFinding): string => {
-  const named =
-    typeof raw.export_name === "string" ? raw.export_name : typeof raw.name === "string" ? raw.name : null;
   const cycle = Array.isArray(raw.cycle) ? raw.cycle.join(" -> ") : null;
-  const subject = named ?? cycle ?? (typeof raw.path === "string" ? raw.path : "");
-  return subject === "" ? category.replaceAll("_", " ") : `${category.replaceAll("_", " ")}: ${subject}`;
+  const subject = stringOf(raw.export_name) ?? stringOf(raw.name) ?? cycle ?? stringOf(raw.path) ?? "";
+  const what = category.replaceAll("_", " ");
+  return subject === "" ? what : `${what}: ${subject}`;
 };
 
 const readCheck = (stdout: string): Check => {
@@ -77,9 +76,9 @@ const findingOf = (
   raw: RawFinding,
   { root, offsetOf, severity }: FindingInput,
 ): RunnerFinding => {
-  const path = typeof raw.path === "string" ? (isAbsolute(raw.path) ? raw.path : join(root, raw.path)) : null;
-  const line = typeof raw.line === "number" ? raw.line : null;
-  const column = typeof raw.col === "number" ? raw.col : 0;
+  const path = absoluteIn(root, stringOf(raw.path));
+  const line = numberOf(raw.line);
+  const column = numberOf(raw.col) ?? 0;
 
   return {
     category,

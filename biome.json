@@ -38,6 +38,7 @@
       "style": {
         "noEnum": "error",
         "noInferrableTypes": "error",
+        "noNestedTernary": "error",
         "noNonNullAssertion": "error",
         "noParameterAssign": "error",
         "useAsConstAssertion": "error",

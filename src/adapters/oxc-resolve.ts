@@ -1,8 +1,16 @@
 import { dirname } from "node:path";
 import { ResolverFactory } from "oxc-resolver";
-import type { ResolveSpecifier } from "../ports/resolve.ts";
+import type { Resolution, ResolveSpecifier } from "../ports/resolve.ts";
 
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".json"];
+
+type ResolvedFile = ReturnType<ResolverFactory["resolveFileSync"]>;
+
+const resolutionOf = (result: ResolvedFile, specifier: string): Resolution => {
+  if (result.builtin !== undefined && result.builtin !== null) return { kind: "builtin", name: specifier };
+  if (result.path !== undefined && result.path !== null) return { kind: "path", path: result.path };
+  return { kind: "unresolved", reason: result.error ?? "not resolved" };
+};
 
 export function createResolver(): ResolveSpecifier {
   const factory = new ResolverFactory({
@@ -18,21 +26,14 @@ export function createResolver(): ResolveSpecifier {
     },
   });
 
-  const cache = new Map<string, ReturnType<ResolveSpecifier>>();
+  const cache = new Map<string, Resolution>();
 
   return (fromFile, specifier) => {
-    const key = `${dirname(fromFile)} ${specifier}`;
+    const key = `${dirname(fromFile)}\0${specifier}`;
     const cached = cache.get(key);
     if (cached !== undefined) return cached;
 
-    const result = factory.resolveFileSync(fromFile, specifier);
-    const resolution: ReturnType<ResolveSpecifier> =
-      result.builtin !== undefined && result.builtin !== null
-        ? { kind: "builtin", name: specifier }
-        : result.path !== undefined && result.path !== null
-          ? { kind: "path", path: result.path }
-          : { kind: "unresolved", reason: result.error ?? "not resolved" };
-
+    const resolution = resolutionOf(factory.resolveFileSync(fromFile, specifier), specifier);
     cache.set(key, resolution);
     return resolution;
   };

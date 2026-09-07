@@ -1,8 +1,7 @@
-import { isAbsolute, join } from "node:path";
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
-import { numberOf, objectOf, stringOf, summarize } from "./tool-output.ts";
+import { absoluteIn, numberOf, objectOf, stringOf, summarize } from "./tool-output.ts";
 import { captureTool } from "./tool-process.ts";
 
 export const DEFAULT_MAX_DIAGNOSTICS = 10_000;
@@ -99,8 +98,7 @@ const convert = (entry: unknown, { root, offsetOf, categories }: ConvertInput): 
   if (raw === null || category === null) return { kind: "failed", reason: SHAPE };
 
   const location = objectOf(raw.location);
-  const reported = location === null ? null : stringOf(location.path);
-  const path = reported === null ? null : isAbsolute(reported) ? reported : join(root, reported);
+  const path = absoluteIn(root, location === null ? null : stringOf(location.path));
 
   if (UNCHECKED.some((prefix) => category.startsWith(prefix))) {
     return { kind: "failed", reason: `${path ?? "a file"} was not checked: ${summarize(raw.message)}` };

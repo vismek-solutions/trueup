@@ -1,3 +1,5 @@
+import { isAbsolute, join } from "node:path";
+
 const REASON_LIMIT = 300;
 
 export const summarize = (text: unknown): string => {
@@ -16,3 +18,8 @@ export const objectOf = (value: unknown): Record<string, unknown> | null =>
 export const stringOf = (value: unknown): string | null => (typeof value === "string" ? value : null);
 
 export const numberOf = (value: unknown): number | null => (typeof value === "number" ? value : null);
+
+export const absoluteIn = (root: string, path: string | null): string | null => {
+  if (path === null) return null;
+  return isAbsolute(path) ? path : join(root, path);
+};
