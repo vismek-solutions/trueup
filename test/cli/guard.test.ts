@@ -43,11 +43,12 @@ describe("guarding a proposed write", () => {
     expect(existsSync(NEW_FILE)).toBe(false);
   });
 
-  it("names the file each finding is about, so a message that reads as a fragment has a subject", async () => {
+  it("names the file once beside the claim, so a message that reads as a fragment has a subject", async () => {
     const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));
-    const reason = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+    const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
 
-    expect(reason).toContain("src/engine/added.ts  ");
+    expect(reason).toContain("every-import-respects-its-zone-boundary  src/engine/added.ts");
+    expect(reason.split("src/engine/added.ts").length - 1).toBe(1);
     expect(reason).not.toContain(PROJECT);
   });
 

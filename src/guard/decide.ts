@@ -18,7 +18,9 @@ export function decideOnProposal({ report, path, root }: DecideInput): Decision 
     if (hits.length === 0) return [];
 
     return [
-      [claim.claim, ...hits.map((hit) => `  ${where}  ${hit.message}`), `  ${claim.guidance}`].join("\n"),
+      [`${claim.claim}  ${where}`, ...hits.map((hit) => `  ${hit.message}`), `  ${claim.guidance}`].join(
+        "\n",
+      ),
     ];
   });
 
