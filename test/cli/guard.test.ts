@@ -149,8 +149,12 @@ describe("refusing to let the rules be edited", () => {
     expect(await refusalFor(join(PROJECT, "locked/notes.md"))).toContain(CLAIM);
   });
 
-  it("says that switching the check off is not the fix", async () => {
-    expect(await refusalFor(join(PROJECT, "architecture.config.ts"))).toContain("fix the code");
+  it("asks rather than refuses, so setup is still possible", async () => {
+    const { output } = await guard(writing(join(PROJECT, "architecture.config.ts"), "whatever"));
+    const { hookSpecificOutput: result } = JSON.parse(output);
+
+    expect(result.permissionDecision).toBe("ask");
+    expect(result.permissionDecisionReason).toContain("Approve it if this is setup");
   });
 
   it("leaves every other file to the ordinary rules", async () => {

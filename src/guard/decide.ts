@@ -2,7 +2,7 @@ import { relative } from "node:path";
 import type { Decision } from "../ports/proposal.ts";
 import type { Finding, Report } from "../report/model.ts";
 
-const ALLOW: Decision = { blocked: false, reasons: [] };
+const ALLOW: Decision = { verdict: "allow", reasons: [] };
 
 export interface DecideInput {
   readonly report: Report;
@@ -31,5 +31,5 @@ export function decideOnProposal({ report, path, root }: DecideInput): Decision 
     return [[header, ...lines, `  ${claim.guidance}`].join("\n")];
   });
 
-  return reasons.length === 0 ? ALLOW : { blocked: true, reasons };
+  return reasons.length === 0 ? ALLOW : { verdict: "deny", reasons };
 }

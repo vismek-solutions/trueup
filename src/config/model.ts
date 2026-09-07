@@ -2,6 +2,7 @@ import type { BoundaryRule } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
 import type { IsolationRule } from "../claims/isolation.ts";
 import type { SeamRule } from "../claims/seam.ts";
+import type { Protection } from "../ports/protection.ts";
 import type { Runner } from "../ports/runner.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 
@@ -12,7 +13,7 @@ export interface ArchitectureConfig {
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
   readonly isolate?: readonly IsolationRule[] | undefined;
-  readonly protect?: readonly string[] | undefined;
+  readonly protect?: Protection | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;

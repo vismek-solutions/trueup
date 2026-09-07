@@ -23,7 +23,8 @@ export { eslintRunner, type EslintRunnerOptions } from "./adapters/eslint-runner
 export { biomeRunner, DEFAULT_MAX_DIAGNOSTICS, type BiomeRunnerOptions } from "./adapters/biome-runner.ts";
 export { RUNNERS_RAN_CLAIM } from "./claims/delegated.ts";
 export { decideOnProposal } from "./guard/decide.ts";
-export type { Decision, Proposal } from "./ports/proposal.ts";
+export type { Decision, Proposal, Verdict } from "./ports/proposal.ts";
+export type { Protection, ProtectionRule } from "./ports/protection.ts";
 export type { Overlay } from "./compose.ts";
 export { applyBaseline, baselineOf, STALE_CLAIM } from "./ratchet/apply.ts";
 export type { RatchetResult } from "./ratchet/model.ts";

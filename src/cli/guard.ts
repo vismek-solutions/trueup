@@ -1,12 +1,13 @@
 import { extname, sep } from "node:path";
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
-import { contextFor, denialFor, requestFrom } from "../adapters/claude-code-hook.ts";
+import { contextFor, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
 import { SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
 import { check } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import type { ArchitectureConfig } from "../config/model.ts";
 import { decideOnProposal } from "../guard/decide.ts";
 import { protectionOf } from "../guard/protected.ts";
+import type { Protection } from "../ports/protection.ts";
 import type { Decision, HookRequest } from "../ports/proposal.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
@@ -21,7 +22,7 @@ interface Rulebook {
   readonly root: string;
   readonly config: string;
   readonly baseline: string;
-  readonly patterns: readonly string[];
+  readonly protect: Protection | undefined;
 }
 
 const under = (roots: readonly string[], path: string): boolean =>
@@ -34,7 +35,7 @@ const overlayOf = (request: HookRequest): Map<string, string> =>
   request.kind === "propose" ? new Map([[request.proposal.path, request.proposal.text]]) : new Map();
 
 const answerTo = (request: HookRequest, decision: Decision): string | null =>
-  request.kind === "propose" ? denialFor(decision) : contextFor(decision);
+  request.kind === "propose" ? verdictFor(decision) : contextFor(decision);
 
 const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebook): string | null => {
   if (path === null) return null;
@@ -43,10 +44,10 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
     root: rulebook.root,
     path,
     always: [rulebook.config, rulebook.baseline],
-    patterns: rulebook.patterns,
+    protect: rulebook.protect,
   });
 
-  return decision.blocked ? answerTo(request, decision) : null;
+  return decision.verdict === "allow" ? null : answerTo(request, decision);
 };
 
 const analysed = (config: ArchitectureConfig, roots: readonly string[], path: string | null): boolean =>
@@ -73,7 +74,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     root,
     config: found,
     baseline,
-    patterns: config.protect ?? [],
+    protect: config.protect,
   });
 
   if (refusal !== null) {

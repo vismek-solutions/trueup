@@ -75,24 +75,25 @@ export function requestFrom(payload: unknown, root: string): HookRequest | null 
   return proposal === null ? null : { kind: "propose", proposal };
 }
 
-export function denialFor(decision: Decision): string | null {
-  if (!decision.blocked) return null;
+export function verdictFor(decision: Decision): string | null {
+  if (decision.verdict === "allow") return null;
+
+  const headline =
+    decision.verdict === "deny"
+      ? "This edit is refused by the project's architecture rules."
+      : "This edit needs your approval under the project's architecture rules.";
 
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
-      permissionDecision: "deny",
-      permissionDecisionReason: [
-        "This edit is refused by the project's architecture rules.",
-        "",
-        ...decision.reasons,
-      ].join("\n"),
+      permissionDecision: decision.verdict,
+      permissionDecisionReason: [headline, "", ...decision.reasons].join("\n"),
     },
   });
 }
 
 export function contextFor(decision: Decision): string | null {
-  if (!decision.blocked) return null;
+  if (decision.verdict === "allow") return null;
 
   return JSON.stringify({
     hookSpecificOutput: {

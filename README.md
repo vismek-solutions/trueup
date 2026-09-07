@@ -274,31 +274,57 @@ Anything already in the baseline does not block either.
 
 An unusable payload, a missing config, a file type you do not analyse — all of those allow the write. A guard that errors would block *every* edit rather than the wrong ones.
 
-### The rulebook is off limits
+### The rulebook goes through you
 
-Every other rule can be switched off by editing the config, so the guard refuses edits to it outright.
+Every other rule can be switched off by editing the config, so the guard stops that edit and hands it to you.
 
-Two files are protected with no configuration at all: the config the rules were read from, and the baseline. An agent cannot widen a boundary to make a check pass, and cannot record a fresh violation as pre-existing.
+Two files are covered with no configuration at all: the config the rules were read from, and the baseline. Those are the two ways to make a failing check pass without touching any code — widen the boundary, or record the violation as already known.
+
+The default is a permission prompt, not a refusal.
 
 ```
+This edit needs your approval under the project's architecture rules.
+
 no-edit-changes-the-rules-themselves  architecture.config.ts
-  This file is the rulebook the other checks are read from, so an edit to it is not governed by
-  anything. Changing it to make a check pass switches the check off, and leaves no trace that it
-  ever failed. If the code is wrong, fix the code. If the rule is genuinely wrong, say so, leave
-  the check failing, and let a person decide — that judgement is not this edit's to make.
+  An agent is asking to change a file the project's rules are read from. Approve it if this is
+  setup, or a change to the rules you meant to make. Refuse it if a check was failing just before
+  this: editing the rulebook is how a failing check gets switched off, and it leaves no trace that
+  it ever failed.
 ```
 
-Add anything else that should be yours alone.
+That keeps setup work possible. An agent can draft your zones, add one for a directory you just made, or wire the hooks — you approve each one. What it cannot do is quietly widen a rule that is red right now, because you see the request and the reason for suspecting it.
+
+Add anything else that should come to you first.
 
 ```ts
 protect: [".claude/settings.json", ".github/workflows/**", "CLAUDE.md"]
 ```
 
-Protecting the hook settings is the one worth copying. Without it, the fastest way past the guard is to turn the guard off.
+The hook settings are the entry worth copying. Without them, the shortest way past the guard is to turn the guard off.
 
-This check runs before anything else, so it covers files the analysis would never look at — a `.json`, a `.yml`, a path outside `include`. It is the only rule with no counterpart in a full run, because "the config was edited" is not something a snapshot of the code can show.
+### Refusing outright instead
 
-You still edit these files yourself. The hook only sees what the agent does.
+Where nobody is watching — CI, an unattended agent, a shared repo — a prompt is not a gate. Ask for a refusal instead.
+
+```ts
+protect: { paths: ["CLAUDE.md"], decision: "deny" }
+```
+
+`decision` alone hardens the config and the baseline without naming anything else.
+
+```ts
+protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
+```
+
+There is no timeout that turns an unanswered prompt into an approval, and there should not be: waiting would become the way past the guard. The config is TypeScript, so let the environment pick the verdict instead.
+
+### Two things this check does differently
+
+It runs before the roots and extension filters, so it covers files the analysis would never look at — a `.json`, a `.yml`, anything outside `include`.
+
+It has no counterpart in a full run, because a snapshot of the code cannot show that the config was edited. This is the only rule that exists purely at write time.
+
+You still edit these files yourself, directly. The hook only sees what an agent does.
 
 ### Why there are two hooks
 
