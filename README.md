@@ -217,6 +217,16 @@ An adapter distrusts the tool it wraps. Unparseable output, an unexpected shape,
 
 Exit codes differ per tool and none of them mean what you would guess. eslint exits `1` for "found problems" and reserves `2` for a broken config. biome exits `1` whether it found problems or could not read the path at all, so the adapter reads its summary rather than its status.
 
+### Letting biome fix what it can
+
+```ts
+biomeRunner({ write: process.env.CI === undefined })
+```
+
+Biome applies its safe fixes and the report keeps only what it could not fix. An agent then spends its turns on the findings that need judgement instead of on `let` versus `const`.
+
+Off by default, and worth keeping off in CI — a check that rewrites the tree reports on code that no longer matches what was committed. The config is TypeScript, so the environment decides. Biome's unsafe fixes can change behaviour and stay out of reach of this option; pass `--unsafe` through `command` if you want them, knowing an agent will not notice a semantic change. `eslintRunner` takes `--fix` the same way, through `command`.
+
 ### Catching a rule an agent silenced
 
 ```ts

@@ -23,6 +23,7 @@ export interface BiomeRunnerOptions {
   readonly paths?: readonly string[] | undefined;
   readonly categories?: readonly string[] | undefined;
   readonly maxDiagnostics?: number | undefined;
+  readonly write?: boolean | undefined;
 }
 
 const wanted = (category: string, categories: readonly string[] | undefined): boolean =>
@@ -34,6 +35,7 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
   const paths = options.paths ?? ["."];
   const categories = options.categories;
   const maxDiagnostics = options.maxDiagnostics ?? DEFAULT_MAX_DIAGNOSTICS;
+  const fixing = options.write === true ? ["--write"] : [];
 
   return {
     name: "biome",
@@ -43,7 +45,7 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
 
       const result = spawnSync(
         executable,
-        [...rest, "--reporter=json", `--max-diagnostics=${maxDiagnostics}`, ...paths],
+        [...rest, ...fixing, "--reporter=json", `--max-diagnostics=${maxDiagnostics}`, ...paths],
         { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
       );
 

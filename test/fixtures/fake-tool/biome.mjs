@@ -54,6 +54,16 @@ if (mode === "internal-error") {
   });
 }
 
+if (mode === "report-args") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: process.argv.slice(3).join(" "), category: "lint/args", location: at(3, 14), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
 if (mode === "relative-paths") {
   emit({
     summary: summary({}),

@@ -70,6 +70,23 @@ describe("reading biome's output", () => {
   });
 });
 
+describe("letting biome fix what it can", () => {
+  const argsFor = (options: { readonly write?: boolean }): string =>
+    findingsOf(biomeRunner({ command: ["node", TOOL, "report-args"], ...options }).run(ROOT))[0]?.message ?? "";
+
+  it("leaves the working tree alone unless asked", () => {
+    expect(argsFor({})).not.toContain("--write");
+  });
+
+  it("asks biome to apply its safe fixes when told to", () => {
+    expect(argsFor({ write: true })).toContain("--write");
+  });
+
+  it("still reports what biome could not fix", () => {
+    expect(findingsOf(runWith("ok")).length).toBeGreaterThan(0);
+  });
+});
+
 describe("refusing to trust biome", () => {
   it("fails when biome processed no files, which its exit code alone does not say", () => {
     expect(reasonOf(runWith("no-files"))).toContain("processed no files");
