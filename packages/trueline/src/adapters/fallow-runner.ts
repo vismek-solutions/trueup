@@ -11,8 +11,15 @@ export const DEFAULT_FALLOW_CATEGORIES = [
   "unused_exports",
   "unused_types",
   "unused_dependencies",
+  "unused_dev_dependencies",
+  "unlisted_dependencies",
+  "type_only_dependencies",
+  "test_only_dependencies",
+  "dev_dependencies_in_production",
+  "private_type_leaks",
   "duplicate_exports",
   "circular_dependencies",
+  "re_export_cycles",
 ] as const;
 
 export type DuplicationMode = "strict" | "mild" | "weak" | "semantic";
@@ -105,11 +112,11 @@ const findingsIn = (
   check: Record<string, unknown>,
   category: string,
   input: FindingInput,
-): readonly RunnerFinding[] => {
+): readonly RunnerFinding[] | null => {
   const entries = check[category];
   return Array.isArray(entries)
     ? entries.map((entry) => findingOf(category, entry as RawFinding, input))
-    : [];
+    : null;
 };
 
 const DUPLICATION_CATEGORY = "code_duplication";
@@ -173,7 +180,12 @@ export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
       if (payload.kind === "failed") return payload;
 
       const input: FindingInput = { root, offsetOf: createOffsetReader(root), severity };
-      const found = categories.flatMap((category) => findingsIn(payload.check, category, input));
+      const found: RunnerFinding[] = [];
+      for (const category of categories) {
+        const entries = findingsIn(payload.check, category, input);
+        if (entries === null) return { kind: "failed", reason: `output carried no ${category}` };
+        found.push(...entries);
+      }
       if (duplication === undefined) return { kind: "findings", findings: found };
 
       const clones = clonesIn(payload.dupes, input);

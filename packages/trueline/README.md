@@ -721,6 +721,8 @@ Each clone group arrives as one finding per instance, sharing a group, so `--nex
 
 Expect one class of false positive: two functions with the same shape and different meanings. `weak` mode normalises identifiers, so it cannot tell them apart. Rename them so the next reader can, and baseline the finding.
 
+A category you name that the tool never reports fails the run. Reading it as "nothing found" is how a typo becomes a check that silently enforces nothing.
+
 ### Adapters distrust the tool they wrap
 
 Unparseable output. An unexpected shape. A silent tool, a missing binary, a config error, a file the tool could not parse, a run that checked nothing.

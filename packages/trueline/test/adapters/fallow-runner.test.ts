@@ -67,6 +67,10 @@ describe("refusing to trust a delegated tool", () => {
     expect(reasonOf(runWith("not-json"))).toContain("not JSON");
   });
 
+  it("fails on a category the tool never reported, rather than reading it as empty", () => {
+    expect(reasonOf(runWith("ok", ["unused_exports", "no_such_category"]))).toContain("no_such_category");
+  });
+
   it("fails when the tool printed nothing", () => {
     expect(reasonOf(runWith("silent"))).toContain("no output");
   });
