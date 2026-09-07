@@ -2,7 +2,7 @@ import { extname, sep } from "node:path";
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
 import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
 import { SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
-import { check } from "../compose.ts";
+import { check, placementOf } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import type { ArchitectureConfig } from "../config/model.ts";
 import { decideOnProposal } from "../guard/decide.ts";
@@ -34,6 +34,16 @@ const targetOf = (request: HookRequest): string | null =>
 
 const overlayOf = (request: HookRequest): Map<string, string> =>
   request.kind === "propose" ? new Map([[request.proposal.path, request.proposal.text]]) : new Map();
+
+const withReach = (decision: Decision, path: string | null, config: ArchitectureConfig, root: string) => {
+  if (decision.verdict === "allow" || path === null) return decision;
+
+  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries ?? [] });
+  if (placement.zone === null) return decision;
+
+  const footer = `${placement.zone} may reach ${placement.mayReach.join(" · ")}`;
+  return { ...decision, reasons: [...decision.reasons, footer] };
+};
 
 const answerTo = (request: HookRequest, decision: Decision): string | null =>
   request.kind === "propose" ? verdictFor(decision) : contextFor(decision);
@@ -96,6 +106,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       boundaries: config.boundaries,
       seams: config.seams,
       maxFilesPerDirectory: config.maxFilesPerDirectory,
+      duplication: config.duplication,
       isolate: config.isolate,
       colocation: config.colocation,
       rules: config.rules,
@@ -111,7 +122,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     recorded.entries.length === 0 ? report : applyBaseline({ report, baseline: recorded, root }).report;
 
   const decision = decideOnProposal({ report: effective, path: target, root });
-  const output = answerTo(request, decision);
+  const output = answerTo(request, withReach(decision, target, config, root));
   if (output !== null) write(output);
   return 0;
 }

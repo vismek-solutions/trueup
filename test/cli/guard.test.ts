@@ -52,6 +52,14 @@ describe("guarding a proposed write", () => {
     expect(reason).not.toContain(PROJECT);
   });
 
+  it("says what the file may reach, so the next attempt is not a guess", async () => {
+    const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));
+    const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+
+    expect(reason).toContain("engine may reach engine");
+    expect(reason).not.toContain("engine may reach engine · domain");
+  });
+
   it("allows a proposal that breaks nothing, despite an existing violation elsewhere", async () => {
     expect((await guard(writing(NEW_FILE, REACHES_NOTHING))).output).toBe("");
   });

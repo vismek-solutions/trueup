@@ -1,6 +1,6 @@
-import type { ResolvedImport } from "../project/model.ts";
-import type { Finding } from "../report/model.ts";
-import type { Claim } from "./model.ts";
+import type { ResolvedImport } from "../../project/model.ts";
+import type { Finding } from "../../report/model.ts";
+import type { Claim } from "../model.ts";
 
 const PLACEMENT =
   "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs — a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. Move it to the zone that uses it. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Giving a zone a role silences it as a consumer, and is honest only for a zone that never owns what it uses.";

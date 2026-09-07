@@ -3,12 +3,14 @@ import {
   DEFAULT,
   NAMESPACE,
   type BindingKind,
+  type Declaration,
   type ExportEntry,
   type ImportBinding,
   type ImportStatement,
   type Mention,
   type ModuleRecord,
   type ParseModule,
+  type ReadDeclarations,
   type ReadMentions,
 } from "../ports/module-record.ts";
 
@@ -132,7 +134,72 @@ const exportEntryOf = (entry: ExportRecord): ExportEntry | null => {
   };
 };
 
+const NAMED_DECLARATIONS = new Set([
+  "FunctionDeclaration",
+  "ClassDeclaration",
+  "TSTypeAliasDeclaration",
+  "TSInterfaceDeclaration",
+  "TSEnumDeclaration",
+  "TSModuleDeclaration",
+]);
+
+const spanOf = (node: AstNode): { start: number; end: number } | null =>
+  typeof node.start === "number" && typeof node.end === "number"
+    ? { start: node.start, end: node.end }
+    : null;
+
+const identifierOf = (node: AstNode): AstNode | null => {
+  const id = node.id as AstNode | null | undefined;
+  return id !== null && id !== undefined && typeof id.name === "string" ? id : null;
+};
+
+const bodyAfterName = (node: AstNode, id: AstNode, text: string): string | null => {
+  const span = spanOf(node);
+  const from = typeof id.end === "number" ? id.end : null;
+  return span === null || from === null ? null : text.slice(from, span.end);
+};
+
+const namedOf = (node: AstNode, text: string): Declaration | null => {
+  const id = identifierOf(node);
+  if (id === null) return null;
+
+  const body = bodyAfterName(node, id, text);
+  const span = spanOf(node);
+  return body === null || span === null ? null : { name: id.name as string, text: body, start: span.start };
+};
+
+const unwrapped = (node: AstNode): AstNode => {
+  if (node.type !== "ExportNamedDeclaration" && node.type !== "ExportDefaultDeclaration") return node;
+  const inner = node.declaration as AstNode | null | undefined;
+  return inner === null || inner === undefined ? node : inner;
+};
+
+const declarationsOf = (raw: AstNode, text: string, into: Declaration[]): void => {
+  const node = unwrapped(raw);
+  const type = typeof node.type === "string" ? node.type : null;
+  if (type === null) return;
+
+  if (type === "VariableDeclaration") {
+    for (const entry of (node.declarations ?? []) as AstNode[]) {
+      const found = namedOf(entry, text);
+      if (found !== null) into.push(found);
+    }
+    return;
+  }
+
+  if (!NAMED_DECLARATIONS.has(type)) return;
+  const found = namedOf(node, text);
+  if (found !== null) into.push(found);
+};
+
 export const readMentions: ReadMentions = (path, text) => collectMentions(parseSync(path, text).program);
+
+export const readDeclarations: ReadDeclarations = (path, text) => {
+  const body = parseSync(path, text).program.body as unknown as AstNode[];
+  const found: Declaration[] = [];
+  for (const node of body) declarationsOf(node, text, found);
+  return found;
+};
 
 export const parseModule: ParseModule = (path, text): ModuleRecord => {
   const { module } = parseSync(path, text);

@@ -1,12 +1,13 @@
 import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
-import { parseModule, readMentions } from "./adapters/oxc-parse.ts";
+import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
-import { colocationClaim, testOnlyExportClaim } from "./claims/colocation.ts";
+import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
-import { directoryClaim } from "./claims/directories.ts";
+import { directoryClaim } from "./claims/placement/directories.ts";
+import { duplicationClaim } from "./claims/placement/duplication.ts";
 import { isolationClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
@@ -57,7 +58,7 @@ const analyseProject = ({ root, roots, zones, extensions, ignoreDirectories, ove
   const modules = parseAll(sources, parseModule);
   const graph = buildSymbolGraph({ modules, resolve: createResolver() });
   const assignment = assignZones({ root, files: [...graph.files], zones });
-  const lexicon = buildLexicon({ modules, sources, readMentions });
+  const lexicon = buildLexicon({ modules, sources, readMentions, readDeclarations });
 
   return {
     graph,
@@ -69,6 +70,34 @@ const analyseProject = ({ root, roots, zones, extensions, ignoreDirectories, ove
 
 export const inspect = (options: InspectOptions): Project => analyseProject(options).project;
 
+export interface PlacementInput {
+  readonly root: string;
+  readonly path: string;
+  readonly zones: readonly ZoneDefinition[];
+  readonly boundaries: readonly BoundaryRule[];
+}
+
+export interface Placement {
+  readonly zone: string | null;
+  readonly mayReach: readonly string[];
+  readonly mayNotReach: readonly string[];
+}
+
+export function placementOf({ root, path, zones, boundaries }: PlacementInput): Placement {
+  const zone = assignZones({ root, files: [path], zones }).zoneOf(path);
+  if (zone === null) return { zone: null, mayReach: [], mayNotReach: [] };
+
+  const closed = [
+    ...new Set(boundaries.filter((rule) => rule.from === zone).flatMap((rule) => [...rule.mayNotReach])),
+  ].sort();
+
+  return {
+    zone,
+    mayReach: zones.map((entry) => entry.name).filter((name) => !closed.includes(name)),
+    mayNotReach: closed,
+  };
+}
+
 export interface CheckOptions {
   readonly root: string;
   readonly roots?: readonly string[] | undefined;
@@ -77,6 +106,7 @@ export interface CheckOptions {
   readonly seams?: readonly SeamRule[] | undefined;
   readonly isolate?: readonly IsolationRule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
+  readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
@@ -108,6 +138,7 @@ export function check({
   seams = [],
   isolate = [],
   maxFilesPerDirectory,
+  duplication,
   colocation = false,
   rules = [],
   runners = [],
@@ -136,6 +167,7 @@ export function check({
     seamClaim(seams),
     ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
     ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
+    ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),
     ...(colocation ? placementClaims(zones) : []),
     ...customClaims(rules),
   ];

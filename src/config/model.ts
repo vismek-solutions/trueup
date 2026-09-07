@@ -15,6 +15,7 @@ export interface ArchitectureConfig {
   readonly isolate?: readonly IsolationRule[] | undefined;
   readonly protect?: Protection | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
+  readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;

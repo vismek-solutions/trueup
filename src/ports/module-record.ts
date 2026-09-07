@@ -63,3 +63,11 @@ export interface ModuleRecord {
 export type ParseModule = (path: string, text: string) => ModuleRecord;
 
 export type ReadMentions = (path: string, text: string) => readonly Mention[];
+
+export interface Declaration {
+  readonly name: string;
+  readonly text: string;
+  readonly start: number;
+}
+
+export type ReadDeclarations = (path: string, text: string) => readonly Declaration[];

@@ -1,5 +1,5 @@
 import { isAbsolute, relative, resolve } from "node:path";
-import { inspect } from "../compose.ts";
+import { inspect, placementOf } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
 
@@ -56,15 +56,11 @@ export async function runExplain({ cwd, argv, write }: RunExplainInput): Promise
     return 0;
   }
 
-  const forbidden = (config.boundaries ?? [])
-    .filter((rule) => rule.from === zone)
-    .flatMap((rule) => [...rule.mayNotReach]);
-  const unique = [...new Set(forbidden)].sort();
-  const allowed = project.zoneNames.filter((name: string) => !unique.includes(name)).sort();
+  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries ?? [] });
 
   write(`zone        ${zone}`);
-  write(`may reach   ${list(allowed)}`);
-  write(`may not     ${list(unique)}`);
+  write(`may reach   ${list(placement.mayReach)}`);
+  write(`may not     ${list(placement.mayNotReach)}`);
 
   for (const seam of (config.seams ?? []).filter((rule) => rule.generic === zone)) {
     const vocabulary = project.vocabularyOf(seam.domain);

@@ -41,10 +41,6 @@ type Results =
   | { readonly kind: "results"; readonly results: readonly RawResult[] }
   | { readonly kind: "failed"; readonly reason: string };
 
-type Collected =
-  | { readonly kind: "findings"; readonly findings: readonly RunnerFinding[] }
-  | { readonly kind: "failed"; readonly reason: string };
-
 interface CollectInput {
   readonly offsetOf: OffsetOf;
   readonly categories: readonly string[] | undefined;
@@ -107,7 +103,7 @@ const readResults = (stdout: string, patterns: readonly string[]): Results => {
 const keeps = (categories: readonly string[] | undefined, category: string): boolean =>
   categories === undefined || categories.includes(category);
 
-const fromMessages = (messages: readonly RawMessage[], file: string, input: CollectInput): Collected => {
+const fromMessages = (messages: readonly RawMessage[], file: string, input: CollectInput): RunnerOutcome => {
   const findings: RunnerFinding[] = [];
 
   for (const raw of messages) {
@@ -134,7 +130,7 @@ const fromSuppressed = (
     .filter(({ category }) => keeps(input.categories, category))
     .map(({ raw, category }) => findingOf(raw, file, category, suppressedMessageOf(raw), input.offsetOf));
 
-const fromResult = (entry: RawResult, input: CollectInput): Collected => {
+const fromResult = (entry: RawResult, input: CollectInput): RunnerOutcome => {
   const file = typeof entry.filePath === "string" ? entry.filePath : null;
   if (file === null || !Array.isArray(entry.messages)) return { kind: "failed", reason: SHAPE };
 

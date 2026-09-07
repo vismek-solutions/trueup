@@ -63,6 +63,7 @@ export function buildProject({ root, graph, zones, lexicon }: BuildProjectInput)
     imports,
     exportsOf: lexicon.exportedNamesIn,
     mentionsIn: lexicon.mentionsIn,
+    declarationsIn: lexicon.declarationsIn,
     vocabularyOf: (names) => lexicon.vocabularyOf(names.flatMap((name) => zones.filesIn(name))),
     relative: (file) => relative(root, file),
   };

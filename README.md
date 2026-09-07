@@ -19,6 +19,7 @@ It reads your source files without running them. It works out which file depends
 - [Adopting on an existing codebase](#adopting-on-an-existing-codebase) — the baseline
 - [Seams](#seams) — leaks that cross no import
 - [Directory size](#directory-size)
+- [The same thing written twice](#the-same-thing-written-twice) — the way an agent grows a codebase
 - [Code that crossed a boundary for one caller](#code-that-crossed-a-boundary-for-one-caller)
 - [Rules you write yourself](#rules-you-write-yourself)
 - [Using your existing linter alongside it](#using-your-existing-linter-alongside-it)
@@ -147,6 +148,7 @@ Under the findings sits the guidance for that claim. It says what the violation 
 | `no-sibling-directory-reaches-another` | sibling directories stay independent |
 | `generic-code-names-no-domain-concept` | the seams hold |
 | `no-directory-holds-too-many-files` | no directory has become a drawer |
+| `no-declaration-is-written-twice` | nothing exists in two copies |
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
@@ -263,6 +265,17 @@ It reads the proposed edit, applies it to a copy of the file in memory, and chec
 ```
 
 The agent gets the refusal as its tool result, carrying the same explanation the report prints. It corrects course inside the same turn. Nothing lands on disk, and no round trip through you is needed.
+
+The refusal ends with what the file *may* reach, not just what it may not.
+
+```
+every-import-respects-its-zone-boundary  src/engine/table.ts
+  is engine and may not reach domain: Warrant from src/domain/warrant.ts
+  Code in one zone reached a symbol declared in a zone it may not reach. …
+engine may reach engine · shared
+```
+
+The moment an agent has been refused is the moment it is about to guess. Telling it where it may go costs one line and saves the turn spent guessing wrong.
 
 If you are not using Serena, the `Write|Edit` matcher alone covers everything. Drop the second block.
 
@@ -421,6 +434,41 @@ The count includes every file the analysis read, unclassified ones included. A d
 There is no exemption list, because a limit with an exemption list is a limit nobody has to meet.
 
 Line and function length are a linter's job, not this one's. Delegate them.
+
+## The same thing written twice
+
+```ts
+duplication: 60
+```
+
+Every other rule here judges an edge that exists and should not. This one judges an edge that should exist and does not.
+
+That gap is where an agent lives. It does not find what is already there, so it writes it again. Each copy is individually correct, three lines long, and passes review. Meanwhile the codebase grows a second answer to a question it had already answered.
+
+Nothing else catches it. The copies are all used, so a dead-code checker sees nothing. They sit in different files, so a linter sees nothing. And they are far too small for a copy-paste detector to report without burying you.
+
+### What it compares
+
+The number is the shortest declaration worth reporting, in characters, with runs of whitespace collapsed to one space.
+
+A declaration's **name is not part of the comparison**. A copy that was renamed on the way is still a copy, and renaming is exactly what happens when the second one is written from memory rather than pasted.
+
+```
+no-declaration-is-written-twice             3 errors
+    src/zones/assign.ts:11:6      declares toPosix, which is written the same way in src/claims/isolation.ts, src/guard/protected.ts
+    src/claims/isolation.ts:17:6  declares posix, which is written the same way in src/guard/protected.ts, src/zones/assign.ts
+    src/guard/protected.ts:26:6   declares posix, which is written the same way in src/claims/isolation.ts, src/zones/assign.ts
+```
+
+Those three are real, and they are from this repository.
+
+### Picking the number
+
+Start around 60 and read what comes back. Lower finds more real duplication and more shared test scaffolding; higher finds only the large copies.
+
+On this repository, 60 reports 28 and 100 reports 4. There is no default, because the right number depends on how much of your test setup you consider worth sharing.
+
+Two findings that are not bugs are worth expecting. Fixture path constants repeated across test files are genuinely the same declaration, and you may decide that is fine. And two types can be structurally identical while meaning different things — when that happens they were two ideas wearing one shape, and the fix is to name them apart rather than to merge them.
 
 ## Code that crossed a boundary for one caller
 

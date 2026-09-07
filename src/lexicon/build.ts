@@ -1,10 +1,17 @@
-import type { Mention, ModuleRecord, ReadMentions } from "../ports/module-record.ts";
+import type {
+  Declaration,
+  Mention,
+  ModuleRecord,
+  ReadDeclarations,
+  ReadMentions,
+} from "../ports/module-record.ts";
 import type { Lexicon, Vocabulary } from "./model.ts";
 
 export interface BuildLexiconInput {
   readonly modules: readonly ModuleRecord[];
   readonly sources: ReadonlyMap<string, string>;
   readonly readMentions: ReadMentions;
+  readonly readDeclarations: ReadDeclarations;
 }
 
 const exportedNamesOf = (record: ModuleRecord | undefined): readonly string[] =>
@@ -13,9 +20,25 @@ const exportedNamesOf = (record: ModuleRecord | undefined): readonly string[] =>
 const literalsOf = (mentions: readonly Mention[]): readonly string[] =>
   mentions.flatMap((mention) => (mention.form === "string" ? [mention.text] : []));
 
-export function buildLexicon({ modules, sources, readMentions }: BuildLexiconInput): Lexicon {
+export function buildLexicon({
+  modules,
+  sources,
+  readMentions,
+  readDeclarations,
+}: BuildLexiconInput): Lexicon {
   const byPath = new Map(modules.map((record) => [record.path, record]));
   const walked = new Map<string, readonly Mention[]>();
+  const declared = new Map<string, readonly Declaration[]>();
+
+  const declarationsIn = (path: string): readonly Declaration[] => {
+    const cached = declared.get(path);
+    if (cached !== undefined) return cached;
+
+    const text = sources.get(path);
+    const found = text === undefined ? [] : readDeclarations(path, text);
+    declared.set(path, found);
+    return found;
+  };
 
   const mentionsIn = (path: string): readonly Mention[] => {
     const cached = walked.get(path);
@@ -42,6 +65,7 @@ export function buildLexicon({ modules, sources, readMentions }: BuildLexiconInp
   return {
     vocabularyOf,
     mentionsIn,
+    declarationsIn,
     exportedNamesIn: (path) => exportedNamesOf(byPath.get(path)),
     importedNamesIn: (path) =>
       new Set(
