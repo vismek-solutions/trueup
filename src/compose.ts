@@ -3,7 +3,7 @@ import { parseModule, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
-import { colocationClaim } from "./claims/colocation.ts";
+import { colocationClaim, testOnlyExportClaim } from "./claims/colocation.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
 import { directoryClaim } from "./claims/directories.ts";
@@ -21,7 +21,7 @@ import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
 import type { Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
-import type { ZoneDefinition } from "./zones/model.ts";
+import type { ZoneDefinition, ZoneRole } from "./zones/model.ts";
 
 export type Overlay = ReadonlyMap<string, string>;
 
@@ -85,6 +85,17 @@ export interface CheckOptions {
 
 export const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessClaims];
 
+const namesOf = (zones: readonly ZoneDefinition[], role: ZoneRole): string[] =>
+  zones.filter((zone) => zone.role === role).map((zone) => zone.name);
+
+const placementClaims = (zones: readonly ZoneDefinition[]): Claim[] => {
+  const tests = namesOf(zones, "tests");
+  return [
+    colocationClaim([...namesOf(zones, "wiring"), ...tests]),
+    ...(tests.length === 0 ? [] : [testOnlyExportClaim(tests)]),
+  ];
+};
+
 export function check({
   root,
   roots,
@@ -119,9 +130,7 @@ export function check({
     boundaryClaim(boundaries),
     seamClaim(seams),
     ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
-    ...(colocation
-      ? [colocationClaim(zones.filter((zone) => zone.consumesOnly === true).map((zone) => zone.name))]
-      : []),
+    ...(colocation ? placementClaims(zones) : []),
     ...customClaims(rules),
   ];
 

@@ -2,8 +2,11 @@ import type { ResolvedImport } from "../project/model.ts";
 import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 
-const GUIDANCE =
-  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs — a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. Move it to the zone that uses it. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Declaring a zone `consumesOnly` silences it as a consumer, and is honest only for a zone that never owns what it uses, such as a composition root or a test suite.";
+const PLACEMENT =
+  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs — a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. Move it to the zone that uses it. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Giving a zone a role silences it as a consumer, and is honest only for a zone that never owns what it uses.";
+
+const FOR_TESTS =
+  "Nothing outside the tests uses this export, so it is public only so a test can reach in. Reach the behaviour through the surface production actually calls, and the export can go back to being private. If the piece genuinely deserves its own test, that is a sign it wants to be its own module with a real caller, not a widened surface on this one. A helper that exists purely to serve tests belongs in a zone with the tests role, not in the source it props up. Adding a production caller to satisfy this check is the one fix that makes the codebase worse.";
 
 type Crossing = ResolvedImport & {
   readonly symbol: string;
@@ -14,28 +17,30 @@ type Crossing = ResolvedImport & {
 
 interface Reach {
   readonly declaredIn: string;
+  readonly declaredZone: string;
   readonly symbol: string;
   readonly zones: Set<string>;
   readonly files: Set<string>;
 }
 
-const crosses = (edge: ResolvedImport, borrowers: ReadonlySet<string>): edge is Crossing => {
+const crosses = (edge: ResolvedImport): edge is Crossing => {
   if (edge.kind === "type" || edge.symbol === null || edge.declaredIn === null) return false;
   if (edge.fromZone === null || edge.declaredZone === null) return false;
-  return edge.fromZone !== edge.declaredZone && !borrowers.has(edge.fromZone);
+  return edge.fromZone !== edge.declaredZone;
 };
 
-const gather = (imports: readonly ResolvedImport[], borrowers: ReadonlySet<string>): Map<string, Reach> => {
+const gather = (imports: readonly ResolvedImport[]): Reach[] => {
   const seen = new Map<string, Reach>();
 
   for (const edge of imports) {
-    if (!crosses(edge, borrowers)) continue;
+    if (!crosses(edge)) continue;
 
     const key = `${edge.declaredIn}\0${edge.symbol}`;
     const found = seen.get(key);
     if (found === undefined) {
       seen.set(key, {
         declaredIn: edge.declaredIn,
+        declaredZone: edge.declaredZone,
         symbol: edge.symbol,
         zones: new Set([edge.fromZone]),
         files: new Set([edge.from]),
@@ -46,25 +51,24 @@ const gather = (imports: readonly ResolvedImport[], borrowers: ReadonlySet<strin
     }
   }
 
-  return seen;
+  return [...seen.values()].sort((left, right) => (left.declaredIn < right.declaredIn ? -1 : 1));
 };
 
-export function colocationClaim(consumesOnlyZones: readonly string[]): Claim {
-  const borrowers = new Set(consumesOnlyZones);
+export function colocationClaim(roleZones: readonly string[]): Claim {
+  const roles = new Set(roleZones);
 
   return {
     name: "no-value-is-declared-away-from-its-only-consumer",
-    guidance: GUIDANCE,
+    guidance: PLACEMENT,
     check: ({ project }): readonly Finding[] =>
-      [...gather(project.imports(), borrowers).values()]
-        .filter((reach) => reach.zones.size === 1)
-        .sort((left, right) => (left.declaredIn < right.declaredIn ? -1 : 1))
-        .map((reach) => {
-          const only = [...reach.zones][0] ?? "";
+      gather(project.imports())
+        .map((reach) => ({ reach, owners: [...reach.zones].filter((zone) => !roles.has(zone)) }))
+        .filter(({ owners }) => owners.length === 1)
+        .map(({ reach, owners }) => {
+          const only = owners[0] ?? "";
+          const inOnly = [...reach.files].filter((file) => project.zoneOf(file) === only);
           const where =
-            reach.files.size === 1
-              ? project.relative([...reach.files][0] ?? "")
-              : `${only} (${reach.files.size} files)`;
+            inOnly.length === 1 ? project.relative(inOnly[0] ?? "") : `${only} (${inOnly.length} files)`;
 
           return {
             severity: "error" as const,
@@ -73,5 +77,24 @@ export function colocationClaim(consumesOnlyZones: readonly string[]): Claim {
             start: null,
           };
         }),
+  };
+}
+
+export function testOnlyExportClaim(testZones: readonly string[]): Claim {
+  const tests = new Set(testZones);
+
+  return {
+    name: "no-export-exists-only-for-a-test",
+    guidance: FOR_TESTS,
+    check: ({ project }): readonly Finding[] =>
+      gather(project.imports())
+        .filter((reach) => !tests.has(reach.declaredZone))
+        .filter((reach) => [...reach.zones].every((zone) => tests.has(zone)))
+        .map((reach) => ({
+          severity: "error" as const,
+          message: `exports ${reach.symbol}, which only tests use`,
+          file: reach.declaredIn,
+          start: null,
+        })),
   };
 }

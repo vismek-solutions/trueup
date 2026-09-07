@@ -33,36 +33,68 @@ describe("keeping a value with its only consumer", () => {
 
   it("says nothing when the consuming zone never owns what it uses", () => {
     const zones: readonly ZoneDefinition[] = [
-      { name: "engine", patterns: ["src/engine/**"], consumesOnly: true },
+      { name: "engine", patterns: ["src/engine/**"], role: "wiring" },
       { name: "domain", patterns: ["src/domain/**"] },
     ];
 
     expect(claimIn(runWith(zones))?.findings).toEqual([]);
   });
 
-  it("tells the reader when declaring a zone consumesOnly is honest", () => {
-    expect(claimIn(runWith())?.guidance).toContain("composition root or a test suite");
+  it("tells the reader when giving a zone a role is honest", () => {
+    expect(claimIn(runWith())?.guidance).toContain("never owns what it uses");
+  });
+});
+
+const SHARED = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "colocated");
+const TEST_ONLY = "no-export-exists-only-for-a-test";
+
+const sharedReport = check({
+  root: SHARED,
+  colocation: true,
+  zones: [
+    { name: "spec", patterns: ["src/spec/**"], role: "tests" },
+    { name: "shared", patterns: ["src/shared/**"] },
+    { name: "web", patterns: ["src/web/**"] },
+    { name: "server", patterns: ["src/server/**"] },
+  ],
+});
+
+const messagesFor = (claim: string): readonly string[] =>
+  sharedReport.claims.find((entry) => entry.claim === claim)?.findings.map((finding) => finding.message) ??
+  [];
+
+describe("an export that exists only for its test", () => {
+  it("reports a value nothing outside the tests uses", () => {
+    expect(messagesFor(TEST_ONLY)).toEqual(["exports ONLY_A_TEST_READS_THIS, which only tests use"]);
+  });
+
+  it("says nothing about a value production also uses", () => {
+    expect(messagesFor(TEST_ONLY).join()).not.toContain("usedInProduction");
+  });
+
+  it("names the fix that would make the codebase worse", () => {
+    const claim = sharedReport.claims.find((entry) => entry.claim === TEST_ONLY);
+    expect(claim?.guidance).toContain("Adding a production caller to satisfy this check");
+  });
+
+  it("stays quiet when no zone is declared as tests", () => {
+    const report = check({
+      root: SHARED,
+      colocation: true,
+      zones: [{ name: "all", patterns: ["src/**"] }],
+    });
+
+    expect(report.claims.find((entry) => entry.claim === TEST_ONLY)).toBeUndefined();
   });
 });
 
 describe("a shared zone that is not actually shared", () => {
-  const SHARED = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "colocated");
-
-  const report = check({
-    root: SHARED,
-    colocation: true,
-    zones: [
-      { name: "shared", patterns: ["src/shared/**"] },
-      { name: "web", patterns: ["src/web/**"] },
-      { name: "server", patterns: ["src/server/**"] },
-    ],
-  });
-
-  const findings = report.claims.find((claim) => claim.claim === CLAIM)?.findings ?? [];
+  const findings = sharedReport.claims.find((claim) => claim.claim === CLAIM)?.findings ?? [];
 
   it("reports a value several files in one zone use, which counting files would miss", () => {
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.message).toBe("declares forWebOnly, used only by web (2 files)");
+    expect(findings.map((finding) => finding.message)).toContain(
+      "declares forWebOnly, used only by web (2 files)",
+    );
   });
 
   it("says nothing about a value two zones genuinely share", () => {

@@ -1,7 +1,9 @@
+export type ZoneRole = "wiring" | "tests";
+
 export interface ZoneDefinition {
   readonly name: string;
   readonly patterns: readonly string[];
-  readonly consumesOnly?: boolean | undefined;
+  readonly role?: ZoneRole | undefined;
 }
 
 export interface DeadPattern {

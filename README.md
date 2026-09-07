@@ -80,6 +80,7 @@ Every claim runs on every pass and the whole report prints, so a run that clears
 | `generic-code-names-no-domain-concept` | the seams hold |
 | `no-directory-holds-too-many-files` | no directory has become a drawer |
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a seam for a single caller |
+| `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
 
 The first four fail closed. An unresolved import, a name no module exports, or a config that matches nothing is an error, never a quiet pass — a check that reports success while enforcing nothing is worse than no check.
 
@@ -127,8 +128,8 @@ Line and function length are a linter's job, not this tool's: delegate them with
 ```ts
 colocation: true,
 zones: [
-  { name: "spec", patterns: ["**/*.test.ts"], consumesOnly: true },
-  { name: "root", patterns: ["src/main.ts"], consumesOnly: true },
+  { name: "spec", patterns: ["**/*.test.ts", "**/*.fixture.ts"], role: "tests" },
+  { name: "root", patterns: ["src/main.ts"], role: "wiring" },
   { name: "shared", patterns: ["packages/shared/**"] },
   { name: "web", patterns: ["apps/web/**"] },
 ]
@@ -138,11 +139,24 @@ A value exported from one zone and used by only one other zone is paying for a s
 
 Two exclusions make this precise rather than noisy, and both are load-bearing.
 
-**A zone marked `consumesOnly` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where it belongs — a root wires each collaborator exactly once, and a test imports whatever it exercises. Left in, they bury the real findings.
+**A zone with a `role` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where it belongs — a root wires each collaborator exactly once, and a test imports whatever it exercises. Left in, they bury the real findings.
 
 **Type-only edges are ignored**, because a type is routinely used without being imported: reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
 
 Measured on a 911-file monorepo: unfiltered, 758 findings; with both exclusions, 47 — of which 10 are values in a shared package that only one app uses, the case counting files per symbol misses entirely.
+
+### Exports that exist only for a test
+
+Declaring a zone with `role: "tests"` also turns the question around. A value that *only* the tests import is not shared code with one consumer — it is private code made public so a test could reach in:
+
+```
+no-export-exists-only-for-a-test          3 errors
+    src/case/anchor.ts   exports EPOCH_START, which only tests use
+    src/case/prompt.ts   exports CAST_RULES, which only tests use
+    src/access/gate.ts   exports resourceAccess, which only tests use
+```
+
+The fix is to reach the behaviour through the surface production actually calls. A helper that genuinely exists to serve tests belongs in the tests zone — pattern `**/*.fixture.ts` into it and the false positives go with it, worth 39 of 169 findings on that monorepo. Adding a production caller to satisfy the check is the one fix that makes the codebase worse, and the guidance says so.
 
 ## Rules in TypeScript
 
