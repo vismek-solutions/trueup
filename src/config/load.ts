@@ -1,11 +1,20 @@
 import { dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { toPosix } from "../paths/posix.ts";
-import { boundariesOf, configIn, expanded, memberDirectories, zonesOf, type Member } from "./members.ts";
-import type { ArchitectureConfig, MemberConfig } from "./model.ts";
+import {
+  assertReachable,
+  boundariesOf,
+  configIn,
+  expanded,
+  memberDirectories,
+  reachRules,
+  zonesOf,
+  type Member,
+} from "./members.ts";
+import type { ArchitectureConfig, MemberConfig, ResolvedConfig } from "./model.ts";
 
 export interface LoadedConfig {
-  readonly config: ArchitectureConfig;
+  readonly config: ResolvedConfig;
   readonly path: string;
   readonly root: string;
   readonly memberConfigs: readonly string[];
@@ -64,13 +73,19 @@ const claimedOnce = (names: readonly string[]): void => {
   }
 };
 
-const withMembers = (config: ArchitectureConfig, members: readonly Member[]): ArchitectureConfig => {
-  claimedOnce([...members.map((member) => member.name), ...config.zones.map((zone) => zone.name)]);
+const withMembers = (config: ArchitectureConfig, members: readonly Member[]): ResolvedConfig => {
+  const own = config.zones ?? [];
+  claimedOnce([...members.map((member) => member.name), ...own.map((zone) => zone.name)]);
+  assertReachable(members);
 
   return {
     ...config,
-    zones: [...members.flatMap(zonesOf), ...config.zones],
-    boundaries: [...members.flatMap(boundariesOf), ...expanded(config.boundaries ?? [], members)],
+    zones: [...members.flatMap(zonesOf), ...own],
+    boundaries: [
+      ...members.flatMap(boundariesOf),
+      ...reachRules(members),
+      ...expanded(config.boundaries ?? [], members),
+    ],
   };
 };
 
@@ -87,7 +102,7 @@ export async function loadConfig(path: string): Promise<LoadedConfig> {
   );
 
   return {
-    config: members.length === 0 ? config : withMembers(config, members),
+    config: members.length === 0 ? { ...config, zones: config.zones ?? [] } : withMembers(config, members),
     path,
     root,
     memberConfigs: members.map((member) => member.configPath),

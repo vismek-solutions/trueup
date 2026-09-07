@@ -98,15 +98,13 @@ Put your tests in their own zone, ahead of everything else. Left inside a source
 
 ### One config per package
 
-A monorepo does not need one file listing every zone in every package. The root names its members; each member names its own zones.
+A monorepo does not need one file listing every zone in every package. The root names its members. Each member names its own zones and what it reaches.
 
 ```ts
 // architecture.config.ts
 export default defineConfig({
   include: ["packages", "apps"],
   members: ["packages/*", "apps/*"],
-  zones: [],
-  boundaries: [{ from: "docs", mayNotReach: ["lib"], anchor: "imported-module" }],
 });
 ```
 
@@ -122,15 +120,41 @@ export default defineMember({
 });
 ```
 
-A member's patterns are relative to the member. Its zone names are qualified with it, so the report says `lib/domain` and `ui/domain` are different zones even though both packages called theirs `domain`.
+A member's patterns are relative to the member. Its zone names are qualified with it, so `lib/domain` and `ui/domain` are different zones even though both packages called theirs `domain`.
 
 A member may only constrain itself. Everything it names is its own.
 
-The root writes rules between members, naming a member where a zone would go. `mayNotReach: ["lib"]` expands to every zone in `lib` **except** the ones marked `role: "api"` — that is what the role is for. Pair it with `anchor: "imported-module"` to get "enter through the index"; leave the anchor off and the rule follows the barrel to the declaring file, which blocks the index route too.
+### What a member may reach
 
-Member zones are matched before the root's own, and a name used by both a member and a root zone is an error.
+Nothing, until it says so. A member reaching another it did not name is an error.
 
-Each member's config is protected from agent edits exactly like the root's.
+```ts
+// apps/docs/architecture.config.ts
+export default defineMember({
+  mayReach: ["lib", "ui"],
+  zones: [{ name: "pages", patterns: ["src/**"] }],
+});
+```
+
+This is the same shape as a `package.json` dependency list, and for the same reason: adding a dependency is a local edit, next to the code that took it on. Twenty packages need twenty declarations, not four hundred.
+
+`mayReach: ["lib"]` opens `lib`'s `role: "api"` zones and nothing else. A package with no api zone opens entirely.
+
+Reaching between members is judged on the module you imported, not on the file that declares the symbol. Inside one package, following the barrel to the declaration is the whole point. Between packages, the api **is** the contract, and what it re-exports is deliberate.
+
+### What the root still decides
+
+A member can grant itself anything, so a member's own word is not a rule. The root writes the prohibitions no member may lift:
+
+```ts
+boundaries: [{ from: "apps", mayNotReach: ["apps"] }]
+```
+
+Name a member where a zone would go and it expands to that member's zones — minus its api, on the right of `mayNotReach`. A prohibition always wins over a `mayReach`.
+
+The root is otherwise just `members` plus repo-wide settings. It needs no zones of its own; declare some only for files that sit outside every member.
+
+Each member's config is protected from agent edits exactly like the root's, and no rulebook is ever analysed as source.
 
 Still one number for the whole repo: `maxFilesPerDirectory` and `duplication`. Members cannot override those yet.
 

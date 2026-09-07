@@ -8,6 +8,7 @@ import type { ZoneDefinition } from "../zones/model.ts";
 
 export interface MemberConfig {
   readonly zones: readonly ZoneDefinition[];
+  readonly mayReach?: readonly string[] | undefined;
   readonly boundaries?: readonly BoundaryRule[] | undefined;
 }
 
@@ -15,7 +16,7 @@ export interface ArchitectureConfig {
   readonly command?: string | undefined;
   readonly include?: readonly string[] | undefined;
   readonly members?: readonly string[] | undefined;
-  readonly zones: readonly ZoneDefinition[];
+  readonly zones?: readonly ZoneDefinition[] | undefined;
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
   readonly isolate?: readonly IsolationRule[] | undefined;
@@ -29,6 +30,8 @@ export interface ArchitectureConfig {
   readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
 }
+
+export type ResolvedConfig = ArchitectureConfig & { readonly zones: readonly ZoneDefinition[] };
 
 export const defineConfig = (config: ArchitectureConfig): ArchitectureConfig => config;
 

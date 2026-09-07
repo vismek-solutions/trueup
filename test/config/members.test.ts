@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { runGuard } from "../../src/cli/guard.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
+import { assertReachable, type Member } from "../../src/config/members.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
@@ -19,6 +20,8 @@ const reportOf = async (): Promise<Report> => {
   return check({ root, roots, ignoreFiles: [CONFIG, ...memberConfigs], ...config });
 };
 
+const breaches = async (): Promise<readonly string[]> => messagesIn(await reportOf(), BOUNDARY);
+
 describe("a root that names members", () => {
   it("qualifies each member's zone with the member it came from", async () => {
     const { config } = await loaded();
@@ -27,6 +30,7 @@ describe("a root that names members", () => {
       "lib/api",
       "lib/domain",
       "lib/engine",
+      "ui/widgets",
     ]);
   });
 
@@ -36,9 +40,9 @@ describe("a root that names members", () => {
     expect(domain?.patterns).toEqual(["packages/lib/src/domain/**"]);
   });
 
-  it("keeps a member's role, so the api stays the way in", async () => {
+  it("needs no zones of its own", async () => {
     const { config } = await loaded();
-    expect(config.zones.find((zone) => zone.name === "lib/api")?.role).toBe("api");
+    expect(config.zones.every((zone) => zone.name.includes("/"))).toBe(true);
   });
 
   it("reports every member's rulebook, so the guard can protect them all", async () => {
@@ -46,7 +50,79 @@ describe("a root that names members", () => {
     expect(memberConfigs.map((path) => path.slice(ROOT.length + 1))).toEqual([
       "apps/docs/architecture.config.ts",
       "packages/lib/architecture.config.ts",
+      "packages/ui/architecture.config.ts",
     ]);
+  });
+
+  it("leaves the rulebooks themselves out of the analysis", async () => {
+    expect(messagesIn(await reportOf(), "every-file-belongs-to-a-zone")).toEqual([]);
+  });
+});
+
+describe("what one member may reach in another", () => {
+  it("refuses a member nobody invited it into", async () => {
+    expect(await breaches()).toContain(
+      "is docs/pages and may not reach ui/widgets: widget from packages/ui/src/widget.ts",
+    );
+  });
+
+  it("lets an invited member in through the api", async () => {
+    expect((await breaches()).join(" ")).not.toContain("page.ts");
+  });
+
+  it("still refuses an invited member that reaches past the api", async () => {
+    expect(await breaches()).toContain(
+      "is docs/pages and may not reach lib/domain: thing from packages/lib/src/domain/thing.ts",
+    );
+  });
+
+  it("lets the root forbid what a member granted itself", async () => {
+    expect(await breaches()).toContain(
+      "is lib/engine and may not reach ui/widgets: widget from packages/ui/src/widget.ts",
+    );
+  });
+});
+
+describe("naming a member that is not there", () => {
+  const wanting = (name: string, mayReach: readonly string[]): Member => ({
+    name,
+    directory: `packages/${name}`,
+    configPath: `packages/${name}/architecture.config.ts`,
+    config: { zones: [], mayReach },
+  });
+
+  it("refuses a name no member declares, rather than reaching nothing in silence", () => {
+    expect(() => assertReachable([wanting("lib", ["typo"])])).toThrow(/not a member/);
+  });
+
+  it("refuses a member that lists itself", () => {
+    expect(() => assertReachable([wanting("lib", ["lib"])])).toThrow(/itself/);
+  });
+});
+
+describe("what a member says about itself", () => {
+  it("qualifies its own boundary on both sides", async () => {
+    const { config } = await loaded();
+    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", mayNotReach: ["lib/engine"] });
+  });
+
+  it("is enforced like any other boundary", async () => {
+    const { config, root, memberConfigs } = await loaded();
+    const report = check({
+      root,
+      roots: resolveInclude(root, config.include),
+      ignoreFiles: [CONFIG, ...memberConfigs],
+      ...config,
+      overlay: new Map([
+        [
+          join(ROOT, "packages/lib/src/domain/thing.ts"),
+          'import { run } from "../engine/run.ts";\n\nexport const thing = run();\n',
+        ],
+      ]),
+    });
+    expect(messagesIn(report, BOUNDARY)).toContain(
+      "is lib/domain and may not reach lib/engine: run from packages/lib/src/engine/run.ts",
+    );
   });
 });
 
@@ -73,55 +149,5 @@ describe("protecting the rulebooks", () => {
 
   it("still refuses the root rulebook", async () => {
     expect(await proposeTo("architecture.config.ts")).toContain("no-edit-changes-the-rules-themselves");
-  });
-});
-
-describe("boundaries across the two levels", () => {
-  it("qualifies a member's own boundary on both sides", async () => {
-    const { config } = await loaded();
-    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", mayNotReach: ["lib/engine"] });
-  });
-
-  it("expands a member named at the root into its zones", async () => {
-    const { config } = await loaded();
-    const rule = config.boundaries?.find((entry) => entry.from === "docs/pages");
-    expect(rule?.mayNotReach).toEqual(["lib/domain", "lib/engine"]);
-  });
-
-  it("leaves the api zone out, because that is what a role of api means", async () => {
-    const { config } = await loaded();
-    const rule = config.boundaries?.find((entry) => entry.from === "docs/pages");
-    expect(rule?.mayNotReach).not.toContain("lib/api");
-  });
-
-  it("blocks the file that reaches past the member's index, and only that one", async () => {
-    expect(messagesIn(await reportOf(), BOUNDARY)).toEqual([
-      "is docs/pages and may not reach lib/domain: thing from packages/lib/src/domain/thing.ts",
-    ]);
-  });
-
-  it("leaves the rulebooks themselves out of the analysis", async () => {
-    expect(messagesIn(await reportOf(), "every-file-belongs-to-a-zone")).toEqual([]);
-  });
-
-  it("still enforces what a member says about itself", async () => {
-    const { config, root } = await loaded();
-    const zones = config.zones;
-    const boundaries = config.boundaries ?? [];
-    const report = check({
-      root,
-      roots: resolveInclude(root, config.include),
-      zones,
-      boundaries,
-      overlay: new Map([
-        [
-          join(ROOT, "packages/lib/src/domain/thing.ts"),
-          'import { run } from "../engine/run.ts";\n\nexport const thing = run();\n',
-        ],
-      ]),
-    });
-    expect(messagesIn(report, BOUNDARY)).toContain(
-      "is lib/domain and may not reach lib/engine: run from packages/lib/src/engine/run.ts",
-    );
   });
 });

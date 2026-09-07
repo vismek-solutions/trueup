@@ -4,7 +4,7 @@ import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-
 import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
 import { check, placementOf } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
-import type { ArchitectureConfig } from "../config/model.ts";
+import type { ArchitectureConfig, ResolvedConfig } from "../config/model.ts";
 import { decideOnProposal } from "../guard/decide.ts";
 import { protectionOf } from "../guard/protected.ts";
 import type { Protection } from "../ports/protection.ts";
@@ -20,7 +20,7 @@ export interface RunGuardInput {
 
 interface Site {
   readonly root: string;
-  readonly config: ArchitectureConfig;
+  readonly config: ResolvedConfig;
 }
 
 interface Rulebook {

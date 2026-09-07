@@ -68,10 +68,44 @@ export const boundariesOf = (member: Member): readonly BoundaryRule[] =>
     mayNotReach: rule.mayNotReach.map((zone) => qualified(member, zone)),
   }));
 
+export const assertReachable = (members: readonly Member[]): void => {
+  const declared = new Set(members.map((member) => member.name));
+
+  for (const member of members) {
+    for (const target of member.config.mayReach ?? []) {
+      if (target === member.name) throw new Error(`${member.directory} lists itself in \`mayReach\``);
+      if (!declared.has(target)) {
+        throw new Error(`${member.directory} may reach ${target}, which is not a member`);
+      }
+    }
+  }
+};
+
 const namesOf = (member: Member, entering: boolean): readonly string[] =>
   member.config.zones
     .filter((zone) => !(entering && zone.role === "api"))
     .map((zone) => qualified(member, zone.name));
+
+const closedIn = (member: Member, invited: boolean): readonly string[] => {
+  if (!invited) return namesOf(member, false);
+  return member.config.zones.some((zone) => zone.role === "api") ? namesOf(member, true) : [];
+};
+
+export const reachRules = (members: readonly Member[]): readonly BoundaryRule[] =>
+  members.flatMap((member) => {
+    const invited = new Set(member.config.mayReach ?? []);
+    const mayNotReach = members
+      .filter((other) => other.name !== member.name)
+      .flatMap((other) => closedIn(other, invited.has(other.name)));
+
+    return mayNotReach.length === 0
+      ? []
+      : zonesOf(member).map((zone) => ({
+          from: zone.name,
+          mayNotReach,
+          anchor: "imported-module" as const,
+        }));
+  });
 
 export const expanded = (
   rules: readonly BoundaryRule[],
