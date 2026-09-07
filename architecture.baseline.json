@@ -1,0 +1,59 @@
+{
+  "entries": [
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/adapters/biome-runner.ts",
+      "message": "Excessive complexity of 73 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/adapters/eslint-runner.ts",
+      "message": "Excessive complexity of 16 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/adapters/eslint-runner.ts",
+      "message": "Excessive complexity of 46 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/adapters/fallow-runner.ts",
+      "message": "Excessive complexity of 45 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/adapters/oxc-parse.ts",
+      "message": "Excessive complexity of 31 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/adapters/oxc-parse.ts",
+      "message": "Excessive complexity of 37 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/claims/boundary.ts",
+      "message": "Excessive complexity of 17 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/claims/seam.ts",
+      "message": "Excessive complexity of 23 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/cli/render.ts",
+      "message": "Excessive complexity of 29 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/graph/exports.ts",
+      "message": "Excessive complexity of 41 detected (max: 15)."
+    },
+    {
+      "claim": "biome/lint/complexity/noExcessiveCognitiveComplexity",
+      "file": "src/lexicon/build.ts",
+      "message": "Excessive complexity of 17 detected (max: 15)."
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import { biomeRunner } from "./src/adapters/biome-runner.ts";
 import { defineRule } from "./src/claims/custom.ts";
 import { defineConfig } from "./src/config/model.ts";
 
@@ -19,6 +20,13 @@ const allBut = (...kept: string[]): string[] => LAYERS.filter((layer) => !kept.i
 
 export default defineConfig({
   include: ["src"],
+  runners: [
+    biomeRunner({
+      command: ["node_modules/.bin/biome", "lint"],
+      paths: ["src", "test", "bin"],
+      write: process.env.CI === undefined,
+    }),
+  ],
   zones: [
     { name: "ports", patterns: ["src/ports/**"] },
     { name: "graph", patterns: ["src/graph/**"] },

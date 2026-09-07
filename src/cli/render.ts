@@ -25,13 +25,17 @@ const locate = (root: string, finding: Finding, cache: Map<string, string>): str
   return `${relative(root, finding.file)}${position}`;
 };
 
-const wrap = (text: string, width: number): string[] =>
-  text.split(" ").reduce<string[]>((lines, word) => {
+const wrap = (text: string, width: number): string[] => {
+  const lines: string[] = [];
+
+  for (const word of text.split(" ")) {
     const last = lines[lines.length - 1];
-    if (last === undefined || `${last} ${word}`.length > width) return [...lines, word];
-    lines[lines.length - 1] = `${last} ${word}`;
-    return lines;
-  }, []);
+    if (last === undefined || `${last} ${word}`.length > width) lines.push(word);
+    else lines[lines.length - 1] = `${last} ${word}`;
+  }
+
+  return lines;
+};
 
 export interface RatchetSummary {
   readonly known: number;
@@ -56,6 +60,8 @@ export function render(report: Report, root: string, ratchet?: RatchetSummary): 
   }
   lines.push("");
 
+  const width = Math.max(44, ...report.claims.map((claim) => claim.claim.length + 2));
+
   for (const claim of report.claims) {
     const errors = claim.findings.filter((finding) => finding.severity === "error").length;
     const warnings = claim.findings.length - errors;
@@ -66,7 +72,7 @@ export function render(report: Report, root: string, ratchet?: RatchetSummary): 
             .filter(Boolean)
             .join(" · ");
 
-    lines.push(`${claim.claim.padEnd(44)}${tally}`);
+    lines.push(`${claim.claim.padEnd(width)}${tally}`);
     for (const finding of claim.findings) {
       const where = locate(root, finding, cache);
       lines.push(where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`);
