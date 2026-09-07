@@ -202,6 +202,22 @@ The first four are about the analysis itself, and they fail loudly on purpose.
 
 An import that does not resolve. A name no module exports. A pattern matching nothing. Each of those means the tool is seeing less than you think it is. A check that reports success while enforcing nothing is worse than no check at all.
 
+### Imports your build tool supplies
+
+Frameworks invent specifiers that exist only at build time. `astro:content` is not on disk and never will be, so it fails `every-import-resolves` like any typo would.
+
+Name them and they become external instead:
+
+```ts
+externals: ["astro:*", "virtual:*", "#imports"]
+```
+
+`*` matches any run of characters, slashes included — these are specifiers, not paths, so `virtual:*` covers `virtual:site/heading`.
+
+Nothing relative or absolute can be declared external. A pattern that would swallow `./thing.ts` is ignored for that import, so the escape valve can never hide your own files.
+
+Do not reach for the baseline here. A virtual specifier fails on every run, so baselining it buries the check permanently — and the next real typo lands in the same silence.
+
 ## Boundaries
 
 A boundary names a zone, and the zones it may not reach.

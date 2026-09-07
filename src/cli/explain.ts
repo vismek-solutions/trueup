@@ -36,6 +36,7 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     roots: resolveInclude(root, config.include),
     zones: config.zones,
     extensions: config.extensions,
+    externals: config.externals,
     ignoreDirectories: config.ignoreDirectories,
     overlay: new Map([[path, ""]]),
   });

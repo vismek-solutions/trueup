@@ -127,6 +127,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       colocation: config.colocation,
       rules: config.rules,
       extensions: config.extensions,
+      externals: config.externals,
       ignoreDirectories: config.ignoreDirectories,
       overlay: overlayOf(request),
     }),

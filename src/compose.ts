@@ -38,10 +38,14 @@ const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLA
 const parseAll = (sources: ReadonlyMap<string, string>, parse: ParseModule): ModuleRecord[] =>
   [...sources].map(([path, text]) => parse(path, text));
 
-export function analyze(options: DiscoverFilesOptions): SymbolGraph {
+export interface AnalyzeOptions extends DiscoverFilesOptions {
+  readonly externals?: readonly string[] | undefined;
+}
+
+export function analyze(options: AnalyzeOptions): SymbolGraph {
   return buildSymbolGraph({
     modules: parseAll(readSources(options), parseModule),
-    resolve: createResolver(),
+    resolve: createResolver({ externals: options.externals }),
   });
 }
 
@@ -50,14 +54,23 @@ export interface InspectOptions {
   readonly roots?: readonly string[] | undefined;
   readonly zones: readonly ZoneDefinition[];
   readonly extensions?: readonly string[] | undefined;
+  readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
   readonly overlay?: Overlay | undefined;
 }
 
-const analyseProject = ({ root, roots, zones, extensions, ignoreDirectories, overlay }: InspectOptions) => {
+const analyseProject = ({
+  root,
+  roots,
+  zones,
+  extensions,
+  externals,
+  ignoreDirectories,
+  overlay,
+}: InspectOptions) => {
   const sources = readSources({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
   const modules = parseAll(sources, parseModule);
-  const graph = buildSymbolGraph({ modules, resolve: createResolver() });
+  const graph = buildSymbolGraph({ modules, resolve: createResolver({ externals }) });
   const assignment = assignZones({ root, files: [...graph.files], zones });
   const lexicon = buildLexicon({ modules, sources, readMentions, readDeclarations });
 
@@ -113,6 +126,7 @@ export interface CheckOptions {
   readonly runners?: readonly Runner[] | undefined;
   readonly overlay?: Overlay | undefined;
   readonly extensions?: readonly string[] | undefined;
+  readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
 }
 
@@ -145,6 +159,7 @@ export function check({
   runners = [],
   overlay,
   extensions,
+  externals,
   ignoreDirectories,
 }: CheckOptions): Report {
   const {
@@ -157,6 +172,7 @@ export function check({
     roots,
     zones,
     extensions,
+    externals,
     ignoreDirectories,
     overlay,
   });

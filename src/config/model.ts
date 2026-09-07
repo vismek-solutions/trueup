@@ -20,6 +20,7 @@ export interface ArchitectureConfig {
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly extensions?: readonly string[] | undefined;
+  readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
 }
 

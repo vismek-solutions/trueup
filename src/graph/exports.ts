@@ -69,7 +69,9 @@ export function createExportResolver({ modules, resolve }: ExportResolverDeps): 
   const follow = (fromFile: string, specifier: string, name: string): EdgeTarget => {
     const resolution = resolve(fromFile, specifier);
     if (resolution.kind === "builtin") return { kind: "builtin", name: resolution.name };
-    if (resolution.kind === "unresolved") return { kind: "external", path: null };
+    if (resolution.kind === "unresolved" || resolution.kind === "external") {
+      return { kind: "external", path: null };
+    }
     if (!modules.has(resolution.path)) return { kind: "external", path: resolution.path };
     return step(resolution.path, name);
   };

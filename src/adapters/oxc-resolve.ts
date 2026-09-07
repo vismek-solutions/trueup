@@ -12,7 +12,26 @@ const resolutionOf = (result: ResolvedFile, specifier: string): Resolution => {
   return { kind: "unresolved", reason: result.error ?? "not resolved" };
 };
 
-export function createResolver(): ResolveSpecifier {
+export interface ResolverOptions {
+  readonly externals?: readonly string[] | undefined;
+}
+
+const OWN_FILE = /^[./]/;
+const SPECIAL = /[.*+?^${}()|[\]\\]/g;
+
+const suppliedBy = (patterns: readonly string[]): ((specifier: string) => boolean) => {
+  if (patterns.length === 0) return () => false;
+
+  const alternatives = patterns
+    .map((pattern) => pattern.replace(SPECIAL, (char) => (char === "*" ? ".*" : `\\${char}`)))
+    .join("|");
+  const expression = new RegExp(`^(?:${alternatives})$`);
+
+  return (specifier) => !OWN_FILE.test(specifier) && expression.test(specifier);
+};
+
+export function createResolver({ externals = [] }: ResolverOptions = {}): ResolveSpecifier {
+  const supplied = suppliedBy(externals);
   const factory = new ResolverFactory({
     tsconfig: "auto",
     builtinModules: true,
@@ -29,6 +48,8 @@ export function createResolver(): ResolveSpecifier {
   const cache = new Map<string, Resolution>();
 
   return (fromFile, specifier) => {
+    if (supplied(specifier)) return { kind: "external", name: specifier };
+
     const key = `${dirname(fromFile)}\0${specifier}`;
     const cached = cache.get(key);
     if (cached !== undefined) return cached;
