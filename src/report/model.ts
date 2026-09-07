@@ -7,6 +7,7 @@ export interface Finding {
   readonly message: string;
   readonly file: string | null;
   readonly start: number | null;
+  readonly group?: string | undefined;
 }
 
 export interface ClaimResult {

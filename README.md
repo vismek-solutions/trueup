@@ -152,6 +152,30 @@ The counts stay on the first line on purpose. A reporter that prints nothing whe
 
 This is worth handing to an agent that checks after every change. A green run costs it two lines instead of twenty.
 
+### When you want one thing to fix
+
+```
+npx trueline --next
+```
+
+One problem, then stop.
+
+```
+problem 1 of 12 · 16 claims · 12 errors · 0 warnings
+
+no-declaration-is-written-twice  3 errors
+    src/zones/assign.ts:11:6      declares toPosix, which is written the same way in …
+    src/claims/isolation.ts:17:6  declares posix, which is written the same way in …
+    src/guard/protected.ts:26:6   declares posix, which is written the same way in …
+    The same declaration was written more than once, in files that could have shared it. …
+```
+
+A problem is not a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.
+
+The order is the order the claims run, so the checks about the analysis itself come first. That matters: while an import fails to resolve, every other answer is drawn from a graph with a hole in it.
+
+Run it, fix what it shows, run it again. It reports `nothing left to fix` when the errors are gone.
+
 ## What it checks
 
 | claim | asserts |

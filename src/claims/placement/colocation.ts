@@ -23,17 +23,17 @@ interface Reach {
   readonly files: Set<string>;
 }
 
-const crosses = (edge: ResolvedImport): edge is Crossing => {
+const usable = (edge: ResolvedImport): edge is Crossing => {
   if (edge.kind === "type" || edge.symbol === null || edge.declaredIn === null) return false;
-  if (edge.fromZone === null || edge.declaredZone === null) return false;
-  return edge.fromZone !== edge.declaredZone;
+  return edge.fromZone !== null && edge.declaredZone !== null;
 };
 
-const gather = (imports: readonly ResolvedImport[]): Reach[] => {
+const gather = (imports: readonly ResolvedImport[], keepSameZone: boolean): Reach[] => {
   const seen = new Map<string, Reach>();
 
   for (const edge of imports) {
-    if (!crosses(edge)) continue;
+    if (!usable(edge)) continue;
+    if (!keepSameZone && edge.fromZone === edge.declaredZone) continue;
 
     const key = `${edge.declaredIn}\0${edge.symbol}`;
     const found = seen.get(key);
@@ -54,6 +54,10 @@ const gather = (imports: readonly ResolvedImport[]): Reach[] => {
   return [...seen.values()].sort((left, right) => (left.declaredIn < right.declaredIn ? -1 : 1));
 };
 
+const acrossZones = (imports: readonly ResolvedImport[]): Reach[] => gather(imports, false);
+
+const everyConsumer = (imports: readonly ResolvedImport[]): Reach[] => gather(imports, true);
+
 export function colocationClaim(roleZones: readonly string[]): Claim {
   const roles = new Set(roleZones);
 
@@ -61,7 +65,7 @@ export function colocationClaim(roleZones: readonly string[]): Claim {
     name: "no-value-is-declared-away-from-its-only-consumer",
     guidance: PLACEMENT,
     check: ({ project }): readonly Finding[] =>
-      gather(project.imports())
+      acrossZones(project.imports())
         .map((reach) => ({ reach, owners: [...reach.zones].filter((zone) => !roles.has(zone)) }))
         .filter(({ owners }) => owners.length === 1)
         .map(({ reach, owners }) => {
@@ -96,7 +100,7 @@ export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput
         apiZones.flatMap((zone) => project.filesIn(zone)).flatMap((file) => project.exportsOf(file)),
       );
 
-      return gather(project.imports())
+      return everyConsumer(project.imports())
         .filter((reach) => !tests.has(reach.declaredZone) && !published.has(reach.symbol))
         .filter((reach) => [...reach.zones].every((zone) => tests.has(zone)))
         .map((reach) => ({

@@ -68,6 +68,10 @@ describe("an export that exists only for its test", () => {
     expect(messagesFor(TEST_ONLY).join()).not.toContain("usedInProduction");
   });
 
+  it("counts a consumer in the declaring zone, which crosses no boundary to be seen", () => {
+    expect(messagesFor(TEST_ONLY).join()).not.toContain("usedBySibling");
+  });
+
   it("names the fix that would make the codebase worse", () => {
     const claim = sharedReport.claims.find((entry) => entry.claim === TEST_ONLY);
     expect(claim?.guidance).toContain("Adding a production caller to satisfy this check");

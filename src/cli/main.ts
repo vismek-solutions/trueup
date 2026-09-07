@@ -5,7 +5,7 @@ import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf, type Report } from "../report/model.ts";
-import { render, renderDots, type RatchetSummary } from "./render.ts";
+import { render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
 
 export const EXIT_CLEAN = 0;
 export const EXIT_ERRORS = 1;
@@ -18,6 +18,7 @@ type Present = (report: Report, root: string, ratchet?: RatchetSummary) => strin
 
 const presenterFor = (argv: readonly string[]): Present => {
   if (argv.includes("--json")) return (report) => JSON.stringify(report, null, 2);
+  if (argv.includes("--next")) return renderNext;
   return argv.includes("--dots") ? renderDots : render;
 };
 

@@ -107,6 +107,56 @@ const tallyLine = (report: Report): string => {
   ].join(" · ");
 };
 
+interface Problem {
+  readonly claim: Report["claims"][number];
+  readonly findings: readonly Finding[];
+}
+
+const keyOf = (claim: string, finding: Finding): string =>
+  `${claim}\0${finding.group ?? `${finding.file ?? ""}\0${finding.message}`}`;
+
+const problemsIn = (report: Report): Problem[] => {
+  const byKey = new Map<string, Problem>();
+
+  for (const claim of report.claims) {
+    for (const finding of claim.findings.filter((entry) => entry.severity === "error")) {
+      const key = keyOf(claim.claim, finding);
+      const found = byKey.get(key);
+      if (found === undefined) byKey.set(key, { claim, findings: [finding] });
+      else byKey.set(key, { claim, findings: [...found.findings, finding] });
+    }
+  }
+
+  return [...byKey.values()];
+};
+
+export function renderNext(report: Report, root: string, ratchet?: RatchetSummary): string {
+  const problems = problemsIn(report);
+  const first = problems[0];
+  const tally = tallyLine(report);
+
+  if (first === undefined) {
+    return [
+      `nothing left to fix · ${tally}`,
+      ...(ratchet === undefined || ratchet.stale === 0 ? [] : [`baseline  ${ratchet.stale} stale`]),
+    ].join("\n");
+  }
+
+  const cache = new Map<string, string>();
+  const shown = first.findings.map((finding) => {
+    const where = locate(root, finding, cache);
+    return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
+  });
+
+  return [
+    `problem 1 of ${problems.length} · ${tally}`,
+    "",
+    `${first.claim.claim}  ${plural(first.findings.length, "error")}`,
+    ...shown,
+    ...wrap(first.claim.guidance, 96).map((line) => `    ${line}`),
+  ].join("\n");
+}
+
 export function renderDots(report: Report, root: string, ratchet?: RatchetSummary): string {
   const cache = new Map<string, string>();
   const { coverage } = report;

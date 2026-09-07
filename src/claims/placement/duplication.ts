@@ -30,7 +30,7 @@ const copiesIn = (project: Project, minSize: number): Map<string, Copy[]> => {
   return byBody;
 };
 
-const findingsFor = (copies: readonly Copy[], project: Project): readonly Finding[] => {
+const findingsFor = (copies: readonly Copy[], project: Project, group: string): readonly Finding[] => {
   const files = new Set(copies.map((copy) => copy.file));
   if (files.size < 2) return [];
 
@@ -45,6 +45,7 @@ const findingsFor = (copies: readonly Copy[], project: Project): readonly Findin
       message: `declares ${copy.name}, which is written the same way in ${elsewhere.join(", ")}`,
       file: copy.file,
       start: copy.start,
+      group,
     };
   });
 };
@@ -56,6 +57,6 @@ export function duplicationClaim(minSize: number): Claim {
     check: ({ project }) =>
       [...copiesIn(project, minSize)]
         .sort(([left], [right]) => (left < right ? -1 : 1))
-        .flatMap(([, copies]) => findingsFor(copies, project)),
+        .flatMap(([body, copies]) => findingsFor(copies, project, body)),
   };
 }
