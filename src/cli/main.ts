@@ -37,6 +37,7 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     boundaries: config.boundaries,
     seams: config.seams,
     maxFilesPerDirectory: config.maxFilesPerDirectory,
+    isolate: config.isolate,
     colocation: config.colocation,
     rules: config.rules,
     runners: config.runners,

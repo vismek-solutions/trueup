@@ -104,6 +104,7 @@ Under the findings is the guidance for that claim — what the violation means a
 | `every-zone-pattern-matches-a-file` | no pattern is dead |
 | `every-rule-names-a-declared-zone` | no rule mentions a zone that does not exist |
 | `every-import-respects-its-zone-boundary` | the boundaries hold |
+| `no-sibling-directory-reaches-another` | sibling directories stay independent of each other |
 | `generic-code-names-no-domain-concept` | the seams hold |
 | `no-directory-holds-too-many-files` | no directory has become a drawer |
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a seam for a single caller |
@@ -139,6 +140,30 @@ Barrels also make dependency rules useless. To a tool that reads import statemen
 The second row is where import-graph tools sit, including ones that resolve the barrel perfectly well. Resolving it is not the hard part. Attaching the rule to the symbol is.
 
 Set `anchor: "imported-module"` when you do want the blunt version — "this package is off limits entirely" — and leave it alone for anything finer. `ignoreTypeOnly: true` exempts `import type`, for when you care that runtime code crossed rather than that a type name did.
+
+## Keeping sibling directories apart
+
+Zones are named, so a boundary between them has to be written out. That falls apart for the case where the directories are many, similar, and constantly added to — `src/routes/a`, `src/routes/b`, `src/routes/c`, where the rule you actually want is "none of these knows about any other".
+
+Writing that as zones needs one zone and one boundary per route, and — much worse — a route added tomorrow is governed by nothing until someone remembers to add it.
+
+```ts
+isolate: [{ siblings: "src/routes/*", except: ["_shared"] }]
+```
+
+The `*` names the group. Every directory it matches becomes an island: files inside may import each other freely and may reach anything outside the group, but may not reach a sibling. Depth does not matter — `src/routes/c/deep/inner.ts` is still `c`. A new directory is isolated the moment it exists, with no config change, which is the whole point.
+
+```
+no-sibling-directory-reaches-another        2 errors
+    src/routes/a/page.ts:1:0        is a and may not reach sibling b: thing from src/routes/b/thing.ts
+    src/routes/c/deep/inner.ts:1:0  is c and may not reach sibling b: thing from src/routes/b/thing.ts
+```
+
+The parent itself is not in any group, so `src/routes/index.ts` importing every route is fine — that is what a parent is for. `except` is for the directory the group is meant to share; use it for `_shared` and nothing else, since the shared thing is usually the answer to the finding rather than an exception to it.
+
+More than one `*` is allowed and each combination is its own island, so `apps/*/features/*` isolates `web/cart` from `web/checkout` and from `admin/cart`.
+
+If the pattern matches no directory at all, that is an error rather than a silent pass — a rule guarding nothing is the failure mode this tool exists to prevent.
 
 ## Blocking a bad edit before it happens
 

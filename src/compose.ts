@@ -7,6 +7,7 @@ import { colocationClaim, testOnlyExportClaim } from "./claims/colocation.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
 import { directoryClaim } from "./claims/directories.ts";
+import { isolationClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
@@ -74,6 +75,7 @@ export interface CheckOptions {
   readonly zones: readonly ZoneDefinition[];
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
+  readonly isolate?: readonly IsolationRule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
@@ -104,6 +106,7 @@ export function check({
   zones,
   boundaries = [],
   seams = [],
+  isolate = [],
   maxFilesPerDirectory,
   colocation = false,
   rules = [],
@@ -131,6 +134,7 @@ export function check({
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
     boundaryClaim(boundaries),
     seamClaim(seams),
+    ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
     ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
     ...(colocation ? placementClaims(zones) : []),
     ...customClaims(rules),
