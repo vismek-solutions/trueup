@@ -1,15 +1,14 @@
 import { readFileSync } from "node:fs";
-import type { Decision, Proposal } from "../ports/proposal.ts";
+import { isAbsolute, join } from "node:path";
+import type { Decision, HookRequest, Proposal } from "../ports/proposal.ts";
+import { stringOf } from "./tool-output.ts";
+
+const SERENA_REPLACE = "mcp__serena__replace_content";
 
 interface HookPayload {
+  readonly hook_event_name?: unknown;
   readonly tool_name?: unknown;
-  readonly tool_input?: {
-    readonly file_path?: unknown;
-    readonly content?: unknown;
-    readonly old_string?: unknown;
-    readonly new_string?: unknown;
-    readonly replace_all?: unknown;
-  };
+  readonly tool_input?: Record<string, unknown>;
 }
 
 const editedText = (path: string, from: string, to: string, all: boolean): string | null => {
@@ -23,23 +22,57 @@ const editedText = (path: string, from: string, to: string, all: boolean): strin
   return all ? current.replaceAll(from, to) : current.replace(from, to);
 };
 
-export function proposalFrom(payload: unknown): Proposal | null {
-  if (payload === null || typeof payload !== "object") return null;
-  const { tool_name: tool, tool_input: input } = payload as HookPayload;
-  if (input === undefined || typeof input.file_path !== "string") return null;
-  const path = input.file_path;
+const replacementIn = (
+  path: string,
+  from: string | null,
+  to: string | null,
+  all: boolean,
+): Proposal | null => {
+  if (from === null || to === null) return null;
+  const text = editedText(path, from, to, all);
+  return text === null ? null : { path, text };
+};
+
+const fileIn = (root: string, input: Record<string, unknown>): string | null => {
+  const absolute = stringOf(input.file_path);
+  if (absolute !== null) return absolute;
+
+  const named = stringOf(input.relative_path);
+  if (named === null || named === "") return null;
+  return isAbsolute(named) ? named : join(root, named);
+};
+
+const proposalIn = (tool: string, input: Record<string, unknown>, root: string): Proposal | null => {
+  const path = fileIn(root, input);
+  if (path === null) return null;
 
   if (tool === "Write") {
-    return typeof input.content === "string" ? { path, text: input.content } : null;
+    const content = stringOf(input.content);
+    return content === null ? null : { path, text: content };
   }
 
   if (tool === "Edit") {
-    if (typeof input.old_string !== "string" || typeof input.new_string !== "string") return null;
-    const text = editedText(path, input.old_string, input.new_string, input.replace_all === true);
-    return text === null ? null : { path, text };
+    const all = input.replace_all === true;
+    return replacementIn(path, stringOf(input.old_string), stringOf(input.new_string), all);
+  }
+
+  if (tool === SERENA_REPLACE && input.mode === "literal") {
+    const all = input.allow_multiple_occurrences === true;
+    return replacementIn(path, stringOf(input.needle), stringOf(input.repl), all);
   }
 
   return null;
+};
+
+export function requestFrom(payload: unknown, root: string): HookRequest | null {
+  if (payload === null || typeof payload !== "object") return null;
+  const { hook_event_name: event, tool_name: tool, tool_input: input } = payload as HookPayload;
+  if (input === undefined || typeof tool !== "string") return null;
+
+  if (event === "PostToolUse") return { kind: "review", path: fileIn(root, input) };
+
+  const proposal = proposalIn(tool, input, root);
+  return proposal === null ? null : { kind: "propose", proposal };
 }
 
 export function denialFor(decision: Decision): string | null {
@@ -51,6 +84,21 @@ export function denialFor(decision: Decision): string | null {
       permissionDecision: "deny",
       permissionDecisionReason: [
         "This edit would break the project's architecture.",
+        "",
+        ...decision.reasons,
+      ].join("\n"),
+    },
+  });
+}
+
+export function contextFor(decision: Decision): string | null {
+  if (!decision.blocked) return null;
+
+  return JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: "PostToolUse",
+      additionalContext: [
+        "That edit broke the project's architecture. Repair it before moving on.",
         "",
         ...decision.reasons,
       ].join("\n"),
