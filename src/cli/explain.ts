@@ -3,11 +3,7 @@ import { inspect, placementOf } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
 
-export interface RunExplainInput {
-  readonly cwd: string;
-  readonly argv: readonly string[];
-  readonly write: (line: string) => void;
-}
+import type { CommandInput } from "./command.ts";
 
 const SAMPLE = 6;
 
@@ -19,7 +15,7 @@ const sampleOf = (values: Iterable<string>): string => {
   return sorted.length > SAMPLE ? `${shown} · and ${sorted.length - SAMPLE} more` : shown;
 };
 
-export async function runExplain({ cwd, argv, write }: RunExplainInput): Promise<number> {
+export async function runExplain({ cwd, argv, write }: CommandInput): Promise<number> {
   const target = argv.find((entry) => !entry.startsWith("--"));
   if (target === undefined) {
     write(`usage: ${DEFAULT_COMMAND} explain <path>`);

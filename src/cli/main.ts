@@ -12,13 +12,9 @@ export const EXIT_ERRORS = 1;
 export const EXIT_STALE_BASELINE = 2;
 export const EXIT_NO_CONFIG = 3;
 
-export interface RunCliInput {
-  readonly cwd: string;
-  readonly argv: readonly string[];
-  readonly write: (line: string) => void;
-}
+import type { CommandInput } from "./command.ts";
 
-export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number> {
+export async function runCli({ cwd, argv, write }: CommandInput): Promise<number> {
   const asJson = argv.includes("--json");
   const updating = argv.includes("--update-baseline");
   const explicit = argv.find((entry) => entry.startsWith("--config="))?.slice("--config=".length);
@@ -37,6 +33,7 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     boundaries: config.boundaries,
     seams: config.seams,
     maxFilesPerDirectory: config.maxFilesPerDirectory,
+    duplication: config.duplication,
     isolate: config.isolate,
     colocation: config.colocation,
     rules: config.rules,

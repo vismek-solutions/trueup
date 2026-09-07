@@ -1,17 +1,13 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { fixtureAt } from "../support/fixtures.ts";
+import { SEAM_ZONES as ZONES } from "../support/zones.ts";
 import { defineRule } from "../../src/claims/custom.ts";
 import { check } from "../../src/compose.ts";
 import type { Project } from "../../src/project/model.ts";
 import type { ClaimResult } from "../../src/report/model.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "seam");
-
-const ZONES = [
-  { name: "domain", patterns: ["domain/**"] },
-  { name: "engine", patterns: ["engine/**"] },
-];
+const ROOT = fixtureAt("seam");
 
 const runRule = (rule: ReturnType<typeof defineRule>): ClaimResult => {
   const report = check({ root: ROOT, zones: ZONES, rules: [rule] });

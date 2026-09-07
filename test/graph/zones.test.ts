@@ -1,6 +1,6 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { FIXTURES } from "../support/fixtures.ts";
 import { check } from "../../src/compose.ts";
 import { assignZones } from "../../src/zones/assign.ts";
 
@@ -83,8 +83,6 @@ describe("zone assignment", () => {
     expect(zones.filesIn("domain")).toEqual([at("src/domain/c.ts")]);
   });
 });
-
-const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures");
 
 describe("a check run", () => {
   it("runs every claim in one pass rather than stopping at the first failure", () => {

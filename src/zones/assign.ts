@@ -1,5 +1,6 @@
-import { relative, sep } from "node:path";
+import { relative } from "node:path";
 import picomatch from "picomatch";
+import { toPosix } from "../paths/posix.ts";
 import type { DeadPattern, ZoneAssignment, ZoneDefinition } from "./model.ts";
 
 export interface AssignZonesInput {
@@ -7,8 +8,6 @@ export interface AssignZonesInput {
   readonly files: readonly string[];
   readonly zones: readonly ZoneDefinition[];
 }
-
-const toPosix = (path: string): string => (sep === "/" ? path : path.split(sep).join("/"));
 
 export function assignZones({ root, files, zones }: AssignZonesInput): ZoneAssignment {
   const matchers = zones.map((zone) => ({

@@ -1,5 +1,6 @@
-import { relative, sep } from "node:path";
+import { relative } from "node:path";
 import picomatch from "picomatch";
+import { toPosix } from "../paths/posix.ts";
 import type { Protection, ProtectionRule } from "../ports/protection.ts";
 import type { Decision, Verdict } from "../ports/proposal.ts";
 
@@ -13,7 +14,7 @@ const DENY_GUIDANCE =
 
 const ALLOW: Decision = { verdict: "allow", reasons: [] };
 
-const ASKS_A_PERSON = new Set(["default", "plan"]);
+const ASKS_NOBODY = new Set(["acceptEdits", "auto", "dontAsk", "bypassPermissions"]);
 
 export interface ProtectionInput {
   readonly root: string;
@@ -22,8 +23,6 @@ export interface ProtectionInput {
   readonly protect: Protection | undefined;
   readonly mode: string | null;
 }
-
-const posix = (path: string): string => (sep === "/" ? path : path.split(sep).join("/"));
 
 const pathsIn = (protect: Protection | undefined): readonly string[] => {
   if (protect === undefined) return [];
@@ -41,13 +40,13 @@ const covered = ({ root, path, always, protect }: ProtectionInput): boolean => {
 
   const patterns = pathsIn(protect);
   if (patterns.length === 0) return false;
-  return picomatch([...patterns], { dot: true })(posix(relative(root, path)));
+  return picomatch([...patterns], { dot: true })(toPosix(relative(root, path)));
 };
 
 const settled = (protect: Protection | undefined, mode: string | null): Exclude<Verdict, "allow"> => {
   const wanted = verdictIn(protect);
   if (wanted === "deny") return "deny";
-  return mode === null || ASKS_A_PERSON.has(mode) ? "ask" : "deny";
+  return mode !== null && ASKS_NOBODY.has(mode) ? "deny" : "ask";
 };
 
 export function protectionOf(input: ProtectionInput): Decision {
@@ -55,7 +54,7 @@ export function protectionOf(input: ProtectionInput): Decision {
 
   const verdict = settled(input.protect, input.mode);
   const guidance = verdict === "deny" ? DENY_GUIDANCE : ASK_GUIDANCE;
-  const where = posix(relative(input.root, input.path)) || input.path;
+  const where = toPosix(relative(input.root, input.path)) || input.path;
 
   return { verdict, reasons: [`${CLAIM}  ${where}\n  ${guidance}`] };
 }

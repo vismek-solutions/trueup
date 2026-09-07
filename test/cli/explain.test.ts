@@ -1,9 +1,9 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { fixtureAt } from "../support/fixtures.ts";
 import { runExplain } from "../../src/cli/explain.ts";
 
-const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "explained");
+const PROJECT = fixtureAt("explained");
 
 const explain = async (...argv: string[]): Promise<{ code: number; output: string }> => {
   let output = "";

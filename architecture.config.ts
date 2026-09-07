@@ -28,6 +28,7 @@ export default defineConfig({
   ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures"],
   command: "node ./bin/trueline.js",
   maxFilesPerDirectory: 12,
+  duplication: 60,
   colocation: true,
   runners: [
     biomeRunner({
@@ -40,6 +41,7 @@ export default defineConfig({
   zones: [
     { name: "spec", patterns: ["test/**"], role: "tests" },
     { name: "ports", patterns: ["src/ports/**"] },
+    { name: "paths", patterns: ["src/paths/**"] },
     { name: "graph", patterns: ["src/graph/**"] },
     { name: "zones", patterns: ["src/zones/**"] },
     { name: "lexicon", patterns: ["src/lexicon/**"] },
@@ -57,6 +59,7 @@ export default defineConfig({
   ],
   boundaries: [
     { from: "ports", mayNotReach: LAYERS },
+    { from: "paths", mayNotReach: LAYERS },
     { from: "graph", mayNotReach: allBut("graph") },
     { from: "zones", mayNotReach: allBut("zones") },
     { from: "lexicon", mayNotReach: allBut("lexicon") },

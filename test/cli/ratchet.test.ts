@@ -1,7 +1,7 @@
 import { existsSync, rmSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { fixtureAt } from "../support/fixtures.ts";
 import { baselinePathIn, readBaseline, writeBaseline } from "../../src/adapters/baseline-file.ts";
 import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE, runCli } from "../../src/cli/main.ts";
 import type { Baseline } from "../../src/ports/baseline.ts";
@@ -145,7 +145,7 @@ describe("a baseline", () => {
   });
 });
 
-const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "project");
+const PROJECT = fixtureAt("project");
 const BASELINE = baselinePathIn(PROJECT);
 
 const runIn = async (argv: readonly string[]): Promise<{ code: number; output: string }> => {

@@ -1,5 +1,6 @@
-import { relative, sep } from "node:path";
+import { relative } from "node:path";
 import picomatch from "picomatch";
+import { toPosix } from "../paths/posix.ts";
 import type { Project, ResolvedImport } from "../project/model.ts";
 import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
@@ -14,13 +15,11 @@ export interface IsolationRule {
 
 type GroupOf = (file: string) => string | null;
 
-const posix = (path: string): string => (sep === "/" ? path : path.split(sep).join("/"));
-
 const groupReader = (root: string, pattern: string): GroupOf => {
   const expression = picomatch.makeRe(`${pattern}/**`, { dot: true, capture: true });
 
   return (file) => {
-    const captured = expression.exec(posix(relative(root, file)));
+    const captured = expression.exec(toPosix(relative(root, file)));
     if (captured === null) return null;
 
     const segments = captured.slice(1, -1).filter((segment) => segment !== undefined && segment !== "");

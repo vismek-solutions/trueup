@@ -1,14 +1,13 @@
 import { rmSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { fixtureAt } from "../support/fixtures.ts";
 import { baselinePathIn, writeBaseline } from "../../src/adapters/baseline-file.ts";
 import { runAgentInstructions } from "../../src/cli/agent-instructions.ts";
 import { runCli } from "../../src/cli/main.ts";
 import { COMMAND_TOKEN } from "../../src/report/invocation.ts";
 
-const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "explained");
-const VIOLATING = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "violating");
+const PROJECT = fixtureAt("explained");
+const VIOLATING = fixtureAt("violating");
 
 const capture = async (run: (write: (line: string) => void) => Promise<number>): Promise<string> => {
   let output = "";

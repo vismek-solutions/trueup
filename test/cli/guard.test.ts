@@ -1,13 +1,13 @@
 import { existsSync, rmSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { fixtureAt } from "../support/fixtures.ts";
 import { baselinePathIn, writeBaseline } from "../../src/adapters/baseline-file.ts";
 import { runGuard } from "../../src/cli/guard.ts";
 import { check } from "../../src/compose.ts";
 import { baselineOf } from "../../src/ratchet/apply.ts";
 
-const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "guarded");
+const PROJECT = fixtureAt("guarded");
 const BASELINE = baselinePathIn(PROJECT);
 const NEW_FILE = join(PROJECT, "src/engine/added.ts");
 

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { findingsOf, reasonOf } from "../support/report.ts";
 import { biomeRunner } from "../../src/adapters/biome-runner.ts";
 import type { RunnerOutcome } from "../../src/ports/runner.ts";
 
@@ -15,9 +16,6 @@ const runWith = (mode: string, categories?: readonly string[]): RunnerOutcome =>
     command: ["node", TOOL, mode],
     ...(categories === undefined ? {} : { categories }),
   }).run(ROOT);
-
-const findingsOf = (outcome: RunnerOutcome) => (outcome.kind === "findings" ? outcome.findings : []);
-const reasonOf = (outcome: RunnerOutcome): string => (outcome.kind === "failed" ? outcome.reason : "");
 
 describe("reading biome's output", () => {
   it("keeps biome's full rule path as the category", () => {
