@@ -117,6 +117,7 @@ describe("a check run", () => {
       ...standardClaims.map((claim) => claim.name),
       "every-rule-names-a-declared-zone",
       "every-import-respects-its-zone-boundary",
+      "generic-code-names-no-domain-concept",
     ]);
   });
 

@@ -46,10 +46,19 @@ export type ExportEntry =
       readonly start: number;
     };
 
+export type MentionForm = "name" | "string";
+
+export interface Mention {
+  readonly text: string;
+  readonly form: MentionForm;
+  readonly start: number;
+}
+
 export interface ModuleRecord {
   readonly path: string;
   readonly imports: readonly ImportStatement[];
   readonly exports: readonly ExportEntry[];
+  readonly mentions: readonly Mention[];
 }
 
 export type ParseModule = (path: string, text: string) => ModuleRecord;

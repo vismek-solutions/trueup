@@ -1,6 +1,7 @@
 import { relative } from "node:path";
 import type { EdgeTarget } from "../graph/model.ts";
 import type { Claim } from "./model.ts";
+import type { ZoneReference } from "./zone-references.ts";
 
 export type EdgeAnchor = "declaring-file" | "imported-module";
 
@@ -69,21 +70,7 @@ export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
   };
 }
 
-export function ruleZonesExistClaim(rules: readonly BoundaryRule[]): Claim {
-  return {
-    name: "every-rule-names-a-declared-zone",
-    check: ({ zones }) => {
-      const declared = new Set(zones.declaredNames);
-      return rules.flatMap((rule) =>
-        [rule.from, ...rule.mayNotReach]
-          .filter((name) => !declared.has(name))
-          .map((name) => ({
-            severity: "error" as const,
-            message: `rule from ${rule.from} names zone ${name}, which is not declared`,
-            file: null,
-            start: null,
-          })),
-      );
-    },
-  };
-}
+export const boundaryZoneReferences = (rules: readonly BoundaryRule[]): readonly ZoneReference[] =>
+  rules.flatMap((rule) =>
+    [rule.from, ...rule.mayNotReach].map((zone) => ({ rule: `boundary rule from ${rule.from}`, zone })),
+  );

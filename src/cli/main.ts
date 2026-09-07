@@ -25,6 +25,7 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     roots: resolveInclude(root, config.include),
     zones: config.zones,
     rules: config.rules,
+    seams: config.seams,
     extensions: config.extensions,
     ignoreDirectories: config.ignoreDirectories,
   });

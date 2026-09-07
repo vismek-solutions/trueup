@@ -5,12 +5,60 @@ import {
   type ExportEntry,
   type ImportBinding,
   type ImportStatement,
+  type Mention,
   type ModuleRecord,
   type ParseModule,
 } from "../ports/module-record.ts";
 
+interface AstNode {
+  readonly type?: unknown;
+  readonly [key: string]: unknown;
+}
+
+const SKIPPED_SUBTREES = new Set(["ImportDeclaration", "ExportAllDeclaration", "TSImportType"]);
+
+const collectMentions = (program: unknown): Mention[] => {
+  const mentions: Mention[] = [];
+
+  const visit = (node: unknown): void => {
+    if (node === null || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item);
+      return;
+    }
+
+    const current = node as AstNode;
+    const type = typeof current.type === "string" ? current.type : null;
+    if (type !== null && SKIPPED_SUBTREES.has(type)) return;
+
+    if (type === "Identifier" || type === "JSXIdentifier") {
+      if (typeof current.name === "string" && typeof current.start === "number") {
+        mentions.push({ text: current.name, form: "name", start: current.start });
+      }
+    } else if (type === "Literal") {
+      if (typeof current.value === "string" && typeof current.start === "number") {
+        mentions.push({ text: current.value, form: "string", start: current.start });
+      }
+    } else if (type === "ExportNamedDeclaration" || type === "ExportDefaultDeclaration") {
+      visit(current.declaration);
+      return;
+    } else if (type === "ImportExpression") {
+      visit(current.options);
+      return;
+    }
+
+    for (const key of Object.keys(current)) {
+      if (key === "type" || key === "start" || key === "end") continue;
+      visit(current[key]);
+    }
+  };
+
+  visit(program);
+  return mentions;
+};
+
 export const parseModule: ParseModule = (path, text): ModuleRecord => {
-  const { module } = parseSync(path, text);
+  const { module, program } = parseSync(path, text);
 
   const imports: ImportStatement[] = module.staticImports.map((statement) => {
     const bindings: ImportBinding[] = statement.entries.map((entry) => ({
@@ -66,5 +114,5 @@ export const parseModule: ParseModule = (path, text): ModuleRecord => {
     }
   }
 
-  return { path, imports, exports };
+  return { path, imports, exports, mentions: collectMentions(program) };
 };
