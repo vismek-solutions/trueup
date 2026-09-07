@@ -70,11 +70,12 @@ export function seamClaim(rules: readonly SeamRule[]): Claim {
           minimum: rule.minLiteralLength ?? DEFAULT_MIN_LITERAL_LENGTH,
         };
 
-        return zones
-          .filesIn(rule.generic)
-          .flatMap((file) =>
-            findingsIn(file, lexicon.mentionsIn(file), { ...shared, imported: lexicon.importedNamesIn(file) }),
-          );
+        return zones.filesIn(rule.generic).flatMap((file) =>
+          findingsIn(file, lexicon.mentionsIn(file), {
+            ...shared,
+            imported: lexicon.importedNamesIn(file),
+          }),
+        );
       }),
   };
 }

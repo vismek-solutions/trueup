@@ -8,7 +8,8 @@ export interface Rule {
   readonly check: (project: Project) => readonly Issue[];
 }
 
-const NO_GUIDANCE = "This rule is defined by this project's own configuration. Read it there for what it asserts.";
+const NO_GUIDANCE =
+  "This rule is defined by this project's own configuration. Read it there for what it asserts.";
 
 export const defineRule = (
   name: string,

@@ -40,22 +40,21 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
 
   const report = withCommand(
     check({
-    root,
-    roots,
-    zones: config.zones,
-    boundaries: config.boundaries,
-    seams: config.seams,
-    rules: config.rules,
-    extensions: config.extensions,
-    ignoreDirectories: config.ignoreDirectories,
+      root,
+      roots,
+      zones: config.zones,
+      boundaries: config.boundaries,
+      seams: config.seams,
+      rules: config.rules,
+      extensions: config.extensions,
+      ignoreDirectories: config.ignoreDirectories,
       overlay: new Map([[proposal.path, proposal.text]]),
     }),
     config.command ?? DEFAULT_COMMAND,
   );
 
   const baseline = readBaseline(baselinePathIn(root));
-  const effective =
-    baseline.entries.length === 0 ? report : applyBaseline({ report, baseline, root }).report;
+  const effective = baseline.entries.length === 0 ? report : applyBaseline({ report, baseline, root }).report;
 
   const denial = denialFor(decideOnProposal({ report: effective, path: proposal.path }));
   if (denial !== null) write(denial);

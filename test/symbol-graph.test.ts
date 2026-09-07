@@ -9,7 +9,9 @@ const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 const graphOf = (fixture: string): SymbolGraph => analyze({ roots: [join(FIXTURES, fixture)] });
 
 const targetOf = (graph: SymbolGraph, consumer: string, imported: string): EdgeTarget => {
-  const edge = graph.edges.find((candidate) => candidate.from.endsWith(consumer) && candidate.imported === imported);
+  const edge = graph.edges.find(
+    (candidate) => candidate.from.endsWith(consumer) && candidate.imported === imported,
+  );
   if (edge === undefined) throw new Error(`no edge for ${imported} in ${consumer}`);
   return edge.to;
 };
@@ -80,10 +82,9 @@ describe("degraded input", () => {
   it("reports the same name reached through two star re-exports as ambiguous", () => {
     const target = targetOf(graphOf("ambiguous"), "consumer.ts", "shared");
     expect(target.kind).toBe("ambiguous");
-    expect(target.kind === "ambiguous" && target.candidates.map((candidate) => candidate.path).sort()).toEqual([
-      join(FIXTURES, "ambiguous/left.ts"),
-      join(FIXTURES, "ambiguous/right.ts"),
-    ]);
+    expect(
+      target.kind === "ambiguous" && target.candidates.map((candidate) => candidate.path).sort(),
+    ).toEqual([join(FIXTURES, "ambiguous/left.ts"), join(FIXTURES, "ambiguous/right.ts")]);
   });
 
   it("terminates on mutually recursive star re-exports", () => {

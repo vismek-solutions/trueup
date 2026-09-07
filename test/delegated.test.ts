@@ -39,7 +39,10 @@ const claimNames = (report: Report): string[] => report.claims.map((claim) => cl
 describe("a delegated tool", () => {
   it("contributes one claim per category it reports", () => {
     const report = reportWith([
-      reporting([finding("unused_exports", "unused exports: helper"), finding("circular_dependencies", "a -> b")]),
+      reporting([
+        finding("unused_exports", "unused exports: helper"),
+        finding("circular_dependencies", "a -> b"),
+      ]),
     ]);
 
     expect(claimNames(report)).toContain("stub/unused_exports");

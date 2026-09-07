@@ -59,9 +59,10 @@ describe("a rule written in TypeScript", () => {
   it("can express a boundary from the import query alone", () => {
     const result = runRule(
       defineRule("engine-may-not-reach-domain", (project) =>
-        project
-          .imports({ fromZone: "engine", declaredZone: "domain" })
-          .map((entry) => ({ message: `${project.relative(entry.from)} takes ${entry.imported}`, file: entry.from })),
+        project.imports({ fromZone: "engine", declaredZone: "domain" }).map((entry) => ({
+          message: `${project.relative(entry.from)} takes ${entry.imported}`,
+          file: entry.from,
+        })),
       ),
     );
 

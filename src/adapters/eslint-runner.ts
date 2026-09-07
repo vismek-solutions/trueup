@@ -59,7 +59,9 @@ const messageOf = (raw: RawMessage): string =>
 const justificationOf = (raw: RawMessage): string => {
   if (!Array.isArray(raw.suppressions)) return "";
   return (raw.suppressions as readonly RawSuppression[])
-    .map((suppression) => (typeof suppression.justification === "string" ? suppression.justification.trim() : ""))
+    .map((suppression) =>
+      typeof suppression.justification === "string" ? suppression.justification.trim() : "",
+    )
     .filter((reason) => reason !== "")
     .join("; ");
 };
@@ -122,7 +124,11 @@ const fromMessages = (messages: readonly RawMessage[], file: string, input: Coll
   return { kind: "findings", findings };
 };
 
-const fromSuppressed = (suppressed: readonly RawMessage[], file: string, input: CollectInput): readonly RunnerFinding[] =>
+const fromSuppressed = (
+  suppressed: readonly RawMessage[],
+  file: string,
+  input: CollectInput,
+): readonly RunnerFinding[] =>
   suppressed
     .map((raw) => ({ raw, category: `${SUPPRESSED}/${ruleIdOf(raw)}` }))
     .filter(({ category }) => keeps(input.categories, category))

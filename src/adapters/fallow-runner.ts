@@ -41,7 +41,8 @@ interface FindingInput {
 }
 
 const describe = (category: string, raw: RawFinding): string => {
-  const named = typeof raw.export_name === "string" ? raw.export_name : typeof raw.name === "string" ? raw.name : null;
+  const named =
+    typeof raw.export_name === "string" ? raw.export_name : typeof raw.name === "string" ? raw.name : null;
   const cycle = Array.isArray(raw.cycle) ? raw.cycle.join(" -> ") : null;
   const subject = named ?? cycle ?? (typeof raw.path === "string" ? raw.path : "");
   return subject === "" ? category.replaceAll("_", " ") : `${category.replaceAll("_", " ")}: ${subject}`;
@@ -62,13 +63,20 @@ const readCheck = (stdout: string): Check => {
 
   const schema = (check as { schema_version?: unknown }).schema_version;
   if (schema !== FALLOW_CHECK_SCHEMA) {
-    return { kind: "failed", reason: `check schema ${String(schema)} is not the expected ${FALLOW_CHECK_SCHEMA}` };
+    return {
+      kind: "failed",
+      reason: `check schema ${String(schema)} is not the expected ${FALLOW_CHECK_SCHEMA}`,
+    };
   }
 
   return { kind: "check", check: check as Record<string, unknown> };
 };
 
-const findingOf = (category: string, raw: RawFinding, { root, offsetOf, severity }: FindingInput): RunnerFinding => {
+const findingOf = (
+  category: string,
+  raw: RawFinding,
+  { root, offsetOf, severity }: FindingInput,
+): RunnerFinding => {
   const path = typeof raw.path === "string" ? (isAbsolute(raw.path) ? raw.path : join(root, raw.path)) : null;
   const line = typeof raw.line === "number" ? raw.line : null;
   const column = typeof raw.col === "number" ? raw.col : 0;
@@ -88,7 +96,9 @@ const findingsIn = (
   input: FindingInput,
 ): readonly RunnerFinding[] => {
   const entries = check[category];
-  return Array.isArray(entries) ? entries.map((entry) => findingOf(category, entry as RawFinding, input)) : [];
+  return Array.isArray(entries)
+    ? entries.map((entry) => findingOf(category, entry as RawFinding, input))
+    : [];
 };
 
 export function fallowRunner(options: FallowRunnerOptions = {}): Runner {

@@ -4,7 +4,17 @@
   "files": {
     "includes": ["**", "!test/fixtures", "!research"]
   },
-  "formatter": { "enabled": false },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 110
+  },
+  "assist": {
+    "actions": {
+      "source": { "organizeImports": "off" }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {

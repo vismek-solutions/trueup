@@ -72,7 +72,8 @@ describe("reading biome's output", () => {
 
 describe("letting biome fix what it can", () => {
   const argsFor = (options: { readonly write?: boolean }): string =>
-    findingsOf(biomeRunner({ command: ["node", TOOL, "report-args"], ...options }).run(ROOT))[0]?.message ?? "";
+    findingsOf(biomeRunner({ command: ["node", TOOL, "report-args"], ...options }).run(ROOT))[0]?.message ??
+    "";
 
   it("leaves the working tree alone unless asked", () => {
     expect(argsFor({})).not.toContain("--write");

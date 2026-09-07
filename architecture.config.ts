@@ -58,22 +58,25 @@ export default defineConfig({
     { from: "cli", mayNotReach: allBut("cli", "config", "report", "ratchet", "guard", "adapters", "root") },
   ],
   rules: [
-    defineRule("no-two-zones-import-each-other", (project) => {
-      const reaches = new Map<string, Set<string>>();
-      for (const entry of project.imports()) {
-        if (entry.fromZone === null || entry.declaredZone === null) continue;
-        if (entry.fromZone === entry.declaredZone) continue;
-        const targets = reaches.get(entry.fromZone) ?? new Set<string>();
-        targets.add(entry.declaredZone);
-        reaches.set(entry.fromZone, targets);
-      }
+    defineRule(
+      "no-two-zones-import-each-other",
+      (project) => {
+        const reaches = new Map<string, Set<string>>();
+        for (const entry of project.imports()) {
+          if (entry.fromZone === null || entry.declaredZone === null) continue;
+          if (entry.fromZone === entry.declaredZone) continue;
+          const targets = reaches.get(entry.fromZone) ?? new Set<string>();
+          targets.add(entry.declaredZone);
+          reaches.set(entry.fromZone, targets);
+        }
 
-      return [...reaches].flatMap(([zone, targets]) =>
-        [...targets]
-          .filter((target) => zone < target && reaches.get(target)?.has(zone) === true)
-          .map((target) => ({ message: `zones ${zone} and ${target} import each other` })),
-      );
-    },
-    "Two zones import each other, so neither can be read, tested or moved on its own. Decide which of the two owns the shared concept and give the other a one-way dependency on it; if neither owns it, the concept belongs in a third zone both may reach."),
+        return [...reaches].flatMap(([zone, targets]) =>
+          [...targets]
+            .filter((target) => zone < target && reaches.get(target)?.has(zone) === true)
+            .map((target) => ({ message: `zones ${zone} and ${target} import each other` })),
+        );
+      },
+      "Two zones import each other, so neither can be read, tested or moved on its own. Decide which of the two owns the shared concept and give the other a one-way dependency on it; if neither owns it, the concept belongs in a third zone both may reach.",
+    ),
   ],
 });

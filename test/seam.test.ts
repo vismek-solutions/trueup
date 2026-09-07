@@ -15,7 +15,9 @@ const leaks = (rule: SeamRule): string[] => {
   const report = check({ root: ROOT, zones: ZONES, seams: [rule] });
   const findings =
     report.claims.find((claim) => claim.claim === "generic-code-names-no-domain-concept")?.findings ?? [];
-  return findings.map((finding) => `${relative(ROOT, finding.file ?? "")} ${finding.message.split("names ")[1]}`).sort();
+  return findings
+    .map((finding) => `${relative(ROOT, finding.file ?? "")} ${finding.message.split("names ")[1]}`)
+    .sort();
 };
 
 const ENGINE_VS_DOMAIN: SeamRule = { generic: "engine", domain: ["domain"] };

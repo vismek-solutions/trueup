@@ -42,12 +42,16 @@ describe("reading a delegated tool's output", () => {
 
   it("ignores a category that was not asked for", () => {
     const outcome = runWith("ok", ["unused_exports"]);
-    expect(outcome.kind === "findings" && outcome.findings.map((f) => f.category)).toEqual(["unused_exports"]);
+    expect(outcome.kind === "findings" && outcome.findings.map((f) => f.category)).toEqual([
+      "unused_exports",
+    ]);
   });
 
   it("describes a cycle by its members", () => {
     const outcome = runWith("ok", ["circular_dependencies"]);
-    expect(outcome.kind === "findings" && outcome.findings[0]?.message).toBe("circular dependencies: a.ts -> b.ts");
+    expect(outcome.kind === "findings" && outcome.findings[0]?.message).toBe(
+      "circular dependencies: a.ts -> b.ts",
+    );
   });
 });
 

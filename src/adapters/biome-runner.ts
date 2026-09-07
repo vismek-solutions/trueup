@@ -27,7 +27,11 @@ export interface BiomeRunnerOptions {
 }
 
 type Payload =
-  | { readonly kind: "payload"; readonly summary: Record<string, unknown>; readonly diagnostics: readonly unknown[] }
+  | {
+      readonly kind: "payload";
+      readonly summary: Record<string, unknown>;
+      readonly diagnostics: readonly unknown[];
+    }
   | { readonly kind: "failed"; readonly reason: string };
 
 type Converted =
@@ -104,7 +108,10 @@ const convert = (entry: unknown, { root, offsetOf, categories }: ConvertInput): 
 
   const severity = SEVERITIES[stringOf(raw.severity) ?? ""];
   if (severity === undefined) {
-    return { kind: "failed", reason: `biome reported an unrecognised severity ${JSON.stringify(raw.severity)}` };
+    return {
+      kind: "failed",
+      reason: `biome reported an unrecognised severity ${JSON.stringify(raw.severity)}`,
+    };
   }
 
   if (!wanted(category, categories)) return { kind: "skip" };
@@ -151,7 +158,10 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
       });
       if (captured.kind === "failed") return captured;
       if (captured.stdout.trim() === "") {
-        return { kind: "failed", reason: `no output (exit ${captured.status}): ${summarize(captured.stderr)}` };
+        return {
+          kind: "failed",
+          reason: `no output (exit ${captured.status}): ${summarize(captured.stderr)}`,
+        };
       }
 
       const payload = readPayload(captured.stdout);

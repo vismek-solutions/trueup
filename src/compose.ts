@@ -90,7 +90,12 @@ export function check({
   extensions,
   ignoreDirectories,
 }: CheckOptions): Report {
-  const { graph, zones: assignment, lexicon, project } = analyseProject({
+  const {
+    graph,
+    zones: assignment,
+    lexicon,
+    project,
+  } = analyseProject({
     root,
     roots,
     zones,

@@ -33,7 +33,9 @@ const violation = (message: string, start: number) => ({
 });
 
 const claimOf = (message: string, start = 10) =>
-  reportOf([{ claim: "every-import-respects-its-zone-boundary", guidance: "", findings: [violation(message, start)] }]);
+  reportOf([
+    { claim: "every-import-respects-its-zone-boundary", guidance: "", findings: [violation(message, start)] },
+  ]);
 
 const severitiesOf = (report: Report): string[] =>
   report.claims
@@ -41,7 +43,8 @@ const severitiesOf = (report: Report): string[] =>
     .flatMap((claim) => claim.findings.map((finding) => finding.severity));
 
 const staleOf = (report: Report): readonly string[] =>
-  report.claims.find((claim) => claim.claim === STALE_CLAIM)?.findings.map((finding) => finding.message) ?? [];
+  report.claims.find((claim) => claim.claim === STALE_CLAIM)?.findings.map((finding) => finding.message) ??
+  [];
 
 const staleFindingsOf = (report: Report) =>
   report.claims.find((claim) => claim.claim === STALE_CLAIM)?.findings ?? [];
@@ -102,7 +105,11 @@ describe("a baseline", () => {
 
   it("refuses to record a broken analysis", () => {
     const broken = reportOf([
-      { claim: "the-analysis-reached-files", guidance: "", findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }] },
+      {
+        claim: "the-analysis-reached-files",
+        guidance: "",
+        findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }],
+      },
     ]);
 
     expect(baselineOf(broken, ROOT).entries).toEqual([]);
@@ -110,13 +117,19 @@ describe("a baseline", () => {
 
   it("keeps a broken analysis failing even when an entry claims to cover it", () => {
     const broken = reportOf([
-      { claim: "the-analysis-reached-files", guidance: "", findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }] },
+      {
+        claim: "the-analysis-reached-files",
+        guidance: "",
+        findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }],
+      },
     ]);
     const forged: Baseline = {
       entries: [{ claim: "the-analysis-reached-files", file: null, message: "no files were analysed" }],
     };
 
-    expect(severitiesOf(applyBaseline({ report: broken, baseline: forged, root: ROOT }).report)).toEqual(["error"]);
+    expect(severitiesOf(applyBaseline({ report: broken, baseline: forged, root: ROOT }).report)).toEqual([
+      "error",
+    ]);
   });
 
   it("records each distinct violation once and in a stable order", () => {
