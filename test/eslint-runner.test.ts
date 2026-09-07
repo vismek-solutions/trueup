@@ -16,6 +16,9 @@ const runWith = (mode: string, categories?: readonly string[]): RunnerOutcome =>
     ...(categories === undefined ? {} : { categories }),
   }).run(ROOT);
 
+const runReportingSuppressed = (mode: string): RunnerOutcome =>
+  eslintRunner({ command: ["node", TOOL, mode], reportSuppressed: true }).run(ROOT);
+
 const findingsOf = (outcome: RunnerOutcome) => (outcome.kind === "findings" ? outcome.findings : []);
 const reasonOf = (outcome: RunnerOutcome): string => (outcome.kind === "failed" ? outcome.reason : "");
 
@@ -48,6 +51,38 @@ describe("reading eslint's output", () => {
 
   it("treats a lint failure exit code as a normal result", () => {
     expect(runWith("ok").kind).toBe("findings");
+  });
+});
+
+describe("surfacing what an inline comment silenced", () => {
+  it("says nothing about suppressed messages until asked", () => {
+    expect(findingsOf(runWith("ok")).map((finding) => finding.category)).toEqual([
+      "no-unused-vars",
+      "prefer-const",
+    ]);
+  });
+
+  it("keeps a suppressed rule apart from the same rule firing for real", () => {
+    expect(findingsOf(runReportingSuppressed("ok")).map((finding) => finding.category)).toEqual([
+      "no-unused-vars",
+      "prefer-const",
+      "suppressed/eqeqeq",
+      "suppressed/no-console",
+    ]);
+  });
+
+  it("carries the justification the author gave for silencing the rule", () => {
+    const finding = findingsOf(runReportingSuppressed("ok")).at(-1);
+    expect(finding?.message).toContain("needed for the CLI");
+  });
+
+  it("leaves a suppression with no justification stated plainly", () => {
+    const finding = findingsOf(runReportingSuppressed("ok"))[2];
+    expect(finding?.message).toBe("Expected '===' and instead saw '=='.");
+  });
+
+  it("fails rather than reporting none when eslint does not report suppressions at all", () => {
+    expect(reasonOf(runReportingSuppressed("no-suppressed-field"))).toContain("does not report suppressed");
   });
 });
 

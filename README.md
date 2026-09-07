@@ -206,14 +206,24 @@ A path in no zone is reported as such, which is the answer you want before creat
 The rules here cover what a linter cannot express. Everything else is delegated, and the findings become claims of their own in the same report and the same baseline:
 
 ```ts
-import { eslintRunner, fallowRunner } from "acs";
+import { biomeRunner, eslintRunner, fallowRunner } from "acs";
 
-runners: [eslintRunner(), fallowRunner()]
+runners: [eslintRunner(), biomeRunner(), fallowRunner()]
 ```
 
-A finding's category becomes its own claim — `eslint/no-unused-vars`, `fallow/unused_exports` — so a baseline entry pins one rule rather than a whole tool. eslint runs with the project root as its working directory and keeps its own severities, so a rule you set to `warn` stays a warning here. Narrow a wide tool with `categories`, point it somewhere other than `.` with `patterns`, and replace `npx` with your own invocation through `command`.
+A finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports` — so a baseline entry pins one rule rather than a whole tool. Each tool runs with the project root as its working directory and keeps its own severities, so a rule you set to `warn` stays a warning here. Narrow any of them with `categories`; biome matches by prefix, so `["lint"]` keeps every lint rule and drops formatter and config diagnostics.
 
-An adapter distrusts the tool it wraps. Unparseable output, an unexpected shape, a silent tool, a missing binary, a configuration error, a file eslint could not parse, or a run that linted nothing all fail the check rather than reporting nothing found — and a tool that could not run is never recorded in a baseline. fallow additionally pins the output schema it was written against.
+An adapter distrusts the tool it wraps. Unparseable output, an unexpected shape, a silent tool, a missing binary, a configuration error, a file the tool could not parse, or a run that checked nothing all fail the check rather than reporting nothing found — and a tool that could not run is never recorded in a baseline. Each adapter validates what it actually depends on: fallow declares a schema version to pin, biome does not, so its severity vocabulary and its count of withheld diagnostics are checked instead.
+
+Exit codes differ per tool and none of them mean what you would guess. eslint exits `1` for "found problems" and reserves `2` for a broken config. biome exits `1` whether it found problems or could not read the path at all, so the adapter reads its summary rather than its status.
+
+### Catching a rule an agent silenced
+
+```ts
+eslintRunner({ reportSuppressed: true })
+```
+
+Every `// eslint-disable-next-line` becomes a finding under `eslint/suppressed/<rule>`, carrying the justification if one was written. Existing suppressions go in the baseline; a new one fails. This is the move an agent makes when told to get the build green, and without this it leaves no trace.
 
 Runners are gate-time only. The write-time guard skips them, since spawning a whole-repo lint on every edit costs more than it catches.
 

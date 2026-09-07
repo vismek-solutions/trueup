@@ -40,16 +40,41 @@ if (mode === "fatal") {
   process.exit(1);
 }
 
+const messages = [
+  { ruleId: "no-unused-vars", severity: 2, message: "'run' is assigned a value but never used.", line: 3, column: 14 },
+  { ruleId: "prefer-const", severity: 1, message: "'thing' is never reassigned.", line: 1, column: 10 },
+];
+
+if (mode === "no-suppressed-field") {
+  process.stdout.write(JSON.stringify([{ filePath, messages }]));
+  process.exit(1);
+}
+
 process.stdout.write(
   JSON.stringify([
     {
       filePath,
-      messages: [
-        { ruleId: "no-unused-vars", severity: 2, message: "'run' is assigned a value but never used.", line: 3, column: 14 },
-        { ruleId: "prefer-const", severity: 1, message: "'thing' is never reassigned.", line: 1, column: 10 },
+      messages,
+      suppressedMessages: [
+        {
+          ruleId: "eqeqeq",
+          severity: 2,
+          message: "Expected '===' and instead saw '=='.",
+          line: 3,
+          column: 14,
+          suppressions: [{ kind: "directive", justification: "" }],
+        },
+        {
+          ruleId: "no-console",
+          severity: 1,
+          message: "Unexpected console statement.",
+          line: 1,
+          column: 10,
+          suppressions: [{ kind: "directive", justification: "needed for the CLI" }],
+        },
       ],
     },
-    { filePath: join(process.cwd(), "src/domain/thing.ts"), messages: [] },
+    { filePath: join(process.cwd(), "src/domain/thing.ts"), messages: [], suppressedMessages: [] },
   ]),
 );
 process.exit(1);
