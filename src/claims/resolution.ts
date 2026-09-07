@@ -3,6 +3,8 @@ import type { Claim } from "./model.ts";
 
 export const theAnalysisReachedFiles: Claim = {
   name: "the-analysis-reached-files",
+  guidance:
+    "No file matched the configured roots and extensions, so every other claim passed on nothing. Fix `include` or `extensions` in the config. An empty analysis fails so a mis-scoped config cannot report success.",
   check: ({ graph }) =>
     graph.files.size > 0
       ? []
@@ -11,6 +13,8 @@ export const theAnalysisReachedFiles: Claim = {
 
 export const everyImportResolves: Claim = {
   name: "every-import-resolves",
+  guidance:
+    "A specifier did not resolve, so its edges are absent from the graph and no rule could judge them. Fix the path, the tsconfig paths, or the package exports. This fails rather than warns because a rule that cannot see an edge silently passes it.",
   check: ({ root, graph }) =>
     graph.unresolvedImports.map((entry) => ({
       severity: "error",
@@ -22,6 +26,8 @@ export const everyImportResolves: Claim = {
 
 export const everyImportedNameIsExported: Claim = {
   name: "every-imported-name-is-exported",
+  guidance:
+    "The module resolved but exports no such name. Either the import is wrong, or a re-export it used to travel through was removed.",
   check: ({ root, graph }) =>
     graph.edges
       .filter((edge) => edge.to.kind === "missing-export")
@@ -35,6 +41,8 @@ export const everyImportedNameIsExported: Claim = {
 
 export const everyImportedNameIsUnambiguous: Claim = {
   name: "every-imported-name-is-unambiguous",
+  guidance:
+    "Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from. Export it from one place, or re-export it by name.",
   check: ({ root, graph }) =>
     graph.edges
       .filter((edge) => edge.to.kind === "ambiguous")

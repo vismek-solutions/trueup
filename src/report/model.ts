@@ -11,6 +11,7 @@ export interface Finding {
 
 export interface ClaimResult {
   readonly claim: string;
+  readonly guidance: string;
   readonly findings: readonly Finding[];
 }
 

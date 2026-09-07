@@ -4,7 +4,11 @@ import type { CheckContext, Claim } from "./model.ts";
 
 export function runClaims(claims: readonly Claim[], context: CheckContext): Report {
   return {
-    claims: claims.map((claim) => ({ claim: claim.name, findings: claim.check(context) })),
+    claims: claims.map((claim) => ({
+      claim: claim.name,
+      guidance: claim.guidance,
+      findings: claim.check(context),
+    })),
     coverage: coverageOf(context),
   };
 }

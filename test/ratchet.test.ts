@@ -33,7 +33,7 @@ const violation = (message: string, start: number) => ({
 });
 
 const claimOf = (message: string, start = 10) =>
-  reportOf([{ claim: "every-import-respects-its-zone-boundary", findings: [violation(message, start)] }]);
+  reportOf([{ claim: "every-import-respects-its-zone-boundary", guidance: "", findings: [violation(message, start)] }]);
 
 const severitiesOf = (report: Report): string[] =>
   report.claims
@@ -81,7 +81,7 @@ describe("a baseline", () => {
 
   it("refuses to record a broken analysis", () => {
     const broken = reportOf([
-      { claim: "the-analysis-reached-files", findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }] },
+      { claim: "the-analysis-reached-files", guidance: "", findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }] },
     ]);
 
     expect(baselineOf(broken, ROOT).entries).toEqual([]);
@@ -89,7 +89,7 @@ describe("a baseline", () => {
 
   it("keeps a broken analysis failing even when an entry claims to cover it", () => {
     const broken = reportOf([
-      { claim: "the-analysis-reached-files", findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }] },
+      { claim: "the-analysis-reached-files", guidance: "", findings: [{ severity: "error", message: "no files were analysed", file: null, start: null }] },
     ]);
     const forged: Baseline = {
       entries: [{ claim: "the-analysis-reached-files", file: null, message: "no files were analysed" }],
@@ -100,8 +100,8 @@ describe("a baseline", () => {
 
   it("records each distinct violation once and in a stable order", () => {
     const many = reportOf([
-      { claim: "b-claim", findings: [violation("second", 1), violation("second", 2)] },
-      { claim: "a-claim", findings: [violation("first", 3)] },
+      { claim: "b-claim", guidance: "", findings: [violation("second", 1), violation("second", 2)] },
+      { claim: "a-claim", guidance: "", findings: [violation("first", 3)] },
     ]);
 
     expect(baselineOf(many, ROOT).entries.map((entry) => `${entry.claim} ${entry.message}`)).toEqual([

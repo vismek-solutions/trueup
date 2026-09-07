@@ -14,5 +14,6 @@ export interface CheckContext {
 
 export interface Claim {
   readonly name: string;
+  readonly guidance: string;
   readonly check: (context: CheckContext) => readonly Finding[];
 }

@@ -25,6 +25,14 @@ const locate = (root: string, finding: Finding, cache: Map<string, string>): str
   return `${relative(root, finding.file)}${position}`;
 };
 
+const wrap = (text: string, width: number): string[] =>
+  text.split(" ").reduce<string[]>((lines, word) => {
+    const last = lines[lines.length - 1];
+    if (last === undefined || `${last} ${word}`.length > width) return [...lines, word];
+    lines[lines.length - 1] = `${last} ${word}`;
+    return lines;
+  }, []);
+
 export interface RatchetSummary {
   readonly known: number;
   readonly stale: number;
@@ -62,6 +70,10 @@ export function render(report: Report, root: string, ratchet?: RatchetSummary): 
     for (const finding of claim.findings) {
       const where = locate(root, finding, cache);
       lines.push(where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`);
+    }
+    if (claim.findings.length > 0) {
+      for (const line of wrap(claim.guidance, 96)) lines.push(`    ${line}`);
+      lines.push("");
     }
   }
 

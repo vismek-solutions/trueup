@@ -8,6 +8,8 @@ export interface ZoneReference {
 export function zoneReferencesExistClaim(references: readonly ZoneReference[]): Claim {
   return {
     name: "every-rule-names-a-declared-zone",
+    guidance:
+      "A rule names a zone that is not declared, so the rule never fires and the boundary it describes is not enforced. Correct the name or declare the zone.",
     check: ({ zones }) => {
       const declared = new Set(zones.declaredNames);
       return references

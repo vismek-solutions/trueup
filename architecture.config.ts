@@ -64,6 +64,7 @@ export default defineConfig({
           .filter((target) => zone < target && reaches.get(target)?.has(zone) === true)
           .map((target) => ({ message: `zones ${zone} and ${target} import each other` })),
       );
-    }),
+    },
+    "Two zones import each other, so neither can be read, tested or moved on its own. Decide which of the two owns the shared concept and give the other a one-way dependency on it; if neither owns it, the concept belongs in a third zone both may reach."),
   ],
 });

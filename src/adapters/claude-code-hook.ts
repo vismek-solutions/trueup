@@ -50,9 +50,9 @@ export function denialFor(decision: Decision): string | null {
       hookEventName: "PreToolUse",
       permissionDecision: "deny",
       permissionDecisionReason: [
-        "This edit would break the project's architecture:",
-        ...decision.reasons.map((reason) => `- ${reason}`),
-        "Fix the placement or the import rather than widening the rule.",
+        "This edit would break the project's architecture.",
+        "",
+        ...decision.reasons,
       ].join("\n"),
     },
   });

@@ -4,10 +4,17 @@ import type { Claim } from "./model.ts";
 
 export interface Rule {
   readonly name: string;
+  readonly guidance: string;
   readonly check: (project: Project) => readonly Issue[];
 }
 
-export const defineRule = (name: string, check: (project: Project) => readonly Issue[]): Rule => ({ name, check });
+const NO_GUIDANCE = "This rule is defined by this project's own configuration. Read it there for what it asserts.";
+
+export const defineRule = (
+  name: string,
+  check: (project: Project) => readonly Issue[],
+  guidance: string = NO_GUIDANCE,
+): Rule => ({ name, guidance, check });
 
 const toFinding = (issue: Issue): Finding => ({
   severity: issue.severity ?? "error",
@@ -19,5 +26,6 @@ const toFinding = (issue: Issue): Finding => ({
 export const customClaims = (rules: readonly Rule[]): readonly Claim[] =>
   rules.map((rule) => ({
     name: rule.name,
+    guidance: rule.guidance,
     check: ({ project }) => rule.check(project).map(toFinding),
   }));

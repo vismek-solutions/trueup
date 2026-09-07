@@ -50,6 +50,11 @@ every-zone-pattern-matches-a-file           ok
 every-rule-names-a-declared-zone            ok
 every-import-respects-its-zone-boundary     1 error
     src/engine/table.ts:14:9  src/engine/table.ts is engine and may not reach domain: Warrant from src/domain/warrant.ts through src/shared/index.ts
+    Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
+    declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
+    reach the target, or have the target expose what the caller needs through a zone it may reach.
+    Run `acs explain <file>` to see what a file may reach. Widening the rule is not the fix.
+
 generic-code-names-no-domain-concept        ok
 
 10 claims · 1 error · 0 warnings
@@ -75,6 +80,8 @@ Every claim runs on every pass and the whole report prints, so a run that clears
 | `generic-code-names-no-domain-concept` | the seams hold |
 
 The first four fail closed. An unresolved import, a name no module exports, or a config that matches nothing is an error, never a quiet pass — a check that reports success while enforcing nothing is worse than no check.
+
+Each claim carries its own account of what a violation means and how to resolve it, printed under the findings and repeated in the guard's refusal. A reader who has never seen the rule before gets told what to do about it, and told not to widen the rule to make it pass.
 
 ## Boundaries
 
@@ -127,6 +134,13 @@ rules: [
 ```
 
 Each import arrives with its origin zone and declaring zone already resolved, alongside `via` (the module the specifier named), `symbol`, and `kind`. A rule returns issues; a message alone is enough, and severity defaults to `error`.
+
+Pass a third argument to say what a violation means and how to fix it. Whoever hits the rule — a colleague or an agent — reads that instead of guessing:
+
+```ts
+defineRule("no-two-zones-import-each-other", check,
+  "Two zones import each other, so neither can be understood or moved alone. Decide which owns the shared concept and give the other a one-way dependency on it.")
+```
 
 Rules see a project model rather than a syntax tree, so the parser stays an implementation detail.
 
