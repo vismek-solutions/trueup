@@ -41,9 +41,9 @@ export default defineConfig({
     { name: "guard", patterns: ["src/guard/**"] },
     { name: "claims", patterns: ["src/claims/**"] },
     { name: "config", patterns: ["src/config/**"] },
-    { name: "cli", patterns: ["src/cli/**"], wiring: true },
+    { name: "cli", patterns: ["src/cli/**"], consumesOnly: true },
     { name: "adapters", patterns: ["src/adapters/**"] },
-    { name: "root", patterns: ["src/compose.ts", "src/index.ts"], wiring: true },
+    { name: "root", patterns: ["src/compose.ts", "src/index.ts"], consumesOnly: true },
   ],
   boundaries: [
     { from: "ports", mayNotReach: LAYERS },

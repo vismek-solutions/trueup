@@ -120,7 +120,7 @@ export function check({
     seamClaim(seams),
     ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
     ...(colocation
-      ? [colocationClaim(zones.filter((zone) => zone.wiring === true).map((zone) => zone.name))]
+      ? [colocationClaim(zones.filter((zone) => zone.consumesOnly === true).map((zone) => zone.name))]
       : []),
     ...customClaims(rules),
   ];

@@ -127,16 +127,22 @@ Line and function length are a linter's job, not this tool's: delegate them with
 ```ts
 colocation: true,
 zones: [
-  { name: "app", patterns: ["src/**"], wiring: true },
-  { name: "domain", patterns: ["src/domain/**"] },
+  { name: "spec", patterns: ["**/*.test.ts"], consumesOnly: true },
+  { name: "root", patterns: ["src/main.ts"], consumesOnly: true },
+  { name: "shared", patterns: ["packages/shared/**"] },
+  { name: "web", patterns: ["apps/web/**"] },
 ]
 ```
 
-A value exported from one zone and used by exactly one file in another is paying for a seam that carries nothing anyone else needs. Move it to the file that uses it; a second consumer arriving later is a reason to move it back then.
+A value exported from one zone and used by only one other zone is paying for a seam that carries nothing a second caller needs. A symbol in a shared package that one consumer uses is not shared — it is that consumer's code in the wrong package. Move it there; a second consumer arriving later is a reason to move it back then.
 
-Two exclusions make this precise rather than noisy, and both are load-bearing. A **composition root consumes almost everything exactly once** — that is its job — so a zone marked `wiring: true` is never counted as the lone consumer. And **type-only edges are ignored**, because a type is routinely used without being imported: reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
+Two exclusions make this precise rather than noisy, and both are load-bearing.
 
-Measured on this repo, the unfiltered version fires on 51 of 97 symbols and the filtered one on 3, of which 2 were real.
+**A zone marked `consumesOnly` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where it belongs — a root wires each collaborator exactly once, and a test imports whatever it exercises. Left in, they bury the real findings.
+
+**Type-only edges are ignored**, because a type is routinely used without being imported: reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
+
+Measured on a 911-file monorepo: unfiltered, 758 findings; with both exclusions, 47 — of which 10 are values in a shared package that only one app uses, the case counting files per symbol misses entirely.
 
 ## Rules in TypeScript
 

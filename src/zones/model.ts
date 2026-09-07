@@ -1,7 +1,7 @@
 export interface ZoneDefinition {
   readonly name: string;
   readonly patterns: readonly string[];
-  readonly wiring?: boolean | undefined;
+  readonly consumesOnly?: boolean | undefined;
 }
 
 export interface DeadPattern {
