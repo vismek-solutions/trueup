@@ -32,8 +32,7 @@ export interface Report {
   readonly coverage: Coverage;
 }
 
-export const findingsOf = (report: Report): readonly Finding[] =>
-  report.claims.flatMap((claim) => claim.findings);
+const findingsOf = (report: Report): readonly Finding[] => report.claims.flatMap((claim) => claim.findings);
 
 export const countOf = (report: Report, severity: Severity): number =>
   findingsOf(report).filter((finding) => finding.severity === severity).length;

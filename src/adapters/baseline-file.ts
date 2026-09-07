@@ -4,7 +4,7 @@ import type { Baseline, BaselineEntry } from "../ports/baseline.ts";
 
 const EMPTY_BASELINE: Baseline = { entries: [] };
 
-export const BASELINE_NAME = "architecture.baseline.json";
+const BASELINE_NAME = "architecture.baseline.json";
 
 export const baselinePathIn = (root: string): string => join(root, BASELINE_NAME);
 

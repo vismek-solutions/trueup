@@ -3,7 +3,7 @@ import { dirname, isAbsolute, join, parse, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { ArchitectureConfig } from "./model.ts";
 
-export const CONFIG_NAMES = ["architecture.config.ts", "architecture.config.js", "architecture.config.mjs"];
+const CONFIG_NAMES = ["architecture.config.ts", "architecture.config.js", "architecture.config.mjs"];
 
 export interface LoadedConfig {
   readonly config: ArchitectureConfig;

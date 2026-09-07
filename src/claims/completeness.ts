@@ -1,7 +1,7 @@
 import { relative } from "node:path";
 import type { Claim } from "./model.ts";
 
-export const everyFileBelongsToAZone: Claim = {
+const everyFileBelongsToAZone: Claim = {
   name: "every-file-belongs-to-a-zone",
   guidance:
     "A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing zone, or declare a zone that covers it. Run `{acs} explain <file>` to see what a location would allow.",
@@ -14,7 +14,7 @@ export const everyFileBelongsToAZone: Claim = {
     })),
 };
 
-export const everyZoneHasAFile: Claim = {
+const everyZoneHasAFile: Claim = {
   name: "every-zone-has-a-file",
   guidance:
     "A declared zone matches nothing, which silently disables every rule naming it. Fix its patterns or remove the zone.",
@@ -27,7 +27,7 @@ export const everyZoneHasAFile: Claim = {
     })),
 };
 
-export const everyZonePatternMatchesAFile: Claim = {
+const everyZonePatternMatchesAFile: Claim = {
   name: "every-zone-pattern-matches-a-file",
   guidance:
     "A pattern matches nothing, so it is a rule you believe you have and do not. Fix it or delete it. Zones match first-match-wins, so an earlier zone may already have taken these files.",

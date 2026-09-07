@@ -4,7 +4,7 @@ import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
 import { absoluteIn, numberOf, stringOf } from "./tool-output.ts";
 import { captureTool } from "./tool-process.ts";
 
-export const FALLOW_CHECK_SCHEMA = 9;
+const FALLOW_CHECK_SCHEMA = 9;
 
 export const DEFAULT_FALLOW_CATEGORIES = [
   "unused_files",

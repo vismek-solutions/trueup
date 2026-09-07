@@ -8,7 +8,7 @@ import { runCli } from "../../src/cli/main.ts";
 import { COMMAND_TOKEN } from "../../src/report/invocation.ts";
 
 const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "explained");
-const VIOLATING = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "project");
+const VIOLATING = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "violating");
 
 const capture = async (run: (write: (line: string) => void) => Promise<number>): Promise<string> => {
   let output = "";
