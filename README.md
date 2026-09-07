@@ -1,26 +1,52 @@
 # trueline
 
-`trueline` keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing that shape.
+`trueline` keeps a TypeScript codebase in the shape you meant it to have. It also stops a coding agent from quietly changing that shape.
 
-It reads your source files without running them, works out which file depends on which, and compares that against rules you wrote down. When something breaks a rule, it says which file, what it did, and what to do about it.
+It reads your source files without running them. It works out which file depends on which. Then it compares that against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
 
-## If you have never used a tool like this
+## Contents
 
-A linter reads one file at a time and tells you about that file: an unused variable, a missing `await`. It is looking at the code *inside* a file.
+- [What this is](#what-this-is) — the idea, and why it exists
+- [Getting started](#getting-started) — install, configure, run
+- [Zones](#zones) — the one concept everything else is built on
+- [Reading a report](#reading-a-report)
+- [What it checks](#what-it-checks) — the full list
+- [Boundaries](#boundaries) — which zones may reach which
+- [Sibling directories](#sibling-directories) — routes and features that must stay apart
+- [Blocking a bad edit](#blocking-a-bad-edit) — the agent hook
+- [Teaching the agent up front](#teaching-the-agent-up-front)
+- [Asking before writing](#asking-before-writing) — the `explain` command
+- [Adopting on an existing codebase](#adopting-on-an-existing-codebase) — the baseline
+- [Seams](#seams) — leaks that cross no import
+- [Directory size](#directory-size)
+- [Code that crossed a boundary for one caller](#code-that-crossed-a-boundary-for-one-caller)
+- [Rules you write yourself](#rules-you-write-yourself)
+- [Using your existing linter alongside it](#using-your-existing-linter-alongside-it)
+- [Exit codes](#exit-codes) · [Cost](#cost)
 
-`trueline` looks at the lines *between* files. Which parts of your project are allowed to know about which other parts. Where things live. Whether a folder has quietly become a junk drawer. None of that is visible from inside any single file, which is exactly why it goes wrong without anyone noticing.
+## What this is
 
-You describe the shape once, in a config file. After that every run answers the same question: is this still true?
+### It reads between files, not inside them
 
-## Why this exists
+A linter reads one file at a time and tells you about that file. An unused variable. A missing `await`. It is looking at the code *inside* a file.
 
-An agent writing code optimises for the change in front of it. Reaching into another module is the shortest path to a working feature, so that is the path it takes. Every individual edit is defensible, the tests stay green, and after a hundred of them the project is a ball of mud that nobody chose.
+`trueline` looks at the lines *between* files. Which parts of your project may know about which other parts. Where things live. Whether a folder has quietly become a junk drawer.
 
-You cannot review your way out of this — the whole point of the agent is that you are not reading every line. So the constraints have to be written down somewhere the agent runs into them, every time, without you.
+None of that is visible from inside any single file. That is exactly why it goes wrong without anyone noticing.
 
-That is what this is. And because a rule the agent can edit is a rule the agent will edit when it is under pressure to make the output green, every message it prints says the same thing: fix the code, not the rule.
+You describe the shape once, in a config file. Every run after that answers one question: is this still true?
 
-## Start
+### Why it exists
+
+An agent writing code optimises for the change in front of it. Reaching into another module is the shortest path to a working feature, so that is the path it takes.
+
+Every individual edit is defensible. The tests stay green. After a hundred of them the project is a ball of mud that nobody chose.
+
+You cannot review your way out of this. The whole point of the agent is that you are not reading every line. So the constraints have to live somewhere the agent runs into them, every time, without you.
+
+That is what this is. A rule the agent can edit is a rule the agent will edit once it is under pressure to make the output green — so every message this prints says the same thing. Fix the code, not the rule.
+
+## Getting started
 
 Requires Node 22.18 or newer.
 
@@ -28,7 +54,7 @@ Requires Node 22.18 or newer.
 npm install --save-dev trueline
 ```
 
-Create `architecture.config.ts` at the root of your project. This one says the project has four kinds of file, and that `engine` code may not reach into `domain` or `app`:
+Now create `architecture.config.ts` at the root of your project.
 
 ```ts
 import { defineConfig } from "trueline";
@@ -45,7 +71,9 @@ export default defineConfig({
 });
 ```
 
-Then run it:
+That config says the project has four kinds of file, and that `engine` code may not reach into `domain` or `app`.
+
+Then run it.
 
 ```
 npx trueline
@@ -53,13 +81,23 @@ npx trueline
 
 ## Zones
 
-A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in, so this is the one idea worth getting right.
+A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in. This is the one idea worth getting right.
 
-A file belongs to the first zone whose pattern matches it, so order them narrowest first. In the example above, `src/domain/user.test.ts` is `spec` rather than `domain`, because `spec` comes first.
+### Order matters
 
-Two things to know. Every file must land in some zone — a file in none is an error, not a shrug, because a file nothing has classified is a file no rule can govern. And put your tests in their own zone ahead of everything else; left inside a source zone, fixture text leaks into the other checks.
+A file belongs to the first zone whose pattern matches it. Order them narrowest first.
 
-## Reading the output
+In the config above, `src/domain/user.test.ts` is `spec` rather than `domain`, because `spec` comes first.
+
+### Every file must land somewhere
+
+A file in no zone is an error, not a shrug. A file nothing has classified is a file no rule can govern.
+
+Put your tests in their own zone, ahead of everything else. Left inside a source zone, fixture text leaks into the other checks.
+
+## Reading a report
+
+Here is a run with one violation.
 
 ```
 coverage  898 files · 7524 edges · 5816 symbol · 1663 external · 41 builtin · 0 unresolved
@@ -85,11 +123,13 @@ generic-code-names-no-domain-concept        ok
 10 claims · 1 error · 0 warnings
 ```
 
-The first two lines are a receipt. They exist so that a clean report cannot mean "I checked nothing" — if the file count or the edge count is wrong, you can see it before you trust the `ok`s.
+The first two lines are a receipt. They exist so a clean report cannot mean "I checked nothing". If the file count or the edge count looks wrong, you see it before you trust the `ok`s.
 
-Each line after that is a **claim**: a statement about the project that is either true, or true except for the counterexamples listed underneath. Every claim runs on every pass and the whole list always prints, so fixing one thing still tells you whether everything else moved.
+Each line after that is a **claim**. A claim is a statement about the project that is either true, or true except for the counterexamples listed underneath.
 
-Under the findings is the guidance for that claim — what the violation means and how to resolve it. It is written for whoever hits the rule without having read this file, which most of the time is the agent.
+Every claim runs on every pass, and the whole list always prints. Fixing one thing still tells you whether everything else moved.
+
+Under the findings sits the guidance for that claim. It says what the violation means and how to resolve it. It is written for whoever hits the rule without having read this file — which, most of the time, is the agent.
 
 ## What it checks
 
@@ -104,18 +144,20 @@ Under the findings is the guidance for that claim — what the violation means a
 | `every-zone-pattern-matches-a-file` | no pattern is dead |
 | `every-rule-names-a-declared-zone` | no rule mentions a zone that does not exist |
 | `every-import-respects-its-zone-boundary` | the boundaries hold |
-| `no-sibling-directory-reaches-another` | sibling directories stay independent of each other |
+| `no-sibling-directory-reaches-another` | sibling directories stay independent |
 | `generic-code-names-no-domain-concept` | the seams hold |
 | `no-directory-holds-too-many-files` | no directory has become a drawer |
-| `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a seam for a single caller |
+| `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
-The first four are about the analysis itself, and they fail loudly on purpose. An import that does not resolve, a name no module exports, a pattern matching nothing — each of those means the tool is looking at less than you think it is, and a check that reports success while enforcing nothing is worse than no check at all.
+The first four are about the analysis itself, and they fail loudly on purpose.
 
-## Boundaries, and why they follow the symbol
+An import that does not resolve. A name no module exports. A pattern matching nothing. Each of those means the tool is seeing less than you think it is. A check that reports success while enforcing nothing is worse than no check at all.
 
-A boundary names a zone and the zones it may not reach:
+## Boundaries
+
+A boundary names a zone, and the zones it may not reach.
 
 ```ts
 boundaries: [
@@ -124,34 +166,52 @@ boundaries: [
 ]
 ```
 
-Here is the part that makes this different from every other tool of its kind.
+### Why barrels break other tools
 
-Most projects have a **barrel**: a file, usually `index.ts`, that re-exports everything from the modules around it so that consumers can import from one place. `import { Warrant } from "@app/shared"` is much nicer to write than a path six directories deep.
+This is the part that makes `trueline` different from every other tool of its kind.
 
-Barrels also make dependency rules useless. To a tool that reads import statements, every consumer of that package looks identical — they all import from `shared/index.ts`. A rule saying "components may not touch warrants" either matches every one of those imports or none of them, and neither is the truth.
+Most projects have a **barrel**. That is a file, usually `index.ts`, that re-exports everything around it so consumers can import from one place. `import { Warrant } from "@app/shared"` beats a path six directories deep.
 
-`trueline` follows the re-export chain to the file that actually **declares** the thing you imported, and anchors the rule there. On a real monorepo, the same rule written both ways:
+Barrels also make dependency rules useless. To a tool that reads import statements, every consumer of that package looks identical — they all import from `shared/index.ts`. A rule saying "components may not touch warrants" then matches all of those imports or none of them. Neither is the truth.
+
+`trueline` follows the re-export chain to the file that actually **declares** the thing you imported, and anchors the rule there.
+
+On a real monorepo, the same rule written both ways:
 
 | anchored on | result |
 |---|---|
 | the file that declares the symbol | the four component files that reach `warrants.ts` |
 | the module the import statement named | nothing at all |
 
-The second row is where import-graph tools sit, including ones that resolve the barrel perfectly well. Resolving it is not the hard part. Attaching the rule to the symbol is.
+The second row is where import-graph tools sit. That includes ones which resolve the barrel perfectly well. Resolving it is not the hard part. Attaching the rule to the symbol is.
 
-Set `anchor: "imported-module"` when you do want the blunt version — "this package is off limits entirely" — and leave it alone for anything finer. `ignoreTypeOnly: true` exempts `import type`, for when you care that runtime code crossed rather than that a type name did.
+### Two options on a boundary
 
-## Keeping sibling directories apart
+`anchor: "imported-module"` gives you the blunt version — "this package is off limits entirely". Leave it alone for anything finer.
 
-Zones are named, so a boundary between them has to be written out. That falls apart for the case where the directories are many, similar, and constantly added to — `src/routes/a`, `src/routes/b`, `src/routes/c`, where the rule you actually want is "none of these knows about any other".
+`ignoreTypeOnly: true` exempts `import type`. Use it when you care that runtime code crossed, rather than that a type name did.
 
-Writing that as zones needs one zone and one boundary per route, and — much worse — a route added tomorrow is governed by nothing until someone remembers to add it.
+## Sibling directories
+
+Zones are named, so a boundary between them has to be written out. That falls apart when the directories are many, similar, and constantly added to.
+
+Think `src/routes/a`, `src/routes/b`, `src/routes/c`. The rule you want is "none of these knows about any other".
+
+Written as zones, that needs one zone and one boundary per route. Worse, a route added tomorrow is governed by nothing until someone remembers to add it.
+
+### Declaring a group
 
 ```ts
 isolate: [{ siblings: "src/routes/*", except: ["_shared"] }]
 ```
 
-The `*` names the group. Every directory it matches becomes an island: files inside may import each other freely and may reach anything outside the group, but may not reach a sibling. Depth does not matter — `src/routes/c/deep/inner.ts` is still `c`. A new directory is isolated the moment it exists, with no config change, which is the whole point.
+The `*` names the group. Every directory it matches becomes an island.
+
+Files inside an island may import each other freely, and may reach anything outside the group. They may not reach a sibling.
+
+A new directory is isolated the moment it exists, with no config change. That is the whole point.
+
+### What it reports
 
 ```
 no-sibling-directory-reaches-another        2 errors
@@ -159,17 +219,29 @@ no-sibling-directory-reaches-another        2 errors
     src/routes/c/deep/inner.ts:1:0  is c and may not reach sibling b: thing from src/routes/b/thing.ts
 ```
 
-The parent itself is not in any group, so `src/routes/index.ts` importing every route is fine — that is what a parent is for. `except` is for the directory the group is meant to share; use it for `_shared` and nothing else, since the shared thing is usually the answer to the finding rather than an exception to it.
+Depth does not matter. `src/routes/c/deep/inner.ts` is still `c`.
 
-More than one `*` is allowed and each combination is its own island, so `apps/*/features/*` isolates `web/cart` from `web/checkout` and from `admin/cart`.
+The parent itself is in no group. So `src/routes/index.ts` importing every route is fine — that is what a parent is for.
 
-If the pattern matches no directory at all, that is an error rather than a silent pass — a rule guarding nothing is the failure mode this tool exists to prevent.
+More than one `*` is allowed, and each combination is its own island. `apps/*/features/*` keeps `web/cart` apart from `web/checkout` and from `admin/cart`.
 
-## Blocking a bad edit before it happens
+If the pattern matches no directory at all, that is an error rather than a silent pass. A rule guarding nothing is the failure mode this tool exists to prevent.
+
+### On `except`
+
+`except` is for the directory the group is meant to share. Use it for `_shared` and little else.
+
+The shared thing is usually the answer to a finding, not an exception to it.
+
+## Blocking a bad edit
 
 This is the part that matters most if you are working with an agent.
 
-Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueline guard` is that command: it reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
+Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueline guard` is that command.
+
+It reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
+
+### The hook
 
 ```json
 {
@@ -190,25 +262,37 @@ Claude Code can run a command before it writes a file, and cancel the write if t
 }
 ```
 
-The agent gets the refusal as its tool result, with the same explanation the report prints, and corrects course inside the same turn. Nothing lands on disk and no round trip through you is needed.
+The agent gets the refusal as its tool result, carrying the same explanation the report prints. It corrects course inside the same turn. Nothing lands on disk, and no round trip through you is needed.
 
-Only findings on the file being written can block it. Someone else's standing violation is not this edit's problem, and blocking on one would make every edit in an existing codebase impossible. Anything already in the baseline does not block either. An unusable payload, a missing config, a file type you do not analyse — all of those allow the write, because a guard that errors would block *every* edit rather than the wrong ones.
+If you are not using Serena, the `Write|Edit` matcher alone covers everything. Drop the second block.
+
+### What can and cannot block
+
+Only findings on the file being written can block it. Someone else's standing violation is not this edit's problem, and blocking on one would make every edit in an existing codebase impossible.
+
+Anything already in the baseline does not block either.
+
+An unusable payload, a missing config, a file type you do not analyse — all of those allow the write. A guard that errors would block *every* edit rather than the wrong ones.
 
 ### Why there are two hooks
 
-To judge an edit before it happens, the guard has to be able to work out what the file would look like afterwards. For a plain find-and-replace that is straightforward. For an edit expressed as "replace the body of this function", it is not — that needs the language server's idea of where the function starts and ends, which lives inside the editing tool, not here.
+To judge an edit before it happens, the guard has to work out what the file would look like afterwards.
 
-So tools whose result can be reproduced exactly are checked *before* the write and can be refused. Everything else is checked immediately *after* the write, against the real file, and comes back as a correction rather than a refusal. The guard never guesses at another tool's edit semantics; guessing is how this class of tool goes quietly wrong.
+For a plain find-and-replace, that is straightforward. For an edit expressed as "replace the body of this function", it is not. That needs the language server's idea of where the function starts and ends, which lives inside the editing tool rather than here.
 
-If you are not using Serena, the `Write|Edit` matcher alone covers everything and you can drop the second block.
+So tools whose result can be reproduced exactly are checked *before* the write, and can be refused. Everything else is checked immediately *after* the write, against the real file, and comes back as a correction rather than a refusal.
 
-## Telling the agent the rules up front
+The guard never guesses at another tool's edit semantics. Guessing is how this class of tool goes quietly wrong.
+
+## Teaching the agent up front
 
 ```
 npx trueline agent-instructions >> CLAUDE.md
 ```
 
-This prints a short block naming your zones, the two commands worth running, and the instruction that matters most: fix the code, not the rule. Blocking an edit teaches the agent one rule at a time, at the moment it breaks it. This teaches it the shape before it starts.
+This prints a short block naming your zones, the two commands worth running, and the instruction that matters most: fix the code, not the rule.
+
+Blocking an edit teaches the agent one rule at a time, at the moment it breaks it. This teaches it the shape before it starts.
 
 ## Asking before writing
 
@@ -224,33 +308,49 @@ vocabulary  domain owns names this file may not use:
             search · testimony
 ```
 
-Useful to you when you are deciding where something goes, and useful to an agent that has been told to run it before creating a file. A path in no zone is reported as such, which is the answer you want before making a directory nothing covers.
+Useful to you when deciding where something goes. Useful to an agent told to run it before creating a file.
 
-## Adopting on a codebase that already breaks the rules
+A path in no zone is reported as such. That is the answer you want before making a directory nothing covers.
 
-Almost nobody starts clean. Record what is already there, then hold the line:
+## Adopting on an existing codebase
+
+Almost nobody starts clean. Record what is already there, then hold the line.
 
 ```
 npx trueline --update-baseline
 ```
 
-The **baseline** is a file listing the violations that existed when you started. From then on a new violation fails the build, while a recorded one prints as a warning — visible, not hidden, so nobody forgets the debt is there.
+The **baseline** is a file listing the violations that existed when you started.
 
-If you fix something that was in the baseline, the run exits `2` and tells you to update it. That sounds fussy and is the entire point: without it a baseline slowly turns into a list of permanent exemptions that nobody dares delete.
+From then on, a new violation fails the build. A recorded one prints as a warning — visible, not hidden, so nobody forgets the debt is there.
 
-Entries are keyed on the claim, the file and the message — never on a line number — so moving code around does not churn the file. And a run where nothing was analysed can never be recorded, so a broken config cannot silently baseline your whole project.
+### When you fix something
 
-## Seams: catching what an import cannot
+If you fix a violation that was in the baseline, the run exits `2` and tells you to update it.
 
-A boundary catches a bad import. It cannot catch the other way domain knowledge leaks: a value arriving as a function argument or a prop, where the receiving file mirrors a shape it should not know about and imports nothing at all.
+That sounds fussy, and it is the entire point. Without it, a baseline slowly turns into a list of permanent exemptions nobody dares delete.
+
+Entries are keyed on the claim, the file and the message. Never on a line number, so moving code around does not churn the file.
+
+A run where nothing was analysed can never be recorded. A broken config cannot silently baseline your whole project.
+
+## Seams
+
+A boundary catches a bad import. It cannot catch the other way domain knowledge leaks.
+
+A value arrives as a function argument or a prop. The receiving file mirrors a shape it should not know about, and imports nothing at all.
 
 ```ts
 seams: [{ generic: "engine", domain: ["domain"] }]
 ```
 
-The vocabulary is derived rather than configured. A domain zone owns the names its files export and the string values its sources contain. Generic code that mentions one of those, with no import to explain why, is naming something it has no business naming. A new domain type is covered from the moment it exists — there is no list to keep in sync.
+The vocabulary is derived rather than configured. A domain zone owns the names its files export, and the string values its sources contain.
 
-On a real app this found a component hardcoding `"stav"` where the domain exports `REQUISITION_STATUS = "stav"`, plus several hardcoding members of enums the domain declares. Tune it with `allow` for words the two genuinely share, and `minLiteralLength` for short incidental strings.
+Generic code that mentions one of those, with no import to explain why, is naming something it has no business naming. A new domain type is covered from the moment it exists. There is no list to keep in sync.
+
+On a real app this found a component hardcoding `"stav"` where the domain exports `REQUISITION_STATUS = "stav"`, plus several hardcoding members of enums the domain declares.
+
+Tune it with `allow` for words the two genuinely share, and `minLiteralLength` for short incidental strings.
 
 ## Directory size
 
@@ -258,13 +358,17 @@ On a real app this found a component hardcoding `"stav"` where the domain export
 maxFilesPerDirectory: 12
 ```
 
-Boundaries govern what a file may reach. This governs where files pile up. A directory that keeps growing has stopped being one idea, and an agent adding the twenty-first file to a folder has no way to notice that from inside the file it is writing.
+Boundaries govern what a file may reach. This governs where files pile up.
 
-The count includes every file the analysis read, unclassified ones included — a directory nothing has claimed is the likeliest dumping ground. There is no exemption list, because a limit with an exemption list is a limit nobody has to meet.
+A directory that keeps growing has stopped being one idea. An agent adding the twenty-first file to a folder has no way to notice that from inside the file it is writing.
+
+The count includes every file the analysis read, unclassified ones included. A directory nothing has claimed is the likeliest dumping ground.
+
+There is no exemption list, because a limit with an exemption list is a limit nobody has to meet.
 
 Line and function length are a linter's job, not this one's. Delegate them.
 
-## Code that crossed a boundary for exactly one caller
+## Code that crossed a boundary for one caller
 
 ```ts
 colocation: true,
@@ -276,19 +380,23 @@ zones: [
 ]
 ```
 
-A value exported from one zone and used by only one other zone is paying for a seam that carries nothing a second caller needs. A symbol in a shared package that exactly one app imports is not shared code — it is that app's code, in the wrong package. Move it there. A second consumer showing up later is a reason to move it back then, not a reason to have guessed now.
+A value exported from one zone and used by only one other zone is paying for a boundary that carries nothing a second caller needs.
 
-Two exclusions make this precise instead of noisy, and both are load-bearing.
+A symbol in a shared package that exactly one app imports is not shared code. It is that app's code, in the wrong package. Move it there. A second consumer showing up later is a reason to move it back then, not a reason to have guessed now.
 
-**A zone with a `role` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where that code belongs — a root wires each collaborator exactly once, and a test imports whatever it exercises. Left in, they bury the real findings.
+### Two exclusions, both load-bearing
 
-**Type-only edges are ignored**, because a type gets used constantly without being imported: reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
+**A zone with a `role` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where that code belongs. A root wires each collaborator exactly once. A test imports whatever it exercises. Left in, they bury the real findings.
 
-Measured on a 911-file monorepo: 758 findings unfiltered, 47 with both exclusions — of which 10 were values in a shared package that only one app used, the case that counting files per symbol misses entirely.
+**Type-only edges are ignored.** A type gets used constantly without being imported — reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
+
+Measured on a 911-file monorepo: 758 findings unfiltered, 47 with both exclusions. Ten of those 47 were values in a shared package that only one app used, which is the case that counting files per symbol misses entirely.
 
 ### Exports that exist only for a test
 
-Declaring a zone with `role: "tests"` also turns the question around. Something that *only* the tests import is not shared code with one consumer. It is private code that was made public so a test could reach in:
+Declaring a zone with `role: "tests"` also turns the question around.
+
+Something that *only* the tests import is not shared code with one consumer. It is private code made public so a test could reach in.
 
 ```
 no-export-exists-only-for-a-test          3 errors
@@ -297,13 +405,15 @@ no-export-exists-only-for-a-test          3 errors
     src/access/gate.ts   exports resourceAccess, which only tests use
 ```
 
-The fix is to test the behaviour through the surface production code actually calls. A helper that genuinely exists to serve tests belongs in the tests zone — put `**/*.fixture.ts` in that zone and its false positives go with it, worth 39 of 169 findings on that monorepo.
+The fix is to test the behaviour through the surface production code actually calls.
 
-Adding a production caller to satisfy the check is the one fix that makes the codebase worse, and the printed guidance says so.
+A helper that genuinely exists to serve tests belongs in the tests zone. Put `**/*.fixture.ts` in that zone and its false positives go with it — worth 39 of 169 findings on that monorepo.
+
+Adding a production caller to satisfy the check is the one fix that makes the codebase worse. The printed guidance says so.
 
 ## Rules you write yourself
 
-Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project:
+Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project.
 
 ```ts
 import { defineRule } from "trueline";
@@ -326,20 +436,24 @@ rules: [
 ]
 ```
 
-Each import arrives with its origin zone and its declaring zone already worked out, alongside `via` (the module the import statement named), `symbol` and `kind`. Return a list of issues; a message alone is enough, and severity defaults to `error`.
+Each import arrives with its origin zone and its declaring zone already worked out. Alongside those come `via` (the module the import statement named), `symbol` and `kind`.
 
-Pass a third argument to say what a violation means and how to fix it. Whoever hits the rule reads that instead of guessing:
+Return a list of issues. A message alone is enough, and severity defaults to `error`.
+
+### Give the rule a remedy
+
+A third argument says what a violation means and how to fix it. Whoever hits the rule reads that instead of guessing.
 
 ```ts
 defineRule("no-two-zones-import-each-other", check,
   "Two zones import each other, so neither can be understood or moved alone. Decide which owns the shared concept and give the other a one-way dependency on it.")
 ```
 
-Rules see a model of the project rather than a syntax tree, so the parser stays an implementation detail you never have to learn.
+Rules see a model of the project rather than a syntax tree. The parser stays an implementation detail you never have to learn.
 
 ## Using your existing linter alongside it
 
-The rules here cover what a linter cannot express. Everything else is delegated, and those findings join the same report and the same baseline:
+The rules here cover what a linter cannot express. Everything else is delegated. Those findings join the same report and the same baseline.
 
 ```ts
 import { biomeRunner, eslintRunner, fallowRunner } from "trueline";
@@ -347,11 +461,19 @@ import { biomeRunner, eslintRunner, fallowRunner } from "trueline";
 runners: [eslintRunner(), biomeRunner(), fallowRunner()]
 ```
 
-Each finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports` — so a baseline entry pins one rule rather than a whole tool. Each tool runs with your project root as its working directory and keeps its own severities, so a rule you set to `warn` stays a warning here. Narrow any of them with `categories`; biome matches by prefix, so `["lint"]` keeps every lint rule and drops formatter and config noise.
+Each finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports`. A baseline entry then pins one rule rather than a whole tool.
 
-An adapter distrusts the tool it wraps. Unparseable output, an unexpected shape, a silent tool, a missing binary, a config error, a file the tool could not parse, a run that checked nothing — each fails the check rather than reporting nothing found, and a tool that could not run is never recorded in a baseline.
+Each tool runs with your project root as its working directory, and keeps its own severities. A rule you set to `warn` stays a warning here.
 
-The exit codes are worth knowing about, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. biome exits `1` whether it found problems or could not read the path at all, so the adapter reads its summary instead of its status.
+Narrow any of them with `categories`. Biome matches by prefix, so `["lint"]` keeps every lint rule and drops formatter and config noise.
+
+### Adapters distrust the tool they wrap
+
+Unparseable output. An unexpected shape. A silent tool, a missing binary, a config error, a file the tool could not parse, a run that checked nothing.
+
+Each of those fails the check rather than reporting nothing found. A tool that could not run is never recorded in a baseline.
+
+The exit codes are worth knowing about, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. Biome exits `1` whether it found problems or could not read the path at all, so the adapter reads its summary instead of its status.
 
 ### Letting biome fix what it can
 
@@ -359,9 +481,11 @@ The exit codes are worth knowing about, because none of them mean what you would
 biomeRunner({ write: process.env.CI === undefined })
 ```
 
-Biome applies its safe fixes and the report keeps only what it could not fix. The agent then spends its turns on findings that need judgement instead of on `let` versus `const`.
+Biome applies its safe fixes, and the report keeps only what it could not fix. The agent then spends its turns on findings that need judgement instead of on `let` versus `const`.
 
-Off by default, and worth keeping off in CI — a check that rewrites the tree is reporting on code that no longer matches what was committed. The config is TypeScript, so the environment decides. Biome's unsafe fixes can change behaviour and stay out of reach of this option; pass `--unsafe` through `command` if you want them, knowing an agent will not notice a semantic change. `eslintRunner` takes `--fix` the same way.
+This is off by default, and worth keeping off in CI. A check that rewrites the tree is reporting on code that no longer matches what was committed. The config is TypeScript, so the environment decides.
+
+Biome's unsafe fixes can change behaviour, and stay out of reach of this option. Pass `--unsafe` through `command` if you want them, knowing an agent will not notice a semantic change. `eslintRunner` takes `--fix` the same way.
 
 ### Catching a rule the agent silenced
 
@@ -369,16 +493,25 @@ Off by default, and worth keeping off in CI — a check that rewrites the tree i
 eslintRunner({ reportSuppressed: true })
 ```
 
-Every `// eslint-disable-next-line` becomes a finding under `eslint/suppressed/<rule>`, carrying its justification if one was written. Existing suppressions go in the baseline; a new one fails.
+Every `// eslint-disable-next-line` becomes a finding under `eslint/suppressed/<rule>`, carrying its justification if one was written.
 
-This is the move an agent makes when told to get the build green, and without this it leaves no trace.
+Existing suppressions go in the baseline. A new one fails.
+
+This is the move an agent makes when told to get the build green. Without this it leaves no trace.
 
 Delegated tools run on a full check only. The write-time guard skips them, since spawning a whole-repo lint on every edit costs far more than it catches.
 
 ## Exit codes
 
-`0` clean · `1` errors · `2` the baseline holds entries whose violations are gone · `3` no config found
+| code | meaning |
+|---|---|
+| `0` | clean |
+| `1` | errors |
+| `2` | the baseline holds entries whose violations are gone |
+| `3` | no config found |
 
 ## Cost
 
-A full check on a 900-file monorepo takes about a tenth of a second, and the guard about the same including process startup. Identifiers are only read when a seam rule or a rule of your own asks for them, so a run without either never builds a syntax tree.
+A full check on a 900-file monorepo takes about a tenth of a second. The guard takes about the same, including process startup.
+
+Identifiers are only read when a seam rule or a rule of your own asks for them. A run without either never builds a syntax tree.
