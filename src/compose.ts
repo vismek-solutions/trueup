@@ -14,7 +14,7 @@ import { zoneReferencesExistClaim } from "./claims/zone-references.ts";
 import { buildSymbolGraph } from "./graph/build.ts";
 import type { SymbolGraph } from "./graph/model.ts";
 import { buildLexicon } from "./lexicon/build.ts";
-import type { ModuleRecord } from "./ports/module-record.ts";
+import type { ModuleRecord, ParseModule } from "./ports/module-record.ts";
 import type { Runner } from "./ports/runner.ts";
 import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
@@ -31,11 +31,14 @@ const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLA
   return new Map(paths.map((path) => [path, overlay.get(path) ?? readSource(path)]));
 };
 
-const parseAll = (sources: ReadonlyMap<string, string>): ModuleRecord[] =>
-  [...sources].map(([path, text]) => parseModule(path, text));
+const parseAll = (sources: ReadonlyMap<string, string>, parse: ParseModule): ModuleRecord[] =>
+  [...sources].map(([path, text]) => parse(path, text));
 
 export function analyze(options: DiscoverFilesOptions): SymbolGraph {
-  return buildSymbolGraph({ modules: parseAll(readSources(options)), resolve: createResolver() });
+  return buildSymbolGraph({
+    modules: parseAll(readSources(options), parseModule),
+    resolve: createResolver(),
+  });
 }
 
 export interface InspectOptions {
@@ -49,7 +52,7 @@ export interface InspectOptions {
 
 const analyseProject = ({ root, roots, zones, extensions, ignoreDirectories, overlay }: InspectOptions) => {
   const sources = readSources({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
-  const modules = parseAll(sources);
+  const modules = parseAll(sources, parseModule);
   const graph = buildSymbolGraph({ modules, resolve: createResolver() });
   const assignment = assignZones({ root, files: [...graph.files], zones });
   const lexicon = buildLexicon({ modules, sources, readMentions });
