@@ -25,6 +25,8 @@ export function buildLexicon(modules: readonly ModuleRecord[]): Lexicon {
   return {
     vocabularyOf,
     mentionsIn: (path) => byPath.get(path)?.mentions ?? [],
+    exportedNamesIn: (path) =>
+      (byPath.get(path)?.exports ?? []).flatMap((entry) => (entry.form === "re-export-star" ? [] : [entry.exported])),
     importedNamesIn: (path) =>
       new Set(
         (byPath.get(path)?.imports ?? []).flatMap((statement) =>

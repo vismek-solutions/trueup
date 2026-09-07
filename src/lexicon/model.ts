@@ -9,4 +9,5 @@ export interface Lexicon {
   readonly vocabularyOf: (paths: readonly string[]) => Vocabulary;
   readonly mentionsIn: (path: string) => readonly Mention[];
   readonly importedNamesIn: (path: string) => ReadonlySet<string>;
+  readonly exportedNamesIn: (path: string) => readonly string[];
 }

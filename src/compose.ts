@@ -3,6 +3,7 @@ import { parseModule } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
+import { customClaims, type Rule } from "./claims/custom.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
@@ -12,6 +13,7 @@ import { buildSymbolGraph } from "./graph/build.ts";
 import type { SymbolGraph } from "./graph/model.ts";
 import { buildLexicon } from "./lexicon/build.ts";
 import type { ModuleRecord } from "./ports/module-record.ts";
+import { buildProject } from "./project/build.ts";
 import type { Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
 import type { ZoneDefinition } from "./zones/model.ts";
@@ -27,11 +29,11 @@ export interface CheckOptions {
   readonly root: string;
   readonly roots?: readonly string[] | undefined;
   readonly zones: readonly ZoneDefinition[];
-  readonly rules?: readonly BoundaryRule[] | undefined;
+  readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
+  readonly rules?: readonly Rule[] | undefined;
   readonly extensions?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
-  readonly extraClaims?: readonly Claim[] | undefined;
 }
 
 export const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessClaims];
@@ -40,23 +42,25 @@ export function check({
   root,
   roots,
   zones,
-  rules = [],
+  boundaries = [],
   seams = [],
+  rules = [],
   extensions,
   ignoreDirectories,
-  extraClaims = [],
 }: CheckOptions): Report {
   const modules = readModules({ roots: roots ?? [root], extensions, ignoreDirectories });
   const graph = buildSymbolGraph({ modules, resolve: createResolver() });
   const assignment = assignZones({ root, files: [...graph.files], zones });
+  const lexicon = buildLexicon(modules);
+  const project = buildProject({ root, graph, zones: assignment, lexicon });
 
   const claims = [
     ...standardClaims,
-    zoneReferencesExistClaim([...boundaryZoneReferences(rules), ...seamZoneReferences(seams)]),
-    boundaryClaim(rules),
+    zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
+    boundaryClaim(boundaries),
     seamClaim(seams),
-    ...extraClaims,
+    ...customClaims(rules),
   ];
 
-  return runClaims(claims, { root, graph, zones: assignment, lexicon: buildLexicon(modules) });
+  return runClaims(claims, { root, graph, zones: assignment, lexicon, project });
 }

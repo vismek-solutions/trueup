@@ -43,7 +43,7 @@ const offendingFiles = (anchor: EdgeAnchor): string[] => {
       { name: "components", patterns: ["apps/web/src/components/**"] },
       { name: "web", patterns: ["apps/web/src/**"] },
     ],
-    rules: [{ from: "components", mayNotReach: ["warrants"], anchor }],
+    boundaries: [{ from: "components", mayNotReach: ["warrants"], anchor }],
   });
 
   const findings =

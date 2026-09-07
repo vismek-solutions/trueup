@@ -14,7 +14,7 @@ const ZONES = [
 ];
 
 const boundaryFindings = (rule: BoundaryRule): readonly Finding[] => {
-  const report = check({ root: ROOT, zones: ZONES, rules: [rule] });
+  const report = check({ root: ROOT, zones: ZONES, boundaries: [rule] });
   return report.claims.find((claim) => claim.claim === "every-import-respects-its-zone-boundary")?.findings ?? [];
 };
 
@@ -53,7 +53,7 @@ describe("rule validation", () => {
     const report = check({
       root: ROOT,
       zones: ZONES,
-      rules: [{ from: "components", mayNotReach: ["typo"] }],
+      boundaries: [{ from: "components", mayNotReach: ["typo"] }],
     });
 
     const findings = report.claims.find((claim) => claim.claim === "every-rule-names-a-declared-zone")?.findings;

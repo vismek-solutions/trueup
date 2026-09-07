@@ -1,0 +1,10 @@
+export { defineConfig, type ArchitectureConfig } from "./config/model.ts";
+export { defineRule, type Rule } from "./claims/custom.ts";
+export type { BoundaryRule, EdgeAnchor } from "./claims/boundary.ts";
+export type { SeamRule } from "./claims/seam.ts";
+export type { ImportQuery, Issue, Project, ResolvedImport } from "./project/model.ts";
+export type { Vocabulary } from "./lexicon/model.ts";
+export type { Mention, MentionForm, BindingKind } from "./ports/module-record.ts";
+export type { ZoneDefinition } from "./zones/model.ts";
+export type { Finding, Report, Severity } from "./report/model.ts";
+export { check, type CheckOptions } from "./compose.ts";
