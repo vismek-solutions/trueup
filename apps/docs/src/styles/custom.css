@@ -1,0 +1,34 @@
+:root {
+  --sl-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sl-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+
+:root[data-theme="dark"] {
+  --sl-color-accent-low: #16241c;
+  --sl-color-accent: #2f7d54;
+  --sl-color-accent-high: #a7dcbc;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #d8efe1;
+  --sl-color-accent: #1f6742;
+  --sl-color-accent-high: #16301f;
+}
+
+.site-title {
+  font-family: var(--sl-font-mono);
+  letter-spacing: -0.02em;
+}
+
+.sl-markdown-content table {
+  font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content :not(pre) > code {
+  font-size: 0.9em;
+  border-radius: 0.25rem;
+}
+
+.sl-markdown-content pre {
+  border-radius: 0.5rem;
+}

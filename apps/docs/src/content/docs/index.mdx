@@ -1,0 +1,54 @@
+---
+title: trueline
+description: Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing it.
+template: splash
+hero:
+  tagline: Keeps a TypeScript codebase in the shape you meant it to have — and stops a coding agent from quietly changing it.
+  actions:
+    - text: Getting started
+      link: /start/getting-started/
+      icon: right-arrow
+    - text: What it checks
+      link: /checks/
+      icon: list-format
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+It reads your source files without running them, works out which file depends on which, and compares that against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
+
+## It reads between files, not inside them
+
+A linter reads one file at a time and tells you about that file. An unused variable. A missing `await`. It is looking at the code *inside* a file.
+
+`trueline` looks at the lines *between* files. Which parts of your project may know about which other parts. Where things live. Whether a folder has quietly become a junk drawer.
+
+None of that is visible from inside any single file. That is exactly why it goes wrong without anyone noticing.
+
+You describe the shape once, in a config file. Every run after that answers one question: is this still true?
+
+## Why it exists
+
+An agent writing code optimises for the change in front of it. Reaching into another module is the shortest path to a working feature, so that is the path it takes.
+
+Every individual edit is defensible. The tests stay green. After a hundred of them the project is a ball of mud that nobody chose.
+
+You cannot review your way out of this. The whole point of the agent is that you are not reading every line. So the constraints have to live somewhere the agent runs into them, every time, without you.
+
+A rule the agent can edit is a rule the agent will edit once it is under pressure to make the output green. So every message this prints says the same thing: fix the code, not the rule.
+
+<CardGrid>
+  <Card title="Follows the barrel" icon="puzzle">
+    A rule is anchored on the file that *declares* a symbol, not the module your import named. A re-export in between does not launder a forbidden edge.
+  </Card>
+  <Card title="Refuses a bad edit" icon="error">
+    Run it as a Claude Code hook and it judges a proposed write before it lands, with the reason the agent needs to correct course in the same turn.
+  </Card>
+  <Card title="Fails loudly" icon="warning">
+    An unresolved import, an empty zone, a dead pattern, an unclassified file: each is an error. A check that passes while enforcing nothing is worse than no check.
+  </Card>
+  <Card title="One report" icon="document">
+    Your linter's findings arrive as claims beside its own, under one baseline and one exit code.
+  </Card>
+</CardGrid>
