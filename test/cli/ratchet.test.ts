@@ -2,11 +2,11 @@ import { existsSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { baselinePathIn, readBaseline, writeBaseline } from "../src/adapters/baseline-file.ts";
-import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE, runCli } from "../src/cli/main.ts";
-import type { Baseline } from "../src/ports/baseline.ts";
-import { applyBaseline, baselineOf, STALE_CLAIM } from "../src/ratchet/apply.ts";
-import type { Report } from "../src/report/model.ts";
+import { baselinePathIn, readBaseline, writeBaseline } from "../../src/adapters/baseline-file.ts";
+import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE, runCli } from "../../src/cli/main.ts";
+import type { Baseline } from "../../src/ports/baseline.ts";
+import { applyBaseline, baselineOf, STALE_CLAIM } from "../../src/ratchet/apply.ts";
+import type { Report } from "../../src/report/model.ts";
 
 const ROOT = "/project";
 
@@ -145,7 +145,7 @@ describe("a baseline", () => {
   });
 });
 
-const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "project");
+const PROJECT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "project");
 const BASELINE = baselinePathIn(PROJECT);
 
 const runIn = async (argv: readonly string[]): Promise<{ code: number; output: string }> => {

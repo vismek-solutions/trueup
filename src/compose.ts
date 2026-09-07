@@ -83,16 +83,18 @@ export interface CheckOptions {
   readonly ignoreDirectories?: readonly string[] | undefined;
 }
 
-export const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessClaims];
+const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessClaims];
 
 const namesOf = (zones: readonly ZoneDefinition[], role: ZoneRole): string[] =>
   zones.filter((zone) => zone.role === role).map((zone) => zone.name);
 
 const placementClaims = (zones: readonly ZoneDefinition[]): Claim[] => {
-  const tests = namesOf(zones, "tests");
+  const testZones = namesOf(zones, "tests");
+  const apiZones = namesOf(zones, "api");
+
   return [
-    colocationClaim([...namesOf(zones, "wiring"), ...tests]),
-    ...(tests.length === 0 ? [] : [testOnlyExportClaim(tests)]),
+    colocationClaim([...namesOf(zones, "wiring"), ...testZones, ...apiZones]),
+    ...(testZones.length === 0 ? [] : [testOnlyExportClaim({ testZones, apiZones })]),
   ];
 };
 

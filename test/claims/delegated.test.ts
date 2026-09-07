@@ -1,13 +1,13 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { RUNNERS_RAN_CLAIM } from "../src/claims/delegated.ts";
-import { check } from "../src/compose.ts";
-import type { Runner, RunnerFinding } from "../src/ports/runner.ts";
-import { countOf, type Report } from "../src/report/model.ts";
-import { applyBaseline, baselineOf } from "../src/ratchet/apply.ts";
+import { RUNNERS_RAN_CLAIM } from "../../src/claims/delegated.ts";
+import { check } from "../../src/compose.ts";
+import type { Runner, RunnerFinding } from "../../src/ports/runner.ts";
+import { countOf, type Report } from "../../src/report/model.ts";
+import { applyBaseline, baselineOf } from "../../src/ratchet/apply.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "project");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "project");
 
 const ZONES = [
   { name: "engine", patterns: ["src/engine/**"] },

@@ -2,12 +2,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { fallowRunner } from "../src/adapters/fallow-runner.ts";
-import type { RunnerOutcome } from "../src/ports/runner.ts";
+import { fallowRunner } from "../../src/adapters/fallow-runner.ts";
+import type { RunnerOutcome } from "../../src/ports/runner.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, "fixtures", "project");
-const TOOL = join(HERE, "fixtures", "fake-tool", "tool.mjs");
+const ROOT = join(HERE, "..", "fixtures", "project");
+const TOOL = join(HERE, "..", "fixtures", "fake-tool", "tool.mjs");
 
 const runWith = (mode: string, categories?: readonly string[]): RunnerOutcome =>
   fallowRunner({

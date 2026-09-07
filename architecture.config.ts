@@ -1,8 +1,12 @@
 import { biomeRunner } from "./src/adapters/biome-runner.ts";
+import { IGNORED_DIRECTORIES } from "./src/adapters/node-files.ts";
 import { defineRule } from "./src/claims/custom.ts";
 import { defineConfig } from "./src/config/model.ts";
 
 const LAYERS = [
+  "spec",
+  "api",
+  "bin",
   "graph",
   "zones",
   "lexicon",
@@ -19,7 +23,8 @@ const LAYERS = [
 const allBut = (...kept: string[]): string[] => LAYERS.filter((layer) => !kept.includes(layer));
 
 export default defineConfig({
-  include: ["src"],
+  include: ["src", "test", "bin"],
+  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures"],
   command: "node ./bin/acs.js",
   maxFilesPerDirectory: 12,
   colocation: true,
@@ -31,6 +36,7 @@ export default defineConfig({
     }),
   ],
   zones: [
+    { name: "spec", patterns: ["test/**"], role: "tests" },
     { name: "ports", patterns: ["src/ports/**"] },
     { name: "graph", patterns: ["src/graph/**"] },
     { name: "zones", patterns: ["src/zones/**"] },
@@ -43,7 +49,9 @@ export default defineConfig({
     { name: "config", patterns: ["src/config/**"] },
     { name: "cli", patterns: ["src/cli/**"], role: "wiring" },
     { name: "adapters", patterns: ["src/adapters/**"] },
-    { name: "root", patterns: ["src/compose.ts", "src/index.ts"], role: "wiring" },
+    { name: "api", patterns: ["src/index.ts"], role: "api" },
+    { name: "bin", patterns: ["bin/**"], role: "wiring" },
+    { name: "root", patterns: ["src/compose.ts"], role: "wiring" },
   ],
   boundaries: [
     { from: "ports", mayNotReach: LAYERS },

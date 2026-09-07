@@ -1,11 +1,11 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { check } from "../src/compose.ts";
-import type { Report } from "../src/report/model.ts";
-import type { ZoneDefinition } from "../src/zones/model.ts";
+import { check } from "../../src/compose.ts";
+import type { Report } from "../../src/report/model.ts";
+import type { ZoneDefinition } from "../../src/zones/model.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "project");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "project");
 const CLAIM = "no-value-is-declared-away-from-its-only-consumer";
 
 const ZONES: readonly ZoneDefinition[] = [
@@ -45,7 +45,7 @@ describe("keeping a value with its only consumer", () => {
   });
 });
 
-const SHARED = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "colocated");
+const SHARED = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "colocated");
 const TEST_ONLY = "no-export-exists-only-for-a-test";
 
 const sharedReport = check({

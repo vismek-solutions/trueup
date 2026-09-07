@@ -1,12 +1,12 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { defineRule } from "../src/claims/custom.ts";
-import { check } from "../src/compose.ts";
-import type { Project } from "../src/project/model.ts";
-import type { ClaimResult } from "../src/report/model.ts";
+import { defineRule } from "../../src/claims/custom.ts";
+import { check } from "../../src/compose.ts";
+import type { Project } from "../../src/project/model.ts";
+import type { ClaimResult } from "../../src/report/model.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "seam");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "seam");
 
 const ZONES = [
   { name: "domain", patterns: ["domain/**"] },

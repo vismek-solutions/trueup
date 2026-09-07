@@ -1,10 +1,10 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { check } from "../src/compose.ts";
-import type { Report } from "../src/report/model.ts";
+import { check } from "../../src/compose.ts";
+import type { Report } from "../../src/report/model.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "project");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "project");
 const CLAIM = "no-directory-holds-too-many-files";
 
 const runWith = (maxFilesPerDirectory?: number): Report =>

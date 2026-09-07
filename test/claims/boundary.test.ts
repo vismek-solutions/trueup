@@ -1,11 +1,11 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { BoundaryRule } from "../src/claims/boundary.ts";
-import { check } from "../src/compose.ts";
-import type { Finding } from "../src/report/model.ts";
+import type { BoundaryRule } from "../../src/claims/boundary.ts";
+import { check } from "../../src/compose.ts";
+import type { Finding } from "../../src/report/model.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "boundary");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "boundary");
 
 const ZONES = [
   { name: "warrants", patterns: ["shared/warrants.ts"] },

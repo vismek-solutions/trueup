@@ -1,8 +1,8 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { check, standardClaims } from "../src/compose.ts";
-import { assignZones } from "../src/zones/assign.ts";
+import { check } from "../../src/compose.ts";
+import { assignZones } from "../../src/zones/assign.ts";
 
 const ROOT = "/project";
 const at = (...parts: string[]): string => join(ROOT, ...parts);
@@ -84,7 +84,7 @@ describe("zone assignment", () => {
   });
 });
 
-const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures");
 
 describe("a check run", () => {
   it("runs every claim in one pass rather than stopping at the first failure", () => {
@@ -114,7 +114,13 @@ describe("a check run", () => {
     });
 
     expect(report.claims.map((claim) => claim.claim)).toEqual([
-      ...standardClaims.map((claim) => claim.name),
+      "the-analysis-reached-files",
+      "every-import-resolves",
+      "every-imported-name-is-exported",
+      "every-imported-name-is-unambiguous",
+      "every-file-belongs-to-a-zone",
+      "every-zone-has-a-file",
+      "every-zone-pattern-matches-a-file",
       "every-rule-names-a-declared-zone",
       "every-import-respects-its-zone-boundary",
       "generic-code-names-no-domain-concept",

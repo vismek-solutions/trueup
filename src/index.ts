@@ -7,7 +7,10 @@ export type { Vocabulary } from "./lexicon/model.ts";
 export type { Mention, MentionForm, BindingKind } from "./ports/module-record.ts";
 export type { ZoneDefinition } from "./zones/model.ts";
 export type { Finding, Report, Severity } from "./report/model.ts";
-export { check, type CheckOptions } from "./compose.ts";
+export { analyze, check, type CheckOptions } from "./compose.ts";
+export { consumersOf } from "./graph/model.ts";
+export { COMMAND_TOKEN, DEFAULT_COMMAND } from "./report/invocation.ts";
+export { EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG, EXIT_STALE_BASELINE } from "./cli/main.ts";
 export type { Baseline, BaselineEntry } from "./ports/baseline.ts";
 export type { Runner, RunnerFinding, RunnerOutcome } from "./ports/runner.ts";
 export {

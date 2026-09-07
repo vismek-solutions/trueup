@@ -1,4 +1,4 @@
-export type ZoneRole = "wiring" | "tests";
+export type ZoneRole = "wiring" | "tests" | "api";
 
 export interface ZoneDefinition {
   readonly name: string;

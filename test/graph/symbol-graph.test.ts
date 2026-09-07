@@ -1,10 +1,10 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { analyze } from "../src/compose.ts";
-import type { EdgeTarget, SymbolGraph } from "../src/graph/model.ts";
+import { analyze } from "../../src/compose.ts";
+import type { EdgeTarget, SymbolGraph } from "../../src/graph/model.ts";
 
-const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures");
 
 const graphOf = (fixture: string): SymbolGraph => analyze({ roots: [join(FIXTURES, fixture)] });
 

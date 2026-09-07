@@ -2,12 +2,12 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { eslintRunner } from "../src/adapters/eslint-runner.ts";
-import type { RunnerOutcome } from "../src/ports/runner.ts";
+import { eslintRunner } from "../../src/adapters/eslint-runner.ts";
+import type { RunnerOutcome } from "../../src/ports/runner.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, "fixtures", "project");
-const TOOL = join(HERE, "fixtures", "fake-tool", "eslint.mjs");
+const ROOT = join(HERE, "..", "fixtures", "project");
+const TOOL = join(HERE, "..", "fixtures", "fake-tool", "eslint.mjs");
 const LINTED = join(ROOT, "src/engine/runner.ts");
 
 const runWith = (mode: string, categories?: readonly string[]): RunnerOutcome =>

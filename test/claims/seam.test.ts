@@ -1,10 +1,10 @@
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { SeamRule } from "../src/claims/seam.ts";
-import { check } from "../src/compose.ts";
+import type { SeamRule } from "../../src/claims/seam.ts";
+import { check } from "../../src/compose.ts";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "seam");
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "seam");
 
 const ZONES = [
   { name: "domain", patterns: ["domain/**"] },
