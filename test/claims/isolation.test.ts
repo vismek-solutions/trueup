@@ -58,6 +58,21 @@ describe("keeping sibling directories apart", () => {
     );
   });
 
+  it("keeps the same route name in two apps apart, and each app's routes from each other", () => {
+    const root = fixtureAt("many-routes");
+    const report = check({
+      root,
+      zones: [{ name: "apps", patterns: ["apps/**"] }],
+      isolate: [{ siblings: "apps/*/src/routes/*" }],
+    });
+
+    expect(messagesIn(report, "every-import-resolves")).toEqual([]);
+    expect(messagesIn(report, CLAIM)).toEqual([
+      "is ui/a and may not reach sibling ui/b: thing from apps/ui/src/routes/b/thing.ts",
+      "is web/a and may not reach sibling ui/a: page from apps/ui/src/routes/a/page.ts",
+    ]);
+  });
+
   it("fails rather than passing quietly when the pattern matches no directory", () => {
     expect(messagesIn(runWith({ siblings: "src/pages/*" }), CLAIM)).toEqual([
       "`src/pages/*` matches no directory, so nothing is being kept apart",

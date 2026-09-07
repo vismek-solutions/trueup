@@ -103,10 +103,11 @@ A monorepo does not need one file listing every zone in every package. The root 
 ```ts
 // architecture.config.ts
 export default defineConfig({
-  include: ["packages", "apps"],
   members: ["packages/*", "apps/*"],
 });
 ```
+
+No `include` needed. Left out, the whole repo is analysed, so a directory no member claims fails as unclassified rather than going quietly unchecked. Narrowing `include` is how you *stop* seeing something, which is rarely what you want.
 
 ```ts
 // packages/lib/architecture.config.ts
@@ -364,7 +365,9 @@ Depth does not matter. `src/routes/c/deep/inner.ts` is still `c`.
 
 The parent itself is in no group. So `src/routes/index.ts` importing every route is fine — that is what a parent is for.
 
-More than one `*` is allowed, and each combination is its own island. `apps/*/features/*` keeps `web/cart` apart from `web/checkout` and from `admin/cart`.
+More than one `*` is allowed, and each combination is its own island. `apps/*/src/routes/*` keeps `ui/a` apart from `ui/b` and from `web/a`, across every app at once.
+
+This is not what `mayReach` does, and members do not replace it. A member is a unit with a rulebook and a public api, and it names what it reaches. An island has neither, there are dozens of them, and the set changes every week — the whole value is that a new one is governed the moment it exists.
 
 If the pattern matches no directory at all, that is an error rather than a silent pass. A rule guarding nothing is the failure mode this tool exists to prevent.
 
