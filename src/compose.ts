@@ -4,6 +4,7 @@ import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
+import { runDelegated } from "./claims/delegated.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
@@ -13,6 +14,7 @@ import { buildSymbolGraph } from "./graph/build.ts";
 import type { SymbolGraph } from "./graph/model.ts";
 import { buildLexicon } from "./lexicon/build.ts";
 import type { ModuleRecord } from "./ports/module-record.ts";
+import type { Runner } from "./ports/runner.ts";
 import { buildProject } from "./project/build.ts";
 import type { Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
@@ -32,6 +34,7 @@ export interface CheckOptions {
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
   readonly rules?: readonly Rule[] | undefined;
+  readonly runners?: readonly Runner[] | undefined;
   readonly extensions?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
 }
@@ -45,6 +48,7 @@ export function check({
   boundaries = [],
   seams = [],
   rules = [],
+  runners = [],
   extensions,
   ignoreDirectories,
 }: CheckOptions): Report {
@@ -62,5 +66,6 @@ export function check({
     ...customClaims(rules),
   ];
 
-  return runClaims(claims, { root, graph, zones: assignment, lexicon, project });
+  const report = runClaims(claims, { root, graph, zones: assignment, lexicon, project });
+  return { claims: [...report.claims, ...runDelegated(runners, root)], coverage: report.coverage };
 }

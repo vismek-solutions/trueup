@@ -1,4 +1,6 @@
-export type Severity = "error" | "warning";
+import type { Severity } from "../ports/severity.ts";
+
+export type { Severity };
 
 export interface Finding {
   readonly severity: Severity;

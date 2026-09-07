@@ -36,6 +36,7 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     boundaries: config.boundaries,
     seams: config.seams,
     rules: config.rules,
+    runners: config.runners,
     extensions: config.extensions,
     ignoreDirectories: config.ignoreDirectories,
   });

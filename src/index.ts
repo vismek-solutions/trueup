@@ -9,5 +9,8 @@ export type { ZoneDefinition } from "./zones/model.ts";
 export type { Finding, Report, Severity } from "./report/model.ts";
 export { check, type CheckOptions } from "./compose.ts";
 export type { Baseline, BaselineEntry } from "./ports/baseline.ts";
+export type { Runner, RunnerFinding, RunnerOutcome } from "./ports/runner.ts";
+export { fallowRunner, DEFAULT_FALLOW_CATEGORIES, type FallowRunnerOptions } from "./adapters/fallow-runner.ts";
+export { RUNNERS_RAN_CLAIM } from "./claims/delegated.ts";
 export { applyBaseline, baselineOf, STALE_CLAIM } from "./ratchet/apply.ts";
 export type { RatchetResult } from "./ratchet/model.ts";
