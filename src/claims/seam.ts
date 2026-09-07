@@ -57,7 +57,7 @@ export function seamClaim(rules: readonly SeamRule[]): Claim {
   return {
     name: "generic-code-names-no-domain-concept",
     guidance:
-      "Generic code named a symbol the domain exports, or repeated a value the domain declares, with no import to explain it. This is the violation that crosses no import edge: a value arrives as a prop and the receiving file restates a shape it may not know. Take the name or value from the domain rather than restating it, or move the code into a zone that may know the domain. Run `{acs} explain <file>` to see the vocabulary. Add to `allow` only for a word the two genuinely share.",
+      "Generic code named a symbol the domain exports, or repeated a value the domain declares, with no import to explain it. This is the violation that crosses no import edge: a value arrives as a prop and the receiving file restates a shape it may not know. Take the name or value from the domain rather than restating it, or move the code into a zone that may know the domain. Run `{trueline} explain <file>` to see the vocabulary. Add to `allow` only for a word the two genuinely share.",
     check: ({ zones, lexicon }) =>
       rules.flatMap((rule) => {
         const shared: Omit<SeamContext, "imported"> = {

@@ -63,7 +63,7 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
   claims.push({
     claim: STALE_CLAIM,
     guidance:
-      "These baseline entries match nothing any more, so the violations they recorded are fixed. Run `{acs} --update-baseline` to drop them. Left in place they become permanent exemptions nobody audits.",
+      "These baseline entries match nothing any more, so the violations they recorded are fixed. Run `{trueline} --update-baseline` to drop them. Left in place they become permanent exemptions nobody audits.",
     findings: stale.map((entry) => ({
       severity: "warning" as const,
       message: `${entry.claim} no longer reports this: ${entry.message}`,

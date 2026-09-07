@@ -53,7 +53,7 @@ describe("the block a project pastes into its agent instructions", () => {
     const output = await capture((write) => runAgentInstructions({ cwd: PROJECT, write }));
 
     expect(output).toContain("Zones: engine, domain, shared");
-    expect(output).toContain("acs explain <file>");
+    expect(output).toContain("trueline explain <file>");
     expect(output).toContain("before");
   });
 

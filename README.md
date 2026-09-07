@@ -1,6 +1,6 @@
-# acs
+# trueline
 
-`acs` keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing that shape.
+`trueline` keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing that shape.
 
 It reads your source files without running them, works out which file depends on which, and compares that against rules you wrote down. When something breaks a rule, it says which file, what it did, and what to do about it.
 
@@ -8,7 +8,7 @@ It reads your source files without running them, works out which file depends on
 
 A linter reads one file at a time and tells you about that file: an unused variable, a missing `await`. It is looking at the code *inside* a file.
 
-`acs` looks at the lines *between* files. Which parts of your project are allowed to know about which other parts. Where things live. Whether a folder has quietly become a junk drawer. None of that is visible from inside any single file, which is exactly why it goes wrong without anyone noticing.
+`trueline` looks at the lines *between* files. Which parts of your project are allowed to know about which other parts. Where things live. Whether a folder has quietly become a junk drawer. None of that is visible from inside any single file, which is exactly why it goes wrong without anyone noticing.
 
 You describe the shape once, in a config file. After that every run answers the same question: is this still true?
 
@@ -25,13 +25,13 @@ That is what this is. And because a rule the agent can edit is a rule the agent 
 Requires Node 22.18 or newer.
 
 ```
-npm install --save-dev acs
+npm install --save-dev trueline
 ```
 
 Create `architecture.config.ts` at the root of your project. This one says the project has four kinds of file, and that `engine` code may not reach into `domain` or `app`:
 
 ```ts
-import { defineConfig } from "acs";
+import { defineConfig } from "trueline";
 
 export default defineConfig({
   include: ["src"],
@@ -48,7 +48,7 @@ export default defineConfig({
 Then run it:
 
 ```
-npx acs
+npx trueline
 ```
 
 ## Zones
@@ -78,7 +78,7 @@ every-import-respects-its-zone-boundary     1 error
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
     reach the target, or have the target expose what the caller needs through a zone it may reach.
-    Run `acs explain <file>` to see what a file may reach. Widening the rule is not the fix.
+    Run `trueline explain <file>` to see what a file may reach. Widening the rule is not the fix.
 
 generic-code-names-no-domain-concept        ok
 
@@ -129,7 +129,7 @@ Most projects have a **barrel**: a file, usually `index.ts`, that re-exports eve
 
 Barrels also make dependency rules useless. To a tool that reads import statements, every consumer of that package looks identical — they all import from `shared/index.ts`. A rule saying "components may not touch warrants" either matches every one of those imports or none of them, and neither is the truth.
 
-`acs` follows the re-export chain to the file that actually **declares** the thing you imported, and anchors the rule there. On a real monorepo, the same rule written both ways:
+`trueline` follows the re-export chain to the file that actually **declares** the thing you imported, and anchors the rule there. On a real monorepo, the same rule written both ways:
 
 | anchored on | result |
 |---|---|
@@ -144,7 +144,7 @@ Set `anchor: "imported-module"` when you do want the blunt version — "this pac
 
 This is the part that matters most if you are working with an agent.
 
-Claude Code can run a command before it writes a file, and cancel the write if that command objects. `acs guard` is that command: it reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
+Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueline guard` is that command: it reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
 
 ```json
 {
@@ -152,13 +152,13 @@ Claude Code can run a command before it writes a file, and cancel the write if t
     "PreToolUse": [
       {
         "matcher": "Write|Edit|mcp__serena__replace_content",
-        "hooks": [{ "type": "command", "command": "npx acs guard" }]
+        "hooks": [{ "type": "command", "command": "npx trueline guard" }]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "mcp__serena__(replace_content|replace_symbol_body|replace_in_files|insert_after_symbol|insert_before_symbol|rename_symbol|safe_delete_symbol)",
-        "hooks": [{ "type": "command", "command": "npx acs guard" }]
+        "hooks": [{ "type": "command", "command": "npx trueline guard" }]
       }
     ]
   }
@@ -180,7 +180,7 @@ If you are not using Serena, the `Write|Edit` matcher alone covers everything an
 ## Telling the agent the rules up front
 
 ```
-npx acs agent-instructions >> CLAUDE.md
+npx trueline agent-instructions >> CLAUDE.md
 ```
 
 This prints a short block naming your zones, the two commands worth running, and the instruction that matters most: fix the code, not the rule. Blocking an edit teaches the agent one rule at a time, at the moment it breaks it. This teaches it the shape before it starts.
@@ -188,7 +188,7 @@ This prints a short block naming your zones, the two commands worth running, and
 ## Asking before writing
 
 ```
-$ npx acs explain src/engine/newThing.ts
+$ npx trueline explain src/engine/newThing.ts
 
 zone        engine
 may reach   engine · shared
@@ -206,7 +206,7 @@ Useful to you when you are deciding where something goes, and useful to an agent
 Almost nobody starts clean. Record what is already there, then hold the line:
 
 ```
-npx acs --update-baseline
+npx trueline --update-baseline
 ```
 
 The **baseline** is a file listing the violations that existed when you started. From then on a new violation fails the build, while a recorded one prints as a warning — visible, not hidden, so nobody forgets the debt is there.
@@ -281,7 +281,7 @@ Adding a production caller to satisfy the check is the one fix that makes the co
 Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project:
 
 ```ts
-import { defineRule } from "acs";
+import { defineRule } from "trueline";
 
 rules: [
   defineRule("no-two-zones-import-each-other", (project) => {
@@ -317,7 +317,7 @@ Rules see a model of the project rather than a syntax tree, so the parser stays 
 The rules here cover what a linter cannot express. Everything else is delegated, and those findings join the same report and the same baseline:
 
 ```ts
-import { biomeRunner, eslintRunner, fallowRunner } from "acs";
+import { biomeRunner, eslintRunner, fallowRunner } from "trueline";
 
 runners: [eslintRunner(), biomeRunner(), fallowRunner()]
 ```

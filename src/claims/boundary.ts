@@ -72,7 +72,7 @@ export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
   return {
     name: "every-import-respects-its-zone-boundary",
     guidance:
-      "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it. Move the code to a zone that may reach the target, or have the target expose what the caller needs through a zone it may reach. Run `{acs} explain <file>` to see what a file may reach. Widening the rule is not the fix.",
+      "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it. Move the code to a zone that may reach the target, or have the target expose what the caller needs through a zone it may reach. Run `{trueline} explain <file>` to see what a file may reach. Widening the rule is not the fix.",
     check: ({ root, graph, zones }) => {
       const byOrigin = rulesByOrigin(rules);
       const zoneOf = (path: string): string | null => zones.zoneOf(path);

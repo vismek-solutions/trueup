@@ -1,8 +1,8 @@
 import type { Report } from "./model.ts";
 
-export const COMMAND_TOKEN = "{acs}";
+export const COMMAND_TOKEN = "{trueline}";
 
-export const DEFAULT_COMMAND = "acs";
+export const DEFAULT_COMMAND = "trueline";
 
 export const withCommand = (report: Report, command: string): Report => ({
   claims: report.claims.map((claim) => ({

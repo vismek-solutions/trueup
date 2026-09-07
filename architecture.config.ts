@@ -26,7 +26,7 @@ const allBut = (...kept: string[]): string[] => LAYERS.filter((layer) => !kept.i
 export default defineConfig({
   include: ["src", "test", "bin"],
   ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures"],
-  command: "node ./bin/acs.js",
+  command: "node ./bin/trueline.js",
   maxFilesPerDirectory: 12,
   colocation: true,
   runners: [
