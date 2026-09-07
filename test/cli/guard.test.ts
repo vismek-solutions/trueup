@@ -43,6 +43,14 @@ describe("guarding a proposed write", () => {
     expect(existsSync(NEW_FILE)).toBe(false);
   });
 
+  it("names the file each finding is about, so a message that reads as a fragment has a subject", async () => {
+    const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));
+    const reason = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+
+    expect(reason).toContain("src/engine/added.ts  ");
+    expect(reason).not.toContain(PROJECT);
+  });
+
   it("allows a proposal that breaks nothing, despite an existing violation elsewhere", async () => {
     expect((await guard(writing(NEW_FILE, REACHES_NOTHING))).output).toBe("");
   });

@@ -1,4 +1,3 @@
-import { relative } from "node:path";
 import type { Vocabulary } from "../lexicon/model.ts";
 import type { Mention } from "../ports/module-record.ts";
 import type { Finding } from "../report/model.ts";
@@ -20,7 +19,6 @@ export const seamZoneReferences = (rules: readonly SeamRule[]): readonly ZoneRef
   );
 
 interface SeamContext {
-  readonly root: string;
   readonly rule: SeamRule;
   readonly vocabulary: Vocabulary;
   readonly imported: ReadonlySet<string>;
@@ -34,7 +32,7 @@ const leaks = (mention: Mention, { vocabulary, imported, minimum }: SeamContext)
     : mention.text.length >= minimum && vocabulary.literals.has(mention.text);
 
 const findingsIn = (file: string, mentions: readonly Mention[], context: SeamContext): Finding[] => {
-  const { root, rule, allowed } = context;
+  const { rule, allowed } = context;
   const reported = new Set<string>();
   const findings: Finding[] = [];
 
@@ -46,7 +44,7 @@ const findingsIn = (file: string, mentions: readonly Mention[], context: SeamCon
     const what = mention.form === "name" ? `the name ${mention.text}` : `the value "${mention.text}"`;
     findings.push({
       severity: "error",
-      message: `${relative(root, file)} is ${rule.generic} and names ${what}, which ${rule.domain.join(" or ")} owns`,
+      message: `is ${rule.generic} and names ${what}, which ${rule.domain.join(" or ")} owns`,
       file,
       start: mention.start,
     });
@@ -60,10 +58,9 @@ export function seamClaim(rules: readonly SeamRule[]): Claim {
     name: "generic-code-names-no-domain-concept",
     guidance:
       "Generic code named a symbol the domain exports, or repeated a value the domain declares, with no import to explain it. This is the violation that crosses no import edge: a value arrives as a prop and the receiving file restates a shape it may not know. Take the name or value from the domain rather than restating it, or move the code into a zone that may know the domain. Run `{acs} explain <file>` to see the vocabulary. Add to `allow` only for a word the two genuinely share.",
-    check: ({ root, zones, lexicon }) =>
+    check: ({ zones, lexicon }) =>
       rules.flatMap((rule) => {
         const shared: Omit<SeamContext, "imported"> = {
-          root,
           rule,
           vocabulary: lexicon.vocabularyOf(rule.domain.flatMap((zone) => zones.filesIn(zone))),
           allowed: new Set(rule.allow ?? []),

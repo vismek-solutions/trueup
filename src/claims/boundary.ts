@@ -50,7 +50,7 @@ const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput
 
   return {
     severity: "error",
-    message: `${relative(root, edge.from)} is ${fromZone} and may not reach ${targetZone}: ${edge.imported} from ${reached}`,
+    message: `is ${fromZone} and may not reach ${targetZone}: ${edge.imported} from ${reached}`,
     file: edge.from,
     start: edge.start,
   };

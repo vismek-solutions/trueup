@@ -58,7 +58,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const baseline = readBaseline(baselinePathIn(root));
   const effective = baseline.entries.length === 0 ? report : applyBaseline({ report, baseline, root }).report;
 
-  const denial = denialFor(decideOnProposal({ report: effective, path: proposal.path }));
+  const denial = denialFor(decideOnProposal({ report: effective, path: proposal.path, root }));
   if (denial !== null) write(denial);
   return 0;
 }

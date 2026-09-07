@@ -49,7 +49,7 @@ every-zone-has-a-file                       ok
 every-zone-pattern-matches-a-file           ok
 every-rule-names-a-declared-zone            ok
 every-import-respects-its-zone-boundary     1 error
-    src/engine/table.ts:14:9  src/engine/table.ts is engine and may not reach domain: Warrant from src/domain/warrant.ts through src/shared/index.ts
+    src/engine/table.ts:14:9  is engine and may not reach domain: Warrant from src/domain/warrant.ts through src/shared/index.ts
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
     reach the target, or have the target expose what the caller needs through a zone it may reach.
