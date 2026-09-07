@@ -25,7 +25,12 @@ const locate = (root: string, finding: Finding, cache: Map<string, string>): str
   return `${relative(root, finding.file)}${position}`;
 };
 
-export function render(report: Report, root: string): string {
+export interface RatchetSummary {
+  readonly known: number;
+  readonly stale: number;
+}
+
+export function render(report: Report, root: string, ratchet?: RatchetSummary): string {
   const cache = new Map<string, string>();
   const lines: string[] = [];
   const { coverage } = report;
@@ -38,6 +43,9 @@ export function render(report: Report, root: string): string {
     `coverage  ${coverage.files} files · ${coverage.edges} edges · ${coverage.symbolEdges} symbol · ${coverage.externalEdges} external · ${coverage.builtinEdges} builtin · ${coverage.unresolvedImports} unresolved`,
   );
   lines.push(`zones     ${zones || "none"} · ${coverage.unclassifiedFiles} unclassified`);
+  if (ratchet !== undefined) {
+    lines.push(`baseline  ${ratchet.known} known · ${ratchet.stale} stale`);
+  }
   lines.push("");
 
   for (const claim of report.claims) {

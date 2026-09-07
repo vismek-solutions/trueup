@@ -1,7 +1,19 @@
 import { defineRule } from "./src/claims/custom.ts";
 import { defineConfig } from "./src/config/model.ts";
 
-const LAYERS = ["graph", "zones", "lexicon", "project", "report", "claims", "config", "cli", "adapters", "root"];
+const LAYERS = [
+  "graph",
+  "zones",
+  "lexicon",
+  "project",
+  "report",
+  "ratchet",
+  "claims",
+  "config",
+  "cli",
+  "adapters",
+  "root",
+];
 const allBut = (...kept: string[]): string[] => LAYERS.filter((layer) => !kept.includes(layer));
 
 export default defineConfig({
@@ -13,6 +25,7 @@ export default defineConfig({
     { name: "lexicon", patterns: ["src/lexicon/**"] },
     { name: "project", patterns: ["src/project/**"] },
     { name: "report", patterns: ["src/report/**"] },
+    { name: "ratchet", patterns: ["src/ratchet/**"] },
     { name: "claims", patterns: ["src/claims/**"] },
     { name: "config", patterns: ["src/config/**"] },
     { name: "cli", patterns: ["src/cli/**"] },
@@ -27,9 +40,10 @@ export default defineConfig({
     { from: "adapters", mayNotReach: allBut("adapters") },
     { from: "project", mayNotReach: allBut("project", "graph", "zones", "lexicon", "report") },
     { from: "report", mayNotReach: allBut("report", "graph", "zones") },
+    { from: "ratchet", mayNotReach: allBut("ratchet", "report") },
     { from: "claims", mayNotReach: allBut("claims", "graph", "zones", "lexicon", "project", "report") },
     { from: "config", mayNotReach: allBut("config", "claims", "zones", "project") },
-    { from: "cli", mayNotReach: allBut("cli", "config", "report", "root") },
+    { from: "cli", mayNotReach: allBut("cli", "config", "report", "ratchet", "adapters", "root") },
   ],
   rules: [
     defineRule("no-two-zones-import-each-other", (project) => {

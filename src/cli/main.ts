@@ -1,7 +1,15 @@
+import { relative } from "node:path";
+import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baseline-file.ts";
 import { check } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
+import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { countOf } from "../report/model.ts";
 import { render } from "./render.ts";
+
+export const EXIT_CLEAN = 0;
+export const EXIT_ERRORS = 1;
+export const EXIT_STALE_BASELINE = 2;
+export const EXIT_NO_CONFIG = 3;
 
 export interface RunCliInput {
   readonly cwd: string;
@@ -11,12 +19,13 @@ export interface RunCliInput {
 
 export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number> {
   const asJson = argv.includes("--json");
+  const updating = argv.includes("--update-baseline");
   const explicit = argv.find((entry) => entry.startsWith("--config="))?.slice("--config=".length);
   const path = explicit ?? findConfig(cwd);
 
   if (path === null || path === undefined) {
     write("no architecture.config.ts found");
-    return 2;
+    return EXIT_NO_CONFIG;
   }
 
   const { config, root } = await loadConfig(path);
@@ -31,6 +40,28 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     ignoreDirectories: config.ignoreDirectories,
   });
 
-  write(asJson ? JSON.stringify(report, null, 2) : render(report, root));
-  return countOf(report, "error") > 0 ? 1 : 0;
+  const baselinePath = baselinePathIn(root);
+
+  if (updating) {
+    const baseline = baselineOf(report, root);
+    writeBaseline(baselinePath, baseline);
+    write(`accepted ${baseline.entries.length} findings into ${relative(cwd, baselinePath) || baselinePath}`);
+    return EXIT_CLEAN;
+  }
+
+  const baseline = readBaseline(baselinePath);
+  if (baseline.entries.length === 0) {
+    write(asJson ? JSON.stringify(report, null, 2) : render(report, root));
+    return countOf(report, "error") > 0 ? EXIT_ERRORS : EXIT_CLEAN;
+  }
+
+  const ratcheted = applyBaseline({ report, baseline, root });
+  write(
+    asJson
+      ? JSON.stringify(ratcheted.report, null, 2)
+      : render(ratcheted.report, root, { known: ratcheted.known, stale: ratcheted.stale }),
+  );
+
+  if (countOf(ratcheted.report, "error") > 0) return EXIT_ERRORS;
+  return ratcheted.stale > 0 ? EXIT_STALE_BASELINE : EXIT_CLEAN;
 }
