@@ -7,6 +7,18 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ^2.5.12
+        version: 2.5.12
+      fallow:
+        specifier: ^3.22.0
+        version: 3.22.0
+      oxlint:
+        specifier: ^1.81.0
+        version: 1.81.0
+
+  packages/trueline:
     dependencies:
       oxc-parser:
         specifier: ^0.148.0
@@ -18,21 +30,12 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7
     devDependencies:
-      '@biomejs/biome':
-        specifier: ^2.5.12
-        version: 2.5.12
       '@types/node':
         specifier: ^22.10.0
         version: 22.20.1
       '@types/picomatch':
         specifier: ^4.0.3
         version: 4.0.3
-      fallow:
-        specifier: ^3.22.0
-        version: 3.22.0
-      oxlint:
-        specifier: ^1.81.0
-        version: 1.81.0
       typescript:
         specifier: ^7.0.2
         version: 7.0.2

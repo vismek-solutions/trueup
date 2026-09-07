@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/bin/trueline.js\" guard"
+            "command": "node \"$CLAUDE_PROJECT_DIR/packages/trueline/bin/trueline.js\" guard"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/bin/trueline.js\" guard"
+            "command": "node \"$CLAUDE_PROJECT_DIR/packages/trueline/bin/trueline.js\" guard"
           }
         ]
       }
