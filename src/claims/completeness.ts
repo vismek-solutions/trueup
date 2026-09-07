@@ -4,7 +4,7 @@ import type { Claim } from "./model.ts";
 export const everyFileBelongsToAZone: Claim = {
   name: "every-file-belongs-to-a-zone",
   guidance:
-    "A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing zone, or declare a zone that covers it. Run `acs explain <file>` to see what a location would allow.",
+    "A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing zone, or declare a zone that covers it. Run `{acs} explain <file>` to see what a location would allow.",
   check: ({ root, zones }) =>
     zones.unclassified.map((file) => ({
       severity: "error",

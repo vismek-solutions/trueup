@@ -6,6 +6,7 @@ import { check } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { decideOnProposal } from "../guard/decide.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
+import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 
 export interface RunGuardInput {
   readonly cwd: string;
@@ -37,7 +38,8 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const roots = resolveInclude(root, config.include);
   if (!under(roots, proposal.path)) return 0;
 
-  const report = check({
+  const report = withCommand(
+    check({
     root,
     roots,
     zones: config.zones,
@@ -46,8 +48,10 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     rules: config.rules,
     extensions: config.extensions,
     ignoreDirectories: config.ignoreDirectories,
-    overlay: new Map([[proposal.path, proposal.text]]),
-  });
+      overlay: new Map([[proposal.path, proposal.text]]),
+    }),
+    config.command ?? DEFAULT_COMMAND,
+  );
 
   const baseline = readBaseline(baselinePathIn(root));
   const effective =

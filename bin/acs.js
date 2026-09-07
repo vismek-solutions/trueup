@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { runAgentInstructions } from "../src/cli/agent-instructions.ts";
 import { runExplain } from "../src/cli/explain.ts";
 import { runGuard } from "../src/cli/guard.ts";
 import { runCli } from "../src/cli/main.ts";
@@ -6,7 +7,9 @@ import { runCli } from "../src/cli/main.ts";
 const argv = process.argv.slice(2);
 const write = (line) => process.stdout.write(`${line}\n`);
 
-if (argv[0] === "explain") {
+if (argv[0] === "agent-instructions") {
+  process.exitCode = await runAgentInstructions({ cwd: process.cwd(), write });
+} else if (argv[0] === "explain") {
   process.exitCode = await runExplain({ cwd: process.cwd(), argv: argv.slice(1), write });
 } else if (argv[0] === "guard") {
   const chunks = [];

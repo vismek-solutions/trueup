@@ -5,6 +5,7 @@ import type { Runner } from "../ports/runner.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 
 export interface ArchitectureConfig {
+  readonly command?: string | undefined;
   readonly include?: readonly string[] | undefined;
   readonly zones: readonly ZoneDefinition[];
   readonly boundaries?: readonly BoundaryRule[] | undefined;

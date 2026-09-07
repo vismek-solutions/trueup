@@ -3,6 +3,7 @@ import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baselin
 import { check } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
+import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf } from "../report/model.ts";
 import { render } from "./render.ts";
 
@@ -29,7 +30,8 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
   }
 
   const { config, root } = await loadConfig(path);
-  const report = check({
+  const report = withCommand(
+    check({
     root,
     roots: resolveInclude(root, config.include),
     zones: config.zones,
@@ -37,9 +39,11 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     seams: config.seams,
     rules: config.rules,
     runners: config.runners,
-    extensions: config.extensions,
-    ignoreDirectories: config.ignoreDirectories,
-  });
+      extensions: config.extensions,
+      ignoreDirectories: config.ignoreDirectories,
+    }),
+    config.command ?? DEFAULT_COMMAND,
+  );
 
   const baselinePath = baselinePathIn(root);
 

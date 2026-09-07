@@ -175,6 +175,16 @@ Entries are keyed on the claim, the file and the message, never on a position, s
 
 Only findings on the proposed path block it. Someone else's standing violation is not this edit's problem, and anything already in the baseline does not block either. An unusable payload, a missing config or a path outside the analysed roots all allow — a guard that errors would block every edit rather than the wrong ones.
 
+## Telling an agent about it
+
+```
+acs agent-instructions >> CLAUDE.md
+```
+
+Prints a block naming the zones, both commands, and the instruction that matters most: fix the code, not the rule. Widening a boundary or recording a violation in the baseline to make a check pass defeats the check, and an agent under pressure to make output green will otherwise do exactly that.
+
+The command written into guidance comes from `command` in the config, so a project installing this as a dependency sets `command: "npx acs"` and every message says the right thing.
+
 ## Asking before writing
 
 ```

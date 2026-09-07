@@ -1,6 +1,7 @@
 import { isAbsolute, relative, resolve } from "node:path";
 import { inspect } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
+import { DEFAULT_COMMAND } from "../report/invocation.ts";
 
 export interface RunExplainInput {
   readonly cwd: string;
@@ -21,7 +22,7 @@ const sampleOf = (values: Iterable<string>): string => {
 export async function runExplain({ cwd, argv, write }: RunExplainInput): Promise<number> {
   const target = argv.find((entry) => !entry.startsWith("--"));
   if (target === undefined) {
-    write("usage: acs explain <path>");
+    write(`usage: ${DEFAULT_COMMAND} explain <path>`);
     return 3;
   }
 
