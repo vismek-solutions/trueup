@@ -28,7 +28,8 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     return 3;
   }
 
-  const { config, root } = await loadConfig(configPath);
+  const { config, root, memberConfigs } = await loadConfig(configPath);
+  const rulebooks = [configPath, ...memberConfigs];
   const path = isAbsolute(target) ? target : resolve(cwd, target);
 
   const project = inspect({
@@ -38,6 +39,7 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     extensions: config.extensions,
     externals: config.externals,
     ignoreDirectories: config.ignoreDirectories,
+    ignoreFiles: rulebooks,
     overlay: new Map([[path, ""]]),
   });
 

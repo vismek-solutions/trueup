@@ -96,6 +96,44 @@ A file in no zone is an error, not a shrug. A file nothing has classified is a f
 
 Put your tests in their own zone, ahead of everything else. Left inside a source zone, fixture text leaks into the other checks.
 
+### One config per package
+
+A monorepo does not need one file listing every zone in every package. The root names its members; each member names its own zones.
+
+```ts
+// architecture.config.ts
+export default defineConfig({
+  include: ["packages", "apps"],
+  members: ["packages/*", "apps/*"],
+  zones: [],
+  boundaries: [{ from: "docs", mayNotReach: ["lib"], anchor: "imported-module" }],
+});
+```
+
+```ts
+// packages/lib/architecture.config.ts
+export default defineMember({
+  zones: [
+    { name: "api", patterns: ["src/index.ts"], role: "api" },
+    { name: "domain", patterns: ["src/domain/**"] },
+    { name: "engine", patterns: ["src/engine/**"] },
+  ],
+  boundaries: [{ from: "domain", mayNotReach: ["engine"] }],
+});
+```
+
+A member's patterns are relative to the member. Its zone names are qualified with it, so the report says `lib/domain` and `ui/domain` are different zones even though both packages called theirs `domain`.
+
+A member may only constrain itself. Everything it names is its own.
+
+The root writes rules between members, naming a member where a zone would go. `mayNotReach: ["lib"]` expands to every zone in `lib` **except** the ones marked `role: "api"` — that is what the role is for. Pair it with `anchor: "imported-module"` to get "enter through the index"; leave the anchor off and the rule follows the barrel to the declaring file, which blocks the index route too.
+
+Member zones are matched before the root's own, and a name used by both a member and a root zone is an error.
+
+Each member's config is protected from agent edits exactly like the root's.
+
+Still one number for the whole repo: `maxFilesPerDirectory` and `duplication`. Members cannot override those yet.
+
 ## Reading a report
 
 Here is a run with one violation.

@@ -25,7 +25,7 @@ interface Site {
 
 interface Rulebook {
   readonly root: string;
-  readonly config: string;
+  readonly rulebooks: readonly string[];
   readonly baseline: string;
   readonly protect: Protection | undefined;
   readonly mode: string | null;
@@ -59,7 +59,7 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
   const decision = protectionOf({
     root: rulebook.root,
     path,
-    always: [rulebook.config, rulebook.baseline],
+    always: [...rulebook.rulebooks, rulebook.baseline],
     protect: rulebook.protect,
     mode: rulebook.mode,
   });
@@ -92,15 +92,16 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const found = findConfig(cwd);
   if (found === null) return 0;
 
-  const { config, root } = await loadConfig(found);
+  const { config, root, memberConfigs } = await loadConfig(found);
   const request = requestFrom(payload, root);
   if (request === null) return 0;
 
+  const rulebooks = [found, ...memberConfigs];
   const target = targetOf(request);
   const baseline = baselinePathIn(root);
   const refusal = refusalOver(request, target, {
     root,
-    config: found,
+    rulebooks,
     baseline,
     protect: config.protect,
     mode: modeOf(payload),
@@ -129,6 +130,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       extensions: config.extensions,
       externals: config.externals,
       ignoreDirectories: config.ignoreDirectories,
+      ignoreFiles: rulebooks,
       overlay: overlayOf(request),
     }),
     config.command ?? DEFAULT_COMMAND,

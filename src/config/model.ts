@@ -6,9 +6,15 @@ import type { Protection } from "../ports/protection.ts";
 import type { Runner } from "../ports/runner.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 
+export interface MemberConfig {
+  readonly zones: readonly ZoneDefinition[];
+  readonly boundaries?: readonly BoundaryRule[] | undefined;
+}
+
 export interface ArchitectureConfig {
   readonly command?: string | undefined;
   readonly include?: readonly string[] | undefined;
+  readonly members?: readonly string[] | undefined;
   readonly zones: readonly ZoneDefinition[];
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
@@ -25,3 +31,5 @@ export interface ArchitectureConfig {
 }
 
 export const defineConfig = (config: ArchitectureConfig): ArchitectureConfig => config;
+
+export const defineMember = (config: MemberConfig): MemberConfig => config;

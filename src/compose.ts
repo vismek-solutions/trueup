@@ -56,6 +56,7 @@ export interface InspectOptions {
   readonly extensions?: readonly string[] | undefined;
   readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
+  readonly ignoreFiles?: readonly string[] | undefined;
   readonly overlay?: Overlay | undefined;
 }
 
@@ -66,9 +67,11 @@ const analyseProject = ({
   extensions,
   externals,
   ignoreDirectories,
+  ignoreFiles,
   overlay,
 }: InspectOptions) => {
-  const sources = readSources({ roots: roots ?? [root], extensions, ignoreDirectories }, overlay);
+  const discovery = { roots: roots ?? [root], extensions, ignoreDirectories, ignoreFiles };
+  const sources = readSources(discovery, overlay);
   const modules = parseAll(sources, parseModule);
   const graph = buildSymbolGraph({ modules, resolve: createResolver({ externals }) });
   const assignment = assignZones({ root, files: [...graph.files], zones });
@@ -128,6 +131,7 @@ export interface CheckOptions {
   readonly extensions?: readonly string[] | undefined;
   readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
+  readonly ignoreFiles?: readonly string[] | undefined;
 }
 
 const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessClaims];
@@ -161,6 +165,7 @@ export function check({
   extensions,
   externals,
   ignoreDirectories,
+  ignoreFiles,
 }: CheckOptions): Report {
   const {
     graph,
@@ -174,6 +179,7 @@ export function check({
     extensions,
     externals,
     ignoreDirectories,
+    ignoreFiles,
     overlay,
   });
 

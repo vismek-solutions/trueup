@@ -1,4 +1,4 @@
-export { defineConfig, type ArchitectureConfig } from "./config/model.ts";
+export { defineConfig, defineMember, type ArchitectureConfig, type MemberConfig } from "./config/model.ts";
 export { defineRule, type Rule } from "./claims/custom.ts";
 export type { BoundaryRule, EdgeAnchor } from "./claims/boundary.ts";
 export type { SeamRule } from "./claims/seam.ts";

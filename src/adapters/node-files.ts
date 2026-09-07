@@ -18,15 +18,18 @@ export interface DiscoverFilesOptions {
   readonly roots: readonly string[];
   readonly extensions?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
+  readonly ignoreFiles?: readonly string[] | undefined;
 }
 
 export function discoverFiles({
   roots,
   extensions = SOURCE_EXTENSIONS,
   ignoreDirectories = IGNORED_DIRECTORIES,
+  ignoreFiles = [],
 }: DiscoverFilesOptions): string[] {
   const allowed = new Set(extensions);
   const skipped = new Set(ignoreDirectories);
+  const excluded = new Set(ignoreFiles);
   const found: string[] = [];
 
   const walk = (directory: string): void => {
@@ -36,7 +39,7 @@ export function discoverFiles({
         if (!skipped.has(entry.name)) walk(path);
         continue;
       }
-      if (entry.isFile() && allowed.has(extname(entry.name))) found.push(path);
+      if (entry.isFile() && allowed.has(extname(entry.name)) && !excluded.has(path)) found.push(path);
     }
   };
 

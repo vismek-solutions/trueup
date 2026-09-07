@@ -33,7 +33,8 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     return EXIT_NO_CONFIG;
   }
 
-  const { config, root } = await loadConfig(path);
+  const { config, root, memberConfigs } = await loadConfig(path);
+  const rulebooks = [path, ...memberConfigs];
   const report = check({
     root,
     roots: resolveInclude(root, config.include),
@@ -49,6 +50,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     extensions: config.extensions,
     externals: config.externals,
     ignoreDirectories: config.ignoreDirectories,
+    ignoreFiles: rulebooks,
   });
 
   const command = config.command ?? DEFAULT_COMMAND;
