@@ -132,6 +132,26 @@ Every claim runs on every pass, and the whole list always prints. Fixing one thi
 
 Under the findings sits the guidance for that claim. It says what the violation means and how to resolve it. It is written for whoever hits the rule without having read this file — which, most of the time, is the agent.
 
+### When you only want the failures
+
+```
+npx trueline --dots
+```
+
+One character per claim, then nothing else unless something failed.
+
+```
+................  80 files · 496 edges · 0 unresolved
+
+16 claims · 0 errors · 0 warnings
+```
+
+`.` is a claim that holds, `!` one whose only findings are in the baseline, `E` one with real errors. Only the `E`s are explained, and only their error findings — a claim's warnings stay counted in the tally and out of your way.
+
+The counts stay on the first line on purpose. A reporter that prints nothing when clean cannot tell you apart from a run that analysed nothing.
+
+This is worth handing to an agent that checks after every change. A green run costs it two lines instead of twenty.
+
 ## What it checks
 
 | claim | asserts |

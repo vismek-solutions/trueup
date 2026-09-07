@@ -91,6 +91,52 @@ const claimLines = (claim: Report["claims"][number], { root, width, cache }: Cla
   return [...lines, ...wrap(claim.guidance, 96).map((line) => `    ${line}`), ""];
 };
 
+const markOf = (findings: readonly Finding[]): string => {
+  if (errorsIn(findings) > 0) return "E";
+  return findings.length === 0 ? "." : "!";
+};
+
+const tallyLine = (report: Report): string => {
+  const total = report.claims.flatMap((claim) => claim.findings);
+  const errors = errorsIn(total);
+
+  return [
+    plural(report.claims.length, "claim"),
+    plural(errors, "error"),
+    plural(total.length - errors, "warning"),
+  ].join(" · ");
+};
+
+export function renderDots(report: Report, root: string, ratchet?: RatchetSummary): string {
+  const cache = new Map<string, string>();
+  const { coverage } = report;
+  const failed = report.claims.filter((claim) => errorsIn(claim.findings) > 0);
+  const width = Math.max(44, ...failed.map((claim) => claim.claim.length + 2));
+
+  const detail = failed.flatMap((claim) => {
+    const hits = claim.findings.filter((finding) => finding.severity === "error");
+    const shown = hits.map((finding) => {
+      const where = locate(root, finding, cache);
+      return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
+    });
+
+    return [
+      "",
+      `${claim.claim.padEnd(width)}${plural(hits.length, "error")}`,
+      ...shown,
+      ...wrap(claim.guidance, 96).map((line) => `    ${line}`),
+    ];
+  });
+
+  return [
+    `${report.claims.map((claim) => markOf(claim.findings)).join("")}  ${coverage.files} files · ${coverage.edges} edges · ${coverage.unresolvedImports} unresolved`,
+    ...(ratchet === undefined ? [] : [`baseline  ${ratchet.known} known · ${ratchet.stale} stale`]),
+    ...detail,
+    "",
+    tallyLine(report),
+  ].join("\n");
+}
+
 export function render(report: Report, root: string, ratchet?: RatchetSummary): string {
   const input: ClaimLinesInput = {
     root,
@@ -98,17 +144,10 @@ export function render(report: Report, root: string, ratchet?: RatchetSummary): 
     cache: new Map<string, string>(),
   };
 
-  const total = report.claims.flatMap((claim) => claim.findings);
-  const errors = errorsIn(total);
-
   return [
     ...headerOf(report, ratchet),
     ...report.claims.flatMap((claim) => claimLines(claim, input)),
     "",
-    [
-      plural(report.claims.length, "claim"),
-      plural(errors, "error"),
-      plural(total.length - errors, "warning"),
-    ].join(" · "),
+    tallyLine(report),
   ].join("\n");
 }
