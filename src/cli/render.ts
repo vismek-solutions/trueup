@@ -113,7 +113,7 @@ interface Problem {
 }
 
 const keyOf = (claim: string, finding: Finding): string =>
-  `${claim}\0${finding.group ?? `${finding.file ?? ""}\0${finding.message}`}`;
+  `${claim}\0${finding.group ?? `${finding.file ?? ""}\0${finding.start ?? ""}\0${finding.message}`}`;
 
 const problemsIn = (report: Report): Problem[] => {
   const byKey = new Map<string, Problem>();

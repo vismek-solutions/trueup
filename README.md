@@ -602,9 +602,9 @@ Rules see a model of the project rather than a syntax tree. The parser stays an 
 The rules here cover what a linter cannot express. Everything else is delegated. Those findings join the same report and the same baseline.
 
 ```ts
-import { biomeRunner, eslintRunner, fallowRunner } from "trueline";
+import { biomeRunner, eslintRunner, fallowRunner, oxlintRunner } from "trueline";
 
-runners: [eslintRunner(), biomeRunner(), fallowRunner()]
+runners: [eslintRunner(), biomeRunner(), fallowRunner(), oxlintRunner()]
 ```
 
 Each finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports`. A baseline entry then pins one rule rather than a whole tool.
@@ -619,7 +619,15 @@ Unparseable output. An unexpected shape. A silent tool, a missing binary, a conf
 
 Each of those fails the check rather than reporting nothing found. A tool that could not run is never recorded in a baseline.
 
-The exit codes are worth knowing about, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. Biome exits `1` whether it found problems or could not read the path at all, so the adapter reads its summary instead of its status.
+The exit codes are worth knowing about, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. Biome and oxlint exit `1` whether they found problems or could not read the path at all, so those adapters read a count out of the payload instead of trusting the status.
+
+### A note on oxlint
+
+oxlint is worth knowing about if you are on TypeScript 7. `@typescript-eslint/parser` refuses to load against it, which takes eslint out of play for TypeScript entirely until that lands. oxlint carries its own parser, needs no TypeScript API, and implements most of the eslint rules — including the ones eslint has and biome does not, like `max-params`.
+
+```ts
+oxlintRunner({ paths: ["src"], categories: ["eslint/max-params"] })
+```
 
 ### Letting biome fix what it can
 

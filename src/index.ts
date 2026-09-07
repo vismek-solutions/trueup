@@ -20,6 +20,7 @@ export {
   type FallowRunnerOptions,
 } from "./adapters/fallow-runner.ts";
 export { eslintRunner, type EslintRunnerOptions } from "./adapters/eslint-runner.ts";
+export { oxlintRunner, type OxlintRunnerOptions } from "./adapters/oxlint-runner.ts";
 export { biomeRunner, DEFAULT_MAX_DIAGNOSTICS, type BiomeRunnerOptions } from "./adapters/biome-runner.ts";
 export { RUNNERS_RAN_CLAIM } from "./claims/delegated.ts";
 export { decideOnProposal } from "./guard/decide.ts";

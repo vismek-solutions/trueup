@@ -1,0 +1,7 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": ["test/fixtures/**"],
+  "rules": {
+    "eslint/max-params": ["error", { "max": 3 }]
+  }
+}
