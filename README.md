@@ -189,6 +189,7 @@ Run it, fix what it shows, run it again. It reports `nothing left to fix` when t
 | `every-zone-pattern-matches-a-file` | no pattern is dead |
 | `every-rule-names-a-declared-zone` | no rule mentions a zone that does not exist |
 | `every-import-respects-its-zone-boundary` | the boundaries hold |
+| `no-zones-form-a-cycle` | no group of zones depends on itself |
 | `no-sibling-directory-reaches-another` | sibling directories stay independent |
 | `generic-code-names-no-domain-concept` | the seams hold |
 | `no-directory-holds-too-many-files` | no directory has become a drawer |
@@ -236,6 +237,22 @@ The second row is where import-graph tools sit. That includes ones which resolve
 `anchor: "imported-module"` gives you the blunt version — "this package is off limits entirely". Leave it alone for anything finer.
 
 `ignoreTypeOnly: true` exempts `import type`. Use it when you care that runtime code crossed, rather than that a type name did.
+
+### Zones that depend on each other
+
+This one holds whether or not you wrote a boundary, and takes no configuration.
+
+If `catalog` imports from `checkout` and `checkout` imports back from `catalog`, neither can be read, tested, moved or deleted on its own. The same defect closes the long way round, through a third zone or a fourth, where no pair of zones looks wrong on its own.
+
+```
+no-zones-form-a-cycle                     2 errors
+    zones catalog and checkout form an import cycle
+    zones billing, invoice and ledger form an import cycle
+```
+
+Each tangle is reported once, not once per zone in it.
+
+Boundaries cannot say this. You would need a rule for every pair of zones, written out by hand, and the pair that traps you is the one you did not predict. Adding a boundary afterwards does not break a cycle either — the imports have to change.
 
 ## Sibling directories
 
@@ -565,20 +582,16 @@ Config covers direction and vocabulary. Anything else is a plain TypeScript func
 import { defineRule } from "trueline";
 
 rules: [
-  defineRule("no-two-zones-import-each-other", (project) => {
-    const reaches = new Map<string, Set<string>>();
-    for (const edge of project.imports()) {
-      if (edge.fromZone === null || edge.declaredZone === null) continue;
-      if (edge.fromZone === edge.declaredZone) continue;
-      reaches.set(edge.fromZone, (reaches.get(edge.fromZone) ?? new Set()).add(edge.declaredZone));
-    }
-
-    return [...reaches].flatMap(([zone, targets]) =>
-      [...targets]
-        .filter((target) => zone < target && reaches.get(target)?.has(zone) === true)
-        .map((target) => ({ message: `zones ${zone} and ${target} import each other` })),
-    );
-  }),
+  defineRule("domain-is-entered-through-its-index", (project) =>
+    project
+      .imports({ declaredZone: "domain" })
+      .filter((edge) => edge.fromZone !== "domain" && !edge.via.endsWith("domain/index.ts"))
+      .map((edge) => ({
+        message: `reaches ${edge.imported} without going through the index`,
+        file: edge.from,
+        at: edge.at,
+      })),
+  ),
 ]
 ```
 
@@ -591,8 +604,8 @@ Return a list of issues. A message alone is enough, and severity defaults to `er
 A third argument says what a violation means and how to fix it. Whoever hits the rule reads that instead of guessing.
 
 ```ts
-defineRule("no-two-zones-import-each-other", check,
-  "Two zones import each other, so neither can be understood or moved alone. Decide which owns the shared concept and give the other a one-way dependency on it.")
+defineRule("domain-is-entered-through-its-index", check,
+  "Something reached past the domain's index into a file behind it, which fixes that file's path and name for every caller. Export what the caller needs from the index and import it from there.")
 ```
 
 Rules see a model of the project rather than a syntax tree. The parser stays an implementation detail you never have to learn.

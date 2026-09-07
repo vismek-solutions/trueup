@@ -4,6 +4,7 @@ import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
+import { cycleClaim } from "./claims/cycles.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
 import { directoryClaim } from "./claims/placement/directories.ts";
@@ -165,6 +166,7 @@ export function check({
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
     boundaryClaim(boundaries),
     seamClaim(seams),
+    cycleClaim,
     ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
     ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
     ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),

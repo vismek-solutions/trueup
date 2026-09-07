@@ -1,7 +1,7 @@
-import { extname, sep } from "node:path";
+import { extname, relative, sep } from "node:path";
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
 import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
-import { SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
+import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
 import { check, placementOf } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import type { ArchitectureConfig } from "../config/model.ts";
@@ -67,8 +67,19 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
   return decision.verdict === "allow" ? null : answerTo(request, decision);
 };
 
-const analysed = (config: ArchitectureConfig, roots: readonly string[], path: string | null): boolean =>
-  path === null || ((config.extensions ?? SOURCE_EXTENSIONS).includes(extname(path)) && under(roots, path));
+const inIgnoredDirectory = (root: string, path: string, config: ArchitectureConfig): boolean => {
+  const skipped = new Set(config.ignoreDirectories ?? IGNORED_DIRECTORIES);
+  return relative(root, path)
+    .split(sep)
+    .slice(0, -1)
+    .some((segment) => skipped.has(segment));
+};
+
+const analysed = ({ root, config }: Site, roots: readonly string[], path: string | null): boolean =>
+  path === null ||
+  ((config.extensions ?? SOURCE_EXTENSIONS).includes(extname(path)) &&
+    under(roots, path) &&
+    !inIgnoredDirectory(root, path, config));
 
 export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<number> {
   let payload: unknown;
@@ -101,7 +112,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   }
 
   const roots = resolveInclude(root, config.include);
-  if (!analysed(config, roots, target)) return 0;
+  if (!analysed({ root, config }, roots, target)) return 0;
 
   const report = withCommand(
     check({

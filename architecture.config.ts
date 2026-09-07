@@ -2,7 +2,6 @@ import { biomeRunner } from "./src/adapters/biome-runner.ts";
 import { fallowRunner } from "./src/adapters/fallow-runner.ts";
 import { IGNORED_DIRECTORIES } from "./src/adapters/node-files.ts";
 import { oxlintRunner } from "./src/adapters/oxlint-runner.ts";
-import { defineRule } from "./src/claims/custom.ts";
 import { defineConfig } from "./src/config/model.ts";
 
 const LAYERS = [
@@ -77,27 +76,5 @@ export default defineConfig({
     { from: "claims", mayNotReach: allBut("claims", "graph", "zones", "lexicon", "project", "report") },
     { from: "config", mayNotReach: allBut("config", "claims", "zones", "project") },
     { from: "cli", mayNotReach: allBut("cli", "config", "report", "ratchet", "guard", "adapters", "root") },
-  ],
-  rules: [
-    defineRule(
-      "no-two-zones-import-each-other",
-      (project) => {
-        const reaches = new Map<string, Set<string>>();
-        for (const entry of project.imports()) {
-          if (entry.fromZone === null || entry.declaredZone === null) continue;
-          if (entry.fromZone === entry.declaredZone) continue;
-          const targets = reaches.get(entry.fromZone) ?? new Set<string>();
-          targets.add(entry.declaredZone);
-          reaches.set(entry.fromZone, targets);
-        }
-
-        return [...reaches].flatMap(([zone, targets]) =>
-          [...targets]
-            .filter((target) => zone < target && reaches.get(target)?.has(zone) === true)
-            .map((target) => ({ message: `zones ${zone} and ${target} import each other` })),
-        );
-      },
-      "Two zones import each other, so neither can be read, tested or moved on its own. Decide which of the two owns the shared concept and give the other a one-way dependency on it; if neither owns it, the concept belongs in a third zone both may reach.",
-    ),
   ],
 });

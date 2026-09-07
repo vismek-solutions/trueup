@@ -122,6 +122,7 @@ describe("a check run", () => {
       "every-rule-names-a-declared-zone",
       "every-import-respects-its-zone-boundary",
       "generic-code-names-no-domain-concept",
+      "no-zones-form-a-cycle",
     ]);
   });
 
