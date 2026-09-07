@@ -1,5 +1,6 @@
 import { relative } from "node:path";
-import type { EdgeTarget } from "../graph/model.ts";
+import type { EdgeTarget, SymbolImportEdge } from "../graph/model.ts";
+import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 import type { ZoneReference } from "./zone-references.ts";
 
@@ -26,47 +27,63 @@ const pathOf = (target: EdgeTarget): string | null => {
   }
 };
 
+interface BreachInput {
+  readonly root: string;
+  readonly zoneOf: (path: string) => string | null;
+  readonly fromZone: string;
+}
+
+const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput): Finding | null => {
+  if (rule.ignoreTypeOnly === true && edge.kind === "type") return null;
+
+  const anchored = rule.anchor === "imported-module" ? edge.via : pathOf(edge.to);
+  if (anchored === null) return null;
+
+  const targetZone = input.zoneOf(anchored);
+  if (targetZone === null || !rule.mayNotReach.includes(targetZone)) return null;
+
+  const { root, fromZone } = input;
+  const reached =
+    edge.via === anchored
+      ? relative(root, anchored)
+      : `${relative(root, anchored)} through ${relative(root, edge.via)}`;
+
+  return {
+    severity: "error",
+    message: `${relative(root, edge.from)} is ${fromZone} and may not reach ${targetZone}: ${edge.imported} from ${reached}`,
+    file: edge.from,
+    start: edge.start,
+  };
+};
+
+const rulesByOrigin = (rules: readonly BoundaryRule[]): ReadonlyMap<string, BoundaryRule[]> => {
+  const byOrigin = new Map<string, BoundaryRule[]>();
+
+  for (const rule of rules) {
+    const existing = byOrigin.get(rule.from);
+    if (existing === undefined) byOrigin.set(rule.from, [rule]);
+    else existing.push(rule);
+  }
+
+  return byOrigin;
+};
+
 export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
   return {
     name: "every-import-respects-its-zone-boundary",
     guidance:
       "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it. Move the code to a zone that may reach the target, or have the target expose what the caller needs through a zone it may reach. Run `{acs} explain <file>` to see what a file may reach. Widening the rule is not the fix.",
     check: ({ root, graph, zones }) => {
-      const byOrigin = new Map<string, BoundaryRule[]>();
-      for (const rule of rules) {
-        const existing = byOrigin.get(rule.from);
-        if (existing === undefined) byOrigin.set(rule.from, [rule]);
-        else existing.push(rule);
-      }
+      const byOrigin = rulesByOrigin(rules);
+      const zoneOf = (path: string): string | null => zones.zoneOf(path);
 
       return graph.edges.flatMap((edge) => {
-        const fromZone = zones.zoneOf(edge.from);
+        const fromZone = zoneOf(edge.from);
         if (fromZone === null) return [];
 
-        const applicable = byOrigin.get(fromZone) ?? [];
-        return applicable.flatMap((rule) => {
-          if (rule.ignoreTypeOnly === true && edge.kind === "type") return [];
-
-          const anchored = rule.anchor === "imported-module" ? edge.via : pathOf(edge.to);
-          if (anchored === null) return [];
-
-          const targetZone = zones.zoneOf(anchored);
-          if (targetZone === null || !rule.mayNotReach.includes(targetZone)) return [];
-
-          const reached =
-            edge.via === anchored
-              ? relative(root, anchored)
-              : `${relative(root, anchored)} through ${relative(root, edge.via)}`;
-
-          return [
-            {
-              severity: "error" as const,
-              message: `${relative(root, edge.from)} is ${fromZone} and may not reach ${targetZone}: ${edge.imported} from ${reached}`,
-              file: edge.from,
-              start: edge.start,
-            },
-          ];
-        });
+        return (byOrigin.get(fromZone) ?? [])
+          .map((rule) => breachOf(edge, rule, { root, zoneOf, fromZone }))
+          .filter((finding): finding is Finding => finding !== null);
       });
     },
   };

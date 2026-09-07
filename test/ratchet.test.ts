@@ -43,6 +43,27 @@ const severitiesOf = (report: Report): string[] =>
 const staleOf = (report: Report): readonly string[] =>
   report.claims.find((claim) => claim.claim === STALE_CLAIM)?.findings.map((finding) => finding.message) ?? [];
 
+const staleFindingsOf = (report: Report) =>
+  report.claims.find((claim) => claim.claim === STALE_CLAIM)?.findings ?? [];
+
+describe("a stale entry", () => {
+  const baseline: Baseline = {
+    entries: [
+      { claim: "every-import-respects-its-zone-boundary", file: "src/engine/runner.ts", message: "gone" },
+      { claim: "every-import-respects-its-zone-boundary", file: null, message: "no file" },
+    ],
+  };
+
+  it("names the file whose violation is fixed, so identical messages stay apart", () => {
+    const { report } = applyBaseline({ report: reportOf([]), baseline, root: ROOT });
+
+    expect(staleFindingsOf(report).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/engine/runner.ts"),
+      null,
+    ]);
+  });
+});
+
 describe("a baseline", () => {
   it("records a finding without its position", () => {
     expect(baselineOf(claimOf("engine reaches domain"), ROOT).entries).toEqual([
@@ -163,6 +184,6 @@ describe("adopting the ratchet from the command line", () => {
 
     expect(code).toBe(EXIT_STALE_BASELINE);
     expect(code).not.toBe(EXIT_ERRORS);
-    expect(output).toContain("drop it from the baseline");
+    expect(output).toContain("no longer reports this");
   });
 });

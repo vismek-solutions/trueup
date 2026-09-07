@@ -1,4 +1,7 @@
 import { relative } from "node:path";
+import type { Vocabulary } from "../lexicon/model.ts";
+import type { Mention } from "../ports/module-record.ts";
+import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 import type { ZoneReference } from "./zone-references.ts";
 
@@ -16,6 +19,42 @@ export const seamZoneReferences = (rules: readonly SeamRule[]): readonly ZoneRef
     [rule.generic, ...rule.domain].map((zone) => ({ rule: `seam rule for ${rule.generic}`, zone })),
   );
 
+interface SeamContext {
+  readonly root: string;
+  readonly rule: SeamRule;
+  readonly vocabulary: Vocabulary;
+  readonly imported: ReadonlySet<string>;
+  readonly allowed: ReadonlySet<string>;
+  readonly minimum: number;
+}
+
+const leaks = (mention: Mention, { vocabulary, imported, minimum }: SeamContext): boolean =>
+  mention.form === "name"
+    ? vocabulary.names.has(mention.text) && !imported.has(mention.text)
+    : mention.text.length >= minimum && vocabulary.literals.has(mention.text);
+
+const findingsIn = (file: string, mentions: readonly Mention[], context: SeamContext): Finding[] => {
+  const { root, rule, allowed } = context;
+  const reported = new Set<string>();
+  const findings: Finding[] = [];
+
+  for (const mention of mentions) {
+    if (allowed.has(mention.text) || reported.has(mention.text)) continue;
+    if (!leaks(mention, context)) continue;
+
+    reported.add(mention.text);
+    const what = mention.form === "name" ? `the name ${mention.text}` : `the value "${mention.text}"`;
+    findings.push({
+      severity: "error",
+      message: `${relative(root, file)} is ${rule.generic} and names ${what}, which ${rule.domain.join(" or ")} owns`,
+      file,
+      start: mention.start,
+    });
+  }
+
+  return findings;
+};
+
 export function seamClaim(rules: readonly SeamRule[]): Claim {
   return {
     name: "generic-code-names-no-domain-concept",
@@ -23,35 +62,19 @@ export function seamClaim(rules: readonly SeamRule[]): Claim {
       "Generic code named a symbol the domain exports, or repeated a value the domain declares, with no import to explain it. This is the violation that crosses no import edge: a value arrives as a prop and the receiving file restates a shape it may not know. Take the name or value from the domain rather than restating it, or move the code into a zone that may know the domain. Run `{acs} explain <file>` to see the vocabulary. Add to `allow` only for a word the two genuinely share.",
     check: ({ root, zones, lexicon }) =>
       rules.flatMap((rule) => {
-        const vocabulary = lexicon.vocabularyOf(rule.domain.flatMap((zone) => zones.filesIn(zone)));
-        const allowed = new Set(rule.allow ?? []);
-        const minimum = rule.minLiteralLength ?? DEFAULT_MIN_LITERAL_LENGTH;
+        const shared: Omit<SeamContext, "imported"> = {
+          root,
+          rule,
+          vocabulary: lexicon.vocabularyOf(rule.domain.flatMap((zone) => zones.filesIn(zone))),
+          allowed: new Set(rule.allow ?? []),
+          minimum: rule.minLiteralLength ?? DEFAULT_MIN_LITERAL_LENGTH,
+        };
 
-        return zones.filesIn(rule.generic).flatMap((file) => {
-          const imported = lexicon.importedNamesIn(file);
-          const reported = new Set<string>();
-
-          return lexicon.mentionsIn(file).flatMap((mention) => {
-            if (allowed.has(mention.text) || reported.has(mention.text)) return [];
-
-            const leaks =
-              mention.form === "name"
-                ? vocabulary.names.has(mention.text) && !imported.has(mention.text)
-                : mention.text.length >= minimum && vocabulary.literals.has(mention.text);
-            if (!leaks) return [];
-
-            reported.add(mention.text);
-            const what = mention.form === "name" ? `the name ${mention.text}` : `the value "${mention.text}"`;
-            return [
-              {
-                severity: "error" as const,
-                message: `${relative(root, file)} is ${rule.generic} and names ${what}, which ${rule.domain.join(" or ")} owns`,
-                file,
-                start: mention.start,
-              },
-            ];
-          });
-        });
+        return zones
+          .filesIn(rule.generic)
+          .flatMap((file) =>
+            findingsIn(file, lexicon.mentionsIn(file), { ...shared, imported: lexicon.importedNamesIn(file) }),
+          );
       }),
   };
 }

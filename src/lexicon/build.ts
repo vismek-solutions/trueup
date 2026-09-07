@@ -7,6 +7,12 @@ export interface BuildLexiconInput {
   readonly readMentions: ReadMentions;
 }
 
+const exportedNamesOf = (record: ModuleRecord | undefined): readonly string[] =>
+  (record?.exports ?? []).flatMap((entry) => (entry.form === "re-export-star" ? [] : [entry.exported]));
+
+const literalsOf = (mentions: readonly Mention[]): readonly string[] =>
+  mentions.flatMap((mention) => (mention.form === "string" ? [mention.text] : []));
+
 export function buildLexicon({ modules, sources, readMentions }: BuildLexiconInput): Lexicon {
   const byPath = new Map(modules.map((record) => [record.path, record]));
   const walked = new Map<string, readonly Mention[]>();
@@ -26,12 +32,8 @@ export function buildLexicon({ modules, sources, readMentions }: BuildLexiconInp
     const literals = new Set<string>();
 
     for (const path of paths) {
-      for (const entry of byPath.get(path)?.exports ?? []) {
-        if (entry.form !== "re-export-star") names.add(entry.exported);
-      }
-      for (const mention of mentionsIn(path)) {
-        if (mention.form === "string") literals.add(mention.text);
-      }
+      for (const name of exportedNamesOf(byPath.get(path))) names.add(name);
+      for (const literal of literalsOf(mentionsIn(path))) literals.add(literal);
     }
 
     return { names, literals };
@@ -40,8 +42,7 @@ export function buildLexicon({ modules, sources, readMentions }: BuildLexiconInp
   return {
     vocabularyOf,
     mentionsIn,
-    exportedNamesIn: (path) =>
-      (byPath.get(path)?.exports ?? []).flatMap((entry) => (entry.form === "re-export-star" ? [] : [entry.exported])),
+    exportedNamesIn: (path) => exportedNamesOf(byPath.get(path)),
     importedNamesIn: (path) =>
       new Set(
         (byPath.get(path)?.imports ?? []).flatMap((statement) =>

@@ -30,8 +30,7 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
   }
 
   const { config, root } = await loadConfig(path);
-  const report = withCommand(
-    check({
+  const report = check({
     root,
     roots: resolveInclude(root, config.include),
     zones: config.zones,
@@ -39,12 +38,11 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
     seams: config.seams,
     rules: config.rules,
     runners: config.runners,
-      extensions: config.extensions,
-      ignoreDirectories: config.ignoreDirectories,
-    }),
-    config.command ?? DEFAULT_COMMAND,
-  );
+    extensions: config.extensions,
+    ignoreDirectories: config.ignoreDirectories,
+  });
 
+  const command = config.command ?? DEFAULT_COMMAND;
   const baselinePath = baselinePathIn(root);
 
   if (updating) {
@@ -56,17 +54,19 @@ export async function runCli({ cwd, argv, write }: RunCliInput): Promise<number>
 
   const baseline = readBaseline(baselinePath);
   if (baseline.entries.length === 0) {
-    write(asJson ? JSON.stringify(report, null, 2) : render(report, root));
-    return countOf(report, "error") > 0 ? EXIT_ERRORS : EXIT_CLEAN;
+    const finished = withCommand(report, command);
+    write(asJson ? JSON.stringify(finished, null, 2) : render(finished, root));
+    return countOf(finished, "error") > 0 ? EXIT_ERRORS : EXIT_CLEAN;
   }
 
   const ratcheted = applyBaseline({ report, baseline, root });
+  const finished = withCommand(ratcheted.report, command);
   write(
     asJson
-      ? JSON.stringify(ratcheted.report, null, 2)
-      : render(ratcheted.report, root, { known: ratcheted.known, stale: ratcheted.stale }),
+      ? JSON.stringify(finished, null, 2)
+      : render(finished, root, { known: ratcheted.known, stale: ratcheted.stale }),
   );
 
-  if (countOf(ratcheted.report, "error") > 0) return EXIT_ERRORS;
+  if (countOf(finished, "error") > 0) return EXIT_ERRORS;
   return ratcheted.stale > 0 ? EXIT_STALE_BASELINE : EXIT_CLEAN;
 }

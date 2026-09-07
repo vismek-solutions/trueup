@@ -1,8 +1,8 @@
-import { spawnSync } from "node:child_process";
 import { isAbsolute, join } from "node:path";
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
-import { createOffsetReader } from "./source-offset.ts";
+import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
+import { captureTool } from "./tool-process.ts";
 
 export const FALLOW_CHECK_SCHEMA = 9;
 
@@ -30,11 +30,65 @@ interface RawFinding {
   readonly cycle?: unknown;
 }
 
+type Check =
+  | { readonly kind: "check"; readonly check: Record<string, unknown> }
+  | { readonly kind: "failed"; readonly reason: string };
+
+interface FindingInput {
+  readonly root: string;
+  readonly offsetOf: OffsetOf;
+  readonly severity: Severity;
+}
+
 const describe = (category: string, raw: RawFinding): string => {
   const named = typeof raw.export_name === "string" ? raw.export_name : typeof raw.name === "string" ? raw.name : null;
   const cycle = Array.isArray(raw.cycle) ? raw.cycle.join(" -> ") : null;
   const subject = named ?? cycle ?? (typeof raw.path === "string" ? raw.path : "");
   return subject === "" ? category.replaceAll("_", " ") : `${category.replaceAll("_", " ")}: ${subject}`;
+};
+
+const readCheck = (stdout: string): Check => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    return { kind: "failed", reason: "output was not JSON" };
+  }
+
+  const check = (parsed as { check?: unknown }).check;
+  if (check === undefined || check === null || typeof check !== "object") {
+    return { kind: "failed", reason: "output carried no check section" };
+  }
+
+  const schema = (check as { schema_version?: unknown }).schema_version;
+  if (schema !== FALLOW_CHECK_SCHEMA) {
+    return { kind: "failed", reason: `check schema ${String(schema)} is not the expected ${FALLOW_CHECK_SCHEMA}` };
+  }
+
+  return { kind: "check", check: check as Record<string, unknown> };
+};
+
+const findingOf = (category: string, raw: RawFinding, { root, offsetOf, severity }: FindingInput): RunnerFinding => {
+  const path = typeof raw.path === "string" ? (isAbsolute(raw.path) ? raw.path : join(root, raw.path)) : null;
+  const line = typeof raw.line === "number" ? raw.line : null;
+  const column = typeof raw.col === "number" ? raw.col : 0;
+
+  return {
+    category,
+    message: describe(category, raw),
+    file: path,
+    start: path === null || line === null ? null : offsetOf(path, line, column),
+    severity,
+  };
+};
+
+const findingsIn = (
+  check: Record<string, unknown>,
+  category: string,
+  input: FindingInput,
+): readonly RunnerFinding[] => {
+  const entries = check[category];
+  return Array.isArray(entries) ? entries.map((entry) => findingOf(category, entry as RawFinding, input)) : [];
 };
 
 export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
@@ -45,62 +99,20 @@ export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
   return {
     name: "fallow",
     run: (root): RunnerOutcome => {
-      const [executable, ...rest] = command;
-      if (executable === undefined) return { kind: "failed", reason: "no command configured" };
-
-      const result = spawnSync(
-        executable,
-        [...rest, "--root", root, "--format", "json", "--quiet"],
-        { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
-      );
-
-      if (result.error !== undefined) return { kind: "failed", reason: result.error.message };
-      if (typeof result.stdout !== "string" || result.stdout.trim() === "") {
-        return { kind: "failed", reason: `no output (exit ${result.status ?? "unknown"})` };
+      const captured = captureTool({ command, args: ["--root", root, "--format", "json", "--quiet"] });
+      if (captured.kind === "failed") return captured;
+      if (captured.stdout.trim() === "") {
+        return { kind: "failed", reason: `no output (exit ${captured.status})` };
       }
 
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(result.stdout);
-      } catch {
-        return { kind: "failed", reason: "output was not JSON" };
-      }
+      const check = readCheck(captured.stdout);
+      if (check.kind === "failed") return check;
 
-      const check = (parsed as { check?: { schema_version?: unknown } }).check;
-      if (check === undefined || check === null || typeof check !== "object") {
-        return { kind: "failed", reason: "output carried no check section" };
-      }
-      if (check.schema_version !== FALLOW_CHECK_SCHEMA) {
-        return {
-          kind: "failed",
-          reason: `check schema ${String(check.schema_version)} is not the expected ${FALLOW_CHECK_SCHEMA}`,
-        };
-      }
-
-      const offsetOf = createOffsetReader(root);
-      const findings: RunnerFinding[] = [];
-
-      for (const category of categories) {
-        const entries = (check as Record<string, unknown>)[category];
-        if (!Array.isArray(entries)) continue;
-
-        for (const entry of entries) {
-          const raw = entry as RawFinding;
-          const path = typeof raw.path === "string" ? (isAbsolute(raw.path) ? raw.path : join(root, raw.path)) : null;
-          const line = typeof raw.line === "number" ? raw.line : null;
-          const column = typeof raw.col === "number" ? raw.col : 0;
-
-          findings.push({
-            category,
-            message: describe(category, raw),
-            file: path,
-            start: path === null || line === null ? null : offsetOf(path, line, column),
-            severity,
-          });
-        }
-      }
-
-      return { kind: "findings", findings };
+      const input: FindingInput = { root, offsetOf: createOffsetReader(root), severity };
+      return {
+        kind: "findings",
+        findings: categories.flatMap((category) => findingsIn(check.check, category, input)),
+      };
     },
   };
 }

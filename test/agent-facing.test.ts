@@ -1,6 +1,8 @@
+import { rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { baselinePathIn, writeBaseline } from "../src/adapters/baseline-file.ts";
 import { runAgentInstructions } from "../src/cli/agent-instructions.ts";
 import { runCli } from "../src/cli/main.ts";
 import { COMMAND_TOKEN } from "../src/report/invocation.ts";
@@ -23,6 +25,21 @@ describe("telling an agent which command to reach for", () => {
   it("leaves no unsubstituted placeholder in any guidance", async () => {
     const output = await capture((write) => runCli({ cwd: VIOLATING, argv: [], write }));
     expect(output).not.toContain(COMMAND_TOKEN);
+  });
+
+  it("leaves no unsubstituted placeholder in the stale-baseline guidance either", async () => {
+    const baseline = baselinePathIn(PROJECT);
+    writeBaseline(baseline, {
+      entries: [{ claim: "every-import-respects-its-zone-boundary", file: "src/gone.ts", message: "gone" }],
+    });
+
+    try {
+      const output = await capture((write) => runCli({ cwd: PROJECT, argv: [], write }));
+      expect(output).toContain("--update-baseline");
+      expect(output).not.toContain(COMMAND_TOKEN);
+    } finally {
+      rmSync(baseline, { force: true });
+    }
   });
 
   it("tells the agent not to widen the rule", async () => {
