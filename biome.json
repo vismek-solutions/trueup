@@ -37,6 +37,7 @@
       },
       "style": {
         "noEnum": "error",
+        "noExcessiveLinesPerFile": { "level": "error", "options": { "maxLines": 250 } },
         "noInferrableTypes": "error",
         "noNestedTernary": "error",
         "noNonNullAssertion": "error",

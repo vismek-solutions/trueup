@@ -78,6 +78,7 @@ Every claim runs on every pass and the whole report prints, so a run that clears
 | `every-rule-names-a-declared-zone` | no rule names a zone that does not exist |
 | `every-import-respects-its-zone-boundary` | the boundaries hold |
 | `generic-code-names-no-domain-concept` | the seams hold |
+| `no-directory-holds-too-many-files` | no directory has become a drawer |
 
 The first four fail closed. An unresolved import, a name no module exports, or a config that matches nothing is an error, never a quiet pass — a check that reports success while enforcing nothing is worse than no check.
 
@@ -107,6 +108,18 @@ seams: [{ generic: "engine", domain: ["domain"] }]
 The vocabulary is derived, not configured: a domain zone owns the names its files export and the string values its sources contain. Generic code mentioning either, with no import to explain it, is naming something it has no right to. A new domain type is covered the moment it exists.
 
 On a real app this found a component hardcoding `"stav"` where the domain exports `REQUISITION_STATUS = "stav"`, and several hardcoding members of enums the domain declares. Tune with `allow` for words the two genuinely share, and `minLiteralLength` for short incidental strings.
+
+## Directory size
+
+```ts
+maxFilesPerDirectory: 12
+```
+
+Boundaries govern what a file may reach; this governs where files accumulate. A directory that keeps growing has stopped being one idea, and an agent adding the twenty-first file to a folder has no way to notice that from inside the file it is writing.
+
+The count is of files the analysis actually read, so unclassified files count too — a directory nothing has claimed is the one most likely to be a dumping ground. There is no exemption list, because a limit with an exemption list is a limit nobody has to meet.
+
+Line and function length are a linter's job, not this tool's: delegate them with `noExcessiveLinesPerFile` and `noExcessiveLinesPerFunction`.
 
 ## Rules in TypeScript
 

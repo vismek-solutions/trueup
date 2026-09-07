@@ -10,6 +10,7 @@ export interface ArchitectureConfig {
   readonly zones: readonly ZoneDefinition[];
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
+  readonly maxFilesPerDirectory?: number | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly extensions?: readonly string[] | undefined;

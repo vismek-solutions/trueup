@@ -5,6 +5,7 @@ import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./clai
 import { completenessClaims } from "./claims/completeness.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
+import { directoryClaim } from "./claims/directories.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
@@ -69,6 +70,7 @@ export interface CheckOptions {
   readonly zones: readonly ZoneDefinition[];
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
+  readonly maxFilesPerDirectory?: number | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly overlay?: Overlay | undefined;
@@ -84,6 +86,7 @@ export function check({
   zones,
   boundaries = [],
   seams = [],
+  maxFilesPerDirectory,
   rules = [],
   runners = [],
   overlay,
@@ -109,6 +112,7 @@ export function check({
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
     boundaryClaim(boundaries),
     seamClaim(seams),
+    ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
     ...customClaims(rules),
   ];
 

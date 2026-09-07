@@ -21,6 +21,7 @@ const allBut = (...kept: string[]): string[] => LAYERS.filter((layer) => !kept.i
 export default defineConfig({
   include: ["src"],
   command: "node ./bin/acs.js",
+  maxFilesPerDirectory: 12,
   runners: [
     biomeRunner({
       command: ["node_modules/.bin/biome", "lint"],
