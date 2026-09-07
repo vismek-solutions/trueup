@@ -2,7 +2,7 @@ import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
 import { absoluteIn, numberOf, objectOf, stringOf, summarize } from "./tool-output.ts";
-import { captureTool } from "./tool-process.ts";
+import { jsonRunner } from "./tool-process.ts";
 
 export const DEFAULT_MAX_DIAGNOSTICS = 10_000;
 
@@ -48,17 +48,9 @@ const wanted = (category: string, categories: readonly string[] | undefined): bo
   categories === undefined ||
   categories.some((prefix) => category === prefix || category.startsWith(`${prefix}/`));
 
-const readPayload = (stdout: string): Payload => {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stdout);
-  } catch {
-    return { kind: "failed", reason: "output was not JSON" };
-  }
-
-  const report = objectOf(parsed);
-  const summary = report === null ? null : objectOf(report.summary);
-  const diagnostics = report === null ? null : report.diagnostics;
+const readPayload = (report: Record<string, unknown>): Payload => {
+  const summary = objectOf(report.summary);
+  const { diagnostics } = report;
   if (summary === null || !Array.isArray(diagnostics)) return { kind: "failed", reason: SHAPE };
 
   return { kind: "payload", summary, diagnostics };
@@ -150,29 +142,21 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
   const maxDiagnostics = options.maxDiagnostics ?? DEFAULT_MAX_DIAGNOSTICS;
   const fixing = options.write === true ? ["--write"] : [];
 
-  return {
+  return jsonRunner({
     name: "biome",
-    run: (root): RunnerOutcome => {
-      const captured = captureTool({
-        command,
-        args: [...fixing, "--reporter=json", `--max-diagnostics=${maxDiagnostics}`, ...paths],
-        cwd: root,
-      });
-      if (captured.kind === "failed") return captured;
-      if (captured.stdout.trim() === "") {
-        return {
-          kind: "failed",
-          reason: `no output (exit ${captured.status}): ${summarize(captured.stderr)}`,
-        };
-      }
-
-      const payload = readPayload(captured.stdout);
+    invoke: (root) => ({
+      command,
+      args: [...fixing, "--reporter=json", `--max-diagnostics=${maxDiagnostics}`, ...paths],
+      cwd: root,
+    }),
+    read: (source, root): RunnerOutcome => {
+      const payload = readPayload(source.payload);
       if (payload.kind === "failed") return payload;
 
-      const reason = unusable(payload.summary, { paths, stderr: captured.stderr, maxDiagnostics });
+      const reason = unusable(payload.summary, { paths, stderr: source.stderr, maxDiagnostics });
       if (reason !== null) return { kind: "failed", reason };
 
       return collect(payload.diagnostics, { root, offsetOf: createOffsetReader(root), categories });
     },
-  };
+  });
 }

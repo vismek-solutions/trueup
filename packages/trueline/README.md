@@ -707,6 +707,20 @@ Each tool runs with your project root as its working directory, and keeps its ow
 
 Narrow any of them with `categories`. Biome matches by prefix, so `["lint"]` keeps every lint rule and drops formatter and config noise.
 
+### Copy-paste, from fallow
+
+`no-declaration-is-written-twice` compares whole declarations, so it sees a small exact copy and nothing else. Near-miss clones — the same shape written out again in different words — need a clone detector.
+
+```ts
+fallowRunner({ duplication: { mode: "weak", minLines: 5, minTokens: 30 } })
+```
+
+Off unless you ask for it, and the two answer different questions. Measured on this repo: the declaration rule at 60 characters reports nothing, fallow at its defaults reports nothing, and fallow lowered far enough to see declaration-sized copies reports 27% of the codebase. There is no single setting that does both jobs.
+
+Each clone group arrives as one finding per instance, sharing a group, so `--next` shows the whole group as one thing to fix.
+
+Expect one class of false positive: two functions with the same shape and different meanings. `weak` mode normalises identifiers, so it cannot tell them apart. Rename them so the next reader can, and baseline the finding.
+
 ### Adapters distrust the tool they wrap
 
 Unparseable output. An unexpected shape. A silent tool, a missing binary, a config error, a file the tool could not parse, a run that checked nothing.

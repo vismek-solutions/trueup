@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "claim": "fallow/code_duplication",
+      "file": "packages/trueline/src/claims/boundary.ts",
+      "message": "7 lines written the same way at packages/trueline/src/project/build.ts:14"
+    },
+    {
+      "claim": "fallow/code_duplication",
+      "file": "packages/trueline/src/project/build.ts",
+      "message": "7 lines written the same way at packages/trueline/src/claims/boundary.ts:16"
+    }
+  ]
+}

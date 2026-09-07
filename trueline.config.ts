@@ -19,7 +19,10 @@ export default defineConfig({
       paths: PATHS,
       write: process.env.CI === undefined,
     }),
-    fallowRunner({ command: ["node_modules/.bin/fallow"] }),
+    fallowRunner({
+      command: ["node_modules/.bin/fallow"],
+      duplication: { mode: "weak", minLines: 5, minTokens: 30 },
+    }),
     oxlintRunner({
       command: ["node_modules/.bin/oxlint"],
       paths: PATHS,

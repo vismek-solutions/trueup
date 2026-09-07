@@ -6,6 +6,7 @@ export interface RunnerFinding {
   readonly file: string | null;
   readonly start: number | null;
   readonly severity: Severity;
+  readonly group?: string | undefined;
 }
 
 export type RunnerOutcome =

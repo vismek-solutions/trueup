@@ -25,6 +25,12 @@ const locate = (root: string, finding: Finding, cache: Map<string, string>): str
   return `${relative(root, finding.file)}${position}`;
 };
 
+const listed = (findings: readonly Finding[], root: string, cache: Map<string, string>): readonly string[] =>
+  findings.map((finding) => {
+    const where = locate(root, finding, cache);
+    return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
+  });
+
 const wrap = (text: string, width: number): string[] => {
   const lines: string[] = [];
 
@@ -142,11 +148,7 @@ export function renderNext(report: Report, root: string, ratchet?: RatchetSummar
     ].join("\n");
   }
 
-  const cache = new Map<string, string>();
-  const shown = first.findings.map((finding) => {
-    const where = locate(root, finding, cache);
-    return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
-  });
+  const shown = listed(first.findings, root, new Map());
 
   return [
     `problem 1 of ${problems.length} · ${tally}`,
@@ -165,10 +167,7 @@ export function renderDots(report: Report, root: string, ratchet?: RatchetSummar
 
   const detail = failed.flatMap((claim) => {
     const hits = claim.findings.filter((finding) => finding.severity === "error");
-    const shown = hits.map((finding) => {
-      const where = locate(root, finding, cache);
-      return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
-    });
+    const shown = listed(hits, root, cache);
 
     return [
       "",

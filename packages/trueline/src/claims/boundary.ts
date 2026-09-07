@@ -13,7 +13,7 @@ export interface BoundaryRule {
   readonly ignoreTypeOnly?: boolean | undefined;
 }
 
-const pathOf = (target: EdgeTarget): string | null => {
+const reachedPathOf = (target: EdgeTarget): string | null => {
   switch (target.kind) {
     case "symbol":
     case "namespace":
@@ -36,7 +36,7 @@ interface BreachInput {
 const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput): Finding | null => {
   if (rule.ignoreTypeOnly === true && edge.kind === "type") return null;
 
-  const anchored = rule.anchor === "imported-module" ? edge.via : pathOf(edge.to);
+  const anchored = rule.anchor === "imported-module" ? edge.via : reachedPathOf(edge.to);
   if (anchored === null) return null;
 
   const targetZone = input.zoneOf(anchored);

@@ -1,4 +1,5 @@
 import { relative } from "node:path";
+import type { EdgeTarget } from "../graph/model.ts";
 import type { Claim } from "./model.ts";
 
 const theAnalysisReachedFiles: Claim = {
@@ -24,35 +25,42 @@ const everyImportResolves: Claim = {
     })),
 };
 
-const everyImportedNameIsExported: Claim = {
+interface EdgeClaim {
+  readonly name: string;
+  readonly guidance: string;
+  readonly kind: EdgeTarget["kind"];
+  readonly fault: string;
+}
+
+const edgesEndingIn = ({ name, guidance, kind, fault }: EdgeClaim): Claim => ({
+  name,
+  guidance,
+  check: ({ root, graph }) =>
+    graph.edges
+      .filter((edge) => edge.to.kind === kind)
+      .map((edge) => ({
+        severity: "error",
+        message: `${relative(root, edge.from)} imports ${edge.imported} from ${edge.specifier}, ${fault}`,
+        file: edge.from,
+        start: edge.start,
+      })),
+});
+
+const everyImportedNameIsExported = edgesEndingIn({
   name: "every-imported-name-is-exported",
+  kind: "missing-export",
+  fault: "which does not export it",
   guidance:
     "The module resolved but exports no such name. Either the import is wrong, or a re-export it used to travel through was removed.",
-  check: ({ root, graph }) =>
-    graph.edges
-      .filter((edge) => edge.to.kind === "missing-export")
-      .map((edge) => ({
-        severity: "error",
-        message: `${relative(root, edge.from)} imports ${edge.imported} from ${edge.specifier}, which does not export it`,
-        file: edge.from,
-        start: edge.start,
-      })),
-};
+});
 
-const everyImportedNameIsUnambiguous: Claim = {
+const everyImportedNameIsUnambiguous = edgesEndingIn({
   name: "every-imported-name-is-unambiguous",
+  kind: "ambiguous",
+  fault: "which re-exports it from more than one module",
   guidance:
     "Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from. Export it from one place, or re-export it by name.",
-  check: ({ root, graph }) =>
-    graph.edges
-      .filter((edge) => edge.to.kind === "ambiguous")
-      .map((edge) => ({
-        severity: "error",
-        message: `${relative(root, edge.from)} imports ${edge.imported} from ${edge.specifier}, which re-exports it from more than one module`,
-        file: edge.from,
-        start: edge.start,
-      })),
-};
+});
 
 export const resolutionClaims: readonly Claim[] = [
   theAnalysisReachedFiles,

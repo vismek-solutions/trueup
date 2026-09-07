@@ -1,7 +1,7 @@
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
-import { absoluteIn, numberOf, objectOf, stringOf, summarize } from "./tool-output.ts";
-import { captureTool } from "./tool-process.ts";
+import { absoluteIn, numberOf, objectOf, stringOf } from "./tool-output.ts";
+import { jsonRunner } from "./tool-process.ts";
 
 const CODE = /^([A-Za-z-]+)\(([^)]+)\)$/;
 
@@ -35,16 +35,8 @@ const offsetOf = (raw: Record<string, unknown>): number | null => {
   return span === null ? null : numberOf(span.offset);
 };
 
-const readPayload = (stdout: string): Read => {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stdout);
-  } catch {
-    return { kind: "failed", reason: "output was not JSON" };
-  }
-
-  const top = objectOf(parsed);
-  if (top === null || !Array.isArray(top.diagnostics)) {
+const readPayload = (top: Record<string, unknown>): Read => {
+  if (!Array.isArray(top.diagnostics)) {
     return { kind: "failed", reason: "output carried no diagnostics" };
   }
 
@@ -81,19 +73,11 @@ export function oxlintRunner(options: OxlintRunnerOptions = {}): Runner {
   const paths = options.paths ?? ["."];
   const categories = options.categories ?? [];
 
-  return {
+  return jsonRunner({
     name: "oxlint",
-    run: (root): RunnerOutcome => {
-      const captured = captureTool({ command, args: ["--format", "json", ...paths], cwd: root });
-      if (captured.kind === "failed") return captured;
-      if (captured.stdout.trim() === "") {
-        return {
-          kind: "failed",
-          reason: summarize(captured.stderr) || `no output (exit ${captured.status})`,
-        };
-      }
-
-      const read = readPayload(captured.stdout);
+    invoke: (root) => ({ command, args: ["--format", "json", ...paths], cwd: root }),
+    read: (source, root): RunnerOutcome => {
+      const read = readPayload(source.payload);
       if (read.kind === "failed") return read;
 
       const findings = read.payload.diagnostics
@@ -103,5 +87,5 @@ export function oxlintRunner(options: OxlintRunnerOptions = {}): Runner {
 
       return { kind: "findings", findings };
     },
-  };
+  });
 }

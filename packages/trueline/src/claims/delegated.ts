@@ -51,6 +51,7 @@ export function runDelegated(runners: readonly Runner[], root: string): readonly
         message: finding.message,
         file: finding.file,
         start: finding.start,
+        ...(finding.group === undefined ? {} : { group: finding.group }),
       })),
     }));
 

@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import type { Runner, RunnerOutcome } from "../ports/runner.ts";
+import { objectOf, summarize } from "./tool-output.ts";
 
 const MAX_BUFFER = 64 * 1024 * 1024;
 
@@ -32,3 +34,52 @@ export function captureTool({ command, args, cwd }: ToolInvocation): Captured {
     status: result.status,
   };
 }
+
+type ToolJson =
+  | { readonly kind: "json"; readonly payload: Record<string, unknown>; readonly stderr: string }
+  | { readonly kind: "failed"; readonly reason: string };
+
+const silentReason = (status: number, stderr: string): string => {
+  const detail = summarize(stderr);
+  const banner = `no output (exit ${status})`;
+  return detail === "" ? banner : `${banner}: ${detail}`;
+};
+
+function readToolJson(invocation: ToolInvocation): ToolJson {
+  const captured = captureTool(invocation);
+  if (captured.kind === "failed") return captured;
+  if (captured.stdout.trim() === "") {
+    return { kind: "failed", reason: silentReason(captured.status, captured.stderr) };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(captured.stdout);
+  } catch {
+    return { kind: "failed", reason: "output was not JSON" };
+  }
+
+  const payload = objectOf(parsed);
+  return payload === null
+    ? { kind: "failed", reason: "output was not a JSON object" }
+    : { kind: "json", payload, stderr: captured.stderr };
+}
+
+export interface JsonSource {
+  readonly payload: Record<string, unknown>;
+  readonly stderr: string;
+}
+
+export interface JsonRunnerPlan {
+  readonly name: string;
+  readonly invoke: (root: string) => ToolInvocation;
+  readonly read: (source: JsonSource, root: string) => RunnerOutcome;
+}
+
+export const jsonRunner = ({ name, invoke, read }: JsonRunnerPlan): Runner => ({
+  name,
+  run: (root): RunnerOutcome => {
+    const report = readToolJson(invoke(root));
+    return report.kind === "failed" ? report : read(report, root);
+  },
+});
