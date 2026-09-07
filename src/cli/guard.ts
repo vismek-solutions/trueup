@@ -1,6 +1,6 @@
 import { extname, sep } from "node:path";
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
-import { contextFor, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
+import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
 import { SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
 import { check } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
@@ -23,6 +23,7 @@ interface Rulebook {
   readonly config: string;
   readonly baseline: string;
   readonly protect: Protection | undefined;
+  readonly mode: string | null;
 }
 
 const under = (roots: readonly string[], path: string): boolean =>
@@ -45,6 +46,7 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
     path,
     always: [rulebook.config, rulebook.baseline],
     protect: rulebook.protect,
+    mode: rulebook.mode,
   });
 
   return decision.verdict === "allow" ? null : answerTo(request, decision);
@@ -75,6 +77,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     config: found,
     baseline,
     protect: config.protect,
+    mode: modeOf(payload),
   });
 
   if (refusal !== null) {

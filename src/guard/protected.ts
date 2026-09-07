@@ -13,11 +13,14 @@ const DENY_GUIDANCE =
 
 const ALLOW: Decision = { verdict: "allow", reasons: [] };
 
+const ASKS_A_PERSON = new Set(["default", "plan"]);
+
 export interface ProtectionInput {
   readonly root: string;
   readonly path: string;
   readonly always: readonly string[];
   readonly protect: Protection | undefined;
+  readonly mode: string | null;
 }
 
 const posix = (path: string): string => (sep === "/" ? path : path.split(sep).join("/"));
@@ -41,10 +44,16 @@ const covered = ({ root, path, always, protect }: ProtectionInput): boolean => {
   return picomatch([...patterns], { dot: true })(posix(relative(root, path)));
 };
 
+const settled = (protect: Protection | undefined, mode: string | null): Exclude<Verdict, "allow"> => {
+  const wanted = verdictIn(protect);
+  if (wanted === "deny") return "deny";
+  return mode === null || ASKS_A_PERSON.has(mode) ? "ask" : "deny";
+};
+
 export function protectionOf(input: ProtectionInput): Decision {
   if (!covered(input)) return ALLOW;
 
-  const verdict = verdictIn(input.protect);
+  const verdict = settled(input.protect, input.mode);
   const guidance = verdict === "deny" ? DENY_GUIDANCE : ASK_GUIDANCE;
   const where = posix(relative(input.root, input.path)) || input.path;
 

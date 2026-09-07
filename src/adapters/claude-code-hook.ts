@@ -7,6 +7,7 @@ const SERENA_REPLACE = "mcp__serena__replace_content";
 
 interface HookPayload {
   readonly hook_event_name?: unknown;
+  readonly permission_mode?: unknown;
   readonly tool_name?: unknown;
   readonly tool_input?: Record<string, unknown>;
 }
@@ -73,6 +74,11 @@ export function requestFrom(payload: unknown, root: string): HookRequest | null 
 
   const proposal = proposalIn(tool, input, root);
   return proposal === null ? null : { kind: "propose", proposal };
+}
+
+export function modeOf(payload: unknown): string | null {
+  if (payload === null || typeof payload !== "object") return null;
+  return stringOf((payload as HookPayload).permission_mode);
 }
 
 export function verdictFor(decision: Decision): string | null {

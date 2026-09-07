@@ -7,8 +7,8 @@ const ROOT = "/project";
 const CONFIG = join(ROOT, "architecture.config.ts");
 const BASELINE = join(ROOT, ".trueline-baseline.json");
 
-const decide = (path: string, protect?: Protection) =>
-  protectionOf({ root: ROOT, path: join(ROOT, path), always: [CONFIG, BASELINE], protect });
+const decide = (path: string, protect?: Protection, mode = "default") =>
+  protectionOf({ root: ROOT, path: join(ROOT, path), always: [CONFIG, BASELINE], protect, mode });
 
 describe("deciding whether a file is the agent's to change", () => {
   it("leaves an ordinary source file alone", () => {
@@ -40,6 +40,17 @@ describe("deciding whether a file is the agent's to change", () => {
     expect(decide(".github/workflows/ci.yml", [".github/**"]).reasons[0]).toContain(
       ".github/workflows/ci.yml",
     );
+  });
+
+  it("refuses instead of asking when the session will ask nobody", () => {
+    for (const mode of ["acceptEdits", "auto", "dontAsk", "bypassPermissions"]) {
+      expect(decide("architecture.config.ts", undefined, mode).verdict).toBe("deny");
+    }
+  });
+
+  it("still asks in the modes where a person is answering", () => {
+    expect(decide("architecture.config.ts", undefined, "default").verdict).toBe("ask");
+    expect(decide("architecture.config.ts", undefined, "plan").verdict).toBe("ask");
   });
 
   it("addresses the person when it asks, and the agent when it refuses", () => {

@@ -302,21 +302,23 @@ protect: [".claude/settings.json", ".github/workflows/**", "CLAUDE.md"]
 
 The hook settings are the entry worth copying. Without them, the shortest way past the guard is to turn the guard off.
 
-### Refusing outright instead
+### When nobody is there to answer
 
-Where nobody is watching — CI, an unattended agent, a shared repo — a prompt is not a gate. Ask for a refusal instead.
+A prompt is only a gate while someone is at the keyboard. In a permission mode where nothing is put to a person — `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions` — the ask is downgraded to a refusal automatically. You do not configure that.
+
+A prompt also cannot be waited out. Nothing turns an unanswered one into an approval, because waiting would then be the way past the guard.
+
+What is left is the case where you are in `default` mode but away from the desk. The prompt sits there, and the agent sits with it. If that matters more to you than agent-driven setup, ask for a refusal outright.
 
 ```ts
 protect: { paths: ["CLAUDE.md"], decision: "deny" }
 ```
 
-`decision` alone hardens the config and the baseline without naming anything else.
+`decision` on its own hardens the config and the baseline without naming anything else.
 
 ```ts
 protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
 ```
-
-There is no timeout that turns an unanswered prompt into an approval, and there should not be: waiting would become the way past the guard. The config is TypeScript, so let the environment pick the verdict instead.
 
 ### Two things this check does differently
 
