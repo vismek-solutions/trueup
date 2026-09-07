@@ -1,6 +1,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EMPTY_BASELINE, type Baseline, type BaselineEntry } from "../ports/baseline.ts";
+import type { Baseline, BaselineEntry } from "../ports/baseline.ts";
+
+const EMPTY_BASELINE: Baseline = { entries: [] };
 
 export const BASELINE_NAME = "architecture.baseline.json";
 

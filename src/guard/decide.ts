@@ -1,5 +1,7 @@
-import { ALLOW, type Decision } from "../ports/proposal.ts";
+import type { Decision } from "../ports/proposal.ts";
 import type { Report } from "../report/model.ts";
+
+const ALLOW: Decision = { blocked: false, reasons: [] };
 
 export interface DecideInput {
   readonly report: Report;

@@ -79,6 +79,7 @@ Every claim runs on every pass and the whole report prints, so a run that clears
 | `every-import-respects-its-zone-boundary` | the boundaries hold |
 | `generic-code-names-no-domain-concept` | the seams hold |
 | `no-directory-holds-too-many-files` | no directory has become a drawer |
+| `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a seam for a single caller |
 
 The first four fail closed. An unresolved import, a name no module exports, or a config that matches nothing is an error, never a quiet pass — a check that reports success while enforcing nothing is worse than no check.
 
@@ -120,6 +121,22 @@ Boundaries govern what a file may reach; this governs where files accumulate. A 
 The count is of files the analysis actually read, so unclassified files count too — a directory nothing has claimed is the one most likely to be a dumping ground. There is no exemption list, because a limit with an exemption list is a limit nobody has to meet.
 
 Line and function length are a linter's job, not this tool's: delegate them with `noExcessiveLinesPerFile` and `noExcessiveLinesPerFunction`.
+
+## Code that crossed a seam for one caller
+
+```ts
+colocation: true,
+zones: [
+  { name: "app", patterns: ["src/**"], wiring: true },
+  { name: "domain", patterns: ["src/domain/**"] },
+]
+```
+
+A value exported from one zone and used by exactly one file in another is paying for a seam that carries nothing anyone else needs. Move it to the file that uses it; a second consumer arriving later is a reason to move it back then.
+
+Two exclusions make this precise rather than noisy, and both are load-bearing. A **composition root consumes almost everything exactly once** — that is its job — so a zone marked `wiring: true` is never counted as the lone consumer. And **type-only edges are ignored**, because a type is routinely used without being imported: reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
+
+Measured on this repo, the unfiltered version fires on 51 of 97 symbols and the filtered one on 3, of which 2 were real.
 
 ## Rules in TypeScript
 

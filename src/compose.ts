@@ -3,6 +3,7 @@ import { parseModule, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
+import { colocationClaim } from "./claims/colocation.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
 import { directoryClaim } from "./claims/directories.ts";
@@ -74,6 +75,7 @@ export interface CheckOptions {
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
+  readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly overlay?: Overlay | undefined;
@@ -90,6 +92,7 @@ export function check({
   boundaries = [],
   seams = [],
   maxFilesPerDirectory,
+  colocation = false,
   rules = [],
   runners = [],
   overlay,
@@ -116,6 +119,9 @@ export function check({
     boundaryClaim(boundaries),
     seamClaim(seams),
     ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
+    ...(colocation
+      ? [colocationClaim(zones.filter((zone) => zone.wiring === true).map((zone) => zone.name))]
+      : []),
     ...customClaims(rules),
   ];
 

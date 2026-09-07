@@ -7,5 +7,3 @@ export interface BaselineEntry {
 export interface Baseline {
   readonly entries: readonly BaselineEntry[];
 }
-
-export const EMPTY_BASELINE: Baseline = { entries: [] };

@@ -46,6 +46,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       boundaries: config.boundaries,
       seams: config.seams,
       maxFilesPerDirectory: config.maxFilesPerDirectory,
+      colocation: config.colocation,
       rules: config.rules,
       extensions: config.extensions,
       ignoreDirectories: config.ignoreDirectories,

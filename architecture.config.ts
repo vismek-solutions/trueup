@@ -22,6 +22,7 @@ export default defineConfig({
   include: ["src"],
   command: "node ./bin/acs.js",
   maxFilesPerDirectory: 12,
+  colocation: true,
   runners: [
     biomeRunner({
       command: ["node_modules/.bin/biome", "lint"],
@@ -40,9 +41,9 @@ export default defineConfig({
     { name: "guard", patterns: ["src/guard/**"] },
     { name: "claims", patterns: ["src/claims/**"] },
     { name: "config", patterns: ["src/config/**"] },
-    { name: "cli", patterns: ["src/cli/**"] },
+    { name: "cli", patterns: ["src/cli/**"], wiring: true },
     { name: "adapters", patterns: ["src/adapters/**"] },
-    { name: "root", patterns: ["src/compose.ts", "src/index.ts"] },
+    { name: "root", patterns: ["src/compose.ts", "src/index.ts"], wiring: true },
   ],
   boundaries: [
     { from: "ports", mayNotReach: LAYERS },
