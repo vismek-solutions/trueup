@@ -4,7 +4,8 @@
     "packages/trueline/src/index.ts",
     "packages/trueline/bin/trueline.js",
     "packages/trueline/trueline.config.ts",
-    "trueline.config.ts"
+    "trueline.config.ts",
+    "apps/docs/src/styles/custom.css"
   ],
   "ignorePatterns": ["**/test/fixtures/**"],
   "rules": {

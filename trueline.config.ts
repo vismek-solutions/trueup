@@ -8,7 +8,13 @@ const PATHS = ["packages/trueline/src", "packages/trueline/test", "packages/true
 
 export default defineConfig({
   members: ["packages/*"],
-  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures"],
+  zones: [{ name: "docs", patterns: ["apps/docs/**"] }],
+  boundaries: [
+    { from: "docs", mayNotReach: ["trueline"] },
+    { from: "trueline", mayNotReach: ["docs"] },
+  ],
+  externals: ["astro:*"],
+  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro"],
   command: "node ./packages/trueline/bin/trueline.js",
   maxFilesPerDirectory: 12,
   duplication: 60,
