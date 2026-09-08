@@ -32,6 +32,28 @@ describe("reading a pnpm workspace", () => {
     expect(workspaceGlobsIn(yaml(body))).toEqual(["packages/*", "apps/*"]);
   });
 
+  it("treats a line of spaces as blank, since an editor leaves those behind", () => {
+    const body = 'packages:\n  - "packages/*"\n   \n  - "apps/*"\n';
+
+    expect(workspaceGlobsIn(yaml(body))).toEqual(["packages/*", "apps/*"]);
+  });
+
+  it("finds the key below a leading comment rather than only on the first line", () => {
+    const body = '# the workspace\npackages:\n  - "packages/*"\n';
+
+    expect(workspaceGlobsIn(yaml(body))).toEqual(["packages/*"]);
+  });
+
+  it("finds the key with trailing whitespace behind it", () => {
+    const body = 'packages:   \n  - "packages/*"\n';
+
+    expect(workspaceGlobsIn(yaml(body))).toEqual(["packages/*"]);
+  });
+
+  it("reads no list that has no `packages:` key above it", () => {
+    expect(workspaceGlobsIn(yaml('  - "packages/*"\ncatalog:\n'))).toEqual([]);
+  });
+
   it("stops at the next top-level key rather than swallowing its values", () => {
     const body = 'packages:\n  - "packages/*"\ncatalog:\n  - "not-a-package"\n';
 
@@ -71,6 +93,20 @@ describe("falling back to package.json", () => {
     });
 
     expect(workspaceGlobsIn(directory)).toEqual(["from-pnpm/*"]);
+  });
+
+  it("keeps only the strings, so a malformed entry is dropped rather than carried", () => {
+    const directory = withFiles({
+      "package.json": JSON.stringify({ workspaces: ["packages/*", 5, null] }),
+    });
+
+    expect(workspaceGlobsIn(directory)).toEqual(["packages/*"]);
+  });
+
+  it("says nothing for a null workspaces, rather than reading through it", () => {
+    const directory = withFiles({ "package.json": JSON.stringify({ workspaces: null }) });
+
+    expect(workspaceGlobsIn(directory)).toEqual([]);
   });
 
   it("says nothing for a package.json with no workspaces at all", () => {

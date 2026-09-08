@@ -47,6 +47,7 @@ describe("what it says when it is done", () => {
       [
         "wrote trueup.config.ts",
         "wrote packages/big/trueup.config.ts",
+        "wrote packages/mid/trueup.config.ts",
         "",
         "members   packages/*",
         "runners   none, no linter in package.json",
@@ -75,7 +76,7 @@ describe("what it says when it is done", () => {
         "members   packages/* · apps/*",
         "runners   fallowRunner · oxlintRunner, over packages · apps only",
         "",
-        "no zone   e2e",
+        "no zone   e2e · vitest.config.ts",
         "          source no member claims; give it zones in the root config, or it fails as",
         "          unclassified and your linters never see it",
         "",
@@ -247,6 +248,13 @@ describe("starting a workspace", () => {
     initIn(directory);
 
     expect(configAt(directory, "packages", "empty", CONFIG)).toContain('{ name: "app", patterns: ["**"] },');
+  });
+
+  it("calls a package crowded past ten zones, not at ten", () => {
+    const { said } = initIn(staged("init-crowded"));
+
+    expect(said).toContain("crowded   big");
+    expect(said).not.toContain("crowded   mid");
   });
 
   it("says which packages hold no source yet, because their zones match nothing", () => {
