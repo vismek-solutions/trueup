@@ -7,7 +7,7 @@ import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocat
 import { cycleClaim } from "./claims/cycles.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
-import { directoryClaim } from "./claims/placement/directories.ts";
+import { directoryClaim, type DirectoryLimit } from "./claims/placement/directories.ts";
 import { duplicationClaim } from "./claims/placement/duplication.ts";
 import { isolationClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
@@ -119,6 +119,7 @@ export interface CheckOptions {
   readonly seams?: readonly SeamRule[] | undefined;
   readonly isolate?: readonly IsolationRule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
+  readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
   readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
@@ -153,6 +154,7 @@ export function check({
   seams = [],
   isolate = [],
   maxFilesPerDirectory,
+  directoryLimits,
   duplication,
   colocation = false,
   rules = [],
@@ -186,7 +188,9 @@ export function check({
     seamClaim(seams),
     cycleClaim,
     ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
-    ...(maxFilesPerDirectory === undefined ? [] : [directoryClaim(maxFilesPerDirectory)]),
+    ...(maxFilesPerDirectory === undefined && (directoryLimits ?? []).length === 0
+      ? []
+      : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits ?? [])]),
     ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),
     ...(colocation ? placementClaims(zones) : []),
     ...customClaims(rules),

@@ -89,7 +89,41 @@ The root is otherwise just `members` plus repo-wide settings. It needs no zones 
 
 Each member's config is protected from agent edits exactly like the root's, and no rulebook is ever analysed as source.
 
-`maxFilesPerDirectory` and `duplication` are single numbers for the whole repository. A member cannot override them.
+## Rules that belong to one package
+
+A member takes `seams`, `rules` and `maxFilesPerDirectory` as well. A rule about one package's components means nothing to the server beside it, and putting it in the root config rebuilds the single shared rulebook that `members` exists to break up.
+
+```ts
+// apps/web/trueline.config.ts
+export default defineMember({
+  maxFilesPerDirectory: 30,
+  zones: [
+    { name: "model", patterns: ["src/model/**"] },
+    { name: "view", patterns: ["src/view/**"] },
+  ],
+  seams: [{ generic: "view", domain: ["model"] }],
+  rules: [
+    defineRule("one-declaration-per-file", (project) =>
+      project.files
+        .filter((file) => project.declarationsIn(file).length > 1)
+        .map((file) => ({ message: `${project.relative(file)} declares more than one thing`, file })),
+    ),
+  ],
+});
+```
+
+A member's rule sees a project narrowed to that member: its own files, and its own zone names unqualified. It is written exactly as it would be if the package stood alone, and it never names the package it lives in — which matters, because a member's name comes from its directory, so a rule that spelled out `web/view` would quietly match nothing the day the folder moved.
+
+The finding is qualified on the way out, so two packages can hold a rule of the same name.
+
+```
+web/one-declaration-per-file                1 error
+    apps/web/src/view/chip.ts  apps/web/src/view/chip.ts declares more than one thing
+```
+
+Because the view is narrowed, a member's rule cannot report on another package. A rule that spans packages is a rule about more than one of them, so it belongs in the root config, where it gets the whole project and the qualified names to go with it.
+
+`duplication` stays root-only. It compares declarations across the whole repository, so a pair that spans two packages with different thresholds has no answer, and inventing one would be worse than the friction of a single number.
 
 ## Members are not islands
 

@@ -93,10 +93,12 @@ First match wins, in declaration order. [What each role changes](/concepts/zones
 
 ```ts
 // packages/lib/trueline.config.ts
-export default defineMember({ zones, allow?, boundaries? })
+export default defineMember({ zones, allow?, boundaries?, seams?, rules?, maxFilesPerDirectory? })
 ```
 
-A member config carries those three keys and nothing else. Runners, custom rules, `externals`, `protect`, `command` and the global limits stay at the root, because they are properties of the repository rather than of a package.
+A member's `rules` receive a project narrowed to that member — its own files, its own zone names unqualified — and their findings are reported under `<member>/<rule>`. [What that means for a rule spanning packages](/concepts/monorepos/#rules-that-belong-to-one-package).
+
+Runners, `externals`, `protect`, `command`, `isolate` and `duplication` stay at the root, because they are properties of the repository rather than of a package.
 
 ## Protection
 

@@ -2,9 +2,14 @@ import { existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import picomatch from "picomatch";
 import type { BoundaryRule } from "../claims/boundary.ts";
+import type { Rule } from "../claims/custom.ts";
+import type { DirectoryLimit } from "../claims/placement/directories.ts";
+import type { SeamRule } from "../claims/seam.ts";
 import { toPosix } from "../paths/posix.ts";
+import type { Project } from "../project/model.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 import type { MemberConfig } from "./model.ts";
+import { scopedTo } from "./scoped.ts";
 
 const CONFIG_NAMES = ["trueline.config.ts", "trueline.config.js", "trueline.config.mjs"];
 
@@ -71,6 +76,33 @@ export const boundariesOf = (members: readonly Member[]): readonly BoundaryRule[
       allow: [...rule.allow.map((zone) => qualified(member, zone)), ...outward],
     }));
   });
+
+export const seamsOf = (members: readonly Member[]): readonly SeamRule[] =>
+  members.flatMap((member) =>
+    (member.config.seams ?? []).map((rule) => ({
+      ...rule,
+      generic: qualified(member, rule.generic),
+      domain: rule.domain.map((zone) => qualified(member, zone)),
+    })),
+  );
+
+export const rulesOf = (members: readonly Member[], root: string): readonly Rule[] =>
+  members.flatMap((member) => {
+    const scope = { directory: join(root, member.directory), prefix: `${member.name}/` };
+
+    return (member.config.rules ?? []).map((rule) => ({
+      ...rule,
+      name: qualified(member, rule.name),
+      check: (project: Project) => rule.check(scopedTo(project, scope)),
+    }));
+  });
+
+export const directoryLimitsOf = (members: readonly Member[], root: string): readonly DirectoryLimit[] =>
+  members.flatMap((member) =>
+    member.config.maxFilesPerDirectory === undefined
+      ? []
+      : [{ within: join(root, member.directory), max: member.config.maxFilesPerDirectory }],
+  );
 
 export const assertReachable = (members: readonly Member[]): void => {
   const declared = new Set(members.map((member) => member.name));

@@ -1,11 +1,24 @@
-import { dirname } from "node:path";
+import { dirname, sep } from "node:path";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
 const GUIDANCE =
   "A directory holds more files than the limit, which is how a folder stops being one idea and turns into a drawer. Group the related files into a subdirectory that names what they share, or move out the ones that never belonged. Raising the limit is not the fix: the number exists to force the question of what this directory is for.";
 
-export function directoryClaim(maxFiles: number): Claim {
+export interface DirectoryLimit {
+  readonly within: string;
+  readonly max: number;
+}
+
+const limitFor = (directory: string, fallback: number, limits: readonly DirectoryLimit[]): number => {
+  const owner = limits
+    .filter((limit) => directory === limit.within || directory.startsWith(`${limit.within}${sep}`))
+    .sort((left, right) => right.within.length - left.within.length)[0];
+
+  return owner?.max ?? fallback;
+};
+
+export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit[] = []): Claim {
   return {
     name: "no-directory-holds-too-many-files",
     guidance: GUIDANCE,
@@ -19,11 +32,11 @@ export function directoryClaim(maxFiles: number): Claim {
       }
 
       return [...counts]
-        .filter(([, count]) => count > maxFiles)
+        .filter(([directory, count]) => count > limitFor(directory, maxFiles, limits))
         .sort(([left], [right]) => (left < right ? -1 : 1))
         .map(([directory, count]) => ({
           severity: "error" as const,
-          message: `holds ${count} files, more than the ${maxFiles} allowed`,
+          message: `holds ${count} files, more than the ${limitFor(directory, maxFiles, limits)} allowed`,
           file: directory,
           start: null,
         }));

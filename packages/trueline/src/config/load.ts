@@ -5,9 +5,12 @@ import {
   assertReachable,
   boundariesOf,
   configIn,
+  directoryLimitsOf,
   expanded,
   memberDirectories,
   reachRules,
+  rulesOf,
+  seamsOf,
   zonesOf,
   type Member,
 } from "./members.ts";
@@ -73,7 +76,11 @@ const claimedOnce = (names: readonly string[]): void => {
   }
 };
 
-const withMembers = (config: ArchitectureConfig, members: readonly Member[]): ResolvedConfig => {
+const withMembers = (
+  config: ArchitectureConfig,
+  members: readonly Member[],
+  root: string,
+): ResolvedConfig => {
   const own = config.zones ?? [];
   claimedOnce([...members.map((member) => member.name), ...own.map((zone) => zone.name)]);
   assertReachable(members);
@@ -86,6 +93,9 @@ const withMembers = (config: ArchitectureConfig, members: readonly Member[]): Re
       ...reachRules(members),
       ...expanded(config.boundaries ?? [], members),
     ],
+    seams: [...seamsOf(members), ...(config.seams ?? [])],
+    rules: [...rulesOf(members, root), ...(config.rules ?? [])],
+    directoryLimits: directoryLimitsOf(members, root),
   };
 };
 
@@ -102,7 +112,8 @@ export async function loadConfig(path: string): Promise<LoadedConfig> {
   );
 
   return {
-    config: members.length === 0 ? { ...config, zones: config.zones ?? [] } : withMembers(config, members),
+    config:
+      members.length === 0 ? { ...config, zones: config.zones ?? [] } : withMembers(config, members, root),
     path,
     root,
     memberConfigs: members.map((member) => member.configPath),
