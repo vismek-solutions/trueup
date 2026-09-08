@@ -130,7 +130,8 @@ export const zonesFor = (directory: string, files: readonly string[]): readonly 
     if (alive.patterns.length > 0) kept.push(declare(alive));
   }
 
-  return kept;
+  if (kept.length > 0) return kept;
+  return [declare({ name: CATCH_ALL[0] ?? "app", patterns: ["**"] })];
 };
 
 export const topDirectoriesIn = (patterns: readonly string[]): readonly string[] =>

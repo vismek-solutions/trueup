@@ -2,6 +2,7 @@
   "name": "@workspace/web",
   "type": "module",
   "dependencies": {
+    "@workspace/ui": "workspace:*",
     "@workspace/lib": "workspace:*",
     "picomatch": "^4.0.0"
   }

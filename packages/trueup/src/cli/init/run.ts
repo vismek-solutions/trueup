@@ -145,7 +145,8 @@ export function runInit({ cwd, argv, write }: CommandInput): number {
 
   write(federated ? `members   ${named(globs)}` : `zones     ${named(zones.map((zone) => zone.name))}`);
   const wired = runners.length === 0 ? "none, no linter in package.json" : named(runners.map(runnerName));
-  write(`runners   ${wired}${scoped.length === 0 ? "" : `, over ${named(scoped)} only`}`);
+  const over = runners.length === 0 || scoped.length === 0 ? "" : `, over ${named(scoped)} only`;
+  write(`runners   ${wired}${over}`);
 
   caveats(
     {
