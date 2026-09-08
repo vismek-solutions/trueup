@@ -1,5 +1,6 @@
 import { relative } from "node:path";
-import type { EdgeTarget, SymbolImportEdge } from "../graph/model.ts";
+import type { SymbolImportEdge } from "../graph/model.ts";
+import { targetPathOf } from "../graph/target.ts";
 import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 import type { ZoneReference } from "./zone-references.ts";
@@ -13,20 +14,6 @@ export interface BoundaryRule {
   readonly ignoreTypeOnly?: boolean | undefined;
 }
 
-const reachedPathOf = (target: EdgeTarget): string | null => {
-  switch (target.kind) {
-    case "symbol":
-    case "namespace":
-    case "missing-export":
-      return target.path;
-    case "external":
-      return target.path;
-    case "builtin":
-    case "ambiguous":
-      return null;
-  }
-};
-
 interface BreachInput {
   readonly root: string;
   readonly zoneOf: (path: string) => string | null;
@@ -36,7 +23,7 @@ interface BreachInput {
 const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput): Finding | null => {
   if (rule.ignoreTypeOnly === true && edge.kind === "type") return null;
 
-  const anchored = rule.anchor === "imported-module" ? edge.via : reachedPathOf(edge.to);
+  const anchored = rule.anchor === "imported-module" ? edge.via : targetPathOf(edge.to);
   if (anchored === null) return null;
 
   const targetZone = input.zoneOf(anchored);

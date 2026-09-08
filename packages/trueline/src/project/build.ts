@@ -1,5 +1,6 @@
 import { relative } from "node:path";
 import type { EdgeTarget, SymbolGraph } from "../graph/model.ts";
+import { targetPathOf } from "../graph/target.ts";
 import type { Lexicon } from "../lexicon/model.ts";
 import type { ZoneAssignment } from "../zones/model.ts";
 import type { ImportQuery, Project, ResolvedImport } from "./model.ts";
@@ -11,18 +12,8 @@ export interface BuildProjectInput {
   readonly lexicon: Lexicon;
 }
 
-const declaringPathOf = (target: EdgeTarget): string | null => {
-  switch (target.kind) {
-    case "symbol":
-    case "namespace":
-    case "missing-export":
-      return target.path;
-    case "external":
-    case "builtin":
-    case "ambiguous":
-      return null;
-  }
-};
+const declaringPathOf = (target: EdgeTarget): string | null =>
+  target.kind === "external" ? null : targetPathOf(target);
 
 export function buildProject({ root, graph, zones, lexicon }: BuildProjectInput): Project {
   const resolved: readonly ResolvedImport[] = graph.edges.map((edge) => {
