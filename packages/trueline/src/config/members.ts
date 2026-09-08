@@ -1,11 +1,13 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import picomatch from "picomatch";
+import type { ApiSurface } from "../claims/api-surface.ts";
 import type { BoundaryRule } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
 import type { DirectoryLimit } from "../claims/placement/directories.ts";
 import type { SeamRule } from "../claims/seam.ts";
 import { toPosix } from "../paths/posix.ts";
+import { exportedFilesIn } from "./exports.ts";
 import type { Project } from "../project/model.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 import type { MemberConfig } from "./model.ts";
@@ -75,6 +77,29 @@ export const boundariesOf = (members: readonly Member[]): readonly BoundaryRule[
       governs: namesOf(member),
     })),
   );
+
+export const apiSurfaces = (members: readonly Member[], root: string): readonly ApiSurface[] =>
+  members.flatMap((member) => {
+    if (member.config.doorsFromExports === true) return [];
+
+    const directory = join(root, member.directory);
+    const exported = exportedFilesIn(directory);
+    if (exported === null) return [];
+
+    const doors = member.config.zones
+      .filter((zone) => zone.role === "api")
+      .map((zone) => qualified(member, zone.name));
+    if (doors.length === 0) return [];
+
+    return [
+      {
+        manifest: join(directory, "package.json"),
+        doors,
+        exported: exported.files,
+        complete: exported.complete,
+      },
+    ];
+  });
 
 export const seamsOf = (members: readonly Member[]): readonly SeamRule[] =>
   members.flatMap((member) =>

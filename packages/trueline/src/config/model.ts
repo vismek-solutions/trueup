@@ -1,3 +1,4 @@
+import type { ApiSurface } from "../claims/api-surface.ts";
 import type { BoundaryRule } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
 import type { IsolationRule } from "../claims/isolation.ts";
@@ -14,6 +15,7 @@ export interface MemberConfig {
   readonly seams?: readonly SeamRule[] | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
+  readonly doorsFromExports?: boolean | undefined;
 }
 
 export interface ArchitectureConfig {
@@ -38,6 +40,7 @@ export interface ArchitectureConfig {
 export type ResolvedConfig = ArchitectureConfig & {
   readonly zones: readonly ZoneDefinition[];
   readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
+  readonly apiSurfaces?: readonly ApiSurface[] | undefined;
 };
 
 export const defineConfig = (config: ArchitectureConfig): ArchitectureConfig => config;

@@ -60,6 +60,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     seams: config.seams,
     maxFilesPerDirectory: config.maxFilesPerDirectory,
     directoryLimits: config.directoryLimits,
+    apiSurfaces: config.apiSurfaces,
     duplication: config.duplication,
     isolate: config.isolate,
     colocation: config.colocation,

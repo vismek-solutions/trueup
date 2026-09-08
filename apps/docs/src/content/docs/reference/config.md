@@ -93,8 +93,12 @@ First match wins, in declaration order. [What each role changes](/concepts/zones
 
 ```ts
 // packages/lib/trueline.config.ts
-export default defineMember({ zones, allow?, boundaries?, seams?, rules?, maxFilesPerDirectory? })
+export default defineMember({
+  zones, allow?, boundaries?, seams?, rules?, maxFilesPerDirectory?, doorsFromExports?
+})
 ```
+
+`doorsFromExports` derives the member's api zone from `package.json#exports` instead of you declaring one. [When that works and when it does not](/concepts/monorepos/#the-door-is-written-down-twice).
 
 A member's `rules` receive a project narrowed to that member — its own files, its own zone names unqualified — and their findings are reported under `<member>/<rule>`. [What that means for a rule spanning packages](/concepts/monorepos/#rules-that-belong-to-one-package).
 

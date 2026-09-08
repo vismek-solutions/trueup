@@ -1,0 +1,7 @@
+{
+  "name": "@doors/built",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  }
+}

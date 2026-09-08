@@ -1,7 +1,9 @@
 import { dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { toPosix } from "../paths/posix.ts";
+import { withDerivedDoors } from "./exports.ts";
 import {
+  apiSurfaces,
   assertReachable,
   boundariesOf,
   configIn,
@@ -64,7 +66,7 @@ const memberAt = async (root: string, directory: string): Promise<Member> => {
     name: relativePath.slice(relativePath.lastIndexOf("/") + 1),
     directory: relativePath,
     configPath,
-    config: config as MemberConfig,
+    config: withDerivedDoors(config as MemberConfig, directory),
   };
 };
 
@@ -96,6 +98,7 @@ const withMembers = (
     seams: [...seamsOf(members), ...(config.seams ?? [])],
     rules: [...rulesOf(members, root), ...(config.rules ?? [])],
     directoryLimits: directoryLimitsOf(members, root),
+    apiSurfaces: apiSurfaces(members, root),
   };
 };
 

@@ -1,6 +1,7 @@
 import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
 import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
+import { apiSurfaceClaim, type ApiSurface } from "./claims/api-surface.ts";
 import { boundaryClaim, boundaryZoneReferences, judges, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
@@ -122,6 +123,7 @@ export interface CheckOptions {
   readonly isolate?: readonly IsolationRule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
   readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
+  readonly apiSurfaces?: readonly ApiSurface[] | undefined;
   readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
@@ -157,6 +159,7 @@ export function check({
   isolate = [],
   maxFilesPerDirectory,
   directoryLimits,
+  apiSurfaces,
   duplication,
   colocation = false,
   rules = [],
@@ -190,6 +193,7 @@ export function check({
     seamClaim(seams),
     cycleClaim,
     ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
+    ...((apiSurfaces ?? []).length === 0 ? [] : [apiSurfaceClaim(apiSurfaces ?? [])]),
     ...(maxFilesPerDirectory === undefined && (directoryLimits ?? []).length === 0
       ? []
       : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits ?? [])]),

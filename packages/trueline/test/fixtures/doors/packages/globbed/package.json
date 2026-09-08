@@ -1,0 +1,8 @@
+{
+  "name": "@doors/globbed",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./features/*": "./src/features/*.ts"
+  }
+}

@@ -13,6 +13,7 @@ description: Every claim the tool makes about a project, and which ones fail lou
 | `every-zone-has-a-file` | no zone is empty |
 | `every-zone-pattern-matches-a-file` | no pattern is dead |
 | `every-rule-names-a-declared-zone` | no rule mentions a zone that does not exist |
+| `every-api-zone-is-exported` | a package's api zones and its `package.json` exports agree |
 | `every-import-respects-its-zone-boundary` | the boundaries hold |
 | `no-zones-form-a-cycle` | no group of zones depends on itself |
 | `no-sibling-directory-reaches-another` | sibling directories stay independent |
@@ -80,6 +81,7 @@ Nine claims are always on and need nothing but zones. The rest wait for a config
 | `maxFilesPerDirectory` | [`no-directory-holds-too-many-files`](/checks/placement/#directory-size) |
 | `duplication` | [`no-declaration-is-written-twice`](/checks/duplication/) |
 | `colocation` | `no-value-is-declared-away-from-its-only-consumer`, and `no-export-exists-only-for-a-test` when a zone also has `role: "tests"` |
+| `members` | [`every-api-zone-is-exported`](/concepts/monorepos/#the-door-is-written-down-twice), for each member that has both a `package.json` with `exports` and an api zone |
 | `runners` | [one claim per delegated category](/integrations/linters/) |
 | `rules` | [whatever you name](/checks/custom-rules/) |
 

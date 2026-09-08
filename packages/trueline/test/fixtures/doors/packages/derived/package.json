@@ -1,0 +1,8 @@
+{
+  "name": "@doors/derived",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vet": "./src/vet/index.ts"
+  }
+}

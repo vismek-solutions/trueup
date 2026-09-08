@@ -93,6 +93,34 @@ The root is otherwise just `members` plus repo-wide settings. It needs no zones 
 
 Each member's config is protected from agent edits exactly like the root's, and no rulebook is ever analysed as source.
 
+## The door is written down twice
+
+`role: "api"` says what other packages may reach. `package.json#exports` says what they can actually import. Nothing keeps them in sync, and drift is silent in both directions, so it is checked.
+
+```
+every-api-zone-is-exported                  2 errors
+    packages/drifted/package.json  exports ./vet, which no api zone covers
+    packages/drifted/package.json  zone drifted/spare is a door that package.json does not export
+```
+
+The first refuses imports that resolve perfectly well. The second is the quieter one: a door nobody outside the workspace can walk through, because the file is not published.
+
+It reports only what it can prove. A member with no `package.json` or no `exports` field says nothing about its surface, so neither does the check. A wildcard subpath like `"./features/*"` matches no single zone, and a subpath pointing at build output — `"./dist/index.js"` — names a file the analysis never reads. In each of those the check stays quiet rather than guessing.
+
+To remove the duplication instead of policing it:
+
+```ts
+// packages/shared/trueline.config.ts
+export default defineMember({
+  doorsFromExports: true,
+  zones: [{ name: "inside", patterns: ["src/**"] }],
+});
+```
+
+Every source file named in `exports` goes into a derived `api` zone ahead of your own, so the barrel is the door and the rest of the package sits behind it. One list, so there is nothing left to drift.
+
+This only works where `exports` points at source. A package that publishes build output would derive a door onto a file the analysis never reads, which is why it is off unless you ask for it. Setting it alongside a hand-written api zone is refused rather than merged.
+
 ## Rules that belong to one package
 
 A member takes `seams`, `rules` and `maxFilesPerDirectory` as well. A rule about one package's components means nothing to the server beside it, and putting it in the root config rebuilds the single shared rulebook that `members` exists to break up.

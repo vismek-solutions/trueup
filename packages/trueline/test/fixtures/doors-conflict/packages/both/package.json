@@ -1,0 +1,5 @@
+{
+  "name": "@doors/both",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" }
+}

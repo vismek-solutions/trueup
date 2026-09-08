@@ -1,23 +1,15 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { check, placementOf } from "../../src/compose.ts";
-import { loadConfig, resolveInclude } from "../../src/config/load.ts";
+import { placementOf } from "../../src/compose.ts";
+import { loadConfig } from "../../src/config/load.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
-import { messagesIn } from "../support/report.ts";
+import { messagesIn, reportForConfig } from "../support/report.ts";
 
 const ROOT = fixtureAt("federated-extras");
 const CONFIG = join(ROOT, "trueline.config.ts");
 
-const reportOf = async (): Promise<Report> => {
-  const { config, root, memberConfigs } = await loadConfig(CONFIG);
-  return check({
-    root,
-    roots: resolveInclude(root, config.include),
-    ignoreFiles: [CONFIG, ...memberConfigs],
-    ...config,
-  });
-};
+const reportOf = (): Promise<Report> => reportForConfig(CONFIG);
 
 describe("a rule a member declares", () => {
   it("is named after the member, so two packages can use the same rule name", async () => {
