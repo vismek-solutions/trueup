@@ -24,6 +24,7 @@ description: Every claim the tool makes about a project, and which ones fail lou
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
 | `no-test-reaches-an-internal` | no test is pinned to a split its subject's callers cannot see |
+| `no-file-sits-loose-beside-a-group` | nothing sits at a group's parent but what assembles it |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
 ## Imports are checked by name
@@ -78,7 +79,7 @@ Nine claims are always on and need nothing but zones. The rest wait for a config
 | key | turns on |
 |---|---|
 | `boundaries` | `every-import-respects-its-zone-boundary` |
-| `isolate` | [`no-sibling-directory-reaches-another`](/checks/isolation/) |
+| `isolate` | [`no-sibling-directory-reaches-another`](/checks/isolation/), and [`no-file-sits-loose-beside-a-group`](/checks/isolation/#files-that-sit-beside-the-group) when a rule also sets `wiring` |
 | `seams` | [`generic-code-names-no-domain-concept`](/checks/seams/) |
 | `maxFilesPerDirectory` | [`no-directory-holds-too-many-files`](/checks/placement/#directory-size) |
 | `duplication` | [`no-declaration-is-written-twice`](/checks/duplication/) |

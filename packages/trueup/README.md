@@ -266,6 +266,7 @@ Run it, fix what it shows, run it again. It reports `nothing left to fix` when t
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
 | `no-test-reaches-an-internal` | no test is pinned to a split its subject's callers cannot see |
+| `no-file-sits-loose-beside-a-group` | nothing sits at a group's parent but what assembles it |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
 The first four are about the analysis itself, and they fail loudly on purpose.
@@ -373,7 +374,7 @@ no-sibling-directory-reaches-another        2 errors
 
 Depth does not matter. `src/routes/c/deep/inner.ts` is still `c`.
 
-The parent itself is in no group. So `src/routes/index.ts` importing every route is fine — that is what a parent is for.
+The parent itself is in no group. So `src/routes/index.ts` importing every route is fine — that is what a parent is for, and `wiring` below is how you say which files may be there.
 
 More than one `*` is allowed, and each combination is its own island. `apps/*/src/routes/*` keeps `ui/a` apart from `ui/b` and from `web/a`, across every app at once.
 
@@ -404,6 +405,31 @@ no-sibling-directory-reaches-another        1 error
     src/routes/_shared/util.ts:1:0  is _shared, which the group shares, and may not reach into
                                     sibling b: thing from src/routes/b/thing.ts
 ```
+
+### Files that sit beside the group
+
+A file directly in `src/routes` belongs to no island, so nothing above governs it. It may reach into
+every route and the check stays quiet. That is right for `index.ts`, whose job is the group, and
+wrong for a helper that ended up there because nobody decided where it went.
+
+`wiring` says which files may sit there, and declaring it is what turns the question on.
+
+```ts
+isolate: [{ siblings: "src/routes/*", except: ["_shared"], wiring: ["**/index.ts"] }]
+```
+
+```
+no-file-sits-loose-beside-a-group           2 errors
+    src/routes/formatMoney.ts  sits beside the siblings `src/routes/*` rather than in one of them
+    src/routes/orderStatus.ts  sits beside the siblings `src/routes/*` rather than in one of them
+```
+
+Move each into the route that uses it, or out of the parent entirely if several do. `index.ts` went
+unreported because the pattern covers it, and so is every later file following that convention.
+
+Leave `wiring` out and nothing is reported: the claim is not made at all, so adding it to an
+existing project changes nothing until you ask this question. Write `wiring: []` to ask it with no
+exceptions. In a member's rulebook it resolves against the member's own directory, like `siblings`.
 
 A directory the islands share does not depend on one of them. When it does, it is not shared code,
 it is coupled code wearing a shared name — and it is the one direction where nothing else would

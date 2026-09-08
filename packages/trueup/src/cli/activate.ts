@@ -57,7 +57,10 @@ const seamLines = (config: ResolvedConfig): readonly string[] =>
 const isolateLines = (config: ResolvedConfig): readonly string[] =>
   (config.isolate ?? []).map((rule) => {
     const spared = rule.except === undefined ? "" : `, except ${rule.except.join(" · ")}`;
-    return `  ${rule.siblings}${spared}`;
+    const beside =
+      rule.wiring === undefined ? "" : `, and only ${rule.wiring.join(" · ")} may sit beside them`;
+    const loose = rule.wiring?.length === 0 ? ", and nothing may sit beside them" : beside;
+    return `  ${rule.siblings}${spared}${loose}`;
   });
 
 const limitLines = (config: ResolvedConfig, root: string): readonly string[] =>

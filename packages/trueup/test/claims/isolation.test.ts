@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
-import { findingsIn, messagesIn, reportForConfig } from "../support/report.ts";
+import { claimIn, findingsIn, messagesIn, reportForConfig } from "../support/report.ts";
 import type { IsolationRule } from "../../src/claims/isolation.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
@@ -232,5 +232,87 @@ describe("keeping sibling directories apart", () => {
   it("tells the reader that widening the exception is not the fix", () => {
     const claim = runWith({ siblings: "src/routes/*" }).claims.find((entry) => entry.claim === CLAIM);
     expect(claim?.guidance).toContain("is not the fix");
+  });
+});
+
+const LOOSE = "no-file-sits-loose-beside-a-group";
+
+describe("a file sitting beside a group rather than in one", () => {
+  it("says nothing until the rule says which files may sit there", () => {
+    expect(claimIn(runWith({ siblings: "src/routes/*" }), LOOSE)).toBeUndefined();
+  });
+
+  it("reports every file at the parent when nothing is named as assembling the group", () => {
+    const report = runWith({ siblings: "src/routes/*", wiring: [] });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/index.ts"),
+      join(ROOT, "src/routes/root-util.ts"),
+    ]);
+  });
+
+  it("names the pattern whose parent it is sitting in, so the reader knows which rule spoke", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*", wiring: [] }), LOOSE)).toContain(
+      "sits beside the siblings `src/routes/*` rather than in one of them",
+    );
+  });
+
+  it("excuses the file that assembles the siblings, and only that one", () => {
+    const report = runWith({ siblings: "src/routes/*", wiring: ["**/index.ts"] });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/root-util.ts"),
+    ]);
+  });
+
+  it("takes a pattern, so the convention covers the files following it and the ones added later", () => {
+    const named = messagesIn(runWith({ siblings: "src/routes/*", wiring: ["src/routes/index.ts"] }), LOOSE);
+    const convention = messagesIn(runWith({ siblings: "src/routes/*", wiring: ["**/index.*"] }), LOOSE);
+
+    expect(convention).toEqual(named);
+  });
+
+  it("says nothing about a file inside a sibling, which is where files are meant to be", () => {
+    const report = runWith({ siblings: "src/routes/*", wiring: [] });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file).join()).not.toContain("page.ts");
+  });
+
+  it("reads only the group's own parent, so a file a level above was never being kept apart", () => {
+    const report = runWith({ siblings: "src/routes/*/*", wiring: [] });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/.internal/hidden.ts"),
+      join(ROOT, "src/routes/_shared/util.ts"),
+      join(ROOT, "src/routes/a/helper.ts"),
+      join(ROOT, "src/routes/a/page.ts"),
+      join(ROOT, "src/routes/b/thing.ts"),
+    ]);
+  });
+
+  it("reports a loose file as an error, not a warning", () => {
+    const severities = findingsIn(runWith({ siblings: "src/routes/*", wiring: [] }), LOOSE);
+
+    expect(new Set(severities.map((finding) => finding.severity))).toEqual(new Set(["error"]));
+  });
+
+  it("tells the reader that parking an undecided file in the list is not the fix", () => {
+    const claim = claimIn(runWith({ siblings: "src/routes/*", wiring: [] }), LOOSE);
+
+    expect(claim?.guidance).toContain("not for the one you would like to allow today");
+  });
+
+  it("reads a member's `wiring` against the member's own directory, as it does `siblings`", async () => {
+    const report = await reportForConfig(join(fixtureAt("member-isolate"), "trueup.config.ts"));
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(fixtureAt("member-isolate"), "apps/web/src/routes/stray.ts"),
+    ]);
+  });
+
+  it("leaves the sibling-reaching claim alone, since a loose file breaches no boundary", () => {
+    const loose = runWith({ siblings: "src/routes/*", wiring: [] });
+
+    expect(messagesIn(loose, CLAIM)).toEqual(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM));
   });
 });

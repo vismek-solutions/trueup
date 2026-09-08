@@ -144,6 +144,9 @@ export const isolateOf = (members: readonly Member[]): readonly IsolationRule[] 
     (member.config.isolate ?? []).map((rule) => ({
       ...rule,
       siblings: `${member.directory}/${rule.siblings}`,
+      ...(rule.wiring === undefined
+        ? {}
+        : { wiring: rule.wiring.map((pattern) => `${member.directory}/${pattern}`) }),
     })),
   );
 

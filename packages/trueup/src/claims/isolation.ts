@@ -8,9 +8,13 @@ import type { Claim } from "./model.ts";
 const GUIDANCE =
   "A rule matching one directory is a warning rather than an error, because a second sibling may simply not exist yet; if the pattern was meant to reach a level deeper, it is the pattern that is wrong and not the tree. Two directories that were meant to stand alone are reaching into each other. Siblings under the same parent are separate parts, and once one imports another neither can be read, moved or deleted without the other, so the parent stops being a set of parts and becomes one unit. Move what they share up to a directory both may reach, or out of the group entirely, and import it from there. Listing the sibling in `except` is not the fix: that is for a directory everyone is meant to share, not for the one case you would like to allow today. `except` matches a group name as a pattern, so name the convention rather than the instances and every directory following it later is covered too. It exempts a directory as a target only: one that reaches back into a sibling is not being shared by the group, it is depending on one of its members, and that is the thing this rule exists to name.";
 
+const LOOSE =
+  "A file sits directly in the directory whose children are being kept apart, so it belongs to no sibling and the isolation rule does not govern it: it may reach into every group and nothing will say so. Move it into the sibling that uses it, or out of the parent entirely if several do. A file whose job is the group itself — an index, a route manifest, the thing that assembles the siblings — is the exception, and `wiring` is where you say so. It matches the path as a pattern, so name the convention rather than the instances and the files added later are covered too. Listing a file there because you have not decided where it belongs is the fix that stops the rule working: `wiring` is for a file that assembles the group, not for the one you would like to allow today. Only the parent of a group is read this way, so a file anywhere else is not reported — it was never being kept apart.";
+
 export interface IsolationRule {
   readonly siblings: string;
   readonly except?: readonly string[] | undefined;
+  readonly wiring?: readonly string[] | undefined;
 }
 
 type GroupOf = (file: string) => string | null;
@@ -89,6 +93,31 @@ const findingsFor = (rule: IsolationRule, root: string, project: Project): reado
     .map((edge) => breachOf(edge, grouping))
     .filter((finding) => finding !== null);
 };
+
+const looseIn = (rule: IsolationRule, root: string, project: Project): readonly Finding[] => {
+  if (rule.wiring === undefined) return [];
+
+  const atParent = picomatch(rule.siblings, { dot: true });
+  const assembles = picomatch([...rule.wiring], { dot: true });
+
+  return project.files
+    .map((file) => ({ file, path: toPosix(relative(root, file)) }))
+    .filter(({ path }) => atParent(path) && !assembles(path))
+    .map(({ file }) => ({
+      severity: "error" as const,
+      message: `sits beside the siblings \`${rule.siblings}\` rather than in one of them`,
+      file,
+      start: null,
+    }));
+};
+
+export function loosePlacementClaim(rules: readonly IsolationRule[]): Claim {
+  return {
+    name: "no-file-sits-loose-beside-a-group",
+    guidance: LOOSE,
+    check: ({ root, project }) => rules.flatMap((rule) => looseIn(rule, root, project)),
+  };
+}
 
 export function isolationClaim(rules: readonly IsolationRule[]): Claim {
   return {

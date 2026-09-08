@@ -15,7 +15,7 @@ import { runDelegated } from "./claims/delegated.ts";
 import { grantClaim, type MemberGrants } from "./claims/members/grants.ts";
 import { directoryClaim, type DirectoryLimit } from "./claims/placement/directories.ts";
 import { duplicationClaim } from "./claims/placement/duplication.ts";
-import { isolationClaim, type IsolationRule } from "./claims/isolation.ts";
+import { isolationClaim, loosePlacementClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
@@ -170,6 +170,14 @@ const placementClaims = (zones: readonly ZoneDefinition[]): Claim[] => {
   ];
 };
 
+const isolationClaims = (isolate: readonly IsolationRule[]): Claim[] =>
+  isolate.length === 0
+    ? []
+    : [
+        isolationClaim(isolate),
+        ...(isolate.some((rule) => rule.wiring !== undefined) ? [loosePlacementClaim(isolate)] : []),
+      ];
+
 export function check({
   root,
   roots,
@@ -214,7 +222,7 @@ export function check({
     boundaryClaim(boundaries),
     seamClaim(seams),
     cycleClaim,
-    ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
+    ...isolationClaims(isolate),
     ...((apiSurfaces ?? []).length === 0 ? [] : [apiSurfaceClaim(apiSurfaces ?? [])]),
     ...((grants ?? []).length === 0 ? [] : [grantClaim(grants ?? [])]),
     ...(maxFilesPerDirectory === undefined && (directoryLimits ?? []).length === 0
