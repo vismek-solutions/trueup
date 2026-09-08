@@ -11,7 +11,7 @@ import { eslintRunner } from "trueline";
 runners: [eslintRunner()]
 ```
 
-Four runners are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`. Add only the ones your project already installs — a runner whose binary is missing fails the run rather than reporting nothing.
+Four runners are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`. Add only the ones your project already installs — a runner whose binary is missing fails the run rather than reporting nothing. [`trueline init`](/start/getting-started/) wires the ones it finds in your `package.json`, scoped to the directories your zones cover, which is also the setting you want by hand: given a bare `.`, oxlint and biome will lint `node_modules` too.
 
 Each finding's category becomes its own claim, sitting in the report next to the rules from here:
 

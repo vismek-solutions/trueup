@@ -36,7 +36,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   if (unknown.length > 0) {
     write(`unrecognised: ${unknown.join(" ")}`);
     write(`known arguments: ${REPORT_FLAGS.join(" ")} --config=<path>`);
-    write("commands: explain <path> · guard · agent-instructions");
+    write("commands: init · explain <path> · guard · agent-instructions");
     return EXIT_BAD_USAGE;
   }
 
@@ -61,6 +61,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     maxFilesPerDirectory: config.maxFilesPerDirectory,
     directoryLimits: config.directoryLimits,
     apiSurfaces: config.apiSurfaces,
+    grants: config.grants,
     duplication: config.duplication,
     isolate: config.isolate,
     colocation: config.colocation,

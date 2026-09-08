@@ -22,6 +22,9 @@ export const findingsIn = (report: Report, claim: string): readonly Finding[] =>
 export const messagesIn = (report: Report, claim: string): string[] =>
   findingsIn(report, claim).map((finding) => finding.message);
 
+export const messagesFor = async (configPath: string, claim: string): Promise<string> =>
+  messagesIn(await reportForConfig(configPath), claim).join(" · ");
+
 export const findingsOf = (outcome: RunnerOutcome) => (outcome.kind === "findings" ? outcome.findings : []);
 
 export const reasonOf = (outcome: RunnerOutcome): string => (outcome.kind === "failed" ? outcome.reason : "");

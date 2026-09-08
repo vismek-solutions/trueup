@@ -1,0 +1,7 @@
+{
+  "name": "@grants/unwired",
+  "type": "module",
+  "dependencies": {
+    "picomatch": "^4.0.0"
+  }
+}

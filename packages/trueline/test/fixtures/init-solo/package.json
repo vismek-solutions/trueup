@@ -1,0 +1,8 @@
+{
+  "name": "solo",
+  "type": "module",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
+    "eslint": "^9.0.0"
+  }
+}

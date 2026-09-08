@@ -1,15 +1,17 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import picomatch from "picomatch";
-import type { ApiSurface } from "../claims/api-surface.ts";
 import type { BoundaryRule } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
+import type { ApiSurface } from "../claims/members/api-surface.ts";
+import type { MemberGrants } from "../claims/members/grants.ts";
 import type { DirectoryLimit } from "../claims/placement/directories.ts";
 import type { SeamRule } from "../claims/seam.ts";
 import { toPosix } from "../paths/posix.ts";
-import { exportedFilesIn } from "./exports.ts";
 import type { Project } from "../project/model.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
+import { exportedFilesIn } from "./exports.ts";
+import { manifestIn, type Manifest } from "./manifest.ts";
 import type { MemberConfig } from "./model.ts";
 import { scopedTo } from "./scoped.ts";
 
@@ -100,6 +102,41 @@ export const apiSurfaces = (members: readonly Member[], root: string): readonly 
       },
     ];
   });
+
+const manifestsOf = (members: readonly Member[], root: string): Map<string, Manifest> =>
+  new Map(
+    members.flatMap((member) => {
+      const manifest = manifestIn(join(root, member.directory));
+      return manifest === null ? [] : [[member.name, manifest] as const];
+    }),
+  );
+
+export const grantsOf = (members: readonly Member[], root: string): readonly MemberGrants[] => {
+  const manifests = manifestsOf(members, root);
+  const published = new Set(
+    [...manifests.values()].flatMap((manifest) => (manifest.name === null ? [] : [manifest.name])),
+  );
+
+  return members.flatMap((member) => {
+    const manifest = manifests.get(member.name);
+    if (manifest === undefined) return [];
+
+    const grants = (member.config.allow ?? []).flatMap((target) => {
+      const dependency = manifests.get(target)?.name;
+      return dependency === undefined || dependency === null ? [] : [{ member: target, dependency }];
+    });
+
+    return grants.length === 0
+      ? []
+      : [
+          {
+            configPath: member.configPath,
+            dependsOn: manifest.dependencies.filter((name) => published.has(name)),
+            grants,
+          },
+        ];
+  });
+};
 
 export const seamsOf = (members: readonly Member[]): readonly SeamRule[] =>
   members.flatMap((member) =>

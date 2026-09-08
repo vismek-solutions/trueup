@@ -1,0 +1,7 @@
+{
+  "name": "@grants/web",
+  "type": "module",
+  "dependencies": {
+    "@grants/lib": "workspace:*"
+  }
+}

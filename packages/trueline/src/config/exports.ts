@@ -1,7 +1,7 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { toPosix } from "../paths/posix.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
+import { manifestIn } from "./manifest.ts";
 import type { MemberConfig } from "./model.ts";
 
 export interface ExportedFile {
@@ -44,17 +44,10 @@ export interface PublicSurface {
 }
 
 export const exportedFilesIn = (directory: string): PublicSurface | null => {
-  const manifest = join(directory, "package.json");
-  if (!existsSync(manifest)) return null;
+  const manifest = manifestIn(directory);
+  if (manifest === null) return null;
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(readFileSync(manifest, "utf8"));
-  } catch {
-    return null;
-  }
-
-  const field = (parsed as { exports?: unknown }).exports;
+  const field = manifest.exports;
   if (field === undefined || field === null) return null;
 
   const subpaths = subpathsIn(field);

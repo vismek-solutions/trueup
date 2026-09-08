@@ -1,5 +1,5 @@
-import type { Finding } from "../report/model.ts";
-import type { Claim } from "./model.ts";
+import type { Finding } from "../../report/model.ts";
+import type { Claim } from "../model.ts";
 
 export interface ApiSurface {
   readonly manifest: string;

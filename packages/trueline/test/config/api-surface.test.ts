@@ -2,13 +2,13 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../../src/config/load.ts";
 import { fixtureAt } from "../support/fixtures.ts";
-import { messagesIn, reportForConfig } from "../support/report.ts";
+import { messagesFor, reportForConfig } from "../support/report.ts";
 
 const ROOT = fixtureAt("doors");
 const CONFIG = join(ROOT, "trueline.config.ts");
 const CLAIM = "every-api-zone-is-exported";
 
-const reported = async (): Promise<string> => messagesIn(await reportForConfig(CONFIG), CLAIM).join(" · ");
+const reported = (): Promise<string> => messagesFor(CONFIG, CLAIM);
 
 describe("comparing the api zones with what package.json publishes", () => {
   it("reports a subpath no api zone covers, which refuses imports that resolve", async () => {

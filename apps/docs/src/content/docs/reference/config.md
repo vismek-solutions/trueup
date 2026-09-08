@@ -3,7 +3,7 @@ title: Configuration
 description: Every key the config file accepts.
 ---
 
-The config is TypeScript. It is discovered by walking upward for `trueline.config.ts`, `.js` or `.mjs`, and the directory holding it is the project root.
+The config is TypeScript. It is discovered by walking upward for `trueline.config.ts`, `.js` or `.mjs`, and the directory holding it is the project root. `npx trueline init` writes a first one from the shape of your tree.
 
 Because it is TypeScript, it can read the environment — useful for anything that should behave differently in CI.
 
@@ -119,6 +119,7 @@ The root config, every member config and the baseline are covered with no config
 
 | | |
 |---|---|
+| `npx trueline init` | write a starting config, and one per workspace package |
 | `npx trueline` | the full report |
 | `npx trueline --dots` | one character per claim |
 | `npx trueline --next` | one problem, then stop |

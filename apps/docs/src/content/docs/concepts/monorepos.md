@@ -12,6 +12,28 @@ export default defineConfig({
 });
 ```
 
+## Starting from the workspace
+
+`trueline init` reads `pnpm-workspace.yaml`, or `workspaces` in `package.json`, and writes that root config plus a rulebook for every package it finds.
+
+```
+wrote trueline.config.ts
+wrote apps/web/trueline.config.ts
+wrote packages/empty/trueline.config.ts
+wrote packages/lib/trueline.config.ts
+kept  packages/ui/trueline.config.ts, already there
+
+members   packages/* · apps/*
+runners   oxlintRunner
+
+no source packages/empty
+          their zones match nothing until those hold code, or narrow `members`
+```
+
+A package that already has a rulebook keeps it. A package holding no code yet gets one anyway, and is named in that last block — its zones match nothing, which is an error rather than a silence.
+
+The workspace file is read once, here, and never again. `members` is not derived from it at check time, because the two lists are allowed to disagree — a docs app can be a workspace package and still be governed by a zone in the root config rather than being a member. Nothing is lost by that: with `include` left out, a package no member claims still fails as unclassified. What `init` writes is a draft you own.
+
 Leave `include` out. The whole repository is then analysed, so a directory no member claims fails as unclassified instead of going quietly unchecked. Narrowing `include` is how you *stop* seeing something.
 
 ```ts
@@ -120,6 +142,19 @@ export default defineMember({
 Every source file named in `exports` goes into a derived `api` zone ahead of your own, so the barrel is the door and the rest of the package sits behind it. One list, so there is nothing left to drift.
 
 This only works where `exports` points at source. A package that publishes build output would derive a door onto a file the analysis never reads, which is why it is off unless you ask for it. Setting it alongside a hand-written api zone is refused rather than merged.
+
+## A grant with no dependency
+
+`allow` and the dependency list overlap, and only one of them is kept honest by the package manager. Delete the last import of a package and the dependency usually goes with it; the grant stays, open, and nothing would refuse an import that walked back through it.
+
+```
+every-grant-has-a-dependency                1 error
+    packages/web/trueline.config.ts  allows ui, but package.json does not depend on @grants/ui
+```
+
+The other direction is already covered elsewhere. Importing a package that is not a dependency is what fallow's [`unlisted-dependencies`](/integrations/linters/) reports, so this claim only looks for the grant nothing backs.
+
+It compares rather than derives, for the reason the door check does: `package.json` is not a rulebook, and reading permission out of it would move boundary-widening out from behind [the guard](/agents/guard/). A member with no `package.json`, or one depending on no package in the workspace, is wired some other way — nothing is said about its grants.
 
 ## Rules that belong to one package
 

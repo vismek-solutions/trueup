@@ -9,9 +9,29 @@ Requires Node 22.18 or newer.
 npm install --save-dev trueline
 ```
 
-Create `trueline.config.ts` at the root of your project, next to `package.json`.
+Then write a starting config:
+
+```sh
+npx trueline init
+```
+
+```
+wrote trueline.config.ts
+
+zones     spec · api · domain · app
+runners   biomeRunner · fallowRunner
+
+next      add `boundaries` to say which zones may reach which
+          turn on `colocation`, `duplication` and `maxFilesPerDirectory` once a first run is clean
+          run `trueline` to see what it finds
+```
+
+It reads the tree, not your intentions: one zone per top-level folder under `src`, one for wherever your tests live, and a catch-all last. Runners are wired for the linters your `package.json` already has, scoped to the directories the zones cover. Nothing is written if a config is already there, and in a workspace each package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
+
+What it will not guess is `boundaries`, because a folder layout does not say which direction the dependencies are meant to run. That is the part you write. The rest of this page uses a config with those filled in:
 
 ```ts
+// trueline.config.ts
 import { defineConfig } from "trueline";
 
 export default defineConfig({

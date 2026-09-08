@@ -9,6 +9,7 @@ import {
   configIn,
   directoryLimitsOf,
   expanded,
+  grantsOf,
   memberDirectories,
   reachRules,
   rulesOf,
@@ -99,6 +100,7 @@ const withMembers = (
     rules: [...rulesOf(members, root), ...(config.rules ?? [])],
     directoryLimits: directoryLimitsOf(members, root),
     apiSurfaces: apiSurfaces(members, root),
+    grants: grantsOf(members, root),
   };
 };
 

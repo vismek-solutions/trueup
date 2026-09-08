@@ -1,13 +1,14 @@
 import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
 import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
-import { apiSurfaceClaim, type ApiSurface } from "./claims/api-surface.ts";
+import { apiSurfaceClaim, type ApiSurface } from "./claims/members/api-surface.ts";
 import { boundaryClaim, boundaryZoneReferences, judges, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
 import { cycleClaim } from "./claims/cycles.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
+import { grantClaim, type MemberGrants } from "./claims/members/grants.ts";
 import { directoryClaim, type DirectoryLimit } from "./claims/placement/directories.ts";
 import { duplicationClaim } from "./claims/placement/duplication.ts";
 import { isolationClaim, type IsolationRule } from "./claims/isolation.ts";
@@ -124,6 +125,7 @@ export interface CheckOptions {
   readonly maxFilesPerDirectory?: number | undefined;
   readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
   readonly apiSurfaces?: readonly ApiSurface[] | undefined;
+  readonly grants?: readonly MemberGrants[] | undefined;
   readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
@@ -160,6 +162,7 @@ export function check({
   maxFilesPerDirectory,
   directoryLimits,
   apiSurfaces,
+  grants,
   duplication,
   colocation = false,
   rules = [],
@@ -194,6 +197,7 @@ export function check({
     cycleClaim,
     ...(isolate.length === 0 ? [] : [isolationClaim(isolate)]),
     ...((apiSurfaces ?? []).length === 0 ? [] : [apiSurfaceClaim(apiSurfaces ?? [])]),
+    ...((grants ?? []).length === 0 ? [] : [grantClaim(grants ?? [])]),
     ...(maxFilesPerDirectory === undefined && (directoryLimits ?? []).length === 0
       ? []
       : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits ?? [])]),
