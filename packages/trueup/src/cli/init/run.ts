@@ -6,6 +6,7 @@ import { toPosix } from "../../paths/posix.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 import type { CommandInput } from "../command.ts";
 import { EXIT_BAD_USAGE } from "../main.ts";
+import { refusedArguments } from "../preamble.ts";
 import { renderMember, renderRoot, runnerName, runnersFor } from "./render.ts";
 import { workspaceGlobsIn } from "./workspace.ts";
 import { sourceFilesIn, topDirectoriesIn, zonesFor, type ZoneLine } from "./zones.ts";
@@ -99,11 +100,7 @@ const caveats = ({ cwd, uncovered, bare, crowded }: Caveats, write: (line: strin
 };
 
 export function runInit({ cwd, argv, write }: CommandInput): number {
-  if (argv.length > 0) {
-    write(`unrecognised: ${argv.join(" ")}`);
-    write(`usage: ${DEFAULT_COMMAND} init`);
-    return EXIT_BAD_USAGE;
-  }
+  if (refusedArguments(argv, "init", write)) return EXIT_BAD_USAGE;
 
   const existing = configIn(cwd);
   if (existing !== null) {

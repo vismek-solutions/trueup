@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { runActivate } from "./activate.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
 import type { CommandInput } from "./command.ts";
 import { runExplain } from "./explain.ts";
@@ -16,6 +17,7 @@ type Command = (input: CommandInput) => number | Promise<number>;
 const COMMANDS: Record<string, Command> = {
   init: runInit,
   explain: runExplain,
+  activate: runActivate,
   "agent-instructions": runAgentInstructions,
 };
 

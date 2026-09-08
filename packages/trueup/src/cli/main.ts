@@ -7,6 +7,7 @@ import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf, type Report } from "../report/model.ts";
 import { renderGitlab } from "./gitlab.ts";
+import { helpLines } from "./help.ts";
 import { render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
 
 export const EXIT_CLEAN = 0;
@@ -15,7 +16,7 @@ export const EXIT_STALE_BASELINE = 2;
 export const EXIT_NO_CONFIG = 3;
 export const EXIT_BAD_USAGE = 4;
 
-const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline"];
+const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline", "--help", "-h"];
 
 const VALUED_FLAGS = ["--config=", "--next="];
 
@@ -42,14 +43,23 @@ const presenterFor = (argv: readonly string[], rulebook: string): Present => {
   return argv.includes("--dots") ? renderDots : render;
 };
 
-export async function runCli({ cwd, argv, write }: CommandInput): Promise<number> {
+const usageIn = (argv: readonly string[], write: (line: string) => void): number | null => {
   const unknown = unknownArgumentsIn(argv, REPORT_FLAGS);
-  if (unknown.length > 0) {
+  const asked = argv.includes("--help") || argv.includes("-h");
+  if (!asked && unknown.length === 0) return null;
+
+  if (!asked) {
     write(`unrecognised: ${unknown.join(" ")}`);
-    write(`known arguments: ${REPORT_FLAGS.join(" ")} --config=<path> --next=<claim>`);
-    write("commands: init · explain <path> · guard · agent-instructions");
-    return EXIT_BAD_USAGE;
+    write("");
   }
+  for (const line of helpLines()) write(line);
+
+  return asked ? EXIT_CLEAN : EXIT_BAD_USAGE;
+};
+
+export async function runCli({ cwd, argv, write }: CommandInput): Promise<number> {
+  const usage = usageIn(argv, write);
+  if (usage !== null) return usage;
 
   const updating = argv.includes("--update-baseline");
   const explicit = argv.find((entry) => entry.startsWith("--config="))?.slice("--config=".length);

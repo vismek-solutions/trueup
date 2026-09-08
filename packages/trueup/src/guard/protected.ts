@@ -24,7 +24,7 @@ export interface ProtectionInput {
   readonly mode: string | null;
 }
 
-const pathsIn = (protect: Protection | undefined): readonly string[] => {
+export const pathsIn = (protect: Protection | undefined): readonly string[] => {
   if (protect === undefined) return [];
   if (Array.isArray(protect)) return protect;
   return (protect as ProtectionRule).paths ?? [];

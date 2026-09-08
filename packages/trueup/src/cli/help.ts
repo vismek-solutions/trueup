@@ -1,0 +1,41 @@
+import { DEFAULT_COMMAND } from "../report/invocation.ts";
+
+const OPTIONS: readonly (readonly [string, string])[] = [
+  ["--dots", "one mark per claim, with detail only for what failed"],
+  ["--next", "the first problem to fix, with the remedy for it"],
+  ["--next=<claim>", "the first problem from claims whose name contains <claim>"],
+  ["--json", "the whole report as JSON"],
+  ["--gitlab", "the report as a GitLab code quality artifact"],
+  ["--update-baseline", "accept every finding standing now, so only new ones fail"],
+  ["--config=<path>", "read this rulebook instead of searching upward for one"],
+  ["--help", "this text"],
+];
+
+const COMMANDS: readonly (readonly [string, string])[] = [
+  ["init", "write a rulebook for this project by reading its shape"],
+  ["explain <path>", "the zone a path falls in, what it may reach, and what it may not name"],
+  ["activate", "every zone, boundary and setting in force, for an agent's context"],
+  ["guard", "rule on a proposed edit, reading a hook payload from stdin"],
+  ["agent-instructions", "a short block to paste into an agent's memory file"],
+];
+
+const WIDTH = 20;
+
+const listed = (entries: readonly (readonly [string, string])[]): readonly string[] =>
+  entries.map(([name, said]) => `  ${name.padEnd(WIDTH)}${said}`);
+
+export const helpLines = (): readonly string[] => [
+  `${DEFAULT_COMMAND} — checks that the code matches the architecture its rulebook describes`,
+  "",
+  `usage: ${DEFAULT_COMMAND} [options]`,
+  `       ${DEFAULT_COMMAND} <command> [arguments]`,
+  "",
+  "options",
+  ...listed(OPTIONS),
+  "",
+  "commands",
+  ...listed(COMMANDS),
+  "",
+  "Exit codes: 0 clean · 1 errors · 2 the baseline has entries nothing reports any more ·",
+  "3 no rulebook found · 4 an argument it does not know.",
+];

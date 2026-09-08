@@ -96,23 +96,36 @@ export interface PlacementInput {
   readonly boundaries: readonly BoundaryRule[];
 }
 
-export interface Placement {
-  readonly zone: string | null;
+export interface Reach {
   readonly mayReach: readonly string[];
   readonly mayNotReach: readonly string[];
 }
 
-export function placementOf({ root, path, zones, boundaries }: PlacementInput): Placement {
-  const zone = assignZones({ root, files: [path], zones }).zoneOf(path);
-  if (zone === null) return { zone: null, mayReach: [], mayNotReach: [] };
+export interface Placement extends Reach {
+  readonly zone: string | null;
+}
 
+export interface ReachInput {
+  readonly zone: string;
+  readonly zones: readonly ZoneDefinition[];
+  readonly boundaries: readonly BoundaryRule[];
+}
+
+export function reachOf({ zone, zones, boundaries }: ReachInput): Reach {
   const rules = boundaries.filter((rule) => rule.from === zone);
   const names = zones.map((entry) => entry.name);
   const permits = (rule: BoundaryRule, name: string): boolean =>
     !judges(rule, name) || rule.allow.includes(name);
   const mayReach = names.filter((name) => name === zone || rules.every((rule) => permits(rule, name)));
 
-  return { zone, mayReach, mayNotReach: names.filter((name) => !mayReach.includes(name)) };
+  return { mayReach, mayNotReach: names.filter((name) => !mayReach.includes(name)) };
+}
+
+export function placementOf({ root, path, zones, boundaries }: PlacementInput): Placement {
+  const zone = assignZones({ root, files: [path], zones }).zoneOf(path);
+  if (zone === null) return { zone: null, mayReach: [], mayNotReach: [] };
+
+  return { zone, ...reachOf({ zone, zones, boundaries }) };
 }
 
 export interface CheckOptions {
