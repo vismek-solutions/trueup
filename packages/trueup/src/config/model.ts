@@ -14,6 +14,7 @@ export interface MemberConfig {
   readonly allow?: readonly string[] | undefined;
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
+  readonly isolate?: readonly IsolationRule[] | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
   readonly doorsFromExports?: boolean | undefined;

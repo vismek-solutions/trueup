@@ -23,6 +23,7 @@ const MEMBER: Record<keyof MemberConfig, true> = {
   allow: true,
   boundaries: true,
   doorsFromExports: true,
+  isolate: true,
   maxFilesPerDirectory: true,
   rules: true,
   seams: true,

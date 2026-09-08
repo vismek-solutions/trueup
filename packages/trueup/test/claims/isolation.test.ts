@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
-import { findingsIn, messagesIn } from "../support/report.ts";
+import { findingsIn, messagesIn, reportForConfig } from "../support/report.ts";
 import type { IsolationRule } from "../../src/claims/isolation.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
@@ -142,6 +142,20 @@ describe("keeping sibling directories apart", () => {
     expect(messagesIn(runWith({ siblings: "src/pages/*" }), CLAIM)).toEqual([
       "`src/pages/*` matches no directory, so nothing is being kept apart",
     ]);
+  });
+
+  it("takes the rule from the member that owns the shape, resolved against its directory", async () => {
+    const report = await reportForConfig(join(fixtureAt("member-isolate"), "trueup.config.ts"));
+
+    expect(messagesIn(report, CLAIM)).toEqual([
+      "is a and may not reach sibling b: thing from apps/web/src/routes/b/thing.ts",
+    ]);
+  });
+
+  it("reads a member's `except` as the group names its own pattern captures", async () => {
+    const report = await reportForConfig(join(fixtureAt("member-isolate"), "trueup.config.ts"));
+
+    expect(messagesIn(report, CLAIM).join()).not.toContain("chrome");
   });
 
   it("tells the reader that widening the exception is not the fix", () => {

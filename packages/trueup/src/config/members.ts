@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import picomatch from "picomatch";
 import type { BoundaryRule } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
+import type { IsolationRule } from "../claims/isolation.ts";
 import type { ApiSurface } from "../claims/members/api-surface.ts";
 import type { MemberGrants } from "../claims/members/grants.ts";
 import type { DirectoryLimit } from "../claims/placement/directories.ts";
@@ -137,6 +138,14 @@ export const grantsOf = (members: readonly Member[], root: string): readonly Mem
         ];
   });
 };
+
+export const isolateOf = (members: readonly Member[]): readonly IsolationRule[] =>
+  members.flatMap((member) =>
+    (member.config.isolate ?? []).map((rule) => ({
+      ...rule,
+      siblings: `${member.directory}/${rule.siblings}`,
+    })),
+  );
 
 export const seamsOf = (members: readonly Member[]): readonly SeamRule[] =>
   members.flatMap((member) =>

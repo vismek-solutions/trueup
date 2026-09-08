@@ -27,10 +27,10 @@ describe("a configuration key nothing reads", () => {
   });
 
   it("says where a key belongs when it is a setting of the other kind", () => {
-    const said = strayKeysIn({ zones: ZONES, isolate: [] }, "member") ?? "";
+    const said = strayKeysIn({ zones: ZONES, duplication: 60 }, "member") ?? "";
 
-    expect(said).toContain("sets `isolate`, which a member configuration does not read.");
-    expect(said).toContain("`isolate` belongs in the root configuration.");
+    expect(said).toContain("sets `duplication`, which a member configuration does not read.");
+    expect(said).toContain("`duplication` belongs in the root configuration.");
   });
 
   it("says the same in the other direction, for a member setting written at the root", () => {
@@ -40,10 +40,10 @@ describe("a configuration key nothing reads", () => {
   });
 
   it("names every stray key, not only the first", () => {
-    const said = strayKeysIn({ zones: ZONES, isolate: [], boundries: [] }, "member") ?? "";
+    const said = strayKeysIn({ zones: ZONES, duplication: 60, boundries: [] }, "member") ?? "";
 
-    expect(said).toContain("sets `isolate`, `boundries`, which a member configuration does not read.");
-    expect(said).toContain("`isolate` belongs in the root configuration.");
+    expect(said).toContain("sets `duplication`, `boundries`, which a member configuration does not read.");
+    expect(said).toContain("`duplication` belongs in the root configuration.");
   });
 
   it("offers no relocation for a key that belongs to neither kind", () => {
@@ -56,7 +56,7 @@ describe("loading a configuration that sets a key nothing reads", () => {
     const path = join(fixtureAt("stray-key"), "trueup.config.ts");
 
     await expect(loadConfig(path)).rejects.toThrow(
-      /packages\/one\/trueup\.config\.ts sets `isolate`, which a member configuration does not read/,
+      /packages\/one\/trueup\.config\.ts sets `duplication`, which a member configuration does not read/,
     );
   });
 });
