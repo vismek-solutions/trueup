@@ -39,10 +39,7 @@ export function runDelegated(runners: readonly Runner[], root: string): readonly
   }
 
   const delegated: ClaimResult[] = [...byClaim.entries()]
-    .sort(([left], [right]) => {
-      if (left < right) return -1;
-      return left > right ? 1 : 0;
-    })
+    .sort(([left], [right]) => (left < right ? -1 : 1))
     .map(([claim, { runner, findings }]) => ({
       claim,
       guidance: findingGuidance(runner),

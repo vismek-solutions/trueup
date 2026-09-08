@@ -63,9 +63,78 @@ describe("a delegated tool", () => {
     expect(report.claims.find((claim) => claim.claim === RUNNERS_RAN_CLAIM)?.findings).toEqual([]);
   });
 
-  it("keeps its findings in a stable order across runs", () => {
-    const runners = [reporting([finding("z_last", "z"), finding("a_first", "a")])];
-    expect(claimNames(reportWith(runners))).toEqual(claimNames(reportWith(runners)));
+  it("orders its claims by name, whatever order the tool reported them in", () => {
+    const report = reportWith([reporting([finding("z_last", "z"), finding("a_first", "a")])]);
+    const delegated = claimNames(report).filter((name) => name.startsWith("stub/"));
+
+    expect(delegated).toEqual(["stub/a_first", "stub/z_last"]);
+  });
+
+  it("gathers a category reported more than once into one claim", () => {
+    const report = reportWith([
+      reporting([finding("unused_exports", "one"), finding("unused_exports", "two")]),
+    ]);
+    const claim = report.claims.find((entry) => entry.claim === "stub/unused_exports");
+
+    expect(claim?.findings.map((found) => found.message)).toEqual(["one", "two"]);
+  });
+
+  it("carries a finding's group through, so a tool can say two of them are one problem", () => {
+    const grouped: RunnerFinding = { ...finding("code_duplication", "copied"), group: "body-one" };
+    const report = reportWith([reporting([grouped])]);
+
+    expect(report.claims.find((entry) => entry.claim === "stub/code_duplication")?.findings[0]).toMatchObject(
+      { group: "body-one" },
+    );
+  });
+
+  it("leaves the group off a finding that has none, rather than inventing an empty one", () => {
+    const report = reportWith([reporting([finding("unused_exports", "one")])]);
+    const [found] = report.claims.find((entry) => entry.claim === "stub/unused_exports")?.findings ?? [];
+
+    expect(found === undefined ? true : "group" in found).toBe(false);
+  });
+
+  it("says which tool a finding came from, since the rules here did not produce it", () => {
+    const report = reportWith([reporting([finding("unused_exports", "one")])]);
+
+    expect(report.claims.find((entry) => entry.claim === "stub/unused_exports")?.guidance).toContain(
+      "Reported by stub",
+    );
+  });
+});
+
+describe("more than one delegated tool", () => {
+  const named = (name: string, findings: readonly RunnerFinding[]): Runner => ({
+    name,
+    run: () => ({ kind: "findings", findings }),
+  });
+
+  it("keeps one that failed from hiding what another found", () => {
+    const report = reportWith([failing("command not found"), named("other", [finding("dupes", "copied")])]);
+
+    expect(claimNames(report)).toContain("other/dupes");
+    expect(report.claims.find((claim) => claim.claim === RUNNERS_RAN_CLAIM)?.findings).toHaveLength(1);
+  });
+
+  it("reports every failure, not only the first tool that could not run", () => {
+    const report = reportWith([failing("command not found"), { ...failing("exited 2"), name: "other" }]);
+    const ran = report.claims.find((claim) => claim.claim === RUNNERS_RAN_CLAIM);
+
+    expect(ran?.findings.map((found) => found.message)).toEqual([
+      "stub did not run: command not found",
+      "other did not run: exited 2",
+    ]);
+  });
+
+  it("keeps two tools' categories apart even when they share a name", () => {
+    const report = reportWith([
+      named("one", [finding("dupes", "from one")]),
+      named("two", [finding("dupes", "from two")]),
+    ]);
+
+    expect(claimNames(report)).toContain("one/dupes");
+    expect(claimNames(report)).toContain("two/dupes");
   });
 });
 
