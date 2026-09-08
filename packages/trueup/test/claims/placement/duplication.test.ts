@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { fixtureAt } from "../support/fixtures.ts";
-import { findingsIn, messagesIn } from "../support/report.ts";
-import { check } from "../../src/compose.ts";
-import type { Report } from "../../src/report/model.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
+import { findingsIn, messagesIn } from "../../support/report.ts";
+import { check } from "../../../src/compose.ts";
+import type { Report } from "../../../src/report/model.ts";
 
 const ROOT = fixtureAt("copied");
 const CLAIM = "no-declaration-is-written-twice";

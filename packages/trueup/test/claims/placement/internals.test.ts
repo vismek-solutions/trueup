@@ -1,10 +1,10 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { fixtureAt } from "../support/fixtures.ts";
-import { claimIn, messagesIn } from "../support/report.ts";
-import { check } from "../../src/compose.ts";
-import type { Report } from "../../src/report/model.ts";
-import type { ZoneDefinition } from "../../src/zones/model.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
+import { claimIn, messagesIn } from "../../support/report.ts";
+import { check } from "../../../src/compose.ts";
+import type { Report } from "../../../src/report/model.ts";
+import type { ZoneDefinition } from "../../../src/zones/model.ts";
 
 const ROOT = fixtureAt("internals");
 const CLAIM = "no-test-reaches-an-internal";

@@ -1,13 +1,12 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { fixtureAt } from "../support/fixtures.ts";
-import { claimIn } from "../support/report.ts";
-import { PROJECT_ZONES as ZONES } from "../support/zones.ts";
-import { renderNext } from "../../src/cli/render.ts";
-import { check } from "../../src/compose.ts";
-import type { Report } from "../../src/report/model.ts";
-import type { ZoneDefinition } from "../../src/zones/model.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
+import { claimIn } from "../../support/report.ts";
+import { PROJECT_ZONES as ZONES } from "../../support/zones.ts";
+import { renderNext } from "../../../src/cli/render.ts";
+import { check } from "../../../src/compose.ts";
+import type { Report } from "../../../src/report/model.ts";
+import type { ZoneDefinition } from "../../../src/zones/model.ts";
 
 const ROOT = fixtureAt("project");
 const CLAIM = "no-value-is-declared-away-from-its-only-consumer";
@@ -50,7 +49,7 @@ describe("keeping a value with its only consumer", () => {
   });
 });
 
-const SHARED = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "colocated");
+const SHARED = fixtureAt("colocated");
 const TEST_ONLY = "no-export-exists-only-for-a-test";
 
 const sharedReport = (): Report =>
