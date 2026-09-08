@@ -153,12 +153,15 @@ Each member's config is protected from agent edits exactly like the root's, and 
 `role: "api"` says what other packages may reach. `package.json#exports` says what they can actually import. Nothing keeps them in sync, and drift is silent in both directions, so it is checked.
 
 ```
-every-api-zone-is-exported                  2 errors
+every-api-zone-is-exported                  3 errors
     packages/drifted/package.json  exports ./vet, which no api zone covers
     packages/drifted/package.json  zone drifted/spare is a door that package.json does not export
+    packages/widened/package.json  zone widened/api covers packages/widened/src/warrants.ts, which package.json does not export
 ```
 
-The first refuses imports that resolve perfectly well. The second is the quieter one: a door nobody outside the workspace can walk through, because the file is not published.
+The first refuses imports that resolve perfectly well. The second is a door nobody outside the workspace can walk through, because the file is not published.
+
+The third is the one worth understanding, because it is how a package quietly comes open. Widening an api zone by one pattern is not a local edit: an api zone is what `allow` opens, so every package you invited in can now reach that file directly, past the barrel, while nothing outside the workspace can import it at all. The check is per file rather than per zone for exactly this reason — a door that covers one exported file does not get to carry any others in with it.
 
 It reports only what it can prove. A member with no `package.json` or no `exports` field says nothing about its surface, so neither does the check. A wildcard subpath like `"./features/*"` matches no single zone, and a subpath pointing at build output — `"./dist/index.js"` — names a file the analysis never reads. In each of those the check stays quiet rather than guessing.
 

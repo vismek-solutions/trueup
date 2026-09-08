@@ -19,6 +19,16 @@ describe("comparing the api zones with what package.json publishes", () => {
     expect(await reported()).toContain("zone drifted/spare is a door that package.json does not export");
   });
 
+  it("reports a file widening a door that already covers an export, which opens the package", async () => {
+    expect(await reported()).toContain(
+      "zone widened/api covers packages/widened/src/warrants.ts, which package.json does not export",
+    );
+  });
+
+  it("says nothing about the exported file sharing that door", async () => {
+    expect(await reported()).not.toContain("widened/src/index.ts");
+  });
+
   it("says nothing about a package whose exports point at build output", async () => {
     expect(await reported()).not.toContain("built");
   });
