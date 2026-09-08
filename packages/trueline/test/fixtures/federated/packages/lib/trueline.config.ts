@@ -1,7 +1,7 @@
 import { defineMember } from "../../../../../src/config/model.ts";
 
 export default defineMember({
-  mayReach: ["ui"],
+  allow: ["ui"],
   zones: [
     { name: "api", patterns: ["src/index.ts"], role: "api" },
     { name: "domain", patterns: ["src/domain/**"] },

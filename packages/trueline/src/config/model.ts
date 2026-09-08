@@ -8,7 +8,7 @@ import type { ZoneDefinition } from "../zones/model.ts";
 
 export interface MemberConfig {
   readonly zones: readonly ZoneDefinition[];
-  readonly mayReach?: readonly string[] | undefined;
+  readonly allow?: readonly string[] | undefined;
   readonly boundaries?: readonly BoundaryRule[] | undefined;
 }
 

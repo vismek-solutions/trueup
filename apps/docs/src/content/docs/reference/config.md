@@ -93,7 +93,7 @@ First match wins, in declaration order. [What each role changes](/concepts/zones
 
 ```ts
 // packages/lib/trueline.config.ts
-export default defineMember({ zones, mayReach?, boundaries? })
+export default defineMember({ zones, allow?, boundaries? })
 ```
 
 A member config carries those three keys and nothing else. Runners, custom rules, `externals`, `protect`, `command` and the global limits stay at the root, because they are properties of the repository rather than of a package.

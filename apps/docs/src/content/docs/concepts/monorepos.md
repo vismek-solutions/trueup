@@ -37,14 +37,14 @@ Nothing, until it says so. A member reaching another it did not name is an error
 ```ts
 // apps/web/trueline.config.ts
 export default defineMember({
-  mayReach: ["lib"],
+  allow: ["lib"],
   zones: [{ name: "pages", patterns: ["src/**"] }],
 });
 ```
 
 This is the same shape as a `package.json` dependency list, and for the same reason: adding a dependency is a local edit, next to the code that took it on. Twenty packages need twenty declarations, not four hundred.
 
-`mayReach: ["lib"]` opens `lib`'s `role: "api"` zones and nothing else. A package with no api zone opens entirely.
+`allow: ["lib"]` opens `lib`'s `role: "api"` zones and nothing else. A package with no api zone opens entirely. It is the same `allow` a boundary rule takes, one level up: there it lists zones, here it lists members.
 
 So this file gets one line of the two past the check:
 

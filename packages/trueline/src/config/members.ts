@@ -72,8 +72,8 @@ export const assertReachable = (members: readonly Member[]): void => {
   const declared = new Set(members.map((member) => member.name));
 
   for (const member of members) {
-    for (const target of member.config.mayReach ?? []) {
-      if (target === member.name) throw new Error(`${member.directory} lists itself in \`mayReach\``);
+    for (const target of member.config.allow ?? []) {
+      if (target === member.name) throw new Error(`${member.directory} lists itself in \`allow\``);
       if (!declared.has(target)) {
         throw new Error(`${member.directory} may reach ${target}, which is not a member`);
       }
@@ -93,7 +93,7 @@ const openIn = (member: Member, invited: boolean): readonly string[] => (invited
 
 export const reachRules = (members: readonly Member[]): readonly BoundaryRule[] =>
   members.flatMap((member) => {
-    const invited = new Set(member.config.mayReach ?? []);
+    const invited = new Set(member.config.allow ?? []);
     const open = members
       .filter((other) => other.name !== member.name)
       .flatMap((other) => openIn(other, invited.has(other.name)));

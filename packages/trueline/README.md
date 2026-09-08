@@ -136,14 +136,14 @@ Nothing, until it says so. A member reaching another it did not name is an error
 ```ts
 // apps/docs/trueline.config.ts
 export default defineMember({
-  mayReach: ["lib", "ui"],
+  allow: ["lib", "ui"],
   zones: [{ name: "pages", patterns: ["src/**"] }],
 });
 ```
 
 This is the same shape as a `package.json` dependency list, and for the same reason: adding a dependency is a local edit, next to the code that took it on. Twenty packages need twenty declarations, not four hundred.
 
-`mayReach: ["lib"]` opens `lib`'s `role: "api"` zones and nothing else. A package with no api zone opens entirely.
+`allow: ["lib"]` opens `lib`'s `role: "api"` zones and nothing else. A package with no api zone opens entirely.
 
 Reaching between members is judged on the module you imported, not on the file that declares the symbol. Inside one package, following the barrel to the declaration is the whole point. Between packages, the api **is** the contract, and what it re-exports is deliberate.
 
@@ -376,7 +376,7 @@ The parent itself is in no group. So `src/routes/index.ts` importing every route
 
 More than one `*` is allowed, and each combination is its own island. `apps/*/src/routes/*` keeps `ui/a` apart from `ui/b` and from `web/a`, across every app at once.
 
-This is not what `mayReach` does, and members do not replace it. A member is a unit with a rulebook and a public api, and it names what it reaches. An island has neither, there are dozens of them, and the set changes every week — the whole value is that a new one is governed the moment it exists.
+This is not what a member's `allow` does, and members do not replace it. A member is a unit with a rulebook and a public api, and it names what it reaches. An island has neither, there are dozens of them, and the set changes every week — the whole value is that a new one is governed the moment it exists.
 
 If the pattern matches no directory at all, that is an error rather than a silent pass. A rule guarding nothing is the failure mode this tool exists to prevent.
 

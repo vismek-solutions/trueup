@@ -84,11 +84,11 @@ describe("what one member may reach in another", () => {
 });
 
 describe("naming a member that is not there", () => {
-  const wanting = (name: string, mayReach: readonly string[]): Member => ({
+  const wanting = (name: string, allow: readonly string[]): Member => ({
     name,
     directory: `packages/${name}`,
     configPath: `packages/${name}/trueline.config.ts`,
-    config: { zones: [], mayReach },
+    config: { zones: [], allow },
   });
 
   it("refuses a name no member declares, rather than reaching nothing in silence", () => {
