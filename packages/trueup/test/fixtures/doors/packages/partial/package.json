@@ -1,0 +1,8 @@
+{
+  "name": "@doors/partial",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./built": "./dist/index.js"
+  }
+}

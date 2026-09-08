@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../../src/config/load.ts";
 import { fixtureAt } from "../support/fixtures.ts";
-import { messagesFor, reportForConfig } from "../support/report.ts";
+import { messagesFor, messagesIn, reportForConfig } from "../support/report.ts";
 
 const ROOT = fixtureAt("doors");
 const CONFIG = join(ROOT, "trueup.config.ts");
@@ -11,6 +11,14 @@ const CLAIM = "every-api-zone-is-exported";
 const reported = (): Promise<string> => messagesFor(CONFIG, CLAIM);
 
 describe("comparing the api zones with what package.json publishes", () => {
+  it("reports these and nothing besides, so a spurious finding is a failure too", async () => {
+    expect(messagesIn(await reportForConfig(CONFIG), CLAIM).sort()).toEqual([
+      "exports ./vet, which no api zone covers",
+      "zone drifted/spare is a door that package.json does not export",
+      "zone widened/api covers packages/widened/src/warrants.ts, which package.json does not export",
+    ]);
+  });
+
   it("reports a subpath no api zone covers, which refuses imports that resolve", async () => {
     expect(await reported()).toContain("exports ./vet, which no api zone covers");
   });
@@ -31,6 +39,10 @@ describe("comparing the api zones with what package.json publishes", () => {
 
   it("says nothing about a package whose exports point at build output", async () => {
     expect(await reported()).not.toContain("built");
+  });
+
+  it("withholds the door direction when some exports could not be read", async () => {
+    expect(await reported()).not.toContain("partial");
   });
 
   it("says nothing about a wildcard subpath, which it cannot match to one zone", async () => {

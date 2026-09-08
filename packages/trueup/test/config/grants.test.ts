@@ -1,7 +1,7 @@
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
-import { findingsIn, reportForConfig } from "../support/report.ts";
+import { findingsIn, messagesIn, reportForConfig } from "../support/report.ts";
 
 const ROOT = fixtureAt("grants");
 const CONFIG = join(ROOT, "trueup.config.ts");
@@ -13,6 +13,12 @@ const granted = async (): Promise<string> =>
     .join(" · ");
 
 describe("comparing what a member may reach with what it depends on", () => {
+  it("reports this and nothing besides, so a spurious finding is a failure too", async () => {
+    expect(messagesIn(await reportForConfig(CONFIG), CLAIM)).toEqual([
+      "allows ui, but package.json does not depend on @grants/ui",
+    ]);
+  });
+
   it("reports a grant onto a package the member does not depend on", async () => {
     expect(await granted()).toContain(
       "packages/web/trueup.config.ts allows ui, but package.json does not depend on @grants/ui",
