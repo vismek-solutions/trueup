@@ -281,12 +281,33 @@ describe("a file sitting beside a group rather than in one", () => {
   it("reads only the group's own parent, so a file a level above was never being kept apart", () => {
     const report = runWith({ siblings: "src/routes/*/*", wiring: [] });
 
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file).join()).not.toContain("routes/index.ts");
+  });
+
+  it("leaves a directory that holds no group alone, since its files sit beside no sibling", () => {
+    const deeper = runWith({ siblings: "src/routes/*/*", wiring: [] });
+    const reported = findingsIn(deeper, LOOSE).map((finding) => finding.file);
+
+    expect(reported.join()).not.toContain("routes/a/");
+    expect(reported.join()).not.toContain("routes/b/");
+  });
+
+  it("still reads the one directory that does hold a group, at that same depth", () => {
+    const deeper = runWith({ siblings: "src/routes/*/*", wiring: [] });
+
+    expect(findingsIn(deeper, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/c/loose.ts"),
+    ]);
+  });
+
+  it("still reads a parent holding a single group, which the reaching claim only warns about", () => {
+    const report = runWith({ siblings: "src/routes/c/*", wiring: [] });
+
     expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
-      join(ROOT, "src/routes/.internal/hidden.ts"),
-      join(ROOT, "src/routes/_shared/util.ts"),
-      join(ROOT, "src/routes/a/helper.ts"),
-      join(ROOT, "src/routes/a/page.ts"),
-      join(ROOT, "src/routes/b/thing.ts"),
+      join(ROOT, "src/routes/c/loose.ts"),
+    ]);
+    expect(messagesIn(report, CLAIM)).toEqual([
+      "`src/routes/c/*` matches only deep, so it is keeping nothing apart yet",
     ]);
   });
 
