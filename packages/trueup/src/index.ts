@@ -11,7 +11,7 @@ export type { Finding, Report, Severity } from "./report/model.ts";
 export { analyze, check, type AnalyzeOptions, type CheckOptions } from "./compose.ts";
 export { consumersOf } from "./graph/model.ts";
 export { COMMAND_TOKEN, DEFAULT_COMMAND } from "./report/invocation.ts";
-export { EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG, EXIT_STALE_BASELINE } from "./cli/main.ts";
+export { EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG, EXIT_STALE_BASELINE } from "./cli/command.ts";
 export type { Baseline, BaselineEntry } from "./ports/baseline.ts";
 export type { Runner, RunnerFinding, RunnerOutcome } from "./ports/runner.ts";
 export {

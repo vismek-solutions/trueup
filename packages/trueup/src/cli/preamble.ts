@@ -1,6 +1,8 @@
 import { inspect, type Overlay } from "../compose.ts";
-import { resolveInclude, type LoadedConfig } from "../config/load.ts";
+import { findConfig, loadConfig, messageOf, resolveInclude, type LoadedConfig } from "../config/load.ts";
+import type { ResolvedConfig } from "../config/model.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
+import { EXIT_BAD_RULEBOOK, EXIT_NO_CONFIG } from "./command.ts";
 
 export const refusedArguments = (
   argv: readonly string[],
@@ -14,10 +16,34 @@ export const refusedArguments = (
   return true;
 };
 
-export const projectFor = (
-  { config, path, root, memberConfigs }: LoadedConfig,
-  overlay?: Overlay,
-): ReturnType<typeof inspect> =>
+export const rulebookAt = async (
+  path: string,
+  write: (line: string) => void,
+): Promise<LoadedConfig | null> => {
+  try {
+    return await loadConfig(path);
+  } catch (failure) {
+    write("the rulebook was found but could not be read, so nothing was checked");
+    write(`  ${messageOf(failure)}`);
+    write("  Until it loads, every rule it declares is off, and no run will say so.");
+    return null;
+  }
+};
+
+export const rulebookIn = async (
+  cwd: string,
+  write: (line: string) => void,
+): Promise<LoadedConfig | number> => {
+  const path = findConfig(cwd);
+  if (path === null) {
+    write("no trueup.config.ts found");
+    return EXIT_NO_CONFIG;
+  }
+
+  return (await rulebookAt(path, write)) ?? EXIT_BAD_RULEBOOK;
+};
+
+const projectFor = ({ config, path, root, memberConfigs }: LoadedConfig, overlay?: Overlay) =>
   inspect({
     root,
     roots: resolveInclude(root, config.include),
@@ -28,3 +54,20 @@ export const projectFor = (
     ignoreFiles: [path, ...memberConfigs],
     overlay,
   });
+
+export interface Opened {
+  readonly config: ResolvedConfig;
+  readonly root: string;
+  readonly project: ReturnType<typeof inspect>;
+}
+
+export const openedIn = async (
+  cwd: string,
+  write: (line: string) => void,
+  overlay?: Overlay,
+): Promise<Opened | number> => {
+  const loaded = await rulebookIn(cwd, write);
+  if (typeof loaded === "number") return loaded;
+
+  return { config: loaded.config, root: loaded.root, project: projectFor(loaded, overlay) };
+};

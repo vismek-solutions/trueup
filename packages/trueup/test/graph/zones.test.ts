@@ -1,7 +1,9 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FIXTURES } from "../support/fixtures.ts";
+import { claimIn, findingsIn } from "../support/report.ts";
 import { check } from "../../src/compose.ts";
+import type { Report } from "../../src/report/model.ts";
 import { assignZones } from "../../src/zones/assign.ts";
 
 const ROOT = "/project";
@@ -84,18 +86,23 @@ describe("zone assignment", () => {
   });
 });
 
+const ZONED = join(FIXTURES, "zoned");
+
+const withAGhostZone = (): Report =>
+  check({
+    root: ZONED,
+    zones: [
+      { name: "engine", patterns: ["engine/**"] },
+      { name: "domain", patterns: ["domain/**"] },
+      { name: "ghost", patterns: ["ghost/**"] },
+    ],
+  });
+
 describe("a check run", () => {
   it("runs every claim in one pass rather than stopping at the first failure", () => {
-    const report = check({
-      root: join(FIXTURES, "zoned"),
-      zones: [
-        { name: "engine", patterns: ["engine/**"] },
-        { name: "domain", patterns: ["domain/**"] },
-        { name: "ghost", patterns: ["ghost/**"] },
-      ],
-    });
-
-    const firing = report.claims.filter((claim) => claim.findings.length > 0).map((claim) => claim.claim);
+    const firing = withAGhostZone()
+      .claims.filter((claim) => claim.findings.length > 0)
+      .map((claim) => claim.claim);
 
     expect(firing.sort()).toEqual([
       "every-file-belongs-to-a-zone",
@@ -103,6 +110,43 @@ describe("a check run", () => {
       "every-zone-has-a-file",
       "every-zone-pattern-matches-a-file",
     ]);
+  });
+
+  it("names the file no zone took, and where it is", () => {
+    expect(findingsIn(withAGhostZone(), "every-file-belongs-to-a-zone")).toEqual([
+      {
+        severity: "error",
+        message: "stray.ts matches no zone",
+        file: join(ZONED, "stray.ts"),
+        start: null,
+      },
+    ]);
+  });
+
+  it("names the zone that matched nothing, which is a rule nothing applies", () => {
+    expect(findingsIn(withAGhostZone(), "every-zone-has-a-file")).toEqual([
+      { severity: "error", message: "zone ghost matches no file", file: null, start: null },
+    ]);
+  });
+
+  it("names the pattern that matched nothing, not just the zone holding it", () => {
+    expect(findingsIn(withAGhostZone(), "every-zone-pattern-matches-a-file")).toEqual([
+      { severity: "error", message: "zone ghost pattern ghost/** matches no file", file: null, start: null },
+    ]);
+  });
+
+  it("tells the reader what each silence means and how to end it", () => {
+    const report = withAGhostZone();
+
+    expect(claimIn(report, "every-file-belongs-to-a-zone")?.guidance).toBe(
+      "A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing zone, or declare a zone that covers it. Run `{trueup} explain <file>` to see what a location would allow.",
+    );
+    expect(claimIn(report, "every-zone-has-a-file")?.guidance).toBe(
+      "A declared zone matches nothing, which silently disables every rule naming it. Fix its patterns or remove the zone.",
+    );
+    expect(claimIn(report, "every-zone-pattern-matches-a-file")?.guidance).toBe(
+      "A pattern matches nothing, so it is a rule you believe you have and do not. Fix it or delete it. Zones match first-match-wins, so an earlier zone may already have taken these files.",
+    );
   });
 
   it("reports a result for every claim, including those that found nothing", () => {

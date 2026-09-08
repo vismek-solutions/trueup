@@ -3,7 +3,7 @@ import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
 import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
 import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
 import { check, placementOf } from "../compose.ts";
-import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
+import { findConfig, resolveInclude } from "../config/load.ts";
 import type { ArchitectureConfig, ResolvedConfig } from "../config/model.ts";
 import { decideOnProposal } from "../guard/decide.ts";
 import { protectionOf } from "../guard/protected.ts";
@@ -11,6 +11,7 @@ import type { Protection } from "../ports/protection.ts";
 import type { Decision, HookRequest } from "../ports/proposal.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
+import { rulebookAt } from "./preamble.ts";
 
 export interface RunGuardInput {
   readonly cwd: string;
@@ -92,7 +93,10 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const found = findConfig(cwd);
   if (found === null) return 0;
 
-  const { config, root, memberConfigs } = await loadConfig(found);
+  const loaded = await rulebookAt(found, write);
+  if (loaded === null) return 0;
+
+  const { config, root, memberConfigs } = loaded;
   const request = requestFrom(payload, root);
   if (request === null) return 0;
 

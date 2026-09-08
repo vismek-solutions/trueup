@@ -1,5 +1,5 @@
-import { findConfig, loadConfig } from "../config/load.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
+import { rulebookIn } from "./preamble.ts";
 
 export interface RunAgentInstructionsInput {
   readonly cwd: string;
@@ -22,13 +22,10 @@ export const adviceLines = (command: string): readonly string[] => [
 ];
 
 export async function runAgentInstructions({ cwd, write }: RunAgentInstructionsInput): Promise<number> {
-  const path = findConfig(cwd);
-  if (path === null) {
-    write("no trueup.config.ts found");
-    return 3;
-  }
+  const loaded = await rulebookIn(cwd, write);
+  if (typeof loaded === "number") return loaded;
 
-  const { config } = await loadConfig(path);
+  const { config } = loaded;
   const command = config.command ?? DEFAULT_COMMAND;
   const zones = config.zones.map((zone) => zone.name).join(", ");
 

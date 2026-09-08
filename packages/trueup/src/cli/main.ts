@@ -1,20 +1,15 @@
 import { relative } from "node:path";
 import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baseline-file.ts";
 import { check } from "../compose.ts";
-import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
+import { findConfig, resolveInclude } from "../config/load.ts";
 import { rulebookGuarded } from "../guard/protected.ts";
 import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf, type Report } from "../report/model.ts";
 import { renderGitlab } from "./gitlab.ts";
 import { helpLines } from "./help.ts";
+import { rulebookAt } from "./preamble.ts";
 import { render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
-
-export const EXIT_CLEAN = 0;
-export const EXIT_ERRORS = 1;
-export const EXIT_STALE_BASELINE = 2;
-export const EXIT_NO_CONFIG = 3;
-export const EXIT_BAD_USAGE = 4;
 
 const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline", "--help", "-h"];
 
@@ -23,7 +18,15 @@ const VALUED_FLAGS = ["--config=", "--next="];
 const unknownArgumentsIn = (argv: readonly string[], known: readonly string[]): readonly string[] =>
   argv.filter((entry) => !known.includes(entry) && !VALUED_FLAGS.some((flag) => entry.startsWith(flag)));
 
-import type { CommandInput } from "./command.ts";
+import {
+  EXIT_BAD_RULEBOOK,
+  EXIT_BAD_USAGE,
+  EXIT_CLEAN,
+  EXIT_ERRORS,
+  EXIT_NO_CONFIG,
+  EXIT_STALE_BASELINE,
+  type CommandInput,
+} from "./command.ts";
 
 type Present = (report: Report, root: string, ratchet?: RatchetSummary) => string;
 
@@ -71,7 +74,10 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   }
 
   const present = presenterFor(argv, path);
-  const { config, root, memberConfigs } = await loadConfig(path);
+  const loaded = await rulebookAt(path, write);
+  if (loaded === null) return EXIT_BAD_RULEBOOK;
+
+  const { config, root, memberConfigs } = loaded;
   const rulebooks = [path, ...memberConfigs];
   const report = check({
     root,

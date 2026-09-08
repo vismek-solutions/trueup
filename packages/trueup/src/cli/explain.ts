@@ -1,11 +1,9 @@
 import { isAbsolute, relative, resolve } from "node:path";
 import { placementOf } from "../compose.ts";
-import { findConfig, loadConfig } from "../config/load.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
 
-import type { CommandInput } from "./command.ts";
-import { EXIT_BAD_USAGE } from "./main.ts";
-import { projectFor } from "./preamble.ts";
+import { EXIT_BAD_USAGE, type CommandInput } from "./command.ts";
+import { openedIn } from "./preamble.ts";
 
 const SAMPLE = 6;
 
@@ -31,17 +29,11 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     return 3;
   }
 
-  const configPath = findConfig(cwd);
-  if (configPath === null) {
-    write("no trueup.config.ts found");
-    return 3;
-  }
-
-  const loaded = await loadConfig(configPath);
-  const { config, root } = loaded;
   const path = isAbsolute(target) ? target : resolve(cwd, target);
+  const opened = await openedIn(cwd, write, new Map([[path, ""]]));
+  if (typeof opened === "number") return opened;
 
-  const project = projectFor(loaded, new Map([[path, ""]]));
+  const { config, root, project } = opened;
   const zone = project.zoneOf(path);
 
   write(relative(root, path));

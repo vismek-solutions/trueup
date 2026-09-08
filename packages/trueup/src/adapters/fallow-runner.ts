@@ -163,6 +163,8 @@ const placeOf = (raw: RawInstance): string | null => {
 const cloneFindings = (group: RawGroup, input: FindingInput): readonly RunnerFinding[] => {
   const instances: readonly RawInstance[] = Array.isArray(group.instances) ? group.instances : [];
   const places = instances.map(placeOf);
+  if (places.filter((place) => place !== null).length < 2) return [];
+
   const lines = numberOf(group.line_count) ?? 0;
   const fingerprint = stringOf(group.fingerprint) ?? places.join("|");
 
@@ -186,7 +188,7 @@ const cloneFindings = (group: RawGroup, input: FindingInput): readonly RunnerFin
 };
 
 const clonesIn = (dupes: unknown, input: FindingInput): readonly RunnerFinding[] | null => {
-  if (dupes === undefined || dupes === null || typeof dupes !== "object") return null;
+  if (dupes === null || typeof dupes !== "object") return null;
 
   const groups = (dupes as { clone_groups?: unknown }).clone_groups;
   return Array.isArray(groups) ? groups.flatMap((group) => cloneFindings(group as RawGroup, input)) : null;

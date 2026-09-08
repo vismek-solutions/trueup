@@ -37,5 +37,5 @@ export const helpLines = (): readonly string[] => [
   ...listed(COMMANDS),
   "",
   "Exit codes: 0 clean · 1 errors · 2 the baseline has entries nothing reports any more ·",
-  "3 no rulebook found · 4 an argument it does not know.",
+  "3 no rulebook found · 4 an argument it does not know · 5 the rulebook would not load.",
 ];

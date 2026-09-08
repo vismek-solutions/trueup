@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { EXIT_BAD_USAGE, EXIT_CLEAN, EXIT_ERRORS, runCli } from "../../src/cli/main.ts";
+import { EXIT_BAD_USAGE, EXIT_CLEAN, EXIT_ERRORS } from "../../src/cli/command.ts";
+import { runCli } from "../../src/cli/main.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 
 const VIOLATING = fixtureAt("violating");
@@ -75,7 +76,7 @@ const HELP = [
   "  agent-instructions  a short block to paste into an agent's memory file",
   "",
   "Exit codes: 0 clean · 1 errors · 2 the baseline has entries nothing reports any more ·",
-  "3 no rulebook found · 4 an argument it does not know.",
+  "3 no rulebook found · 4 an argument it does not know · 5 the rulebook would not load.",
 ];
 
 describe("telling an agent what it can ask for", () => {

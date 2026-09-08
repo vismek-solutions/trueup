@@ -20,6 +20,7 @@ import {
   type Member,
 } from "./members.ts";
 import type { ArchitectureConfig, MemberConfig, ResolvedConfig } from "./model.ts";
+import { allowEmittedSpecifiers } from "./specifiers.ts";
 
 export interface LoadedConfig {
   readonly config: ResolvedConfig;
@@ -40,8 +41,20 @@ export function findConfig(from: string): string | null {
   }
 }
 
+export const messageOf = (failure: unknown): string =>
+  failure instanceof Error ? failure.message : String(failure);
+
+const importedFrom = async (path: string): Promise<unknown> => {
+  allowEmittedSpecifiers();
+  try {
+    return await import(pathToFileURL(path).href);
+  } catch (failure) {
+    throw new Error(`${path} could not be read: ${messageOf(failure)}`, { cause: failure });
+  }
+};
+
 const exportedFrom = async (path: string, kind: ConfigKind): Promise<object> => {
-  const imported: unknown = await import(pathToFileURL(path).href);
+  const imported = await importedFrom(path);
   const config = (imported as { default?: unknown }).default;
 
   if (config === undefined || config === null || typeof config !== "object") {
