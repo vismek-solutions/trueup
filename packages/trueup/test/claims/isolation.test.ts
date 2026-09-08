@@ -38,6 +38,30 @@ describe("keeping sibling directories apart", () => {
     );
   });
 
+  it("warns rather than passing quietly when the pattern finds only one sibling", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/c/*" }), CLAIM)).toEqual([
+      "`src/routes/c/*` matches only deep, so it is keeping nothing apart yet",
+    ]);
+  });
+
+  it("keeps that a warning, since a second sibling may simply not exist yet", () => {
+    const findings = findingsIn(runWith({ siblings: "src/routes/c/*" }), CLAIM);
+
+    expect(findings.map((finding) => finding.severity)).toEqual(["warning"]);
+  });
+
+  it("warns the same way for a pattern reaching a level deeper than the tree goes", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*/*" }), CLAIM)).toEqual([
+      "`src/routes/*/*` matches only c/deep, so it is keeping nothing apart yet",
+    ]);
+  });
+
+  it("drops the warning once there are siblings to keep apart", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM).join()).not.toContain(
+      "keeping nothing apart",
+    );
+  });
+
   it("fails loudly for a pattern with no wildcard, rather than making one group of everything", () => {
     expect(messagesIn(runWith({ siblings: "src/routes" }), CLAIM)).toEqual([
       "`src/routes` matches no directory, so nothing is being kept apart",

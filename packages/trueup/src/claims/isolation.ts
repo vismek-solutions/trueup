@@ -6,7 +6,7 @@ import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 
 const GUIDANCE =
-  "Two directories that were meant to stand alone are reaching into each other. Siblings under the same parent are separate parts, and once one imports another neither can be read, moved or deleted without the other, so the parent stops being a set of parts and becomes one unit. Move what they share up to a directory both may reach, or out of the group entirely, and import it from there. Listing the sibling in `except` is not the fix: that is for a directory everyone is meant to share, not for the one case you would like to allow today.";
+  "A rule matching one directory is a warning rather than an error, because a second sibling may simply not exist yet; if the pattern was meant to reach a level deeper, it is the pattern that is wrong and not the tree. Two directories that were meant to stand alone are reaching into each other. Siblings under the same parent are separate parts, and once one imports another neither can be read, moved or deleted without the other, so the parent stops being a set of parts and becomes one unit. Move what they share up to a directory both may reach, or out of the group entirely, and import it from there. Listing the sibling in `except` is not the fix: that is for a directory everyone is meant to share, not for the one case you would like to allow today.";
 
 export interface IsolationRule {
   readonly siblings: string;
@@ -58,6 +58,17 @@ const findingsFor = (rule: IsolationRule, root: string, project: Project): reado
       {
         severity: "error",
         message: `\`${rule.siblings}\` matches no directory, so nothing is being kept apart`,
+        file: null,
+        start: null,
+      },
+    ];
+  }
+
+  if (groups.size === 1) {
+    return [
+      {
+        severity: "warning",
+        message: `\`${rule.siblings}\` matches only ${[...groups].join("")}, so it is keeping nothing apart yet`,
         file: null,
         start: null,
       },
