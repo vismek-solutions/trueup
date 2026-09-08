@@ -34,8 +34,6 @@ export function apiSurfaceClaim(surfaces: readonly ApiSurface[]): Claim {
 
       return surfaces.flatMap((surface) => {
         const readable = surface.exported.filter((entry) => analysed.has(entry.file));
-        if (readable.length === 0) return [];
-
         const published = new Set(readable.map((entry) => entry.file));
         const behind = new Set(surface.doors.flatMap((door) => zones.filesIn(door)));
 

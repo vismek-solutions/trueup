@@ -7,7 +7,7 @@ import { toPosix } from "../../paths/posix.ts";
 
 const TEST_DIRECTORIES = ["test", "tests", "__tests__"];
 
-const CATCH_ALL = ["app", "wiring", "everything"];
+const CATCH_ALL = "app";
 
 const SOURCE_ROOT = "src/";
 
@@ -53,20 +53,17 @@ export const sourceFilesIn = (directory: string): readonly string[] => {
 
 const unique = (values: readonly string[]): readonly string[] => [...new Set(values)];
 
-const freeName = (base: string, taken: ReadonlySet<string>): string => {
-  if (!taken.has(base)) return base;
-  const tried = [2, 3, 4, 5, 6, 7, 8, 9].map((suffix) => `${base}${suffix}`);
-  return tried.find((candidate) => !taken.has(candidate)) ?? `${base}-zone`;
+const freeName = (base: string, taken: ReadonlySet<string>, suffix = 1): string => {
+  const candidate = suffix === 1 ? base : `${base}${suffix}`;
+  return taken.has(candidate) ? freeName(base, taken, suffix + 1) : candidate;
 };
 
 const groupsUnder = (files: readonly string[], prefix: string): readonly string[] =>
   unique(
     files
-      .filter((file) => file.startsWith(prefix))
-      .map((file) => file.slice(prefix.length).split("/"))
-      .filter((segments) => segments.length > 1)
-      .map((segments) => segments[0] ?? ""),
-  ).filter((name) => name !== "");
+      .filter((file) => file.startsWith(prefix) && file.slice(prefix.length).includes("/"))
+      .map((file) => file.slice(prefix.length, file.indexOf("/", prefix.length))),
+  );
 
 const doorsIn = (directory: string, files: readonly string[]): readonly Draft[] => {
   const surface = exportedFilesIn(directory);
@@ -103,7 +100,7 @@ const draftsFor = (directory: string, files: readonly string[]): readonly Draft[
     .filter((name) => name !== "src")
     .map((name) => claim({ name, patterns: [`${name}/**`] }));
 
-  return [...doors, tests, ...nested, ...beside, claim({ name: CATCH_ALL[0] ?? "app", patterns: ["**"] })];
+  return [...doors, tests, ...nested, ...beside, claim({ name: CATCH_ALL, patterns: ["**"] })];
 };
 
 const claiming = (draft: Draft, left: Set<string>): Draft => {
@@ -131,13 +128,13 @@ export const zonesFor = (directory: string, files: readonly string[]): readonly 
   }
 
   if (kept.length > 0) return kept;
-  return [declare({ name: CATCH_ALL[0] ?? "app", patterns: ["**"] })];
+  return [declare({ name: CATCH_ALL, patterns: ["**"] })];
 };
 
 export const topDirectoriesIn = (patterns: readonly string[]): readonly string[] =>
   unique(
     patterns.flatMap((pattern) => {
-      const head = pattern.split("/")[0];
-      return head === undefined || head === "" || GLOBBED.test(head) ? [] : [head];
+      const head = pattern.includes("/") ? pattern.slice(0, pattern.indexOf("/")) : pattern;
+      return head === "" || GLOBBED.test(head) ? [] : [head];
     }),
   );

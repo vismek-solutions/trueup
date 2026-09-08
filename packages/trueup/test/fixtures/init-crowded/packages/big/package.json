@@ -1,4 +1,7 @@
 {
   "name": "@crowded/big",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@crowded/big": "workspace:*"
+  }
 }

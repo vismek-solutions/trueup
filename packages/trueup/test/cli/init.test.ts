@@ -89,9 +89,86 @@ describe("what it says when it is done", () => {
       ].join("\n"),
     );
   });
+
+  it("says exactly this where every file sits at the root, so no zone names a directory", () => {
+    const directory = staged("init-flat");
+
+    expect(initIn(directory).said).toBe(
+      [
+        "wrote trueup.config.ts",
+        "",
+        "zones     app",
+        "runners   biomeRunner",
+        "",
+        "next      add `boundaries` to say which zones may reach which",
+        "          turn on `colocation`, `duplication` and `maxFilesPerDirectory` once a first run is clean",
+        "          run `trueup` to see what it finds",
+      ].join("\n"),
+    );
+  });
 });
 
 describe("what it writes, to the character", () => {
+  it("writes this root config for a single package", () => {
+    const directory = staged("init-solo");
+    initIn(directory);
+
+    expect(configAt(directory, CONFIG)).toBe(
+      [
+        'import { defineConfig, biomeRunner, eslintRunner } from "trueup";',
+        "",
+        "export default defineConfig({",
+        "  zones: [",
+        '    { name: "spec", patterns: ["test/**"], role: "tests" },',
+        '    { name: "api", patterns: ["src/api/**"] },',
+        '    { name: "domain", patterns: ["src/domain/**"] },',
+        '    { name: "app", patterns: ["**"] },',
+        "  ],",
+        "  runners: [",
+        '    biomeRunner({ categories: ["lint"], paths: ["test", "src"] }),',
+        '    eslintRunner({ patterns: ["test", "src"] }),',
+        "  ],",
+        "});",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("leaves a runner unscoped where no zone names a directory to scope it to", () => {
+    const directory = staged("init-flat");
+    initIn(directory);
+
+    expect(configAt(directory, CONFIG)).toBe(
+      [
+        'import { defineConfig, biomeRunner } from "trueup";',
+        "",
+        "export default defineConfig({",
+        "  zones: [",
+        '    { name: "app", patterns: ["**"] },',
+        "  ],",
+        "  runners: [",
+        '    biomeRunner({ categories: ["lint"] }),',
+        "  ],",
+        "});",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("grants a package nothing for depending on itself", () => {
+    const directory = staged("init-crowded");
+    initIn(directory);
+
+    expect(configAt(directory, "packages", "big", CONFIG)).not.toContain("allow:");
+  });
+
+  it("grants a package with no manifest nothing, rather than reading through it", () => {
+    const directory = staged("init-crowded");
+    initIn(directory);
+
+    expect(configAt(directory, "packages", "mid", CONFIG)).not.toContain("allow:");
+  });
+
   it("writes this root config for a workspace", () => {
     const directory = staged("init-workspace");
     initIn(directory);
@@ -155,36 +232,11 @@ describe("what it writes, to the character", () => {
 });
 
 describe("starting a single package", () => {
-  it("zones the tests, each source group and the rest", () => {
+  it("wires no linter the package.json does not already have", () => {
     const directory = staged("init-solo");
     initIn(directory);
 
-    expect(configAt(directory, CONFIG)).toContain(
-      [
-        '    { name: "spec", patterns: ["test/**"], role: "tests" },',
-        '    { name: "api", patterns: ["src/api/**"] },',
-        '    { name: "domain", patterns: ["src/domain/**"] },',
-        '    { name: "app", patterns: ["**"] },',
-      ].join("\n"),
-    );
-  });
-
-  it("wires only the linters the package.json already has", () => {
-    const directory = staged("init-solo");
-    initIn(directory);
-    const written = configAt(directory, CONFIG);
-
-    expect(written).toContain('import { defineConfig, biomeRunner, eslintRunner } from "trueup";');
-    expect(written).not.toContain("oxlintRunner");
-  });
-
-  it("scopes each runner to the directories the zones cover, so node_modules is not linted", () => {
-    const directory = staged("init-solo");
-    initIn(directory);
-    const written = configAt(directory, CONFIG);
-
-    expect(written).toContain('biomeRunner({ categories: ["lint"], paths: ["test", "src"] })');
-    expect(written).toContain('eslintRunner({ patterns: ["test", "src"] })');
+    expect(configAt(directory, CONFIG)).not.toContain("oxlintRunner");
   });
 
   it("writes no pattern that matches nothing, which its own claims would reject", () => {
@@ -319,10 +371,10 @@ describe("starting a workspace", () => {
 describe("refusing arguments it does not know", () => {
   it("takes none", () => {
     const directory = staged("init-solo");
-    const { code, said } = initIn(directory, ["--members"]);
+    const { code, said } = initIn(directory, ["--members", "packages/*"]);
 
     expect(code).toBe(EXIT_BAD_USAGE);
-    expect(said).toContain("unrecognised: --members");
+    expect(said).toBe("unrecognised: --members packages/*\nusage: trueup init");
     expect(existsSync(join(directory, CONFIG))).toBe(false);
   });
 });

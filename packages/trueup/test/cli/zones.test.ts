@@ -43,12 +43,32 @@ describe("naming zones that would collide", () => {
     expect(namesOf(directory)).toEqual(["api", "api2"]);
   });
 
+  it("counts up until the name is free, rather than stopping at a fixed try", () => {
+    const directory = exporting(
+      "./src/api/index.ts",
+      "src/api/index.ts",
+      "src/api/client.ts",
+      "api/legacy.ts",
+      "api2/older.ts",
+    );
+
+    expect(namesOf(directory)).toEqual(["api", "api2", "api3", "api22"]);
+  });
+
   it("keeps the door pointing at the exported file only", () => {
     const directory = exporting("./src/api/index.ts", "src/api/index.ts", "src/api/client.ts");
     const zones = zonesFor(directory, sourceFilesIn(directory));
 
     expect(zones[0]?.declaration).toBe('{ name: "api", patterns: ["src/api/index.ts"], role: "api" }');
     expect(zones[1]?.declaration).toBe('{ name: "api2", patterns: ["src/api/**"] }');
+  });
+});
+
+describe("making a door of what the package exports", () => {
+  it("opens no door onto build output, and leaves the name free for the folder", () => {
+    const directory = exporting("./dist/index.js", "dist/index.js", "src/api/client.ts");
+
+    expect(namesOf(directory)).toEqual(["api"]);
   });
 });
 
@@ -59,5 +79,13 @@ describe("scoping a runner to the directories the zones cover", () => {
 
   it("drops a pattern whose leading segment is itself a glob, which would scope to nothing", () => {
     expect(topDirectoriesIn(["**", "**/*.test.ts", "src/**"])).toEqual(["src"]);
+  });
+
+  it("drops a pattern anchored at the filesystem root, which names no directory here", () => {
+    expect(topDirectoriesIn(["/etc/**", "src/**"])).toEqual(["src"]);
+  });
+
+  it("takes a pattern naming one file as its own directory", () => {
+    expect(topDirectoriesIn(["src/index.ts", "index.ts"])).toEqual(["src", "index.ts"]);
   });
 });
