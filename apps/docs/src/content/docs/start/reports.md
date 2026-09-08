@@ -170,7 +170,9 @@ The same findings in GitLab's Code Quality format, which puts each one on its li
 ]
 ```
 
-The guidance rides along in `description`, because that is the only field GitLab shows. An error is `major` and a warning is `minor`; nothing is ever `blocker`, since the exit code already fails the pipeline.
+The guidance rides along in `description`, because that is the only field GitLab shows.
+
+Severity follows the baseline. A new violation is `major`; one [the baseline](/agents/baseline/) already accepted is `minor`, so it stays visible in the widget without competing with what this branch broke. Nothing is ever `blocker` — the exit code already fails the pipeline.
 
 ```yaml
 architecture:

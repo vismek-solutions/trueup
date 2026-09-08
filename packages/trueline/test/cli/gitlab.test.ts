@@ -4,6 +4,7 @@ import { fixtureAt } from "../support/fixtures.ts";
 
 const CLEAN = fixtureAt("explained");
 const VIOLATING = fixtureAt("violating");
+const BASELINED = fixtureAt("gitlab-baselined");
 
 interface Issue {
   readonly description: string;
@@ -47,6 +48,15 @@ describe("the gitlab code quality report", () => {
 
   it("maps an error to major so gitlab does not rank it as advice", async () => {
     expect((await issues(VIOLATING))[0]?.severity).toBe("major");
+  });
+
+  it("ranks a baselined violation below a new one, so the widget sorts them apart", async () => {
+    const severities = new Map(
+      (await issues(BASELINED)).map((issue) => [issue.location.path, issue.severity]),
+    );
+
+    expect(severities.get("src/engine/fresh.ts")).toBe("major");
+    expect(severities.get("src/engine/known.ts")).toBe("minor");
   });
 
   it("fingerprints without the position, so reformatting does not resurrect a finding", async () => {
