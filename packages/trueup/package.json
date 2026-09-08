@@ -31,6 +31,7 @@
     "prepack": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "mutate": "stryker run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -39,6 +40,8 @@
     "picomatch": "^4.0.7"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@types/node": "^22.10.0",
     "@types/picomatch": "^4.0.3",
     "typescript": "^7.0.2",
