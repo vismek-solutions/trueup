@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { claimIn } from "../support/report.ts";
 import { PROJECT_ZONES as ZONES } from "../support/zones.ts";
+import { renderNext } from "../../src/cli/render.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 import type { ZoneDefinition } from "../../src/zones/model.ts";
@@ -38,6 +39,14 @@ describe("keeping a value with its only consumer", () => {
 
   it("tells the reader when giving a zone a role is honest", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain("never owns what it uses");
+  });
+
+  it("sends the reader to the file before the declaration, since the symbol is only the evidence", () => {
+    const guidance = claimIn(runWith(), CLAIM)?.guidance ?? "";
+
+    expect(guidance).toContain("not always where the defect is");
+    expect(guidance).toContain("moving the file closes every finding at once");
+    expect(guidance).toContain("Moving the one declaration is the fix only when neither of those holds");
   });
 });
 
@@ -94,6 +103,7 @@ describe("an export that exists only for its test", () => {
 describe("what the shared fixture reports, in full", () => {
   it("reports exactly these misplacements, ordered by the file that declares them", () => {
     expect(messagesFor(CLAIM)).toEqual([
+      "declares alsoEarly, used only by src/web/detail.ts",
       "declares earlyName, used only by src/web/detail.ts",
       "declares usedInProduction, used only by src/web/detail.ts",
       "declares forWebOnly, used only by web (2 files)",
@@ -122,6 +132,24 @@ describe("what the shared fixture reports, in full", () => {
 
   it("says nothing about a published export, whose consumers it cannot see", () => {
     expect(messagesFor(TEST_ONLY).join()).not.toContain("publishedThing");
+  });
+});
+
+describe("showing a misplaced file rather than a scatter of symbols", () => {
+  const next = (): string => renderNext(sharedReport(), SHARED);
+
+  it("collects every symbol one file declares into a single problem", () => {
+    expect(next()).toContain("2 errors");
+    expect(next()).toContain("declares alsoEarly, used only by src/web/detail.ts");
+    expect(next()).toContain("declares earlyName, used only by src/web/detail.ts");
+  });
+
+  it("counts a file as one problem, not one per symbol it declares", () => {
+    expect(next().split("\n")[0]).toContain("problem 1 of 4 · 13 claims · 5 errors");
+  });
+
+  it("keeps two files apart, since only one of them can be the misplaced one", () => {
+    expect(next()).not.toContain("usedInProduction");
   });
 });
 

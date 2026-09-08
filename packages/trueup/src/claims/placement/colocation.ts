@@ -3,7 +3,7 @@ import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
 const PLACEMENT =
-  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs — a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. Move it to the zone that uses it. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Giving a zone a role silences it as a consumer, and is honest only for a zone that never owns what it uses.";
+  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs — a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. The symbol is where the evidence is, not always where the defect is. Read the file first: when several of its exports are reported, or they serve one consumer between them, the file itself sits in the wrong directory, and moving the file closes every finding at once. For an export left over after that, ask whether the seam should carry it at all — a value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving the one declaration is the fix only when neither of those holds. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Giving a zone a role silences it as a consumer, and is honest only for a zone that never owns what it uses.";
 
 const FOR_TESTS =
   "Nothing outside the tests uses this export, so it is public only so a test can reach in. Reach the behaviour through the surface production actually calls, and the export can go back to being private. If the piece genuinely deserves its own test, that is a sign it wants to be its own module with a real caller, not a widened surface on this one. A helper that exists purely to serve tests belongs in a zone with the tests role, not in the source it props up. Something a package publishes belongs in a zone with the api role, whose consumers this analysis cannot see. Adding a production caller to satisfy this check is the one fix that makes the codebase worse.";
@@ -79,6 +79,7 @@ export function colocationClaim(roleZones: readonly string[]): Claim {
             message: `declares ${reach.symbol}, used only by ${where}`,
             file: reach.declaredIn,
             start: null,
+            group: reach.declaredIn,
           };
         }),
   };
