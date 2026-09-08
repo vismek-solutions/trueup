@@ -34,6 +34,8 @@ On a real monorepo, the same rule written both ways:
 
 The second row is where import-graph tools sit. That includes ones which resolve the barrel perfectly well. Resolving it is not the hard part. Attaching the rule to the symbol is.
 
+There is one deliberate exception. [Between packages in a monorepo](/concepts/monorepos/#what-a-member-may-reach) the rule is anchored on the module instead, because there a package's public entry point *is* its contract and what it chooses to re-export is deliberate.
+
 ## Two options on a boundary
 
 `anchor: "imported-module"` gives you the blunt version — "this package is off limits entirely". Leave it alone for anything finer.
@@ -61,6 +63,8 @@ Boundaries cannot say this. You would need a rule for every pair of zones, writt
 Frameworks invent specifiers that exist only at build time. `astro:content` is not on disk and never will be, so it fails `every-import-resolves` like any typo would.
 
 Name them and they become external instead:
+
+If every import in your project resolves, you do not need this. Plain Vite, Next and Express projects normally do — path aliases from `tsconfig.json` are followed automatically, and imports of stylesheets, images and JSON are counted as external rather than reported. This is for specifiers that exist only inside a build, which have no file anywhere.
 
 ```ts
 externals: ["astro:*", "virtual:*", "#imports"]

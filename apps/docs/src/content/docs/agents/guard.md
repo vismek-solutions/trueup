@@ -11,6 +11,8 @@ It reads the proposed edit, applies it to a copy of the file in memory, and chec
 
 ## The hook
 
+This goes in `.claude/settings.json` in your project root. Create the file if it is not there; if it already has a `hooks` key, merge these entries into it rather than replacing them.
+
 ```json
 {
   "hooks": {
@@ -43,7 +45,7 @@ engine may reach engine · shared
 
 The moment an agent has been refused is the moment it is about to guess. Telling it where it may go costs one line and saves the turn spent guessing wrong.
 
-If you are not using Serena, the `Write|Edit` matcher alone covers everything. Drop the second block.
+The second block is only for [Serena](https://github.com/oraios/serena), an MCP server that edits code through a language server. If you have not deliberately installed it, you do not have it — drop that block and keep the `Write|Edit` matcher, which covers everything else.
 
 ## What can and cannot block
 
@@ -83,7 +85,7 @@ The hook settings are the entry worth copying. Without them, the shortest way pa
 
 ## When nobody is there to answer
 
-A prompt is only a gate while someone is at the keyboard. In a permission mode where nothing is put to a person — `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions` — the ask is downgraded to a refusal automatically. You do not configure that.
+A prompt is only a gate while someone is at the keyboard. Claude Code runs in one of several permission modes, and in the ones that stop asking a person — `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions` — the ask is downgraded to a refusal automatically. You do not configure that, and you do not need to know which mode you are in for it to hold.
 
 A prompt also cannot be waited out. Nothing turns an unanswered one into an approval, because waiting would then be the way past the guard.
 

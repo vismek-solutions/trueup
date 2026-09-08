@@ -3,6 +3,10 @@ title: Compared to fallow
 description: What overlaps, what does not, and why this is not built on top of it.
 ---
 
+:::note
+You do not need fallow to use `trueline`, and nothing on this page is setup. Read it if you already run fallow, or if you want to know why the two overlap.
+:::
+
 [fallow](https://docs.fallow.tools) is a codebase analyzer covering dead code, duplication, complexity and architecture boundaries. It is also the tool `trueline` delegates most of its commodity analysis to. The two overlap in one place, and this is the division.
 
 ## The overlap is the vocabulary, not the analysis

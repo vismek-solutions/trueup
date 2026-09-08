@@ -7,6 +7,8 @@ description: Give the agent the shape before it starts, rather than one refusal 
 npx trueline agent-instructions >> CLAUDE.md
 ```
 
+`CLAUDE.md` is a file in your project root that Claude Code reads at the start of every session. Create it if you do not have one. If your team uses a different agent, append the same output to whatever file it reads instead — the block is plain markdown and names no tool.
+
 This prints a short block naming your zones, the two commands worth running, and the instruction that matters most: fix the code, not the rule.
 
 [Blocking an edit](/agents/guard/) teaches the agent one rule at a time, at the moment it breaks it. This teaches it the shape before it starts.

@@ -5,34 +5,64 @@ description: A plain TypeScript function over the project, with the parser kept 
 
 Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project.
 
-```ts
-import { defineRule } from "trueline";
+A rule goes in the `rules` key of your config, so the whole file reads:
 
-rules: [
-  defineRule("domain-is-entered-through-its-index", (project) =>
-    project
-      .imports({ declaredZone: "domain" })
-      .filter((edge) => edge.fromZone !== "domain" && !edge.via.endsWith("domain/index.ts"))
-      .map((edge) => ({
-        message: `reaches ${edge.imported} without going through the index`,
-        file: edge.from,
-        at: edge.at,
-      })),
-  ),
-]
+```ts
+import { defineConfig, defineRule } from "trueline";
+
+export default defineConfig({
+  zones: [
+    { name: "domain", patterns: ["src/domain/**"] },
+    { name: "app", patterns: ["src/**"] },
+  ],
+  rules: [
+    defineRule("domain-is-entered-through-its-index", (project) =>
+      project
+        .imports({ declaredZone: "domain" })
+        .filter((edge) => edge.fromZone !== "domain" && !edge.via.endsWith("domain/index.ts"))
+        .map((edge) => ({
+          message: `reaches ${edge.imported} without going through the index`,
+          file: edge.from,
+          at: edge.at,
+        })),
+    ),
+  ],
+});
 ```
 
-Each import arrives with its origin zone and its declaring zone already worked out. Alongside those come `via` (the module the import statement named), `symbol` and `kind`.
+Return a list of issues. A message alone is enough; `file` and `at` place the caret, and severity defaults to `error`.
 
-Return a list of issues. A message alone is enough, and severity defaults to `error`.
+### What an import gives you
+
+`project.imports()` returns every import in the project, or you can narrow it with `{ fromZone, declaredZone, kind }`. Each one carries:
+
+| field | |
+|---|---|
+| `from` | the importing file |
+| `fromZone` | its zone |
+| `specifier` | the text as written in the import |
+| `via` | the file that specifier resolved to — the barrel, if there is one |
+| `viaZone` | that file's zone |
+| `imported` | the exported name asked for |
+| `local` | the name it was bound to |
+| `symbol` | the declared name, where the target is a single symbol |
+| `declaredIn` | the file that actually declares it, after re-exports |
+| `declaredZone` | that file's zone |
+| `kind` | `"value"` or `"type"` |
+| `at` | byte offset of the binding, for the caret |
+
+The pair worth understanding is `via` against `declaredIn`. `via` is the module the author named; `declaredIn` is where the thing really lives. Collapsing those two is what makes a module-level rule blind through a barrel.
 
 ## Give the rule a remedy
 
 A third argument says what a violation means and how to fix it. Whoever hits the rule reads that instead of guessing.
 
 ```ts
-defineRule("domain-is-entered-through-its-index", check,
-  "Something reached past the domain's index into a file behind it, which fixes that file's path and name for every caller. Export what the caller needs from the index and import it from there.")
+defineRule(
+  "domain-is-entered-through-its-index",
+  (project) => /* the same function as above */,
+  "Something reached past the domain's index into a file behind it, which fixes that file's path and name for every caller. Export what the caller needs from the index and import it from there.",
+)
 ```
 
 A claim without guidance is unfinished. The message says what happened; the guidance says what to do, and — where it matters — names the fix that would make things worse.
@@ -41,7 +71,7 @@ A claim without guidance is unfinished. The message says what happened; the guid
 
 Rules are handed a view of the project rather than an AST. The parser stays an implementation detail you never have to learn, and swapping it never breaks a rule you wrote.
 
-The distinction the model preserves is the one that matters everywhere else in this tool: `via` is the module the specifier named, and the declaring file is where the symbol actually lives. Collapsing those two is what makes a module-level rule blind through a barrel.
+Besides `imports()`, a project answers `files`, `zoneNames`, `zoneOf(file)`, `filesIn(zone)`, `exportsOf(file)` and `relative(file)`.
 
 ## When to write one instead of asking for a feature
 

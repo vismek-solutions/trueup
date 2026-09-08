@@ -38,7 +38,7 @@ Two findings that are not bugs are worth expecting. Fixture path constants repea
 
 ## Fixing one is a three-step edit, in this order
 
-The rule blocks creating the shared module while the copies still exist, and blocks importing a module that does not exist yet. So:
+This order only matters when [the write-time guard](/agents/guard/) is installed, since that is what can refuse an edit: it would object to a third copy of the declaration while the originals are still there, and to importing a module that does not exist yet. Running the check on its own, any order works and only the end state is judged.
 
 1. Delete the copies. References are temporarily undefined, which is a type error but not an architecture one.
 2. Create the shared module.

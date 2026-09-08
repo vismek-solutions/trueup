@@ -9,7 +9,7 @@ description: Every claim the tool makes about a project, and why the first four 
 | `every-import-resolves` | no import failed to resolve to a real file |
 | `every-imported-name-is-exported` | every imported name exists in the module it came from |
 | `every-imported-name-is-unambiguous` | no name arrives through two different re-export chains |
-| `every-file-belongs-to-a-zone` | every file matches exactly one zone |
+| `every-file-belongs-to-a-zone` | every file is claimed by some zone |
 | `every-zone-has-a-file` | no zone is empty |
 | `every-zone-pattern-matches-a-file` | no pattern is dead |
 | `every-rule-names-a-declared-zone` | no rule mentions a zone that does not exist |
@@ -42,7 +42,7 @@ Nine claims are always on and need nothing but zones. The rest wait for a config
 | `seams` | [`generic-code-names-no-domain-concept`](/checks/seams/) |
 | `maxFilesPerDirectory` | [`no-directory-holds-too-many-files`](/checks/placement/#directory-size) |
 | `duplication` | [`no-declaration-is-written-twice`](/checks/duplication/) |
-| `colocation` | [both placement claims](/checks/placement/) |
+| `colocation` | `no-value-is-declared-away-from-its-only-consumer`, and `no-export-exists-only-for-a-test` when a zone also has `role: "tests"` |
 | `runners` | [one claim per delegated category](/integrations/linters/) |
 | `rules` | [whatever you name](/checks/custom-rules/) |
 

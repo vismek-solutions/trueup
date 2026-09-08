@@ -6,10 +6,12 @@ description: Delegated findings arrive as claims of their own, under one report 
 The rules here cover what a linter cannot express. Everything else is delegated. Those findings join the same report and the same baseline.
 
 ```ts
-import { biomeRunner, eslintRunner, fallowRunner, oxlintRunner } from "trueline";
+import { eslintRunner } from "trueline";
 
-runners: [eslintRunner(), biomeRunner(), fallowRunner(), oxlintRunner()]
+runners: [eslintRunner()]
 ```
+
+Add only the tools your project already installs. A runner whose binary is missing **fails the run** rather than reporting nothing, so listing one you do not have will break the build. Four are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`.
 
 Each finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports`. A baseline entry then pins one rule rather than a whole tool.
 

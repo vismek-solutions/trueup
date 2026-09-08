@@ -17,7 +17,11 @@ isolate: [{ siblings: "src/routes/*", except: ["_shared"] }]
 
 The `*` names the group. Every directory it matches becomes an island.
 
+The `*` matches a directory name, and `except` lists those names rather than paths — `_shared` above means `src/routes/_shared`.
+
 Files inside an island may import each other freely, and may reach anything outside the group. They may not reach a sibling.
+
+Isolation is checked independently of [boundaries](/concepts/boundaries/), so both have to pass. "May reach anything outside the group" means this check raises no objection, not that another rule cannot.
 
 A new directory is isolated the moment it exists, with no config change. That is the whole point.
 

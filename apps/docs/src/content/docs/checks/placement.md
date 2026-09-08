@@ -31,7 +31,7 @@ Measured on a 911-file monorepo: 758 findings unfiltered, 47 with both exclusion
 
 ### Exports that exist only for a test
 
-Declaring a zone with `role: "tests"` also turns the question around.
+This second check needs both `colocation: true` and at least one zone with `role: "tests"`. Given those, declaring the test zone turns the question around.
 
 Something that *only* the tests import is not shared code with one consumer. It is private code made public so a test could reach in.
 
@@ -44,7 +44,7 @@ no-export-exists-only-for-a-test          3 errors
 
 The fix is to test the behaviour through the surface production code actually calls.
 
-A helper that genuinely exists to serve tests belongs in the tests zone. Put `**/*.fixture.ts` in that zone and its false positives go with it — worth 39 of 169 findings on that monorepo.
+A helper that genuinely exists to serve tests belongs in the tests zone. Putting `**/*.fixture.ts` in that zone removed a quarter of this check's findings on that monorepo — fixtures are test code, and zoning them as such is the right fix rather than an exception inside the rule.
 
 :::caution
 Adding a production caller to satisfy the check is the one fix that makes the codebase worse. The printed guidance says so.
@@ -60,6 +60,14 @@ A directory that keeps growing has stopped being one idea. An agent adding the t
 
 The count includes every file the analysis read, unclassified ones included. A directory nothing has claimed is the likeliest dumping ground.
 
-There is no exemption list, because a limit with an exemption list is a limit nobody has to meet.
+There is no exemption list, because a limit with an exemption list is a limit nobody has to meet. The lever is the number, and it applies to every directory equally.
+
+### Picking the number
+
+There is no default, and the right value depends on how you group files. A repository that puts each unit in its own directory sits comfortably around 12. One with a flat `components` folder holding one file per component will not — 40 files there is ordinary, and the check is telling you something you may already be happy with.
+
+If that is your shape, you have two honest answers. Set the number where it catches genuine drawers for you — 30, 50 — so it still fires when a folder doubles. Or group the folder into subdirectories by feature, which is what the check is nudging toward, and keep a low number.
+
+What is not an answer is exempting the one directory that fails. Start high enough that the first run reports a handful of real cases rather than a wall, then lower it as those get fixed.
 
 Line and function length are a linter's job, not this one's. [Delegate them](/integrations/linters/).

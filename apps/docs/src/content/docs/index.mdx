@@ -39,16 +39,18 @@ You cannot review your way out of this. The whole point of the agent is that you
 A rule the agent can edit is a rule the agent will edit once it is under pressure to make the output green. So every message this prints says the same thing: fix the code, not the rule.
 
 <CardGrid>
-  <Card title="Follows the barrel" icon="puzzle">
-    A rule is anchored on the file that *declares* a symbol, not the module your import named. A re-export in between does not launder a forbidden edge.
+  <Card title="Sees through re-exports" icon="puzzle">
+    Most projects have an `index.ts` that re-exports a folder. Other tools then see everyone importing `shared/index.ts` and can tell nobody apart. This one follows the chain and sees who reached `warrants.ts`.
   </Card>
   <Card title="Refuses a bad edit" icon="error">
     Run it as a Claude Code hook and it judges a proposed write before it lands, with the reason the agent needs to correct course in the same turn.
   </Card>
   <Card title="Fails loudly" icon="warning">
-    An unresolved import, an empty zone, a dead pattern, an unclassified file: each is an error. A check that passes while enforcing nothing is worse than no check.
+    An import that does not resolve, a zone matching nothing, a file no rule covers: each is an error. A check that passes while enforcing nothing is worse than no check.
   </Card>
   <Card title="One report" icon="document">
-    Your linter's findings arrive as claims beside its own, under one baseline and one exit code.
+    Your linter's findings show up in the same report, with the same pass or fail.
   </Card>
 </CardGrid>
+
+New to it? [Getting started](/start/getting-started/) sets it up on a normal project in about ten minutes.

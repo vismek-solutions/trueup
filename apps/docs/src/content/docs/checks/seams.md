@@ -15,7 +15,7 @@ The vocabulary is derived rather than configured. A domain zone owns the names i
 
 Generic code that mentions one of those, with no import to explain why, is naming something it has no business naming. A new domain type is covered from the moment it exists. There is no list to keep in sync.
 
-On a real app this found a component hardcoding `"stav"` where the domain exports `REQUISITION_STATUS = "stav"`, plus several hardcoding members of enums the domain declares.
+On a real app this found a component hardcoding a status string the domain already exported as a named constant, plus several hardcoding members of enums the domain declares. Each one compiled, passed review, and quietly pinned a domain decision inside a component that had no business holding it.
 
 Tune it with `allow` for words the two genuinely share, and `minLiteralLength` for short incidental strings.
 

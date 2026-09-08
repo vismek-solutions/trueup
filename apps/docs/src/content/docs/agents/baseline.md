@@ -9,7 +9,7 @@ Almost nobody starts clean. Record what is already there, then hold the line.
 npx trueline --update-baseline
 ```
 
-The **baseline** is a file listing the violations that existed when you started.
+That writes `trueline.baseline.json` next to your config, listing the violations that existed when you started. **Commit it.** It is a shared record of what the team has agreed to live with, and a per-developer copy would mean everyone's build failed differently.
 
 From then on, a new violation fails the build. A recorded one prints as a warning — visible, not hidden, so nobody forgets the debt is there.
 

@@ -5,6 +5,8 @@ description: A zone names a group of files by path pattern. Every other rule is 
 
 A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in. This is the one idea worth getting right.
 
+Patterns are matched against each file's path **relative to your project root**, the directory holding `trueline.config.ts`.
+
 ```ts
 zones: [
   { name: "spec", patterns: ["**/*.test.ts"] },
@@ -48,9 +50,9 @@ zones: [
 ]
 ```
 
-`wiring` marks a composition root. It uses other zones' code while never being where that code belongs.
+`wiring` marks the file that assembles everything and is imported by nothing — `src/main.tsx`, or the server entry point that mounts your routers. It uses other zones' code while never being where that code belongs.
 
-`tests` marks a test suite. Same exclusion, and it additionally turns on the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test).
+`tests` marks a test suite. Same exclusion, and — together with `colocation: true` — it enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test).
 
 `api` marks a package's public surface. Names re-exported there answer to consumers outside the analysed code, and in a monorepo it is the only zone another member may enter.
 
@@ -73,3 +75,5 @@ vocabulary  domain owns names this file may not use:
 ```
 
 Useful to you when deciding where something goes, and useful to an agent told to run it before creating a file. A path in no zone is reported as such — the answer you want before making a directory nothing covers.
+
+The `vocabulary` block only appears when a [seam rule](/checks/seams/) covers the file. Without one, the first three lines are the whole answer.
