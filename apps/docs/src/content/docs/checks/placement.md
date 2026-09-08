@@ -5,7 +5,7 @@ description: Where a file should live, given who uses it — and when a director
 
 Boundaries govern what a file may reach. These govern where files sit.
 
-## Code that crossed a boundary for one caller
+## Colocation: code that crossed a boundary for one caller
 
 ```ts
 colocation: true,
@@ -17,17 +17,17 @@ zones: [
 ]
 ```
 
-A value exported from one zone and used by only one other zone is paying for a boundary that carries nothing a second caller needs.
+If exactly one other zone uses a value, that value is not shared code — it is that zone's code, sitting on the wrong side of a boundary.
 
-A symbol in a shared package that exactly one app imports is not shared code. It is that app's code, in the wrong package. Move it there. A second consumer showing up later is a reason to move it back then, not a reason to have guessed now.
+A symbol in a shared package that exactly one app imports belongs in that app. Move it there. A second consumer showing up later is a reason to move it back then, not a reason to have guessed now.
 
-### Two exclusions, both load-bearing
+### What is never counted as the lone consumer
 
 **A zone with a `role` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where that code belongs. A root wires each collaborator exactly once. A test imports whatever it exercises. Left in, they bury the real findings.
 
 **Type-only edges are ignored.** A type gets used constantly without being imported — reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
 
-Measured on a 911-file monorepo: 758 findings unfiltered, 47 with both exclusions. Ten of those 47 were values in a shared package that only one app used, which is the case that counting files per symbol misses entirely.
+Measured on a 911-file monorepo: 758 findings unfiltered, 47 with both exclusions. Ten of the 47 were values in a shared package that only one app used — the case that counting files per symbol misses entirely.
 
 ### Exports that exist only for a test
 
@@ -60,11 +60,11 @@ A directory that keeps growing has stopped being one idea. An agent adding the t
 
 The count includes every file the analysis read, unclassified ones included. A directory nothing has claimed is the likeliest dumping ground.
 
-There is no exemption list, because a limit with an exemption list is a limit nobody has to meet. The lever is the number, and it applies to every directory equally.
+There is no exemption list, because a limit with an exemption list is a limit nobody has to meet. The number is the only lever.
 
 ### Picking the number
 
-There is no default, and the right value depends on how you group files. A repository that puts each unit in its own directory sits comfortably around 12. One with a flat `components` folder holding one file per component will not — 40 files there is ordinary, and the check is telling you something you may already be happy with.
+There is no default, and the right value depends on how you group files. A repository that puts each unit in its own directory sits comfortably around 12. A flat `components` folder with one file per component will not: 40 files there is ordinary, and the check is reporting a shape you may already be happy with.
 
 If that is your shape, you have two honest answers. Set the number where it catches genuine drawers for you — 30, 50 — so it still fires when a folder doubles. Or group the folder into subdirectories by feature, which is what the check is nudging toward, and keep a low number.
 

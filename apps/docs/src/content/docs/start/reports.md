@@ -1,6 +1,6 @@
 ---
 title: Reading a report
-description: What a claim is, why the whole list always prints, and the two output modes worth knowing.
+description: What a claim is, why the whole list always prints, and the two other output modes.
 ---
 
 Here is a run with one violation.
@@ -32,9 +32,16 @@ generic-code-names-no-domain-concept        ok
 
 The first two lines are a receipt. They exist so a clean report cannot mean "I checked nothing".
 
-An **edge** is one imported name in one file — `import { a, b } from "./x"` is two. They are counted by what they reach: `symbol` for a name declared in a file the run read, `external` for one that leaves your source (a package, a stylesheet, an image), `builtin` for `node:` modules, and `unresolved` for a specifier that pointed nowhere.
+An **edge** is one imported name in one file, so `import { a, b } from "./x"` is two. Each is counted by what it reaches:
 
-You are looking for two things. `unresolved` should be `0`, because every unresolved import is an edge no rule could judge. And the file count should look like your project — if it is far too small, the run is checking less than you think.
+| | |
+|---|---|
+| `symbol` | a name declared in a file the run read |
+| `external` | anything outside your source: a package, a stylesheet, an image |
+| `builtin` | a `node:` module |
+| `unresolved` | a specifier that pointed nowhere |
+
+You are looking for two things. `unresolved` should be `0`, because an unresolved import is an edge no rule could judge. And the file count should look like your project — if it is far too small, the run is checking less than you think.
 
 Each line after that is a **claim**: a statement about the project that is either true, or true except for the counterexamples listed underneath.
 
@@ -56,7 +63,13 @@ One character per claim, then nothing else unless something failed.
 16 claims · 0 errors · 0 warnings
 ```
 
-`.` is a claim that holds, `!` one whose only findings are in the baseline, `E` one with real errors. Only the `E`s are explained, and only their error findings — a claim's warnings stay counted in the tally and out of your way.
+| | |
+|---|---|
+| `.` | a claim that holds |
+| `!` | a claim whose only findings are in the baseline |
+| `E` | a claim with real errors |
+
+Only `E` claims are explained, and only their errors. Warnings stay in the tally.
 
 ```
 ........E...!...  80 files · 496 edges · 0 unresolved
@@ -69,9 +82,9 @@ every-import-respects-its-zone-boundary  1 error
 16 claims · 1 error · 2 warnings
 ```
 
-The counts stay on the first line on purpose. A reporter that prints nothing when clean cannot tell you apart from a run that analysed nothing.
+The counts stay on the first line even here, for the reason given above.
 
-This is the one worth handing to an agent that checks after every change. A green run costs it two lines instead of twenty.
+Hand this one to an agent that checks after every change: a green run costs it two lines instead of twenty.
 
 ## When you want one thing to fix
 
@@ -93,7 +106,7 @@ no-declaration-is-written-twice  3 errors
 
 A problem is not a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.
 
-The order is the order the claims run, so the checks about the analysis itself come first. That matters: while an import fails to resolve, every other answer is drawn from a graph with a hole in it.
+Problems arrive in the order the claims run, so the checks about the analysis itself come first. While an import fails to resolve, every other answer is drawn from a graph with a hole in it.
 
 Run it, fix what it shows, run it again. It reports `nothing left to fix` when the errors are gone.
 

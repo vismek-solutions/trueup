@@ -11,7 +11,7 @@ import { eslintRunner } from "trueline";
 runners: [eslintRunner()]
 ```
 
-Add only the tools your project already installs. A runner whose binary is missing **fails the run** rather than reporting nothing, so listing one you do not have will break the build. Four are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`.
+Four runners are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`. Add only the ones your project already installs — a runner whose binary is missing fails the run rather than reporting nothing.
 
 Each finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports`. A baseline entry then pins one rule rather than a whole tool.
 
@@ -19,7 +19,11 @@ Each tool runs with your project root as its working directory, and keeps its ow
 
 Narrow any of them with `categories`. Biome matches by prefix, so `["lint"]` keeps every lint rule and drops formatter and config noise.
 
-`fallowRunner` reads every category in fallow's check output except the ones this tool answers itself — unresolved imports, and its three boundary categories. So you get its dead code, its dependency and catalog hygiene, its cycles, its leaked private types, its routing and client/server checks, and anything a rule pack of yours emits. Its other analyses — health, security, feature flags, semantic similarity — are separate commands and are not read.
+`fallowRunner` reads fallow's whole check output except the categories this tool answers itself: unresolved imports and the three boundary categories.
+
+What you get: dead code, dependency and catalog hygiene, cycles, leaked private types, routing and client/server checks, and anything your own rule packs emit.
+
+What you do not: health, security, feature flags and semantic similarity are separate fallow commands, and this runner does not call them.
 
 :::caution
 Some of fallow's rules ship switched **off**, `private-type-leaks` among them. The category still appears in its output, empty, so the claim here passes while enforcing nothing. Turn those on in fallow's own config:
@@ -37,25 +41,23 @@ Some of fallow's rules ship switched **off**, `private-type-leaks` among them. T
 fallowRunner({ duplication: { mode: "weak", minLines: 5, minTokens: 30 } })
 ```
 
-Off unless you ask for it, and the two answer different questions. Lowering this one until it sees what the [declaration rule](/checks/duplication/) sees does not work: on this tool's repository that setting reports 886 clone groups covering 90% of the codebase, while every quieter setting misses a real renamed copy outright. Run both at their own thresholds.
+Off unless you ask for it, and the two answer different questions. Do not lower this one until it sees what the [declaration rule](/checks/duplication/) sees. On this tool's own repository, that setting reports 886 clone groups — 90% of the codebase. Every quieter setting misses a real renamed copy. Run both at their own thresholds.
 
 Each clone group arrives as one finding per instance, sharing a group, so `--next` shows the whole group as one thing to fix.
 
 Expect one class of false positive: two functions with the same shape and different meanings. `weak` mode normalises identifiers, so it cannot tell them apart. Rename them so the next reader can, and baseline the finding.
 
-A category you name that the tool never reports fails the run. Reading it as "nothing found" is how a typo becomes a check that silently enforces nothing.
+If you name a category the tool never reports, the run fails. Otherwise a typo in that name would read as "nothing found", and the check would enforce nothing.
 
 ## Adapters distrust the tool they wrap
 
-Unparseable output. An unexpected shape. A silent tool, a missing binary, a config error, a file the tool could not parse, a run that checked nothing.
+An adapter fails the check when the tool it wraps is silent, missing, misconfigured, unparseable, or reports that it analysed nothing. None of those is "nothing found", and a tool that could not run is never recorded in a baseline.
 
-Each of those fails the check rather than reporting nothing found. A tool that could not run is never recorded in a baseline.
+The exit codes matter here, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. Biome and oxlint exit `1` whether they found problems or could not read the path at all, so those adapters read a count out of the payload instead of trusting the status.
 
-The exit codes are worth knowing about, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. Biome and oxlint exit `1` whether they found problems or could not read the path at all, so those adapters read a count out of the payload instead of trusting the status.
+## oxlint, if you are on TypeScript 7
 
-## A note on oxlint
-
-oxlint is worth knowing about if you are on TypeScript 7. `@typescript-eslint/parser` refuses to load against it, which takes eslint out of play for TypeScript entirely until that lands. oxlint carries its own parser, needs no TypeScript API, and implements most of the eslint rules — including the ones eslint has and biome does not, like `max-params`.
+`@typescript-eslint/parser` refuses to load against TypeScript 7, which takes eslint out of play for TypeScript there. oxlint carries its own parser, needs no TypeScript API, and implements most of the eslint rules — including the ones eslint has and biome does not, like `max-params`.
 
 ```ts
 oxlintRunner({ paths: ["src"], categories: ["eslint/max-params"] })
@@ -67,9 +69,9 @@ oxlintRunner({ paths: ["src"], categories: ["eslint/max-params"] })
 biomeRunner({ write: process.env.CI === undefined })
 ```
 
-Biome applies its safe fixes, and the report keeps only what it could not fix. The agent then spends its turns on findings that need judgement instead of on `let` versus `const`.
+Biome applies its safe fixes, and the report keeps only what it could not fix.
 
-This is off by default, and worth keeping off in CI. A check that rewrites the tree is reporting on code that no longer matches what was committed. The config is TypeScript, so the environment decides.
+This is off by default, and should stay off in CI. A check that rewrites the tree is reporting on code that no longer matches what was committed. The config is TypeScript, so the environment decides.
 
 Biome's unsafe fixes can change behaviour, and stay out of reach of this option. Pass `--unsafe` through `command` if you want them, knowing an agent will not notice a semantic change. `eslintRunner` takes `--fix` the same way.
 

@@ -19,13 +19,13 @@ This prints a short block naming your zones, the two commands worth running, and
 npx trueline --dots
 ```
 
-A green run costs two lines instead of twenty, which is what you want from something an agent runs after every change.
+Cheap enough to run after every change.
 
 ```sh
 npx trueline explain src/engine/newThing.ts
 ```
 
-Asked *before* creating a file, this answers where the file may live and what it may reach. A path in no zone is reported as such — which is the answer you want before making a directory nothing covers.
+Run before creating a file, it answers where the file may live and what it may reach. A path in no zone says so.
 
 ## Why the instruction is always the same
 

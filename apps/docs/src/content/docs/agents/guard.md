@@ -3,8 +3,6 @@ title: Blocking a bad edit
 description: A hook that judges a proposed write before it reaches disk, and refuses it.
 ---
 
-This is the part that matters most if you are working with an agent.
-
 Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueline guard` is that command.
 
 It reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
@@ -43,13 +41,13 @@ every-import-respects-its-zone-boundary  src/engine/table.ts
 engine may reach engine · shared
 ```
 
-The moment an agent has been refused is the moment it is about to guess. Telling it where it may go costs one line and saves the turn spent guessing wrong.
+A refused agent will otherwise guess at where the code should go. One line of allowed zones saves that turn.
 
 The second block is only for [Serena](https://github.com/oraios/serena), an MCP server that edits code through a language server. If you have not deliberately installed it, you do not have it — drop that block and keep the `Write|Edit` matcher, which covers everything else.
 
 ## What can and cannot block
 
-Only findings on the file being written can block it. Someone else's standing violation is not this edit's problem, and blocking on one would make every edit in an existing codebase impossible.
+A write is blocked only by findings on the file being written. A standing violation somewhere else is not this edit's problem, and if it blocked, no edit in an existing codebase would ever land.
 
 Anything already in the baseline does not block either.
 
@@ -57,7 +55,7 @@ An unusable payload, a missing config, a file type you do not analyse — all of
 
 ## The rulebook goes through you
 
-Every other rule can be switched off by editing the config, so the guard stops that edit and hands it to you.
+Any rule on this site can be switched off by editing the config. So an agent editing the config is itself the thing the guard stops, and hands to you.
 
 Two files are covered with no configuration at all: the config the rules were read from, and the baseline. Those are the two ways to make a failing check pass without touching any code — widen the boundary, or record the violation as already known.
 
@@ -81,15 +79,15 @@ Add anything else that should come to you first.
 protect: [".claude/settings.json", ".github/workflows/**", "CLAUDE.md"]
 ```
 
-The hook settings are the entry worth copying. Without them, the shortest way past the guard is to turn the guard off.
+Copy the hook settings entry at least. Without it, the shortest way past the guard is to turn the guard off.
 
 ## When nobody is there to answer
 
-A prompt is only a gate while someone is at the keyboard. Claude Code runs in one of several permission modes, and in the ones that stop asking a person — `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions` — the ask is downgraded to a refusal automatically. You do not configure that, and you do not need to know which mode you are in for it to hold.
+A prompt is only a gate while someone is at the keyboard. So in the permission modes that stop asking a person — `acceptEdits`, `auto`, `dontAsk` and `bypassPermissions` — the prompt is downgraded to a refusal. You do not configure that, and you do not need to know which mode you are in.
 
 A prompt also cannot be waited out. Nothing turns an unanswered one into an approval, because waiting would then be the way past the guard.
 
-What is left is the case where you are in `default` mode but away from the desk. The prompt sits there, and the agent sits with it. If that matters more to you than agent-driven setup, ask for a refusal outright.
+One case is left: `default` mode with nobody at the desk. The prompt waits, and so does the agent. If that matters more to you than agent-driven setup, ask for a refusal outright.
 
 ```ts
 protect: { paths: ["CLAUDE.md"], decision: "deny" }
@@ -101,7 +99,7 @@ protect: { paths: ["CLAUDE.md"], decision: "deny" }
 protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
 ```
 
-## Two things this check does differently
+## It sees files the analysis never reads
 
 It runs before the roots and extension filters, so it covers files the analysis would never look at — a `.json`, a `.yml`, anything outside `include`.
 
@@ -117,6 +115,6 @@ For a plain find-and-replace, that is straightforward. For an edit expressed as 
 
 So tools whose result can be reproduced exactly are checked *before* the write, and can be refused. Everything else is checked immediately *after* the write, against the real file, and comes back as a correction rather than a refusal.
 
-The guard never guesses at another tool's edit semantics. Guessing is how this class of tool goes quietly wrong.
+The guard never guesses at another tool's edit semantics — a wrong guess would refuse or allow the wrong edit, silently.
 
 Delegated tools do not run here. Spawning a whole-repo lint on every edit costs far more than it catches.

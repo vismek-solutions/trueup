@@ -86,7 +86,7 @@ npx trueline
 
 ## Zones
 
-A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in. This is the one idea worth getting right.
+A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in, so this is the one idea to get right.
 
 ### Order matters
 
@@ -297,9 +297,9 @@ boundaries: [{ from: "engine", allow: ["shared"] }]
 
 Anything not listed is refused. A zone may always reach itself, so it never has to name itself, and a zone with no boundary at all is unrestricted — allowlists are opt-in, one zone at a time.
 
-That default is what makes them worth writing. Under a denylist a new zone is reachable from everywhere until someone remembers to forbid it. Under an allowlist it is reachable from nowhere until someone says otherwise, and the tool names the rule to add.
+Under a denylist a new zone is reachable from everywhere until someone remembers to forbid it. Under an allowlist it is reachable from nowhere until someone says otherwise, and the tool names the rule to add.
 
-Two rules for the same zone narrow each other rather than widening: a zone may reach what *every* rule for it allows. That is how a monorepo root overrides what a package granted itself, with no precedence machinery.
+Two rules for the same zone intersect: the zone may reach only what *every* rule for it allows. That is how a monorepo root narrows what a package granted itself.
 
 ### Why barrels break other tools
 
@@ -360,7 +360,7 @@ The `*` names the group. Every directory it matches becomes an island.
 
 Files inside an island may import each other freely, and may reach anything outside the group. They may not reach a sibling.
 
-A new directory is isolated the moment it exists, with no config change. That is the whole point.
+A new directory is isolated the moment it exists, with no config change.
 
 ### What it reports
 
@@ -464,7 +464,7 @@ Add anything else that should come to you first.
 protect: [".claude/settings.json", ".github/workflows/**", "CLAUDE.md"]
 ```
 
-The hook settings are the entry worth copying. Without them, the shortest way past the guard is to turn the guard off.
+Copy the hook settings entry at least. Without it, the shortest way past the guard is to turn the guard off.
 
 ### When nobody is there to answer
 
@@ -546,7 +546,7 @@ From then on, a new violation fails the build. A recorded one prints as a warnin
 
 If you fix a violation that was in the baseline, the run exits `2` and tells you to update it.
 
-That sounds fussy, and it is the entire point. Without it, a baseline slowly turns into a list of permanent exemptions nobody dares delete.
+Without that, a baseline slowly turns into a list of permanent exemptions nobody dares delete.
 
 Entries are keyed on the claim, the file and the message. Never on a line number, so moving code around does not churn the file.
 
@@ -740,7 +740,7 @@ Two of its features are deliberately not adopted.
 
 **Suppression comments.** fallow can silence a finding inline, and has rules to keep those comments honest — a stale one is reported, and a reason can be required. There is no suppression comment here at all. The baseline is the only way to accept a finding, and it goes stale loudly. A comment sits next to the code it excuses, and nothing ever revisits it.
 
-**Severities on completeness checks.** In fallow every built-in rule takes `error`, `warn` or `off`, unresolved imports included. Set that one to `off` and every other analysis keeps running on a graph that is missing edges, still reporting clean. Here an import that does not resolve is an error with no knob, alongside zero files matched and a pattern that matches nothing. A check that could not see is never a check that passed.
+**Severities on completeness checks.** In fallow every built-in rule takes `error`, `warn` or `off`, unresolved imports included. Set that one to `off` and every other analysis keeps running on a graph with holes in it, and keeps reporting clean. Here an import that does not resolve is an error with no knob, alongside zero files matched and a pattern that matches nothing. A check that could not see is never a check that passed.
 
 ### Why this is not built on top of fallow
 
@@ -748,13 +748,13 @@ A fair question, since the analysis half is delegated already.
 
 fallow exposes findings, never the graph. Its two extension points are declarative data by design — rule packs ban calls, imports, effects and exports, and "loading a pack never executes project code"; plugins seed entry points and used exports. Neither can express a rule that counts consuming zones or asks where a symbol was declared. Its nearest rule kind matches the raw specifier, and documents that aliased ones are not matched, which is the inverse of anchoring on the declaration.
 
-Its Node bindings wrap the same one-shot analyses and return the same reports, so they change the transport rather than what can be asked.
+fallow's Node bindings run the same one-shot analyses and return the same reports. They change how you call it, not what you can ask it.
 
-Its `guard` command accepts paths that do not exist yet, but takes paths rather than content: it reports which rules apply to a file. Judging bytes that are not on disk is a different job.
+fallow's `guard` takes a path, not file content, so it answers which rules apply to a file — even one that does not exist yet. Judging an edit means reading the proposed text, which is a different job.
 
 ### Running both
 
-Neither tool needs the other turned off. If you run both, zones are declared twice, in two formats, and nothing keeps them in sync. Keep this config as the source of truth — fallow's zones carry no roles, its config inheritance replaces arrays rather than merging them, and a package cannot contribute zones upward.
+Neither tool needs the other turned off. If you run both, zones are declared twice, in two formats, and nothing keeps them in sync. Keep this config as the source of truth. fallow's zones carry no roles, its config inheritance replaces arrays instead of merging them, and a package cannot contribute zones upward.
 
 ## Using your existing linter alongside it
 
@@ -794,7 +794,7 @@ Each clone group arrives as one finding per instance, sharing a group, so `--nex
 
 Expect one class of false positive: two functions with the same shape and different meanings. `weak` mode normalises identifiers, so it cannot tell them apart. Rename them so the next reader can, and baseline the finding.
 
-A category you name that the tool never reports fails the run. Reading it as "nothing found" is how a typo becomes a check that silently enforces nothing.
+If you name a category the tool never reports, the run fails. Otherwise a typo in that name would read as "nothing found", and the check would enforce nothing.
 
 ### Adapters distrust the tool they wrap
 
@@ -818,7 +818,7 @@ oxlintRunner({ paths: ["src"], categories: ["eslint/max-params"] })
 biomeRunner({ write: process.env.CI === undefined })
 ```
 
-Biome applies its safe fixes, and the report keeps only what it could not fix. The agent then spends its turns on findings that need judgement instead of on `let` versus `const`.
+Biome applies its safe fixes, and the report keeps only what it could not fix.
 
 This is off by default, and worth keeping off in CI. A check that rewrites the tree is reporting on code that no longer matches what was committed. The config is TypeScript, so the environment decides.
 

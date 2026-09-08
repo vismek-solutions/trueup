@@ -3,7 +3,7 @@ title: Sibling directories
 description: One rule keeps routes and features apart, without naming any of them.
 ---
 
-Zones are named, so a boundary between them has to be written out. That falls apart when the directories are many, similar, and constantly added to.
+Zones are named, so a boundary between them has to be written out. That does not scale when the directories are many, alike, and added to constantly.
 
 Think `src/routes/a`, `src/routes/b`, `src/routes/c`. The rule you want is "none of these knows about any other".
 
@@ -15,15 +15,13 @@ Written as zones, that needs one zone and one boundary per route. Worse, a route
 isolate: [{ siblings: "src/routes/*", except: ["_shared"] }]
 ```
 
-The `*` names the group. Every directory it matches becomes an island.
-
-The `*` matches a directory name, and `except` lists those names rather than paths — `_shared` above means `src/routes/_shared`.
+The `*` names the group, and every directory it matches becomes an island. `except` lists those directory names rather than paths, so `_shared` above means `src/routes/_shared`.
 
 Files inside an island may import each other freely, and may reach anything outside the group. They may not reach a sibling.
 
 Isolation is checked independently of [boundaries](/concepts/boundaries/), so both have to pass. "May reach anything outside the group" means this check raises no objection, not that another rule cannot.
 
-A new directory is isolated the moment it exists, with no config change. That is the whole point.
+A new directory is isolated the moment it exists, with no config change.
 
 ## What it reports
 

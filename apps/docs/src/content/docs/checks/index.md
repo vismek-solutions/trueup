@@ -27,9 +27,13 @@ description: Every claim the tool makes about a project, and why the first four 
 
 An import that does not resolve. A name no module exports. A pattern matching nothing. Each of those means the tool is seeing less than you think it is.
 
-A check that reports success while enforcing nothing is worse than no check at all — it is a gate that keeps passing while the thing it guards drifts. Four separate architecture tools were measured doing exactly that: config globs resolved against the wrong directory so zero files were checked; unresolved specifiers marked valid and skipped; a scope narrowed until the query returned nothing and reported high confidence.
+A check that reports success while enforcing nothing is worse than no check at all — it is a gate that keeps passing while the thing it guards drifts. Four architecture tools were measured doing exactly that:
 
-So an empty or degraded input is an error here, never a pass. Coverage is printed alongside the findings, and it is computed rather than asserted.
+- config globs resolved against the wrong directory, so zero files were checked
+- unresolved specifiers marked valid and skipped
+- a scope narrowed until the query returned nothing, then reported high confidence
+
+So an empty or degraded input is an error here, never a pass. The coverage line at the top of every report is counted from the run itself, not declared by the config.
 
 ## What turns each one on
 
@@ -46,4 +50,4 @@ Nine claims are always on and need nothing but zones. The rest wait for a config
 | `runners` | [one claim per delegated category](/integrations/linters/) |
 | `rules` | [whatever you name](/checks/custom-rules/) |
 
-`no-zones-form-a-cycle` is in the always-on group deliberately. It needs no configuration because there is no version of a zone cycle anyone wants.
+`no-zones-form-a-cycle` needs no configuration, because there is no version of a zone cycle anyone wants.

@@ -11,13 +11,13 @@ boundaries: [{ from: "engine", allow: ["shared"] }]
 
 Anything not listed is refused. A zone may always reach itself, so it never has to name itself, and a zone with no boundary at all is unrestricted — allowlists are opt-in, one zone at a time.
 
-That default is what makes them worth writing. Under a denylist a new zone is reachable from everywhere until someone remembers to forbid it. Under an allowlist it is reachable from nowhere until someone says otherwise, and the tool tells you which rule to add.
+Under a denylist a new zone is reachable from everywhere until someone remembers to forbid it. Under an allowlist it is reachable from nowhere until someone says otherwise, and the tool tells you which rule to add.
 
-Two rules for the same zone narrow each other rather than widening: a zone may reach what *every* rule for it allows. That is how a monorepo root overrides what a package granted itself, with no precedence machinery.
+Two rules for the same zone intersect: the zone may reach only what *every* rule for it allows. That is how a monorepo root narrows what a package granted itself.
 
 ## Why barrels break other tools
 
-This is the part that makes `trueline` different from every other tool of its kind.
+This is where `trueline` and an import-graph tool give different answers about the same code.
 
 Most projects have a **barrel**: a file, usually `index.ts`, that re-exports everything around it so consumers can import from one place. `import { Warrant } from "@app/shared"` beats a path six directories deep.
 
@@ -46,7 +46,7 @@ There is one deliberate exception. [Between packages in a monorepo](/concepts/mo
 
 This one holds whether or not you wrote a boundary, and takes no configuration.
 
-If `catalog` imports from `checkout` and `checkout` imports back from `catalog`, neither can be read, tested, moved or deleted on its own. The same defect closes the long way round, through a third zone or a fourth, where no pair of zones looks wrong on its own.
+If `catalog` imports from `checkout` and `checkout` imports back from `catalog`, neither can be read, tested, moved or deleted on its own. The same tangle can close the long way round, through a third zone or a fourth, where no single pair looks wrong.
 
 ```
 no-zones-form-a-cycle                     2 errors
@@ -62,13 +62,13 @@ Boundaries cannot say this. You would need a rule for every pair of zones, writt
 
 Frameworks invent specifiers that exist only at build time. `astro:content` is not on disk and never will be, so it fails `every-import-resolves` like any typo would.
 
-Name them and they become external instead:
-
-If every import in your project resolves, you do not need this. Plain Vite, Next and Express projects normally do — path aliases from `tsconfig.json` are followed automatically, and imports of stylesheets, images and JSON are counted as external rather than reported. This is for specifiers that exist only inside a build, which have no file anywhere.
+Name them and they become external instead.
 
 ```ts
 externals: ["astro:*", "virtual:*", "#imports"]
 ```
+
+Most projects need none of this. Path aliases from `tsconfig.json` are followed automatically, and stylesheets, images and JSON already count as external. `externals` is only for specifiers the build invents, which have no file anywhere.
 
 `*` matches any run of characters, slashes included — these are specifiers, not paths, so `virtual:*` covers `virtual:site/heading`.
 

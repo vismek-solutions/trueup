@@ -18,7 +18,7 @@ Because it is TypeScript, it can read the environment — useful for anything th
 | `rules` | `Rule[]` | none | [Rules you write yourself](/checks/custom-rules/). |
 | `runners` | `Runner[]` | none | [Delegated tools](/integrations/linters/). |
 | `members` | `string[]` | none | Globs naming [monorepo members](/concepts/monorepos/). |
-| `include` | `string[]` | the whole project | Scan roots. Narrowing this is how you stop seeing something. |
+| `include` | `string[]` | the whole project | Directories to scan. Narrowing this removes files from every check. |
 | `extensions` | `string[]` | `.ts .tsx .mts .cts .js .jsx .mjs .cjs` | Replaces that list rather than adding to it. |
 | `externals` | `string[]` | none | [Specifiers your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies). |
 | `ignoreDirectories` | `string[]` | `.git node_modules dist build out coverage .next .turbo` | Directory basenames never walked into. Replaces the list. |
@@ -26,7 +26,7 @@ Because it is TypeScript, it can read the environment — useful for anything th
 | `maxFilesPerDirectory` | `number` | off | [Directory size limit](/checks/placement/#directory-size). |
 | `duplication` | `number` | off | [Shortest declaration worth reporting](/checks/duplication/), in characters. |
 | `colocation` | `boolean` | `false` | Turns on [the placement claims](/checks/placement/). |
-| `command` | `string` | `trueline` | The command printed in guidance, so messages name how *your* project runs it — set it to `pnpm lint:arch` and every message says that instead of `npx trueline`. |
+| `command` | `string` | `trueline` | The command named in printed guidance. Set it to `pnpm lint:arch` and every message says that. |
 
 ## Zones
 
@@ -44,7 +44,7 @@ First match wins, in declaration order. [What each role changes](/concepts/zones
 
 `allow` is an allowlist: anything not listed is refused, a zone always reaches itself, and a zone with no rule is unrestricted. Several rules for one zone intersect.
 
-`anchor` defaults to `declaring-file`, which is the point of the tool. [The blunt alternative](/concepts/boundaries/#two-options-on-a-boundary).
+`anchor` defaults to `declaring-file`: the rule attaches to the file that declares the symbol, not to the module you imported. [The blunt alternative](/concepts/boundaries/#two-options-on-a-boundary).
 
 ## Seams
 

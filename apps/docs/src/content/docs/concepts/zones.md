@@ -3,7 +3,7 @@ title: Zones
 description: A zone names a group of files by path pattern. Every other rule is written in that vocabulary.
 ---
 
-A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in. This is the one idea worth getting right.
+A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in, so this is the one idea to get right.
 
 Patterns are matched against each file's path **relative to your project root**, the directory holding `trueline.config.ts`.
 
@@ -24,9 +24,9 @@ Above, `src/domain/user.test.ts` is `spec` rather than `domain`, because `spec` 
 
 ## Every file must land somewhere
 
-A file in no zone is an error, not a shrug. A file nothing has classified is a file no rule can govern.
+A file in no zone is an error. Nothing has classified it, so no rule can govern it.
 
-Put your tests in their own zone, ahead of everything else. Left inside a source zone, fixture text leaks into the other checks.
+Put your tests in their own zone, ahead of everything else. Left inside a source zone, they leak fixture text into the other checks.
 
 Three claims guard the vocabulary itself, and all three are errors:
 
@@ -50,13 +50,13 @@ zones: [
 ]
 ```
 
-`wiring` marks the file that assembles everything and is imported by nothing — `src/main.tsx`, or the server entry point that mounts your routers. It uses other zones' code while never being where that code belongs.
+`wiring` marks the file that assembles everything and is imported by nothing — `src/main.tsx`, or the server entry that mounts your routers.
 
-`tests` marks a test suite. Same exclusion, and — together with `colocation: true` — it enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test).
+`tests` marks a test suite. With `colocation: true` it also enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test).
 
 `api` marks a package's public surface. Names re-exported there answer to consumers outside the analysed code, and in a monorepo it is the only zone another member may enter.
 
-All three are excluded from being counted as the lone consumer in the [colocation check](/checks/placement/). Without that exclusion, tests alone produced 646 of 758 raw findings on a large monorepo.
+All three are excluded from being counted as the lone consumer in the [colocation check](/checks/placement/). Without that exclusion, tests alone accounted for 646 of 758 findings on a large monorepo.
 
 ## Asking where a file belongs
 

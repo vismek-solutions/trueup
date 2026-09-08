@@ -12,7 +12,7 @@ export default defineConfig({
 });
 ```
 
-No `include` needed. Left out, the whole repo is analysed, so a directory no member claims fails as unclassified rather than going quietly unchecked. Narrowing `include` is how you *stop* seeing something, which is rarely what you want.
+Leave `include` out. The whole repository is then analysed, so a directory no member claims fails as unclassified instead of going quietly unchecked. Narrowing `include` is how you *stop* seeing something.
 
 ```ts
 // packages/lib/trueline.config.ts
@@ -56,7 +56,7 @@ A member can grant itself anything, so a member's own word is not a rule. The ro
 boundaries: [{ from: "apps", allow: [] }]
 ```
 
-Name a member where a zone would go and it expands: to all of its zones on the left, and to its api on the right. A rule about a member governs only its outward reach — its own zones stay reachable from each other, so an empty `allow` isolates the package rather than shattering it.
+Name a member where a zone would go and it expands: as a `from`, to all of its zones; inside `allow`, to its api zones only. A rule about a member governs only its outward reach — its own zones stay reachable from each other, so an empty `allow` isolates the package rather than shattering it.
 
 A root rule can only narrow what a member granted itself, never widen it, because two rules for one zone intersect.
 
@@ -64,8 +64,8 @@ The root is otherwise just `members` plus repo-wide settings. It needs no zones 
 
 Each member's config is protected from agent edits exactly like the root's, and no rulebook is ever analysed as source.
 
-Still one number for the whole repo: `maxFilesPerDirectory` and `duplication`. Members cannot override those yet.
+`maxFilesPerDirectory` and `duplication` are single numbers for the whole repository. A member cannot override them.
 
 ## Members are not islands
 
-[Sibling isolation](/checks/isolation/) solves a different problem and members do not replace it. A member is a unit with a rulebook and a public api, and it names what it reaches. An island has neither, there are dozens of them, and the set changes every week — the whole value there is that a new one is governed the moment it exists.
+[Sibling isolation](/checks/isolation/) solves a different problem and members do not replace it. A member is a unit with a rulebook and a public api, and it names what it reaches. An island has neither. There are dozens of them, and the set changes every week, so the value is that a new one is governed the moment it exists.

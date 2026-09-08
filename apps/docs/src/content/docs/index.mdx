@@ -16,7 +16,7 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-It reads your source files without running them, works out which file depends on which, and compares that against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
+`trueline` reads your source files without running them, works out which file depends on which, and checks that map against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
 
 ## It reads between files, not inside them
 
@@ -24,7 +24,7 @@ A linter reads one file at a time and tells you about that file. An unused varia
 
 `trueline` looks at the lines *between* files. Which parts of your project may know about which other parts. Where things live. Whether a folder has quietly become a junk drawer.
 
-None of that is visible from inside any single file. That is exactly why it goes wrong without anyone noticing.
+None of that is visible from inside any single file, which is why the shape drifts without anyone noticing.
 
 You describe the shape once, in a config file. Every run after that answers one question: is this still true?
 
@@ -36,11 +36,11 @@ Every individual edit is defensible. The tests stay green. After a hundred of th
 
 You cannot review your way out of this. The whole point of the agent is that you are not reading every line. So the constraints have to live somewhere the agent runs into them, every time, without you.
 
-A rule the agent can edit is a rule the agent will edit once it is under pressure to make the output green. So every message this prints says the same thing: fix the code, not the rule.
+An agent under pressure to make the output green will edit any rule it can reach. So every message this prints says the same thing: fix the code, not the rule.
 
 <CardGrid>
   <Card title="Sees through re-exports" icon="puzzle">
-    Most projects have an `index.ts` that re-exports a folder. Other tools then see everyone importing `shared/index.ts` and can tell nobody apart. This one follows the chain and sees who reached `warrants.ts`.
+    Most projects have an `index.ts` that re-exports a folder. Other tools then see everyone importing `shared/index.ts` and can tell nobody apart. This one follows the chain to the file that declares what you imported.
   </Card>
   <Card title="Refuses a bad edit" icon="error">
     Run it as a Claude Code hook and it judges a proposed write before it lands, with the reason the agent needs to correct course in the same turn.

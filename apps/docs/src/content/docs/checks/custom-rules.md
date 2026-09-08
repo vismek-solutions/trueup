@@ -51,7 +51,7 @@ Return a list of issues. A message alone is enough; `file` and `at` place the ca
 | `kind` | `"value"` or `"type"` |
 | `at` | byte offset of the binding, for the caret |
 
-The pair worth understanding is `via` against `declaredIn`. `via` is the module the author named; `declaredIn` is where the thing really lives. Collapsing those two is what makes a module-level rule blind through a barrel.
+Compare `via` against `declaredIn`. `via` is the module the author named; `declaredIn` is where the thing really lives. A tool that treats them as one is blind through a barrel.
 
 ## Give the rule a remedy
 
@@ -65,7 +65,7 @@ defineRule(
 )
 ```
 
-A claim without guidance is unfinished. The message says what happened; the guidance says what to do, and — where it matters — names the fix that would make things worse.
+The message says what happened; the guidance says what to do, and — where it matters — names the fix that would make things worse.
 
 ## Rules see a model, not a syntax tree
 
@@ -77,4 +77,4 @@ Besides `imports()`, a project answers `files`, `zoneNames`, `zoneOf(file)`, `fi
 
 Write a rule when the constraint is specific to your project — a naming convention, an entry point everything must go through, a package that may only be imported from one place.
 
-Built-in claims earn their place by being true of many projects, or by needing something a rule cannot reach. Zone cycles are built in for the second reason: the closure over the zone graph is not something a per-edge filter can express.
+A claim is built in when it is true of many projects, or when a rule cannot express it. Zone cycles are the second case: finding one means walking the whole zone graph, and a rule only sees one import at a time.
