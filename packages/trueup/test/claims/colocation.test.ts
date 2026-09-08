@@ -44,20 +44,23 @@ describe("keeping a value with its only consumer", () => {
 const SHARED = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures", "colocated");
 const TEST_ONLY = "no-export-exists-only-for-a-test";
 
-const sharedReport = check({
-  root: SHARED,
-  colocation: true,
-  zones: [
-    { name: "spec", patterns: ["src/spec/**"], role: "tests" },
-    { name: "shared", patterns: ["src/shared/**"] },
-    { name: "web", patterns: ["src/web/**"] },
-    { name: "server", patterns: ["src/server/**"] },
-  ],
-});
+const sharedReport = (): Report =>
+  check({
+    root: SHARED,
+    colocation: true,
+    zones: [
+      { name: "spec", patterns: ["src/spec/**"], role: "tests" },
+      { name: "gate", patterns: ["src/api/**"], role: "api" },
+      { name: "shared", patterns: ["src/shared/**"] },
+      { name: "web", patterns: ["src/web/**"] },
+      { name: "server", patterns: ["src/server/**"] },
+    ],
+  });
 
 const messagesFor = (claim: string): readonly string[] =>
-  sharedReport.claims.find((entry) => entry.claim === claim)?.findings.map((finding) => finding.message) ??
-  [];
+  sharedReport()
+    .claims.find((entry) => entry.claim === claim)
+    ?.findings.map((finding) => finding.message) ?? [];
 
 describe("an export that exists only for its test", () => {
   it("reports a value nothing outside the tests uses", () => {
@@ -73,7 +76,7 @@ describe("an export that exists only for its test", () => {
   });
 
   it("names the fix that would make the codebase worse", () => {
-    const claim = sharedReport.claims.find((entry) => entry.claim === TEST_ONLY);
+    const claim = sharedReport().claims.find((entry) => entry.claim === TEST_ONLY);
     expect(claim?.guidance).toContain("Adding a production caller to satisfy this check");
   });
 
@@ -88,16 +91,46 @@ describe("an export that exists only for its test", () => {
   });
 });
 
-describe("a shared zone that is not actually shared", () => {
-  const findings = sharedReport.claims.find((claim) => claim.claim === CLAIM)?.findings ?? [];
-
-  it("reports a value several files in one zone use, which counting files would miss", () => {
-    expect(findings.map((finding) => finding.message)).toContain(
+describe("what the shared fixture reports, in full", () => {
+  it("reports exactly these misplacements, ordered by the file that declares them", () => {
+    expect(messagesFor(CLAIM)).toEqual([
+      "declares earlyName, used only by src/web/detail.ts",
+      "declares usedInProduction, used only by src/web/detail.ts",
       "declares forWebOnly, used only by web (2 files)",
-    );
+    ]);
+  });
+
+  it("reports exactly this export as reachable only from a test", () => {
+    expect(messagesFor(TEST_ONLY)).toEqual(["exports ONLY_A_TEST_READS_THIS, which only tests use"]);
+  });
+
+  it("says nothing about a type only one zone names, which can be used without importing it", () => {
+    expect(messagesFor(CLAIM).join()).not.toContain("OnlyWebNamesThis");
+  });
+
+  it("says nothing about an import that resolves to no file of ours", () => {
+    expect(messagesFor(CLAIM).join()).not.toContain("sep");
+  });
+
+  it("says nothing about a value used only inside the zone that declares it", () => {
+    expect(messagesFor(CLAIM).join()).not.toContain("usedBySibling");
+  });
+
+  it("says nothing about a helper the tests declare for themselves", () => {
+    expect(messagesFor(TEST_ONLY).join()).not.toContain("specHelper");
+  });
+
+  it("says nothing about a published export, whose consumers it cannot see", () => {
+    expect(messagesFor(TEST_ONLY).join()).not.toContain("publishedThing");
+  });
+});
+
+describe("a shared zone that is not actually shared", () => {
+  it("counts the files in the owning zone rather than naming one of them", () => {
+    expect(messagesFor(CLAIM)).toContain("declares forWebOnly, used only by web (2 files)");
   });
 
   it("says nothing about a value two zones genuinely share", () => {
-    expect(findings.map((finding) => finding.message).join()).not.toContain("forBoth");
+    expect(messagesFor(CLAIM).join()).not.toContain("forBoth");
   });
 });
