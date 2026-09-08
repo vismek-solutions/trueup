@@ -104,14 +104,14 @@ describe("naming a member that is not there", () => {
 describe("what a member says about itself", () => {
   it("qualifies its own boundary on both sides", async () => {
     const { config } = await loaded();
-    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", allow: ["lib/api", "ui/widgets"] });
+    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", allow: ["lib/api"] });
   });
 
-  it("keeps the doors the member was granted, which an internal rule must not revoke", async () => {
-    const { config } = await loaded();
+  it("judges only targets inside the member, so it cannot revoke a door another member opened", async () => {
+    const { config, root } = await loaded();
     const internal = config.boundaries?.find((rule) => rule.from === "lib/domain");
 
-    expect(internal?.allow).toContain("ui/widgets");
+    expect(internal?.within).toBe(join(root, "packages/lib"));
   });
 
   it("is enforced like any other boundary", async () => {

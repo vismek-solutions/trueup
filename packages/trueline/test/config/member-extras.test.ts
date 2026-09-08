@@ -33,6 +33,7 @@ describe("a rule a member declares", () => {
 
   it("reports on its own files", async () => {
     expect(messagesIn(await reportOf(), "ui/one-declaration-per-file")).toEqual([
+      "packages/ui/src/model/order.ts declares more than one thing",
       "packages/ui/src/view/chip.ts declares more than one thing",
     ]);
   });
@@ -41,6 +42,20 @@ describe("a rule a member declares", () => {
     const found = messagesIn(await reportOf(), "ui/one-declaration-per-file").join(" ");
 
     expect(found).not.toContain("core");
+  });
+});
+
+describe("an internal boundary in a member", () => {
+  it("does not judge an edge leaving the package, which its own zone names cannot describe", async () => {
+    const breaches = messagesIn(await reportOf(), "every-import-respects-its-zone-boundary").join(" ");
+
+    expect(breaches).not.toContain("core/engine");
+  });
+
+  it("still refuses what it forbids inside the package", async () => {
+    expect(messagesIn(await reportOf(), "every-import-respects-its-zone-boundary")).toEqual([
+      "is ui/view and may not reach ui/model: statusLabel from packages/ui/src/model/order.ts",
+    ]);
   });
 });
 
@@ -55,7 +70,7 @@ describe("a seam a member declares", () => {
 describe("a directory limit a member declares", () => {
   it("applies inside that member", async () => {
     expect(messagesIn(await reportOf(), "no-directory-holds-too-many-files")).toEqual([
-      "holds 2 files, more than the 1 allowed",
+      "holds 3 files, more than the 1 allowed",
     ]);
   });
 

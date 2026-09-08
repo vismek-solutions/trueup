@@ -1,15 +1,10 @@
-import { isAbsolute, relative } from "node:path";
+import { inside } from "../paths/inside.ts";
 import type { ImportQuery, Project, ResolvedImport } from "../project/model.ts";
 
 export interface Scope {
   readonly directory: string;
   readonly prefix: string;
 }
-
-const inside = (directory: string, file: string): boolean => {
-  const step = relative(directory, file);
-  return step !== "" && !step.startsWith("..") && !isAbsolute(step);
-};
 
 const stripped = (prefix: string, zone: string | null): string | null =>
   zone?.startsWith(prefix) === true ? zone.slice(prefix.length) : null;

@@ -2,12 +2,14 @@ import { defineRule } from "../../../../../src/claims/custom.ts";
 import { defineMember } from "../../../../../src/config/model.ts";
 
 export default defineMember({
+  allow: ["core"],
   maxFilesPerDirectory: 1,
   zones: [
     { name: "model", patterns: ["src/model/**"] },
     { name: "view", patterns: ["src/view/**"] },
   ],
   seams: [{ generic: "view", domain: ["model"] }],
+  boundaries: [{ from: "view", allow: [] }],
   rules: [
     defineRule("one-declaration-per-file", (project) =>
       project.files

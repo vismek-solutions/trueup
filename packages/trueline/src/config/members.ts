@@ -66,16 +66,15 @@ export const zonesOf = (member: Member): readonly ZoneDefinition[] =>
     patterns: zone.patterns.map((pattern) => `${member.directory}/${pattern}`),
   }));
 
-export const boundariesOf = (members: readonly Member[]): readonly BoundaryRule[] =>
-  members.flatMap((member) => {
-    const outward = grantedTo(member, members);
-
-    return (member.config.boundaries ?? []).map((rule) => ({
+export const boundariesOf = (members: readonly Member[], root: string): readonly BoundaryRule[] =>
+  members.flatMap((member) =>
+    (member.config.boundaries ?? []).map((rule) => ({
       ...rule,
       from: qualified(member, rule.from),
-      allow: [...rule.allow.map((zone) => qualified(member, zone)), ...outward],
-    }));
-  });
+      allow: rule.allow.map((zone) => qualified(member, zone)),
+      within: join(root, member.directory),
+    })),
+  );
 
 export const seamsOf = (members: readonly Member[]): readonly SeamRule[] =>
   members.flatMap((member) =>

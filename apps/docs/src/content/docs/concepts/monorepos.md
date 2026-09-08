@@ -28,7 +28,9 @@ export default defineMember({
 
 A member's patterns are relative to the member. Its zone names are qualified with it, so `lib/domain` and `ui/domain` are different zones even though both packages called theirs `domain`.
 
-A member may only constrain itself. Everything it names is its own — and the rule runs the other way too: an internal boundary governs reach *inside* the package and never revokes a door another member opened. So `boundaries: [{ from: "domain", allow: [] }]` means "domain reaches nothing else in this package", not "domain reaches nothing at all". What the package may reach outside itself is `allow`'s business, one line up.
+A member may only constrain itself. Everything it names is its own — and the rule runs the other way too: an internal boundary judges only edges that land *inside* the package, so it can never revoke a door another member opened. `boundaries: [{ from: "domain", allow: [] }]` means "domain reaches nothing else in this package", not "domain reaches nothing at all". What the package may reach outside itself is `allow`'s business, one line up.
+
+It has to work that way rather than by listing the doors in the rule. An internal rule is anchored on the declaring file, because piercing barrels inside the package is the whole point — and a door is a re-exporter, so a declaring-file anchor resolves straight past it to the file behind. A rule that named the door could never match one.
 
 ## What a member may reach
 
