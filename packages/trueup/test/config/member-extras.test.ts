@@ -37,6 +37,47 @@ describe("a rule a member declares", () => {
   });
 });
 
+describe("the project a member's rule is handed", () => {
+  const seen = async (prefix: string): Promise<string> =>
+    messagesIn(await reportOf(), "ui/reports-what-the-scope-lets-it-see").find((message) =>
+      message.startsWith(prefix),
+    ) ?? "";
+
+  it("answers filesIn with the member's own zone name, unqualified", async () => {
+    expect(await seen("filesIn view:")).toBe(
+      "filesIn view: packages/ui/src/view/badge.ts packages/ui/src/view/chip.ts packages/ui/src/view/reaches-model.ts",
+    );
+  });
+
+  it("names a file's zone without the member prefix the rule never wrote", async () => {
+    expect(await seen("zoneOf inside:")).toBe("zoneOf inside: model");
+  });
+
+  it("places a file outside the member in no zone, rather than in another package's", async () => {
+    expect(await seen("zoneOf outside:")).toBe("zoneOf outside: null");
+  });
+
+  it("carries only edges leaving the member's own files, with their zones unqualified", async () => {
+    expect(await seen("imports:")).toBe("imports: view>model view>null");
+  });
+
+  it("qualifies a zone the rule asks about, so a query in its own vocabulary matches", async () => {
+    expect(await seen("imports from view:")).toBe(
+      "imports from view: packages/ui/src/view/badge.ts packages/ui/src/view/reaches-model.ts",
+    );
+  });
+
+  it("qualifies the other side of a query too, so asking what reaches a zone finds it", async () => {
+    expect(await seen("imports into model:")).toBe(
+      "imports into model: packages/ui/src/view/reaches-model.ts",
+    );
+  });
+
+  it("qualifies a zone asked for a vocabulary, which is what a seam rule of its own would need", async () => {
+    expect(await seen("names in model:")).toBe("names in model: Status statusLabel");
+  });
+});
+
 describe("an internal boundary in a member", () => {
   it("does not judge an edge leaving the package, which its own zone names cannot describe", async () => {
     const breaches = messagesIn(await reportOf(), "every-import-respects-its-zone-boundary").join(" ");

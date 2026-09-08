@@ -8,7 +8,7 @@ export interface Scope {
 
 const inside = (directory: string, path: string): boolean => {
   const step = relative(directory, path);
-  return step !== "" && !step.startsWith("..") && !isAbsolute(step);
+  return !step.startsWith("..") && !isAbsolute(step);
 };
 
 const stripped = (prefix: string, zone: string | null): string | null =>
