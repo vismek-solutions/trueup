@@ -9,7 +9,7 @@ export type EdgeAnchor = "declaring-file" | "imported-module";
 
 export interface BoundaryRule {
   readonly from: string;
-  readonly mayNotReach: readonly string[];
+  readonly allow: readonly string[];
   readonly anchor?: EdgeAnchor | undefined;
   readonly ignoreTypeOnly?: boolean | undefined;
 }
@@ -27,7 +27,7 @@ const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput
   if (anchored === null) return null;
 
   const targetZone = input.zoneOf(anchored);
-  if (targetZone === null || !rule.mayNotReach.includes(targetZone)) return null;
+  if (targetZone === null || targetZone === input.fromZone || rule.allow.includes(targetZone)) return null;
 
   const { root, fromZone } = input;
   const reached =
@@ -78,5 +78,5 @@ export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
 
 export const boundaryZoneReferences = (rules: readonly BoundaryRule[]): readonly ZoneReference[] =>
   rules.flatMap((rule) =>
-    [rule.from, ...rule.mayNotReach].map((zone) => ({ rule: `boundary rule from ${rule.from}`, zone })),
+    [rule.from, ...rule.allow].map((zone) => ({ rule: `boundary rule from ${rule.from}`, zone })),
   );

@@ -103,7 +103,7 @@ describe("naming a member that is not there", () => {
 describe("what a member says about itself", () => {
   it("qualifies its own boundary on both sides", async () => {
     const { config } = await loaded();
-    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", mayNotReach: ["lib/engine"] });
+    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", allow: ["lib/api"] });
   });
 
   it("is enforced like any other boundary", async () => {

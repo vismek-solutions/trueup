@@ -9,10 +9,7 @@ const PATHS = ["packages/trueline/src", "packages/trueline/test", "packages/true
 export default defineConfig({
   members: ["packages/*"],
   zones: [{ name: "docs", patterns: ["apps/docs/**"] }],
-  boundaries: [
-    { from: "docs", mayNotReach: ["trueline"] },
-    { from: "trueline", mayNotReach: ["docs"] },
-  ],
+  boundaries: [{ from: "docs", allow: [] }],
   externals: ["astro:*"],
   ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro"],
   command: "node ./packages/trueline/bin/trueline.js",

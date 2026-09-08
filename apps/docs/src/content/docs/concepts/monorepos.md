@@ -22,7 +22,7 @@ export default defineMember({
     { name: "domain", patterns: ["src/domain/**"] },
     { name: "engine", patterns: ["src/engine/**"] },
   ],
-  boundaries: [{ from: "domain", mayNotReach: ["engine"] }],
+  boundaries: [{ from: "domain", allow: [] }],
 });
 ```
 
@@ -53,10 +53,12 @@ Reaching between members is judged on the module you imported, not on the file t
 A member can grant itself anything, so a member's own word is not a rule. The root writes the prohibitions no member may lift:
 
 ```ts
-boundaries: [{ from: "apps", mayNotReach: ["apps"] }]
+boundaries: [{ from: "apps", allow: [] }]
 ```
 
-Name a member where a zone would go and it expands to that member's zones — minus its api, on the right of `mayNotReach`. A prohibition always wins over a `mayReach`.
+Name a member where a zone would go and it expands: to all of its zones on the left, and to its api on the right. A rule about a member governs only its outward reach — its own zones stay reachable from each other, so an empty `allow` isolates the package rather than shattering it.
+
+A root rule can only narrow what a member granted itself, never widen it, because two rules for one zone intersect.
 
 The root is otherwise just `members` plus repo-wide settings. It needs no zones of its own; declare some only for files that sit outside every member.
 

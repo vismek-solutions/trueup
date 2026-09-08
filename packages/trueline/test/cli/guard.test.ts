@@ -61,7 +61,7 @@ describe("guarding a proposed write", () => {
         { name: "engine", patterns: ["src/engine/**"] },
         { name: "domain", patterns: ["src/domain/**"] },
       ],
-      boundaries: [{ from: "engine", mayNotReach: ["domain"] }],
+      boundaries: [{ from: "engine", allow: [] }],
       overlay: new Map([[NEW_FILE, REACHES_DOMAIN]]),
     });
     writeBaseline(BASELINE, baselineOf(report, PROJECT));

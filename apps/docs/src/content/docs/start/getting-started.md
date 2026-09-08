@@ -22,11 +22,14 @@ export default defineConfig({
     { name: "engine", patterns: ["src/engine/**"] },
     { name: "app", patterns: ["src/**"] },
   ],
-  boundaries: [{ from: "engine", mayNotReach: ["domain", "app"] }],
+  boundaries: [
+    { from: "app", allow: ["engine", "domain"] },
+    { from: "engine", allow: ["domain"] },
+  ],
 });
 ```
 
-That says the project has four kinds of file, and that `engine` code may not reach into `domain` or `app`.
+That says the project has four kinds of file, that `app` may reach `engine` and `domain`, and that `engine` may reach `domain` and nothing else. Anything a rule does not list is refused, and a zone with no rule is unrestricted.
 
 Then run it.
 

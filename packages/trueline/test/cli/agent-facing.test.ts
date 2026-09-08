@@ -8,6 +8,7 @@ import { COMMAND_TOKEN } from "../../src/report/invocation.ts";
 
 const PROJECT = fixtureAt("explained");
 const VIOLATING = fixtureAt("violating");
+const STALED = fixtureAt("stale-baselined");
 
 const capture = async (run: (write: (line: string) => void) => Promise<number>): Promise<string> => {
   let output = "";
@@ -27,13 +28,13 @@ describe("telling an agent which command to reach for", () => {
   });
 
   it("leaves no unsubstituted placeholder in the stale-baseline guidance either", async () => {
-    const baseline = baselinePathIn(PROJECT);
+    const baseline = baselinePathIn(STALED);
     writeBaseline(baseline, {
       entries: [{ claim: "every-import-respects-its-zone-boundary", file: "src/gone.ts", message: "gone" }],
     });
 
     try {
-      const output = await capture((write) => runCli({ cwd: PROJECT, argv: [], write }));
+      const output = await capture((write) => runCli({ cwd: STALED, argv: [], write }));
       expect(output).toContain("--update-baseline");
       expect(output).not.toContain(COMMAND_TOKEN);
     } finally {

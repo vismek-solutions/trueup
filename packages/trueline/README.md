@@ -69,11 +69,14 @@ export default defineConfig({
     { name: "engine", patterns: ["src/engine/**"] },
     { name: "app", patterns: ["src/**"] },
   ],
-  boundaries: [{ from: "engine", mayNotReach: ["domain", "app"] }],
+  boundaries: [
+    { from: "app", allow: ["engine", "domain"] },
+    { from: "engine", allow: ["domain"] },
+  ],
 });
 ```
 
-That config says the project has four kinds of file, and that `engine` code may not reach into `domain` or `app`.
+That config says the project has four kinds of file, that `app` may reach `engine` and `domain`, and that `engine` may reach `domain` and nothing else. Anything a rule does not list is refused, and a zone with no rule is unrestricted.
 
 Then run it.
 
@@ -118,7 +121,7 @@ export default defineMember({
     { name: "domain", patterns: ["src/domain/**"] },
     { name: "engine", patterns: ["src/engine/**"] },
   ],
-  boundaries: [{ from: "domain", mayNotReach: ["engine"] }],
+  boundaries: [{ from: "domain", allow: [] }],
 });
 ```
 
@@ -149,10 +152,12 @@ Reaching between members is judged on the module you imported, not on the file t
 A member can grant itself anything, so a member's own word is not a rule. The root writes the prohibitions no member may lift:
 
 ```ts
-boundaries: [{ from: "apps", mayNotReach: ["apps"] }]
+boundaries: [{ from: "apps", allow: [] }]
 ```
 
-Name a member where a zone would go and it expands to that member's zones — minus its api, on the right of `mayNotReach`. A prohibition always wins over a `mayReach`.
+Name a member where a zone would go and it expands: to all of its zones on the left, and to its api on the right. A rule about a member governs only its outward reach — its own zones stay reachable from each other, so an empty `allow` isolates the package rather than shattering it.
+
+A root rule can only narrow what a member granted itself, never widen it, because two rules for one zone intersect.
 
 The root is otherwise just `members` plus repo-wide settings. It needs no zones of its own; declare some only for files that sit outside every member.
 
@@ -284,14 +289,17 @@ Do not reach for the baseline here. A virtual specifier fails on every run, so b
 
 ## Boundaries
 
-A boundary names a zone, and the zones it may not reach.
+A boundary names a zone, and the zones it may reach.
 
 ```ts
-boundaries: [
-  { from: "engine", mayNotReach: ["domain"] },
-  { from: "engine", mayNotReach: ["app"], ignoreTypeOnly: true },
-]
+boundaries: [{ from: "engine", allow: ["shared"] }]
 ```
+
+Anything not listed is refused. A zone may always reach itself, so it never has to name itself, and a zone with no boundary at all is unrestricted — allowlists are opt-in, one zone at a time.
+
+That default is what makes them worth writing. Under a denylist a new zone is reachable from everywhere until someone remembers to forbid it. Under an allowlist it is reachable from nowhere until someone says otherwise, and the tool names the rule to add.
+
+Two rules for the same zone narrow each other rather than widening: a zone may reach what *every* rule for it allows. That is how a monorepo root overrides what a package granted itself, with no precedence machinery.
 
 ### Why barrels break other tools
 

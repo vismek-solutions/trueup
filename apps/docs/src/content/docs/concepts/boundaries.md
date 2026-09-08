@@ -3,14 +3,17 @@ title: Boundaries
 description: Which zones may reach which, anchored on the file that declares a symbol rather than the module you imported.
 ---
 
-A boundary names a zone, and the zones it may not reach.
+A boundary names a zone, and the zones it may reach.
 
 ```ts
-boundaries: [
-  { from: "engine", mayNotReach: ["domain"] },
-  { from: "engine", mayNotReach: ["app"], ignoreTypeOnly: true },
-]
+boundaries: [{ from: "engine", allow: ["shared"] }]
 ```
+
+Anything not listed is refused. A zone may always reach itself, so it never has to name itself, and a zone with no boundary at all is unrestricted — allowlists are opt-in, one zone at a time.
+
+That default is what makes them worth writing. Under a denylist a new zone is reachable from everywhere until someone remembers to forbid it. Under an allowlist it is reachable from nowhere until someone says otherwise, and the tool tells you which rule to add.
+
+Two rules for the same zone narrow each other rather than widening: a zone may reach what *every* rule for it allows. That is how a monorepo root overrides what a package granted itself, with no precedence machinery.
 
 ## Why barrels break other tools
 

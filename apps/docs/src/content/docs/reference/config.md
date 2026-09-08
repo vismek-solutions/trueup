@@ -12,7 +12,7 @@ Because it is TypeScript, it can read the environment — useful for anything th
 | key | type | effect |
 |---|---|---|
 | `zones` | `ZoneDefinition[]` | The vocabulary. Required unless `members` is used. |
-| `boundaries` | `BoundaryRule[]` | Which zones may not reach which. |
+| `boundaries` | `BoundaryRule[]` | Which zones each zone may reach. |
 | `seams` | `SeamRule[]` | [Domain leaks with no import](/checks/seams/). |
 | `isolate` | `IsolationRule[]` | [Sibling directories](/checks/isolation/) kept apart. |
 | `rules` | `Rule[]` | [Rules you write yourself](/checks/custom-rules/). |
@@ -39,8 +39,10 @@ First match wins, in declaration order. [What each role changes](/concepts/zones
 ## Boundaries
 
 ```ts
-{ from: string, mayNotReach: string[], anchor?: "declaring-file" | "imported-module", ignoreTypeOnly?: boolean }
+{ from: string, allow: string[], anchor?: "declaring-file" | "imported-module", ignoreTypeOnly?: boolean }
 ```
+
+`allow` is an allowlist: anything not listed is refused, a zone always reaches itself, and a zone with no rule is unrestricted. Several rules for one zone intersect.
 
 `anchor` defaults to `declaring-file`, which is the point of the tool. [The blunt alternative](/concepts/boundaries/#two-options-on-a-boundary).
 

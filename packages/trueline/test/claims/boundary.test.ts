@@ -21,7 +21,7 @@ const boundaryFindings = (rule: BoundaryRule): readonly Finding[] => {
 
 describe("a boundary crossed through a barrel", () => {
   it("is seen when the edge is anchored on the declaring file", () => {
-    const findings = boundaryFindings({ from: "components", mayNotReach: ["warrants"] });
+    const findings = boundaryFindings({ from: "components", allow: ["shared"] });
 
     expect(findings).toHaveLength(1);
     expect(findings[0]?.message).toContain("Warrant");
@@ -30,24 +30,24 @@ describe("a boundary crossed through a barrel", () => {
 
   it("is invisible when the edge is anchored on the module the specifier named", () => {
     expect(
-      boundaryFindings({ from: "components", mayNotReach: ["warrants"], anchor: "imported-module" }),
+      boundaryFindings({ from: "components", allow: ["shared"], anchor: "imported-module" }),
     ).toEqual([]);
   });
 
   it("does not flag a sibling symbol that the same barrel re-exports", () => {
-    const findings = boundaryFindings({ from: "components", mayNotReach: ["warrants"] });
+    const findings = boundaryFindings({ from: "components", allow: ["shared"] });
 
     expect(findings.map((finding) => finding.message).join()).not.toContain("other");
   });
 
   it("can be told to ignore a type-only import", () => {
-    expect(boundaryFindings({ from: "components", mayNotReach: ["warrants"], ignoreTypeOnly: true })).toEqual(
+    expect(boundaryFindings({ from: "components", allow: ["shared"], ignoreTypeOnly: true })).toEqual(
       [],
     );
   });
 
   it("says nothing when the origin zone has no rule", () => {
-    expect(boundaryFindings({ from: "shared", mayNotReach: ["warrants"] })).toEqual([]);
+    expect(boundaryFindings({ from: "shared", allow: ["warrants"] })).toEqual([]);
   });
 });
 
@@ -56,7 +56,7 @@ describe("rule validation", () => {
     const report = check({
       root: ROOT,
       zones: ZONES,
-      boundaries: [{ from: "components", mayNotReach: ["typo"] }],
+      boundaries: [{ from: "components", allow: ["typo"] }],
     });
 
     const findings = report.claims.find(

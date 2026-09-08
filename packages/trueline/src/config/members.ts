@@ -65,7 +65,7 @@ export const boundariesOf = (member: Member): readonly BoundaryRule[] =>
   (member.config.boundaries ?? []).map((rule) => ({
     ...rule,
     from: qualified(member, rule.from),
-    mayNotReach: rule.mayNotReach.map((zone) => qualified(member, zone)),
+    allow: rule.allow.map((zone) => qualified(member, zone)),
   }));
 
 export const assertReachable = (members: readonly Member[]): void => {
@@ -81,30 +81,30 @@ export const assertReachable = (members: readonly Member[]): void => {
   }
 };
 
-const namesOf = (member: Member, entering: boolean): readonly string[] =>
-  member.config.zones
-    .filter((zone) => !(entering && zone.role === "api"))
-    .map((zone) => qualified(member, zone.name));
+const namesOf = (member: Member): readonly string[] =>
+  member.config.zones.map((zone) => qualified(member, zone.name));
 
-const closedIn = (member: Member, invited: boolean): readonly string[] => {
-  if (!invited) return namesOf(member, false);
-  return member.config.zones.some((zone) => zone.role === "api") ? namesOf(member, true) : [];
+const doorsOf = (member: Member): readonly string[] => {
+  const doors = member.config.zones.filter((zone) => zone.role === "api");
+  return doors.length === 0 ? namesOf(member) : doors.map((zone) => qualified(member, zone.name));
 };
+
+const openIn = (member: Member, invited: boolean): readonly string[] =>
+  invited ? doorsOf(member) : [];
 
 export const reachRules = (members: readonly Member[]): readonly BoundaryRule[] =>
   members.flatMap((member) => {
     const invited = new Set(member.config.mayReach ?? []);
-    const mayNotReach = members
+    const open = members
       .filter((other) => other.name !== member.name)
-      .flatMap((other) => closedIn(other, invited.has(other.name)));
+      .flatMap((other) => openIn(other, invited.has(other.name)));
+    const allow = [...namesOf(member), ...open];
 
-    return mayNotReach.length === 0
-      ? []
-      : zonesOf(member).map((zone) => ({
-          from: zone.name,
-          mayNotReach,
-          anchor: "imported-module" as const,
-        }));
+    return zonesOf(member).map((zone) => ({
+      from: zone.name,
+      allow,
+      anchor: "imported-module" as const,
+    }));
   });
 
 export const expanded = (
@@ -114,14 +114,18 @@ export const expanded = (
   const byName = new Map(members.map((member) => [member.name, member]));
   const namesIn = (zone: string, entering: boolean): readonly string[] => {
     const member = byName.get(zone);
-    return member === undefined ? [zone] : namesOf(member, entering);
+    if (member === undefined) return [zone];
+    return entering ? doorsOf(member) : namesOf(member);
   };
 
-  return rules.flatMap((rule) =>
-    namesIn(rule.from, false).map((from) => ({
+  return rules.flatMap((rule) => {
+    const origin = byName.get(rule.from);
+    const own = origin === undefined ? [] : namesOf(origin);
+
+    return namesIn(rule.from, false).map((from) => ({
       ...rule,
       from,
-      mayNotReach: rule.mayNotReach.flatMap((zone) => namesIn(zone, true)),
-    })),
-  );
+      allow: [...own, ...rule.allow.flatMap((zone) => namesIn(zone, true))],
+    }));
+  });
 };

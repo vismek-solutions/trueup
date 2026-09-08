@@ -104,15 +104,13 @@ export function placementOf({ root, path, zones, boundaries }: PlacementInput): 
   const zone = assignZones({ root, files: [path], zones }).zoneOf(path);
   if (zone === null) return { zone: null, mayReach: [], mayNotReach: [] };
 
-  const closed = [
-    ...new Set(boundaries.filter((rule) => rule.from === zone).flatMap((rule) => [...rule.mayNotReach])),
-  ].sort();
+  const rules = boundaries.filter((rule) => rule.from === zone);
+  const names = zones.map((entry) => entry.name);
+  const mayReach = names.filter(
+    (name) => name === zone || rules.every((rule) => rule.allow.includes(name)),
+  );
 
-  return {
-    zone,
-    mayReach: zones.map((entry) => entry.name).filter((name) => !closed.includes(name)),
-    mayNotReach: closed,
-  };
+  return { zone, mayReach, mayNotReach: names.filter((name) => !mayReach.includes(name)) };
 }
 
 export interface CheckOptions {

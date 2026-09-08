@@ -7,5 +7,5 @@ export default defineMember({
     { name: "domain", patterns: ["src/domain/**"] },
     { name: "engine", patterns: ["src/engine/**"] },
   ],
-  boundaries: [{ from: "domain", mayNotReach: ["engine"] }],
+  boundaries: [{ from: "domain", allow: ["api"] }],
 });

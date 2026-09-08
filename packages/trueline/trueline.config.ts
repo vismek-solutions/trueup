@@ -1,24 +1,6 @@
 import { defineMember } from "./src/config/model.ts";
 
-const LAYERS = [
-  "spec",
-  "api",
-  "bin",
-  "graph",
-  "zones",
-  "lexicon",
-  "project",
-  "report",
-  "ratchet",
-  "guard",
-  "claims",
-  "config",
-  "cli",
-  "adapters",
-  "root",
-  "tooling",
-];
-const allBut = (...kept: string[]): string[] => LAYERS.filter((layer) => !kept.includes(layer));
+const AMBIENT = ["ports", "paths"];
 
 export default defineMember({
   zones: [
@@ -42,18 +24,18 @@ export default defineMember({
     { name: "tooling", patterns: ["vitest.config.ts"], role: "wiring" },
   ],
   boundaries: [
-    { from: "ports", mayNotReach: LAYERS },
-    { from: "paths", mayNotReach: LAYERS },
-    { from: "graph", mayNotReach: allBut("graph") },
-    { from: "zones", mayNotReach: allBut("zones") },
-    { from: "lexicon", mayNotReach: allBut("lexicon") },
-    { from: "adapters", mayNotReach: allBut("adapters") },
-    { from: "project", mayNotReach: allBut("project", "graph", "zones", "lexicon", "report") },
-    { from: "report", mayNotReach: allBut("report", "graph", "zones") },
-    { from: "ratchet", mayNotReach: allBut("ratchet", "report") },
-    { from: "guard", mayNotReach: allBut("guard", "report") },
-    { from: "claims", mayNotReach: allBut("claims", "graph", "zones", "lexicon", "project", "report") },
-    { from: "config", mayNotReach: allBut("config", "claims", "zones", "project") },
-    { from: "cli", mayNotReach: allBut("cli", "config", "report", "ratchet", "guard", "adapters", "root") },
+    { from: "ports", allow: [] },
+    { from: "paths", allow: [] },
+    { from: "graph", allow: AMBIENT },
+    { from: "zones", allow: AMBIENT },
+    { from: "lexicon", allow: AMBIENT },
+    { from: "adapters", allow: AMBIENT },
+    { from: "project", allow: [...AMBIENT, "graph", "zones", "lexicon", "report"] },
+    { from: "report", allow: [...AMBIENT, "graph", "zones"] },
+    { from: "ratchet", allow: [...AMBIENT, "report"] },
+    { from: "guard", allow: [...AMBIENT, "report"] },
+    { from: "claims", allow: [...AMBIENT, "graph", "zones", "lexicon", "project", "report"] },
+    { from: "config", allow: [...AMBIENT, "claims", "zones", "project"] },
+    { from: "cli", allow: [...AMBIENT, "config", "report", "ratchet", "guard", "adapters", "root"] },
   ],
 });
