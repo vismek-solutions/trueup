@@ -2,7 +2,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { runGuard } from "../../src/cli/guard.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
-import { assertReachable, type Member } from "../../src/config/members.ts";
+import { assertReachable, expanded, type Member } from "../../src/config/members.ts";
+import type { MemberConfig } from "../../src/config/model.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
@@ -103,7 +104,14 @@ describe("naming a member that is not there", () => {
 describe("what a member says about itself", () => {
   it("qualifies its own boundary on both sides", async () => {
     const { config } = await loaded();
-    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", allow: ["lib/api"] });
+    expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", allow: ["lib/api", "ui/widgets"] });
+  });
+
+  it("keeps the doors the member was granted, which an internal rule must not revoke", async () => {
+    const { config } = await loaded();
+    const internal = config.boundaries?.find((rule) => rule.from === "lib/domain");
+
+    expect(internal?.allow).toContain("ui/widgets");
   });
 
   it("is enforced like any other boundary", async () => {
@@ -122,6 +130,42 @@ describe("what a member says about itself", () => {
     });
     expect(messagesIn(report, BOUNDARY)).toContain(
       "is lib/domain and may not reach lib/engine: run from packages/lib/src/engine/run.ts",
+    );
+  });
+});
+
+describe("a root rule that names a member", () => {
+  const memberOf = (name: string, zones: MemberConfig["zones"]): Member => ({
+    name,
+    directory: `packages/${name}`,
+    configPath: `packages/${name}/trueline.config.ts`,
+    config: { zones },
+  });
+
+  const MEMBERS = [
+    memberOf("lib", [
+      { name: "api", patterns: ["src/index.ts"], role: "api" },
+      { name: "schema", patterns: ["src/schema/**"] },
+    ]),
+    memberOf("web", [{ name: "pages", patterns: ["src/**"] }]),
+  ];
+
+  it("anchors on the imported module, because a door is a re-exporter the declaring file walks past", () => {
+    const [rule] = expanded([{ from: "web", allow: ["lib"] }], MEMBERS);
+
+    expect(rule?.allow).toContain("lib/api");
+    expect(rule?.anchor).toBe("imported-module");
+  });
+
+  it("leaves a rule between plain zones anchored on the declaring file", () => {
+    const [rule] = expanded([{ from: "loose", allow: ["other"] }], MEMBERS);
+
+    expect(rule?.anchor).toBeUndefined();
+  });
+
+  it("refuses declaring-file anchoring on a member rule instead of never matching", () => {
+    expect(() => expanded([{ from: "web", allow: ["lib"], anchor: "declaring-file" }], MEMBERS)).toThrow(
+      /no api zone can ever satisfy/,
     );
   });
 });

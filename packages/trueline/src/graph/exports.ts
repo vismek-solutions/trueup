@@ -118,6 +118,7 @@ export function createExportResolver({ modules, resolve }: ExportResolverDeps): 
   const compute = (path: string, name: string): EdgeTarget => {
     const record = modules.get(path);
     if (record === undefined) return { kind: "external", path };
+    if (!record.esm) return { kind: "symbol", path, name };
 
     const found = declared(path, record, name);
     if (found !== null) return found;

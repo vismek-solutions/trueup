@@ -61,12 +61,16 @@ export const zonesOf = (member: Member): readonly ZoneDefinition[] =>
     patterns: zone.patterns.map((pattern) => `${member.directory}/${pattern}`),
   }));
 
-export const boundariesOf = (member: Member): readonly BoundaryRule[] =>
-  (member.config.boundaries ?? []).map((rule) => ({
-    ...rule,
-    from: qualified(member, rule.from),
-    allow: rule.allow.map((zone) => qualified(member, zone)),
-  }));
+export const boundariesOf = (members: readonly Member[]): readonly BoundaryRule[] =>
+  members.flatMap((member) => {
+    const outward = grantedTo(member, members);
+
+    return (member.config.boundaries ?? []).map((rule) => ({
+      ...rule,
+      from: qualified(member, rule.from),
+      allow: [...rule.allow.map((zone) => qualified(member, zone)), ...outward],
+    }));
+  });
 
 export const assertReachable = (members: readonly Member[]): void => {
   const declared = new Set(members.map((member) => member.name));
@@ -91,13 +95,16 @@ const doorsOf = (member: Member): readonly string[] => {
 
 const openIn = (member: Member, invited: boolean): readonly string[] => (invited ? doorsOf(member) : []);
 
+const grantedTo = (member: Member, members: readonly Member[]): readonly string[] => {
+  const invited = new Set(member.config.allow ?? []);
+  return members
+    .filter((other) => other.name !== member.name)
+    .flatMap((other) => openIn(other, invited.has(other.name)));
+};
+
 export const reachRules = (members: readonly Member[]): readonly BoundaryRule[] =>
   members.flatMap((member) => {
-    const invited = new Set(member.config.allow ?? []);
-    const open = members
-      .filter((other) => other.name !== member.name)
-      .flatMap((other) => openIn(other, invited.has(other.name)));
-    const allow = [...namesOf(member), ...open];
+    const allow = [...namesOf(member), ...grantedTo(member, members)];
 
     return zonesOf(member).map((zone) => ({
       from: zone.name,
@@ -120,11 +127,19 @@ export const expanded = (
   return rules.flatMap((rule) => {
     const origin = byName.get(rule.from);
     const own = origin === undefined ? [] : namesOf(origin);
+    const crossing = [rule.from, ...rule.allow].some((zone) => byName.has(zone));
+
+    if (crossing && rule.anchor === "declaring-file") {
+      throw new Error(
+        `boundary rule from ${rule.from} names a member and asks for declaring-file anchoring, which no api zone can ever satisfy`,
+      );
+    }
 
     return namesIn(rule.from, false).map((from) => ({
       ...rule,
       from,
       allow: [...own, ...rule.allow.flatMap((zone) => namesIn(zone, true))],
+      ...(crossing ? { anchor: "imported-module" as const } : {}),
     }));
   });
 };

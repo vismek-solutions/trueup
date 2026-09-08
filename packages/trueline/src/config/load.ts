@@ -82,7 +82,7 @@ const withMembers = (config: ArchitectureConfig, members: readonly Member[]): Re
     ...config,
     zones: [...members.flatMap(zonesOf), ...own],
     boundaries: [
-      ...members.flatMap(boundariesOf),
+      ...boundariesOf(members),
       ...reachRules(members),
       ...expanded(config.boundaries ?? [], members),
     ],

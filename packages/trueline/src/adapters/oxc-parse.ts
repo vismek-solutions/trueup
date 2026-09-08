@@ -208,5 +208,10 @@ export const parseModule: ParseModule = (path, text): ModuleRecord => {
     .flatMap((statement) => statement.entries.map(exportEntryOf))
     .filter((entry): entry is ExportEntry => entry !== null);
 
-  return { path, imports: module.staticImports.map(statementOf), exports };
+  return {
+    path,
+    imports: module.staticImports.map(statementOf),
+    exports,
+    esm: module.hasModuleSyntax,
+  };
 };

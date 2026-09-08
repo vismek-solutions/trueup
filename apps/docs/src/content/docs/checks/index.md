@@ -52,6 +52,8 @@ every-imported-name-is-unambiguous          1 error
     can say where it came from. Export it from one place, or re-export it by name.
 ```
 
+A CommonJS file is the exception. `module.exports = { … }` declares nothing this analysis can enumerate, so its export list is unknown rather than empty, and a name imported from it is never reported as missing. Claiming absence requires having seen the exports.
+
 Ambiguity is also why the rest of the run has to stop and say so. Every boundary rule here is anchored on the file that *declares* a symbol, and this import has two candidates. Export the name from one place, or re-export it by name instead of with `*`.
 
 ## Why the completeness checks are errors

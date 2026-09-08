@@ -28,7 +28,7 @@ export default defineMember({
 
 A member's patterns are relative to the member. Its zone names are qualified with it, so `lib/domain` and `ui/domain` are different zones even though both packages called theirs `domain`.
 
-A member may only constrain itself. Everything it names is its own.
+A member may only constrain itself. Everything it names is its own — and the rule runs the other way too: an internal boundary governs reach *inside* the package and never revokes a door another member opened. So `boundaries: [{ from: "domain", allow: [] }]` means "domain reaches nothing else in this package", not "domain reaches nothing at all". What the package may reach outside itself is `allow`'s business, one line up.
 
 ## What a member may reach
 
@@ -62,6 +62,8 @@ every-import-respects-its-zone-boundary     1 error
 Zone names are qualified in the finding too, so `web/pages` and `lib/domain` say which package each side is in.
 
 Reaching between members is judged on the module you imported, not on the file that declares the symbol. Inside one package, following the barrel to the declaration is the whole point. Between packages, the api **is** the contract, and what it re-exports is deliberate.
+
+That applies to a root rule naming a member as well, and it is not optional: an api zone is a re-exporter, so declaring-file anchoring walks straight past it and the door could never match. A rule that names a member gets module anchoring, and asking for `anchor: "declaring-file"` on one is refused rather than left to fail silently.
 
 ## What the root still decides
 
