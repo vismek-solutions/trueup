@@ -30,13 +30,9 @@ You describe the shape once, in a config file. Every run after that answers one 
 
 ## Why it exists
 
-An agent writing code optimises for the change in front of it. Reaching into another module is the shortest path to a working feature, so that is the path it takes.
+Every edit an agent makes is defensible on its own. Reaching into another module is the shortest path to a working feature, the tests stay green, and after a hundred of them the project is a shape nobody chose. You cannot review your way out of it — not reading every line is the point.
 
-Every individual edit is defensible. The tests stay green. After a hundred of them the project is a ball of mud that nobody chose.
-
-You cannot review your way out of this. The whole point of the agent is that you are not reading every line. So the constraints have to live somewhere the agent runs into them, every time, without you.
-
-An agent under pressure to make the output green will edit any rule it can reach. So every message this prints says the same thing: fix the code, not the rule.
+So the constraints have to live where the agent runs into them, every time, without you. And because an agent told to get the build green will widen a rule as readily as fix the code, every message this prints says which one is meant.
 
 <CardGrid>
   <Card title="Sees through re-exports" icon="puzzle">

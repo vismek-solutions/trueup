@@ -1,6 +1,6 @@
 ---
 title: What it checks
-description: Every claim the tool makes about a project, and why the first four fail loudly.
+description: Every claim the tool makes about a project, and which ones fail loudly.
 ---
 
 | claim | asserts |
@@ -23,9 +23,40 @@ description: Every claim the tool makes about a project, and why the first four 
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
-## Why the first four fail loudly
+## Imports are checked by name
 
-An import that does not resolve. A name no module exports. A pattern matching nothing. Each of those means the tool is seeing less than you think it is.
+Most tools stop once a specifier resolves to a file. Two of these claims go one step further and ask whether the *name* you imported is really there.
+
+```ts
+// src/pricing/index.ts
+export * from "./net.js";
+export * from "./gross.js";
+```
+
+Both of those modules export `price`. So this import compiles, and which `price` you get is anyone's guess:
+
+```ts
+// src/checkout/total.ts
+import { price } from "../pricing/index.js";
+```
+
+```
+every-imported-name-is-exported             1 error
+    src/checkout/receipt.ts:1:10  src/checkout/receipt.ts imports formatPrice from ../pricing/net.js, which does not export it
+    The module resolved but exports no such name. Either the import is wrong, or a re-export it used
+    to travel through was removed.
+
+every-imported-name-is-unambiguous          1 error
+    src/checkout/total.ts:1:10  src/checkout/total.ts imports price from ../pricing/index.js, which re-exports it from more than one module
+    Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule
+    can say where it came from. Export it from one place, or re-export it by name.
+```
+
+Ambiguity is also why the rest of the run has to stop and say so. Every boundary rule here is anchored on the file that *declares* a symbol, and this import has two candidates. Export the name from one place, or re-export it by name instead of with `*`.
+
+## Why the completeness checks are errors
+
+An import that does not resolve, a name no module exports, a zone pattern matching nothing: each means the tool is seeing less than you think it is.
 
 A check that reports success while enforcing nothing is worse than no check at all — it is a gate that keeps passing while the thing it guards drifts. Four architecture tools were measured doing exactly that:
 

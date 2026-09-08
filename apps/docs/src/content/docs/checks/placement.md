@@ -7,23 +7,33 @@ Boundaries govern what a file may reach. These govern where files sit.
 
 ## Colocation: code that crossed a boundary for one caller
 
-```ts
-colocation: true,
-zones: [
-  { name: "spec", patterns: ["**/*.test.ts", "**/*.fixture.ts"], role: "tests" },
-  { name: "root", patterns: ["src/main.ts"], role: "wiring" },
-  { name: "shared", patterns: ["packages/shared/**"] },
-  { name: "web", patterns: ["apps/web/**"] },
-]
-```
-
 If exactly one other zone uses a value, that value is not shared code — it is that zone's code, sitting on the wrong side of a boundary.
 
-A symbol in a shared package that exactly one app imports belongs in that app. Move it there. A second consumer showing up later is a reason to move it back then, not a reason to have guessed now.
+```ts
+colocation: true,
+```
+
+Turn it on in the shop project from [getting started](/start/getting-started/) and three exports turn out to have exactly one customer each:
+
+```
+no-value-is-declared-away-from-its-only-consumer  3 errors
+    src/api/money.ts  declares formatMoney, used only by src/components/CartRow.tsx
+    src/components/CartRow.tsx  declares CartRow, used only by src/hooks/useCart.ts
+    src/domain/order.ts  declares isSettled, used only by server/routes.ts
+```
+
+`isSettled` sits in `domain`, where shared business rules go, and only the server ever asks. Move it into the server until a second caller turns up. A second consumer arriving later is a reason to move it back then, not a reason to have guessed now.
 
 ### What is never counted as the lone consumer
 
 **A zone with a `role` is never counted as the lone consumer.** Composition roots and test suites use other zones' code without ever being where that code belongs. A root wires each collaborator exactly once. A test imports whatever it exercises. Left in, they bury the real findings.
+
+```ts
+{ name: "spec", patterns: ["**/*.test.ts", "**/*.fixture.ts"], role: "tests" },
+{ name: "app",  patterns: ["src/**"], role: "wiring" },
+```
+
+Those two lines are what keeps `StatusBadge` and `useCart` off the list above: `src/main.ts` imports each exactly once, and wiring is all it does.
 
 **Type-only edges are ignored.** A type gets used constantly without being imported — reading `record.exports[0].form` uses that type and names nothing. Import counts tell the truth about values and lie about types.
 
@@ -57,6 +67,16 @@ maxFilesPerDirectory: 12
 ```
 
 A directory that keeps growing has stopped being one idea. An agent adding the twenty-first file to a folder has no way to notice that from inside the file it is writing.
+
+```
+no-directory-holds-too-many-files           2 errors
+    src/adapters  holds 12 files, more than the 8 allowed
+    src/claims  holds 11 files, more than the 8 allowed
+    A directory holds more files than the limit, which is how a folder stops being one idea and
+    turns into a drawer. Group the related files into a subdirectory that names what they share, or
+    move out the ones that never belonged. Raising the limit is not the fix: the number exists to
+    force the question of what this directory is for.
+```
 
 The count includes every file the analysis read, unclassified ones included. A directory nothing has claimed is the likeliest dumping ground.
 

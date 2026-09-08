@@ -16,10 +16,11 @@ import { defineConfig } from "trueline";
 
 export default defineConfig({
   zones: [
-    { name: "spec", patterns: ["**/*.test.ts", "**/*.test.tsx"] },
+    { name: "spec", patterns: ["**/*.test.ts"] },
     { name: "components", patterns: ["src/components/**"] },
     { name: "hooks", patterns: ["src/hooks/**"] },
     { name: "api", patterns: ["src/api/**"] },
+    { name: "domain", patterns: ["src/domain/**"] },
     { name: "app", patterns: ["src/**"] },
     { name: "server", patterns: ["server/**"] },
   ],
@@ -37,21 +38,49 @@ Then run it.
 npx trueline
 ```
 
+```
+coverage  9 files · 6 edges · 6 symbol · 0 external · 0 builtin · 0 unresolved
+zones     spec 1 · components 2 · hooks 1 · api 1 · domain 1 · app 1 · server 1 · 1 unclassified
+
+the-analysis-reached-files                  ok
+every-import-resolves                       ok
+every-imported-name-is-exported             ok
+every-imported-name-is-unambiguous          ok
+every-file-belongs-to-a-zone                1 error
+    scripts/seed.ts  scripts/seed.ts matches no zone
+    A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing
+    zone, or declare a zone that covers it. Run `trueline explain <file>` to see what a location
+    would allow.
+
+every-zone-has-a-file                       ok
+every-zone-pattern-matches-a-file           ok
+every-rule-names-a-declared-zone            ok
+every-import-respects-its-zone-boundary     1 error
+    src/hooks/useCart.ts:1:10  is hooks and may not reach components: CartRow from src/components/CartRow.tsx
+    Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
+    declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
+    reach the target, or have the target expose what the caller needs through a zone it may reach.
+    Run `trueline explain <file>` to see what a file may reach. Widening the rule is not the fix.
+
+generic-code-names-no-domain-concept        ok
+no-zones-form-a-cycle                       ok
+
+11 claims · 2 errors · 0 warnings
+```
+
+Those two findings are the two kinds this exists to show you: a file no zone claims, and a boundary you did not know was being crossed.
+
 ## Reading that config
 
 Every path pattern is matched against the file's path **relative to your project root** — the directory holding `trueline.config.ts`.
 
-The zones say the project has six kinds of file. Names are yours to invent; nothing is reserved. A good first pass: one zone per top-level folder under `src`, plus one for tests. Then merge any two zones you would never write a rule between.
+The zones say the project has seven kinds of file. Names are yours to invent; nothing is reserved. A good first pass: one zone per top-level folder under `src`, plus one for tests. Then merge any two zones you would never write a rule between.
 
 Order matters, because a file belongs to the **first** zone that matches it. `spec` comes first so a test inside `src/components` is a test rather than a component. `app` comes last as a catch-all for everything under `src` no earlier zone claimed.
 
 The boundaries say `components` may reach `hooks` and `api`, `hooks` may reach `api`, and `api` may reach nothing. A zone always reaches itself, and a zone with no rule of its own — `app`, `server`, `spec` here — is unrestricted. So you can add rules one zone at a time.
 
-## What the first run will tell you
-
-On an existing codebase the first run usually reports files in no zone, and boundaries you did not know were being crossed. Those are the two things it exists to show you.
-
-Two things it will **not** complain about:
+## What it will not complain about
 
 **Path aliases resolve on their own.** `import { Button } from "@/components/Button"` works if `@/*` is mapped in your `tsconfig.json`, with or without a file extension. There is nothing to configure.
 

@@ -5,7 +5,7 @@ description: One rule keeps routes and features apart, without naming any of the
 
 Zones are named, so a boundary between them has to be written out. That does not scale when the directories are many, alike, and added to constantly.
 
-Think `src/routes/a`, `src/routes/b`, `src/routes/c`. The rule you want is "none of these knows about any other".
+Think `src/routes/catalog`, `src/routes/checkout`, `src/routes/account`. The rule you want is "none of these knows about any other".
 
 Written as zones, that needs one zone and one boundary per route. Worse, a route added tomorrow is governed by nothing until someone remembers to add it.
 
@@ -27,15 +27,15 @@ A new directory is isolated the moment it exists, with no config change.
 
 ```
 no-sibling-directory-reaches-another        2 errors
-    src/routes/a/page.ts:1:0        is a and may not reach sibling b: thing from src/routes/b/thing.ts
-    src/routes/c/deep/inner.ts:1:0  is c and may not reach sibling b: thing from src/routes/b/thing.ts
+    src/routes/account/orders/history.ts:1:10  is account and may not reach sibling catalog: price from src/routes/catalog/price.ts
+    src/routes/checkout/page.ts:1:10  is checkout and may not reach sibling catalog: price from src/routes/catalog/price.ts
 ```
 
-Depth does not matter. `src/routes/c/deep/inner.ts` is still `c`.
+Depth does not matter. `src/routes/account/orders/history.ts` is still `account`.
 
-The parent itself is in no group. So `src/routes/index.ts` importing every route is fine — that is what a parent is for.
+The parent itself is in no group. So `src/routes/index.ts` importing every route is fine — that is what a parent is for. And `catalog` importing `_shared/money.ts` raised nothing, because `except` took `_shared` out of the group.
 
-More than one `*` is allowed, and each combination is its own island. `apps/*/src/routes/*` keeps `ui/a` apart from `ui/b` and from `web/a`, across every app at once.
+More than one `*` is allowed, and each combination is its own island. `apps/*/src/routes/*` keeps `ui/catalog` apart from `ui/checkout` and from `web/catalog`, across every app at once.
 
 :::note
 If the pattern matches no directory at all, that is an error rather than a silent pass. A rule guarding nothing is the failure mode this tool exists to prevent.

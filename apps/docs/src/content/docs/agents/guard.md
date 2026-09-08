@@ -83,11 +83,9 @@ Copy the hook settings entry at least. Without it, the shortest way past the gua
 
 ## When nobody is there to answer
 
-A prompt is only a gate while someone is at the keyboard. So in the permission modes that stop asking a person — `acceptEdits`, `auto`, `dontAsk` and `bypassPermissions` — the prompt is downgraded to a refusal. You do not configure that, and you do not need to know which mode you are in.
+A prompt is only a gate while someone is at the keyboard, so in `acceptEdits`, `auto`, `dontAsk` and `bypassPermissions` it becomes a refusal automatically. You do not configure that. An unanswered prompt never turns into an approval either — waiting would be the way past the guard.
 
-A prompt also cannot be waited out. Nothing turns an unanswered one into an approval, because waiting would then be the way past the guard.
-
-One case is left: `default` mode with nobody at the desk. The prompt waits, and so does the agent. If that matters more to you than agent-driven setup, ask for a refusal outright.
+That leaves `default` mode with nobody at the desk: the prompt waits, and so does the agent. If that matters more than agent-driven setup, ask for a refusal outright.
 
 ```ts
 protect: { paths: ["CLAUDE.md"], decision: "deny" }
@@ -109,12 +107,6 @@ You still edit these files yourself, directly. The hook only sees what an agent 
 
 ## Why there are two hooks
 
-To judge an edit before it happens, the guard has to work out what the file would look like afterwards.
-
-For a plain find-and-replace, that is straightforward. For an edit expressed as "replace the body of this function", it is not. That needs the language server's idea of where the function starts and ends, which lives inside the editing tool rather than here.
-
-So tools whose result can be reproduced exactly are checked *before* the write, and can be refused. Everything else is checked immediately *after* the write, against the real file, and comes back as a correction rather than a refusal.
-
-The guard never guesses at another tool's edit semantics — a wrong guess would refuse or allow the wrong edit, silently.
+The guard has to know what the file would look like after the edit. It can reproduce a find-and-replace exactly, so those are checked before the write and refused. An edit like "replace this function's body" depends on the language server's idea of where the function ends, so those are checked immediately after the write and come back as a correction. The guard never guesses at another tool's edit semantics.
 
 Delegated tools do not run here. Spawning a whole-repo lint on every edit costs far more than it catches.

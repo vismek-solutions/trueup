@@ -51,6 +51,26 @@ describe("a boundary crossed through a barrel", () => {
   });
 });
 
+describe("two rules for one zone", () => {
+  it("reports a breached edge once, not once per rule", () => {
+    const report = check({
+      root: ROOT,
+      zones: ZONES,
+      boundaries: [
+        { from: "components", allow: ["shared"] },
+        { from: "components", allow: [] },
+      ],
+    });
+
+    const findings =
+      report.claims.find((claim) => claim.claim === "every-import-respects-its-zone-boundary")
+        ?.findings ?? [];
+    const warrants = findings.filter((finding) => finding.message.includes("Warrant"));
+
+    expect(warrants).toHaveLength(1);
+  });
+});
+
 describe("rule validation", () => {
   it("rejects a rule naming a zone that was never declared", () => {
     const report = check({

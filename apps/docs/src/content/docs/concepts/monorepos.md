@@ -37,7 +37,7 @@ Nothing, until it says so. A member reaching another it did not name is an error
 ```ts
 // apps/web/trueline.config.ts
 export default defineMember({
-  mayReach: ["lib", "ui"],
+  mayReach: ["lib"],
   zones: [{ name: "pages", patterns: ["src/**"] }],
 });
 ```
@@ -46,6 +46,21 @@ This is the same shape as a `package.json` dependency list, and for the same rea
 
 `mayReach: ["lib"]` opens `lib`'s `role: "api"` zones and nothing else. A package with no api zone opens entirely.
 
+So this file gets one line of the two past the check:
+
+```ts
+// apps/web/src/cart.ts
+import { formatMoney } from "@shop/lib";
+import { isSettled } from "@shop/lib/domain/order";
+```
+
+```
+every-import-respects-its-zone-boundary     1 error
+    apps/web/src/cart.ts:2:10  is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts
+```
+
+Zone names are qualified in the finding too, so `web/pages` and `lib/domain` say which package each side is in.
+
 Reaching between members is judged on the module you imported, not on the file that declares the symbol. Inside one package, following the barrel to the declaration is the whole point. Between packages, the api **is** the contract, and what it re-exports is deliberate.
 
 ## What the root still decides
@@ -53,7 +68,15 @@ Reaching between members is judged on the module you imported, not on the file t
 A member can grant itself anything, so a member's own word is not a rule. The root writes the prohibitions no member may lift:
 
 ```ts
-boundaries: [{ from: "apps", allow: [] }]
+boundaries: [{ from: "web", allow: [] }]
+```
+
+Now the import `web` granted itself is refused as well:
+
+```
+every-import-respects-its-zone-boundary     2 errors
+    apps/web/src/cart.ts:1:10  is web/pages and may not reach lib/api: formatMoney from packages/lib/src/index.ts
+    apps/web/src/cart.ts:2:10  is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts
 ```
 
 Name a member where a zone would go and it expands: as a `from`, to all of its zones; inside `allow`, to its api zones only. A rule about a member governs only its outward reach — its own zones stay reachable from each other, so an empty `allow` isolates the package rather than shattering it.

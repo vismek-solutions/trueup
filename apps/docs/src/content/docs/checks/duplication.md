@@ -38,7 +38,7 @@ Two kinds of finding are not bugs. Fixture path constants repeated across test f
 
 ## Fixing one
 
-The order only matters with [the write-time guard](/agents/guard/) installed. The guard would refuse a third copy while the originals stand, and refuse an import of a module that does not exist yet. Running the check on its own, only the end state is judged. Running the check on its own, any order works and only the end state is judged.
+The order only matters with [the write-time guard](/agents/guard/) installed: it would refuse a third copy while the originals stand, and refuse an import of a module that does not exist yet. Running the check on its own, any order works and only the end state is judged.
 
 1. Delete the copies. References are temporarily undefined, which is a type error but not an architecture one.
 2. Create the shared module.
@@ -63,8 +63,6 @@ The two do not overlap, and there is no setting in between. Measured against a p
 | fallow at 1 line, 5 tokens, identifiers blinded | found, plus an invented group on three files | 886 groups, 90% of the codebase |
 | this rule | exactly the pair | 0 |
 
-The gap is structural rather than a tuning accident. A clone detector slides a window over a token stream. It needs enough tokens for a match not to be coincidence, so lowering the window to declaration size makes everything match everything.
-
-Comparing whole declarations removes the window. A short body is a complete unit of meaning, not an arbitrary span — so a small threshold stays sharp.
+A clone detector slides a window over a token stream and needs enough tokens for a match not to be coincidence. Comparing whole declarations removes the window, which is why 60 characters stays sharp.
 
 Run both. [The delegated detector](/integrations/linters/#copy-paste-from-fallow) finds the near-miss copies this rule structurally cannot.

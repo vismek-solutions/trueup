@@ -110,6 +110,46 @@ Problems arrive in the order the claims run, so the checks about the analysis it
 
 Run it, fix what it shows, run it again. It reports `nothing left to fix` when the errors are gone.
 
+## When something else has to read it
+
+```sh
+npx trueline --json
+```
+
+The whole report, claims in the order they ran, each with its guidance and its findings.
+
+```json
+{
+  "claims": [
+    {
+      "claim": "every-imported-name-is-unambiguous",
+      "guidance": "Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from. Export it from one place, or re-export it by name.",
+      "findings": [
+        {
+          "severity": "error",
+          "message": "src/checkout/total.ts imports price from ../pricing/index.js, which re-exports it from more than one module",
+          "file": "/home/you/shop/src/checkout/total.ts",
+          "start": 9
+        }
+      ]
+    }
+  ],
+  "coverage": {
+    "files": 5,
+    "edges": 2,
+    "symbolEdges": 0,
+    "externalEdges": 0,
+    "builtinEdges": 0,
+    "namespaceEdges": 0,
+    "unresolvedImports": 0,
+    "filesByZone": { "pricing": 3, "checkout": 2 },
+    "unclassifiedFiles": 0
+  }
+}
+```
+
+A claim that holds keeps its entry with an empty `findings`, so the shape does not change between a green run and a red one. `file` is absolute and `start` is a character offset into it. The exit code is the same as any other mode.
+
 ## Exit codes
 
 | code | meaning |

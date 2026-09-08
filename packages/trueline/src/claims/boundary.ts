@@ -68,9 +68,11 @@ export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
         const fromZone = zoneOf(edge.from);
         if (fromZone === null) return [];
 
-        return (byOrigin.get(fromZone) ?? [])
+        const breach = (byOrigin.get(fromZone) ?? [])
           .map((rule) => breachOf(edge, rule, { root, zoneOf, fromZone }))
-          .filter((finding): finding is Finding => finding !== null);
+          .find((finding): finding is Finding => finding !== null);
+
+        return breach === undefined ? [] : [breach];
       });
     },
   };

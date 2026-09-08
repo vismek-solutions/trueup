@@ -13,7 +13,23 @@ runners: [eslintRunner()]
 
 Four runners are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`. Add only the ones your project already installs — a runner whose binary is missing fails the run rather than reporting nothing.
 
-Each finding's category becomes its own claim — `eslint/no-unused-vars`, `biome/lint/suspicious/noDoubleEquals`, `fallow/unused_exports`. A baseline entry then pins one rule rather than a whole tool.
+Each finding's category becomes its own claim, sitting in the report next to the rules from here:
+
+```
+every-import-respects-its-zone-boundary     ok
+generic-code-names-no-domain-concept        ok
+no-zones-form-a-cycle                       ok
+every-delegated-tool-ran                    ok
+oxlint/eslint/no-unused-vars                2 warnings
+    src/api/money.ts:1:7  Variable 'CURRENCY' is declared but never used. Unused variables should start with a '_'.
+    src/api/money.ts:4:9  Variable 'rate' is declared but never used. Unused variables should start with a '_'.
+    Reported by oxlint, which this project delegates to. Consult oxlint for what the finding means;
+    the rules here did not produce it.
+
+13 claims · 0 errors · 2 warnings
+```
+
+A claim per category means a baseline entry pins one rule rather than a whole tool. `every-delegated-tool-ran` is the separate claim that the tool started at all.
 
 Each tool runs with your project root as its working directory, and keeps its own severities. A rule you set to `warn` stays a warning here.
 

@@ -7,6 +7,33 @@ The config is TypeScript. It is discovered by walking upward for `trueline.confi
 
 Because it is TypeScript, it can read the environment — useful for anything that should behave differently in CI.
 
+```ts
+// trueline.config.ts
+import { defineConfig, oxlintRunner } from "trueline";
+
+export default defineConfig({
+  zones: [
+    { name: "spec", patterns: ["**/*.test.ts"], role: "tests" },
+    { name: "components", patterns: ["src/components/**"] },
+    { name: "hooks", patterns: ["src/hooks/**"] },
+    { name: "api", patterns: ["src/api/**"] },
+    { name: "domain", patterns: ["src/domain/**"] },
+    { name: "app", patterns: ["src/**"], role: "wiring" },
+  ],
+  boundaries: [
+    { from: "components", allow: ["hooks", "api"] },
+    { from: "hooks", allow: ["api"] },
+    { from: "api", allow: [] },
+  ],
+  seams: [{ generic: "components", domain: ["domain"] }],
+  colocation: true,
+  maxFilesPerDirectory: 12,
+  runners: [oxlintRunner({ paths: ["src"] })],
+});
+```
+
+Everything below `zones` is optional. A config with zones alone still runs nine claims.
+
 ## Root config
 
 | key | type | default | effect |

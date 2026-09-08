@@ -60,13 +60,7 @@ None of that is reimplemented here. Turn it on with `fallowRunner()` and its fin
 
 ## Why this is not built on top of fallow
 
-A fair question, since the analysis half is delegated already.
-
-fallow exposes findings, never the graph. Its two extension points are declarative data by design — rule packs ban calls, imports, effects and exports, and "loading a pack never executes project code"; plugins seed entry points and used exports. Neither can express a rule that counts consuming zones or asks where a symbol was declared. Its nearest rule kind matches the raw specifier, and documents that aliased ones are not matched, which is the inverse of anchoring on the declaration.
-
-fallow's Node bindings run the same one-shot analyses and return the same reports. They change how you call it, not what you can ask it.
-
-fallow's `guard` takes a path, not file content, so it answers which rules apply to a file — even one that does not exist yet. Judging an edit means reading the proposed text, which is a different job.
+fallow exposes findings, never the graph. Both its extension points are declarative by design and never execute project code, so neither can count consuming zones or ask where a symbol was declared — its nearest rule kind matches the raw specifier and explicitly does not match aliased ones. Its Node bindings run the same analyses through a different call, and its `guard` takes a path rather than proposed file content.
 
 ## Running both
 

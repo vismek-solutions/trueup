@@ -38,9 +38,16 @@ There is one deliberate exception. [Between packages in a monorepo](/concepts/mo
 
 ## Two options on a boundary
 
-`anchor: "imported-module"` gives you the blunt version — "this package is off limits entirely". Leave it alone for anything finer.
+```ts
+boundaries: [
+  { from: "components", allow: ["hooks"], ignoreTypeOnly: true },
+  { from: "app", allow: ["api"], anchor: "imported-module" },
+]
+```
 
-`ignoreTypeOnly: true` exempts `import type`. Use it when you care that runtime code crossed, rather than that a type name did.
+`ignoreTypeOnly: true` exempts `import type`. Use it when you care that runtime code crossed, rather than that a type name did — a component naming an `Order` in a signature costs nothing at runtime, and calling `isSettled` does.
+
+`anchor: "imported-module"` puts the rule back on the module the import statement named, which is the blunt version: this package is off limits entirely, barrel and all. Use it for a third-party package or a sibling app you want sealed off. Leave it alone for anything finer, because it is exactly the behaviour the previous section is about.
 
 ## Zones that depend on each other
 
