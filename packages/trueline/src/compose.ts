@@ -22,7 +22,7 @@ import type { ModuleRecord, ParseModule } from "./ports/module-record.ts";
 import type { Runner } from "./ports/runner.ts";
 import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
-import type { Report } from "./report/model.ts";
+import { withoutDuplicates, type Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
 import type { ZoneDefinition, ZoneRole } from "./zones/model.ts";
 
@@ -193,5 +193,8 @@ export function check({
   ];
 
   const report = runClaims(claims, { root, graph, zones: assignment, lexicon, project });
-  return { claims: [...report.claims, ...runDelegated(runners, root)], coverage: report.coverage };
+  return {
+    claims: withoutDuplicates([...report.claims, ...runDelegated(runners, root)]),
+    coverage: report.coverage,
+  };
 }

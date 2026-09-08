@@ -34,6 +34,15 @@ export interface Report {
   readonly notices?: readonly string[] | undefined;
 }
 
+const identityOf = (finding: Finding): string =>
+  `${finding.file ?? ""}\0${finding.start ?? ""}\0${finding.message}`;
+
+export const withoutDuplicates = (claims: readonly ClaimResult[]): readonly ClaimResult[] =>
+  claims.map((claim) => {
+    const unique = new Map(claim.findings.map((finding) => [identityOf(finding), finding]));
+    return unique.size === claim.findings.length ? claim : { ...claim, findings: [...unique.values()] };
+  });
+
 const findingsOf = (report: Report): readonly Finding[] => report.claims.flatMap((claim) => claim.findings);
 
 export const countOf = (report: Report, severity: Severity): number =>

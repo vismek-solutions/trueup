@@ -1,5 +1,12 @@
 const mode = process.argv[2];
 
+if (process.argv.includes("config")) {
+  const rules = { "unused-exports": "error", "circular-dependencies": "error", "unused-types": "error" };
+  if (mode === "rule-off") rules["unused-exports"] = "off";
+  process.stdout.write(JSON.stringify(mode === "no-rules" ? {} : { rules }));
+  process.exit(0);
+}
+
 if (mode === "silent") process.exit(0);
 
 if (mode === "not-json") {

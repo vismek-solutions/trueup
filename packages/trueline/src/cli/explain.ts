@@ -4,6 +4,7 @@ import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
 
 import type { CommandInput } from "./command.ts";
+import { EXIT_BAD_USAGE } from "./main.ts";
 
 const SAMPLE = 6;
 
@@ -16,7 +17,14 @@ const sampleOf = (values: Iterable<string>): string => {
 };
 
 export async function runExplain({ cwd, argv, write }: CommandInput): Promise<number> {
-  const target = argv.find((entry) => !entry.startsWith("--"));
+  const flags = argv.filter((entry) => entry.startsWith("-"));
+  if (flags.length > 0) {
+    write(`unrecognised: ${flags.join(" ")}`);
+    write(`usage: ${DEFAULT_COMMAND} explain <path>`);
+    return EXIT_BAD_USAGE;
+  }
+
+  const target = argv[0];
   if (target === undefined) {
     write(`usage: ${DEFAULT_COMMAND} explain <path>`);
     return 3;

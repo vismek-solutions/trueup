@@ -71,6 +71,21 @@ describe("refusing to trust a delegated tool", () => {
     expect(reasonOf(runWith("ok", ["unused_exports", "no_such_category"]))).toContain("no_such_category");
   });
 
+  it("fails on a category whose rule the tool has switched off, which would report nothing forever", () => {
+    const reason = reasonOf(runWith("rule-off", ["unused_exports"]));
+
+    expect(reason).toContain("unused-exports");
+    expect(reason).toContain("can never report");
+  });
+
+  it("lets a category through when its rule is live", () => {
+    expect(runWith("ok", ["unused_exports"]).kind).toBe("findings");
+  });
+
+  it("fails when the tool will not say which of its rules are on", () => {
+    expect(reasonOf(runWith("no-rules", ["unused_exports"]))).toContain("severities were unreadable");
+  });
+
   it("fails when the tool printed nothing", () => {
     expect(reasonOf(runWith("silent"))).toContain("no output");
   });

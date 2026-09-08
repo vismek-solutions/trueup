@@ -35,7 +35,7 @@ export function captureTool({ command, args, cwd }: ToolInvocation): Captured {
   };
 }
 
-type ToolJson =
+export type ToolJson =
   | { readonly kind: "json"; readonly payload: Record<string, unknown>; readonly stderr: string }
   | { readonly kind: "failed"; readonly reason: string };
 
@@ -45,7 +45,7 @@ const silentReason = (status: number, stderr: string): string => {
   return detail === "" ? banner : `${banner}: ${detail}`;
 };
 
-function readToolJson(invocation: ToolInvocation): ToolJson {
+export function readToolJson(invocation: ToolInvocation): ToolJson {
   const captured = captureTool(invocation);
   if (captured.kind === "failed") return captured;
   if (captured.stdout.trim() === "") {

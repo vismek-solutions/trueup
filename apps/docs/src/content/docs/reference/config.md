@@ -123,3 +123,5 @@ The root config, every member config and the baseline are covered with no config
 | `npx trueline explain <path>` | what a file may reach |
 | `npx trueline agent-instructions` | a block to append to `CLAUDE.md` |
 | `npx trueline guard` | read a hook payload on stdin |
+
+An argument outside this list is an error, not something to ignore.

@@ -13,6 +13,12 @@ export const EXIT_CLEAN = 0;
 export const EXIT_ERRORS = 1;
 export const EXIT_STALE_BASELINE = 2;
 export const EXIT_NO_CONFIG = 3;
+export const EXIT_BAD_USAGE = 4;
+
+const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline"];
+
+const unknownArgumentsIn = (argv: readonly string[], known: readonly string[]): readonly string[] =>
+  argv.filter((entry) => !known.includes(entry) && !entry.startsWith("--config="));
 
 import type { CommandInput } from "./command.ts";
 
@@ -26,6 +32,14 @@ const presenterFor = (argv: readonly string[], rulebook: string): Present => {
 };
 
 export async function runCli({ cwd, argv, write }: CommandInput): Promise<number> {
+  const unknown = unknownArgumentsIn(argv, REPORT_FLAGS);
+  if (unknown.length > 0) {
+    write(`unrecognised: ${unknown.join(" ")}`);
+    write(`known arguments: ${REPORT_FLAGS.join(" ")} --config=<path>`);
+    write("commands: explain <path> · guard · agent-instructions");
+    return EXIT_BAD_USAGE;
+  }
+
   const updating = argv.includes("--update-baseline");
   const explicit = argv.find((entry) => entry.startsWith("--config="))?.slice("--config=".length);
   const path = explicit ?? findConfig(cwd);

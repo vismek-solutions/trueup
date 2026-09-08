@@ -2,40 +2,58 @@ import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
 import { absoluteIn, numberOf, objectOf, stringOf } from "./tool-output.ts";
-import { jsonRunner } from "./tool-process.ts";
+import { jsonRunner, readToolJson } from "./tool-process.ts";
 
 const FALLOW_CHECK_SCHEMA = 9;
 
-export const DEFAULT_FALLOW_CATEGORIES = [
-  "unused_files",
-  "unused_exports",
-  "unused_types",
-  "unused_enum_members",
-  "unused_class_members",
-  "unused_dependencies",
-  "unused_dev_dependencies",
-  "unused_optional_dependencies",
-  "unlisted_dependencies",
-  "type_only_dependencies",
-  "test_only_dependencies",
-  "dev_dependencies_in_production",
-  "unused_dependency_overrides",
-  "misconfigured_dependency_overrides",
-  "unused_catalog_entries",
-  "empty_catalog_groups",
-  "unresolved_catalog_references",
-  "private_type_leaks",
-  "duplicate_exports",
-  "circular_dependencies",
-  "re_export_cycles",
-  "route_collisions",
-  "dynamic_segment_name_conflicts",
-  "invalid_client_exports",
-  "misplaced_directives",
-  "mixed_client_server_barrels",
-  "policy_violations",
-  "stale_suppressions",
-] as const;
+const FALLOW_CATEGORY_RULES: Readonly<Record<string, string>> = {
+  unused_files: "unused-files",
+  unused_exports: "unused-exports",
+  unused_types: "unused-types",
+  unused_enum_members: "unused-enum-members",
+  unused_class_members: "unused-class-members",
+  unused_dependencies: "unused-dependencies",
+  unused_dev_dependencies: "unused-dev-dependencies",
+  unused_optional_dependencies: "unused-optional-dependencies",
+  unlisted_dependencies: "unlisted-dependencies",
+  type_only_dependencies: "type-only-dependencies",
+  test_only_dependencies: "test-only-dependencies",
+  dev_dependencies_in_production: "dev-dependencies-in-production",
+  unused_dependency_overrides: "unused-dependency-overrides",
+  misconfigured_dependency_overrides: "misconfigured-dependency-overrides",
+  unused_catalog_entries: "unused-catalog-entries",
+  empty_catalog_groups: "empty-catalog-groups",
+  unresolved_catalog_references: "unresolved-catalog-references",
+  private_type_leaks: "private-type-leaks",
+  duplicate_exports: "duplicate-exports",
+  circular_dependencies: "circular-dependencies",
+  re_export_cycles: "re-export-cycle",
+  route_collisions: "route-collision",
+  dynamic_segment_name_conflicts: "dynamic-segment-name-conflict",
+  invalid_client_exports: "invalid-client-export",
+  misplaced_directives: "misplaced-directive",
+  mixed_client_server_barrels: "mixed-client-server-barrel",
+  policy_violations: "policy-violation",
+  stale_suppressions: "stale-suppressions",
+};
+
+export const DEFAULT_FALLOW_CATEGORIES: readonly string[] = Object.keys(FALLOW_CATEGORY_RULES);
+
+const silencedIn = (
+  command: readonly string[],
+  root: string,
+  categories: readonly string[],
+): readonly string[] | null => {
+  const resolved = readToolJson({ command, args: ["config", "--root", root, "--format", "json"] });
+  if (resolved.kind === "failed") return null;
+
+  const rules = objectOf(resolved.payload.rules);
+  if (rules === null) return null;
+
+  return categories
+    .map((category) => FALLOW_CATEGORY_RULES[category])
+    .filter((rule): rule is string => rule !== undefined && rules[rule] === "off");
+};
 
 export type DuplicationMode = "strict" | "mild" | "weak" | "semantic";
 
@@ -193,6 +211,16 @@ export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
     read: (source, root): RunnerOutcome => {
       const payload = readPayload(source.payload);
       if (payload.kind === "failed") return payload;
+
+      const silenced = silencedIn(command, root, categories);
+      if (silenced === null)
+        return { kind: "failed", reason: "its resolved rule severities were unreadable" };
+      if (silenced.length > 0) {
+        return {
+          kind: "failed",
+          reason: `these rules are off in fallow's own config, so the categories relying on them can never report: ${silenced.join(", ")}. Turn them on in fallow, or drop the category from the runner.`,
+        };
+      }
 
       const input: FindingInput = { root, offsetOf: createOffsetReader(root), severity };
       const found: RunnerFinding[] = [];

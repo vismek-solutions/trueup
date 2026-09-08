@@ -191,6 +191,17 @@ Findings that name no file — an empty zone, a dead pattern — are placed on t
 GitLab renders an annotation only on lines the merge request touched. A boundary violation sits on the import that caused it, so it lands; a directory-size finding has no line and shows in the widget instead. The pass or fail is [the baseline's](/agents/baseline/) job either way — do not use the Code Quality widget as the ratchet.
 :::
 
+## A flag it does not know is an error
+
+```
+$ npx trueline --claim=no-directory-holds-too-many-files
+unrecognised: --claim=no-directory-holds-too-many-files
+known arguments: --json --gitlab --next --dots --update-baseline --config=<path>
+commands: explain <path> · guard · agent-instructions
+```
+
+A tool that ignored `--dot` and ran the default check would report a clean project while doing something other than what you asked. That is the same silence the completeness claims exist to prevent, so it gets its own exit code rather than being folded into a failed run.
+
 ## Exit codes
 
 | code | meaning |
@@ -199,6 +210,7 @@ GitLab renders an annotation only on lines the merge request touched. A boundary
 | `1` | errors |
 | `2` | the baseline holds entries whose violations are gone |
 | `3` | no config found |
+| `4` | an argument was not recognised |
 
 ## Cost
 

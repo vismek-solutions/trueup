@@ -41,13 +41,20 @@ What you get: dead code, dependency and catalog hygiene, cycles, leaked private 
 
 What you do not: health, security, feature flags and semantic similarity are separate fallow commands, and this runner does not call them.
 
-:::caution
-Some of fallow's rules ship switched **off**, `private-type-leaks` among them. The category still appears in its output, empty, so the claim here passes while enforcing nothing. Turn those on in fallow's own config:
+Some of fallow's rules ship switched **off**, `private-type-leaks` among them. The category still appears in its output, empty, so nothing about the run would look wrong. `fallowRunner` therefore reads fallow's own resolved config and fails when a category it consumes rests on a rule that is off:
+
+```
+every-delegated-tool-ran                    1 error
+    fallow did not run: these rules are off in fallow's own config, so the categories relying on
+    them can never report: private-type-leaks. Turn them on in fallow, or drop the category from
+    the runner.
+```
+
+Turn them on in fallow's own config:
 
 ```json
 { "rules": { "private-type-leaks": "error", "require-suppression-reason": "error" } }
 ```
-:::
 
 ## Copy-paste, from fallow
 
@@ -67,7 +74,7 @@ If you name a category the tool never reports, the run fails. Otherwise a typo i
 
 ## Adapters distrust the tool they wrap
 
-An adapter fails the check when the tool it wraps is silent, missing, misconfigured, unparseable, or reports that it analysed nothing. None of those is "nothing found", and a tool that could not run is never recorded in a baseline.
+An adapter fails the check when the tool it wraps is silent, missing, misconfigured, unparseable, reports that it analysed nothing, or has switched off a rule the adapter was counting on. None of those is "nothing found", and a tool that could not run is never recorded in a baseline.
 
 The exit codes matter here, because none of them mean what you would guess. eslint exits `1` for "found problems" and saves `2` for a broken config. Biome and oxlint exit `1` whether they found problems or could not read the path at all, so those adapters read a count out of the payload instead of trusting the status.
 
