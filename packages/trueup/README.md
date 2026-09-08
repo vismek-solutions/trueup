@@ -386,6 +386,28 @@ If the pattern matches no directory at all, that is an error rather than a silen
 
 The shared thing is usually the answer to a finding, not an exception to it.
 
+It matches a group name as a pattern, so name the convention rather than the instances:
+
+```ts
+isolate: [{ siblings: "src/routes/*/*", except: ["**/-*"] }]
+```
+
+Every dash-prefixed directory is shared, including the one added next week. Naming instances puts
+the exemption back on a config edit, which is the thing the rest of this rule exists to avoid.
+
+The exemption is one-directional. An island may reach a shared directory; the shared directory may
+not reach back into an island:
+
+```
+no-sibling-directory-reaches-another        1 error
+    src/routes/_shared/util.ts:1:0  is _shared, which the group shares, and may not reach into
+                                    sibling b: thing from src/routes/b/thing.ts
+```
+
+A directory the islands share does not depend on one of them. When it does, it is not shared code,
+it is coupled code wearing a shared name — and it is the one direction where nothing else would
+have told you.
+
 ## Blocking a bad edit
 
 This is the part that matters most if you are working with an agent.

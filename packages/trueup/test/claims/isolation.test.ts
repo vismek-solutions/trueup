@@ -28,8 +28,10 @@ describe("keeping sibling directories apart", () => {
   });
 
   it("names the file that reached, not the one that was reached", () => {
-    const finding = findingsIn(runWith({ siblings: "src/routes/*" }), CLAIM)[0];
-    expect(finding?.file).toBe(join(ROOT, "src/routes/a/page.ts"));
+    const findings = findingsIn(runWith({ siblings: "src/routes/*" }), CLAIM);
+    const reaching = findings.find((finding) => finding.message.startsWith("is a and may not reach sibling b"));
+
+    expect(reaching?.file).toBe(join(ROOT, "src/routes/a/page.ts"));
   });
 
   it("groups a file by its top directory however deep it sits", () => {
@@ -70,6 +72,7 @@ describe("keeping sibling directories apart", () => {
 
   it("names a group by its own directory when a globstar above it matched nothing", () => {
     expect(messagesIn(runWith({ siblings: "src/**/routes/*" }), CLAIM)).toEqual([
+      "is _shared and may not reach sibling b: thing from src/routes/b/thing.ts",
       "is a and may not reach sibling .internal: hidden from src/routes/.internal/hidden.ts",
       "is a and may not reach sibling b: thing from src/routes/b/thing.ts",
       "is a and may not reach sibling _shared: util from src/routes/_shared/util.ts",
@@ -91,6 +94,7 @@ describe("keeping sibling directories apart", () => {
 
   it("reports these crossings and no others, so a lost or invented one is a failure", () => {
     expect(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM)).toEqual([
+      "is _shared and may not reach sibling b: thing from src/routes/b/thing.ts",
       "is a and may not reach sibling .internal: hidden from src/routes/.internal/hidden.ts",
       "is a and may not reach sibling b: thing from src/routes/b/thing.ts",
       "is a and may not reach sibling _shared: util from src/routes/_shared/util.ts",
@@ -129,17 +133,59 @@ describe("keeping sibling directories apart", () => {
     expect(findingsIn(runWith({ siblings: "src/pages/*" }), CLAIM)[0]?.severity).toBe("error");
   });
 
-  it("exempts a directory everyone is meant to share", () => {
+  it("exempts a directory everyone is meant to share, as somewhere they may reach", () => {
     const shared = messagesIn(runWith({ siblings: "src/routes/*", except: ["_shared"] }), CLAIM);
 
-    expect(shared.some((message) => message.includes("_shared"))).toBe(false);
-    expect(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM).some((m) => m.includes("_shared"))).toBe(
-      true,
+    expect(shared).not.toContain(
+      "is a and may not reach sibling _shared: util from src/routes/_shared/util.ts",
+    );
+    expect(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM)).toContain(
+      "is a and may not reach sibling _shared: util from src/routes/_shared/util.ts",
+    );
+  });
+
+  it("still reports that directory reaching back into one of the islands", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*", except: ["_shared"] }), CLAIM)).toContain(
+      "is _shared, which the group shares, and may not reach into sibling b: thing from src/routes/b/thing.ts",
+    );
+  });
+
+  it("says why the exemption did not cover it, rather than repeating the sibling wording", () => {
+    const said = messagesIn(runWith({ siblings: "src/routes/*", except: ["_shared"] }), CLAIM);
+
+    expect(said.some((message) => message.includes("which the group shares"))).toBe(true);
+  });
+
+  it("takes a pattern, so a convention covers the directories following it and the ones added later", () => {
+    const named = messagesIn(runWith({ siblings: "src/routes/*", except: ["_shared"] }), CLAIM);
+    const convention = messagesIn(runWith({ siblings: "src/routes/*", except: ["_*"] }), CLAIM);
+
+    expect(convention).toEqual(named);
+  });
+
+  it("lets a wildcard exemption reach a dot-prefixed directory, which it groups like any other", () => {
+    const said = messagesIn(runWith({ siblings: "src/routes/*", except: ["*internal"] }), CLAIM);
+
+    expect(said).not.toContain(
+      "is a and may not reach sibling .internal: hidden from src/routes/.internal/hidden.ts",
+    );
+  });
+
+  it("exempts nothing when the list is empty, rather than everything", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*", except: [] }), CLAIM)).toEqual(
+      messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM),
+    );
+  });
+
+  it("exempts nothing when the pattern matches no group, rather than everything", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*", except: ["nothing-here-*"] }), CLAIM)).toEqual(
+      messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM),
     );
   });
 
   it("treats each combination of wildcards as its own island, and groups nothing shallower", () => {
     expect(messagesIn(runWith({ siblings: "src/*/*" }), CLAIM)).toEqual([
+      "is routes/_shared and may not reach sibling routes/b: thing from src/routes/b/thing.ts",
       "is routes/a and may not reach sibling routes/.internal: hidden from src/routes/.internal/hidden.ts",
       "is routes/a and may not reach sibling routes/b: thing from src/routes/b/thing.ts",
       "is routes/a and may not reach sibling routes/_shared: util from src/routes/_shared/util.ts",
@@ -173,6 +219,7 @@ describe("keeping sibling directories apart", () => {
 
     expect(messagesIn(report, CLAIM)).toEqual([
       "is a and may not reach sibling b: thing from apps/web/src/routes/b/thing.ts",
+      "is shared, which the group shares, and may not reach into sibling b: thing from apps/web/src/routes/b/thing.ts",
     ]);
   });
 
