@@ -32,6 +32,8 @@ A member may only constrain itself. Everything it names is its own — and the r
 
 It has to work that way rather than by listing the doors in the rule. An internal rule is anchored on the declaring file, because piercing barrels inside the package is the whole point — and a door is a re-exporter, so a declaring-file anchor resolves straight past it to the file behind. A rule that named the door could never match one.
 
+Being silent rather than forbidding is what `trueline explain` reports too. A zone the internal rule says nothing about stays under `may reach` if another rule allows it, so the answer an agent gets before writing a file is the same answer the check gives after.
+
 ## What a member may reach
 
 Nothing, until it says so. A member reaching another it did not name is an error.

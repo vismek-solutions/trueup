@@ -1,7 +1,6 @@
 import { relative } from "node:path";
 import type { SymbolImportEdge } from "../graph/model.ts";
 import { targetPathOf } from "../graph/target.ts";
-import { inside } from "../paths/inside.ts";
 import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 import type { ZoneReference } from "./zone-references.ts";
@@ -13,8 +12,11 @@ export interface BoundaryRule {
   readonly allow: readonly string[];
   readonly anchor?: EdgeAnchor | undefined;
   readonly ignoreTypeOnly?: boolean | undefined;
-  readonly within?: string | undefined;
+  readonly governs?: readonly string[] | undefined;
 }
+
+export const judges = (rule: BoundaryRule, zone: string): boolean =>
+  rule.governs === undefined || rule.governs.includes(zone);
 
 interface BreachInput {
   readonly root: string;
@@ -27,10 +29,10 @@ const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput
 
   const anchored = rule.anchor === "imported-module" ? edge.via : targetPathOf(edge.to);
   if (anchored === null) return null;
-  if (rule.within !== undefined && !inside(rule.within, anchored)) return null;
 
   const targetZone = input.zoneOf(anchored);
   if (targetZone === null || targetZone === input.fromZone || rule.allow.includes(targetZone)) return null;
+  if (!judges(rule, targetZone)) return null;
 
   const { root, fromZone } = input;
   const reached =

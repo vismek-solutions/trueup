@@ -1,7 +1,7 @@
 import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
 import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
-import { boundaryClaim, boundaryZoneReferences, type BoundaryRule } from "./claims/boundary.ts";
+import { boundaryClaim, boundaryZoneReferences, judges, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
 import { cycleClaim } from "./claims/cycles.ts";
@@ -106,7 +106,9 @@ export function placementOf({ root, path, zones, boundaries }: PlacementInput): 
 
   const rules = boundaries.filter((rule) => rule.from === zone);
   const names = zones.map((entry) => entry.name);
-  const mayReach = names.filter((name) => name === zone || rules.every((rule) => rule.allow.includes(name)));
+  const permits = (rule: BoundaryRule, name: string): boolean =>
+    !judges(rule, name) || rule.allow.includes(name);
+  const mayReach = names.filter((name) => name === zone || rules.every((rule) => permits(rule, name)));
 
   return { zone, mayReach, mayNotReach: names.filter((name) => !mayReach.includes(name)) };
 }

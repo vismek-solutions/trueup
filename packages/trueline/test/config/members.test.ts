@@ -107,11 +107,11 @@ describe("what a member says about itself", () => {
     expect(config.boundaries?.[0]).toMatchObject({ from: "lib/domain", allow: ["lib/api"] });
   });
 
-  it("judges only targets inside the member, so it cannot revoke a door another member opened", async () => {
-    const { config, root } = await loaded();
+  it("judges only its own member's zones, so it cannot revoke a door another member opened", async () => {
+    const { config } = await loaded();
     const internal = config.boundaries?.find((rule) => rule.from === "lib/domain");
 
-    expect(internal?.within).toBe(join(root, "packages/lib"));
+    expect(internal?.governs).toEqual(["lib/api", "lib/domain", "lib/engine"]);
   });
 
   it("is enforced like any other boundary", async () => {

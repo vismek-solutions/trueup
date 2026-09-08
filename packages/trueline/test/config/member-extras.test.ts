@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { check } from "../../src/compose.ts";
+import { check, placementOf } from "../../src/compose.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
@@ -50,6 +50,19 @@ describe("an internal boundary in a member", () => {
     const breaches = messagesIn(await reportOf(), "every-import-respects-its-zone-boundary").join(" ");
 
     expect(breaches).not.toContain("core/engine");
+  });
+
+  it("leaves the invited member's door in what the file may reach, so explain agrees with the check", async () => {
+    const { config, root } = await loadConfig(CONFIG);
+    const placement = placementOf({
+      root,
+      path: join(ROOT, "packages/ui/src/view/badge.ts"),
+      zones: config.zones,
+      boundaries: config.boundaries ?? [],
+    });
+
+    expect(placement.mayReach).toContain("core/api");
+    expect(placement.mayNotReach).toContain("core/engine");
   });
 
   it("still refuses what it forbids inside the package", async () => {

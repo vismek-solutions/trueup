@@ -89,7 +89,7 @@ const withMembers = (
     ...config,
     zones: [...members.flatMap(zonesOf), ...own],
     boundaries: [
-      ...boundariesOf(members, root),
+      ...boundariesOf(members),
       ...reachRules(members),
       ...expanded(config.boundaries ?? [], members),
     ],
