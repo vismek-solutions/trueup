@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { workspaceGlobsIn } from "../../src/cli/init/workspace.ts";
+import { workspaceGlobsIn } from "../../../src/cli/init/workspace.ts";
 
 const withFiles = (files: Record<string, string>): string => {
   const directory = mkdtempSync(join(tmpdir(), "trueup-workspace-"));

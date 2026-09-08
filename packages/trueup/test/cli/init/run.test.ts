@@ -2,9 +2,9 @@ import { cpSync, mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { EXIT_BAD_USAGE } from "../../src/cli/main.ts";
-import { runInit } from "../../src/cli/init/run.ts";
-import { fixtureAt } from "../support/fixtures.ts";
+import { EXIT_BAD_USAGE } from "../../../src/cli/main.ts";
+import { runInit } from "../../../src/cli/init/run.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
 
 const CONFIG = "trueup.config.ts";
 

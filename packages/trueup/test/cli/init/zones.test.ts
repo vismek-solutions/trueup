@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { sourceFilesIn, topDirectoriesIn, zonesFor } from "../../src/cli/init/zones.ts";
+import { sourceFilesIn, topDirectoriesIn, zonesFor } from "../../../src/cli/init/zones.ts";
 
 const holding = (...paths: readonly string[]): string => {
   const directory = mkdtempSync(join(tmpdir(), "trueup-zones-"));

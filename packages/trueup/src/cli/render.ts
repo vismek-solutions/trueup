@@ -125,14 +125,31 @@ const problemsIn = (report: Report): Problem[] => {
   return [...byKey.values()];
 };
 
-export function renderNext(report: Report, root: string, ratchet?: RatchetSummary): string {
-  const problems = problemsIn(report);
-  const first = problems[0];
+const scopeOf = (only: string | undefined): string => (only === undefined ? "" : ` in \`${only}\``);
+
+export interface NextInput {
+  readonly ratchet?: RatchetSummary | undefined;
+  readonly only?: string | undefined;
+}
+
+export function renderNext(report: Report, root: string, { ratchet, only }: NextInput = {}): string {
+  const claims = only === undefined ? report.claims : report.claims.filter((c) => c.claim.includes(only));
   const tally = tallyLine(report);
+
+  if (claims.length === 0 && only !== undefined) {
+    return [
+      `no claim matches \`${only}\` · ${tally}`,
+      "",
+      ...report.claims.map((claim) => `    ${claim.claim}`),
+    ].join("\n");
+  }
+
+  const problems = problemsIn({ ...report, claims });
+  const first = problems[0];
 
   if (first === undefined) {
     return [
-      `nothing left to fix · ${tally}`,
+      `nothing left to fix${scopeOf(only)} · ${tally}`,
       ...(ratchet === undefined || ratchet.stale === 0 ? [] : [`baseline  ${ratchet.stale} stale`]),
     ].join("\n");
   }
@@ -140,7 +157,7 @@ export function renderNext(report: Report, root: string, ratchet?: RatchetSummar
   const shown = listed(first.findings, root, locator());
 
   return [
-    `problem 1 of ${problems.length} · ${tally}`,
+    `problem 1 of ${problems.length}${scopeOf(only)} · ${tally}`,
     "",
     `${first.claim.claim}  ${plural(first.findings.length, "error")}`,
     ...shown,

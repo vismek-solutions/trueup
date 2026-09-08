@@ -203,13 +203,13 @@ describe("the next report, to the character", () => {
   });
 
   it("names only the stale count when there is nothing left, since known is not a task", () => {
-    expect(renderNext(reportOf([]), "/p", { known: 2, stale: 3 })).toBe(
+    expect(renderNext(reportOf([]), "/p", { ratchet: { known: 2, stale: 3 } })).toBe(
       "nothing left to fix · 0 claims · 0 errors · 0 warnings\nbaseline  3 stale",
     );
   });
 
   it("stays silent about a baseline with nothing stale in it", () => {
-    expect(renderNext(reportOf([]), "/p", { known: 2, stale: 0 })).toBe(
+    expect(renderNext(reportOf([]), "/p", { ratchet: { known: 2, stale: 0 } })).toBe(
       "nothing left to fix · 0 claims · 0 errors · 0 warnings",
     );
   });
@@ -224,6 +224,21 @@ describe("the next report, to the character", () => {
     ]);
 
     expect(renderNext(missing, "/p")).toContain("    gone.ts  m");
+  });
+
+  it("gives a finding with no offset no position, even where the file could be read", () => {
+    const root = fixtureAt("routes");
+    const whole = reportOf([
+      {
+        claim: "c",
+        guidance: "g",
+        findings: [
+          { severity: "error", message: "m", file: join(root, "src/routes/b/thing.ts"), start: null },
+        ],
+      },
+    ]);
+
+    expect(renderNext(whole, root)).toContain("    src/routes/b/thing.ts  m");
   });
 
   it("turns an offset into a line and column against the file it names", () => {
@@ -316,6 +331,48 @@ describe("telling one finding from another", () => {
   });
 });
 
+describe("picking which problem to see first", () => {
+  it("shows the named claim rather than whichever came first", () => {
+    expect(renderNext(MIXED, "/p", { only: "a-mixed" })).toContain(
+      "problem 1 of 1 in `a-mixed` · 3 claims · 1 error · 2 warnings",
+    );
+  });
+
+  it("counts problems within the filter but keeps the tally of the whole run", () => {
+    const both = renderNext(COPIES, "/p", { only: "twice" });
+
+    expect(both.split("\n")[0]).toBe("problem 1 of 2 in `twice` · 2 claims · 4 errors · 0 warnings");
+  });
+
+  it("matches on any part of the name, so the whole claim need not be typed", () => {
+    expect(renderNext(COPIES, "/p", { only: "boundary" })).toContain(
+      "every-import-respects-its-zone-boundary",
+    );
+  });
+
+  it("says so loudly when the filter matches no claim, and names the ones there are", () => {
+    expect(renderNext(COPIES, "/p", { only: "bondary" })).toBe(
+      [
+        "no claim matches `bondary` · 2 claims · 4 errors · 0 warnings",
+        "",
+        "    no-declaration-is-written-twice",
+        "    every-import-respects-its-zone-boundary",
+      ].join("\n"),
+    );
+  });
+
+  it("keeps the run's own tally when the filter is clean, so it cannot read as all clear", () => {
+    const clean = reportOf([
+      { claim: "a-passing-claim", guidance: "g", findings: [] },
+      COPIES.claims[1] as Report["claims"][number],
+    ]);
+
+    expect(renderNext(clean, "/p", { only: "passing" })).toBe(
+      "nothing left to fix in `passing` · 2 claims · 1 error · 0 warnings",
+    );
+  });
+});
+
 describe("showing one problem at a time", () => {
   it("keeps findings that share a cause together", () => {
     const output = renderNext(COPIES, "/p");
@@ -338,11 +395,4 @@ describe("showing one problem at a time", () => {
     expect(renderNext(single, "/p")).toContain("problem 1 of 1");
   });
 
-  it("carries the guidance, since it is the whole point of showing one", () => {
-    expect(renderNext(COPIES, "/p")).toContain("delete the rest");
-  });
-
-  it("says so when there is nothing left", () => {
-    expect(renderNext(reportOf([]), "/p")).toContain("nothing left to fix");
-  });
 });

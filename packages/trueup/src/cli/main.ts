@@ -17,17 +17,28 @@ export const EXIT_BAD_USAGE = 4;
 
 const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline"];
 
+const VALUED_FLAGS = ["--config=", "--next="];
+
 const unknownArgumentsIn = (argv: readonly string[], known: readonly string[]): readonly string[] =>
-  argv.filter((entry) => !known.includes(entry) && !entry.startsWith("--config="));
+  argv.filter((entry) => !known.includes(entry) && !VALUED_FLAGS.some((flag) => entry.startsWith(flag)));
 
 import type { CommandInput } from "./command.ts";
 
 type Present = (report: Report, root: string, ratchet?: RatchetSummary) => string;
 
+const claimFilterIn = (argv: readonly string[]): string | undefined => {
+  const named = argv.find((entry) => entry.startsWith("--next="))?.slice("--next=".length);
+  return named === "" ? undefined : named;
+};
+
 const presenterFor = (argv: readonly string[], rulebook: string): Present => {
   if (argv.includes("--json")) return (report) => JSON.stringify(report, null, 2);
   if (argv.includes("--gitlab")) return (report, root) => renderGitlab(report, root, rulebook);
-  if (argv.includes("--next")) return renderNext;
+
+  const only = claimFilterIn(argv);
+  if (argv.includes("--next") || argv.some((entry) => entry.startsWith("--next="))) {
+    return (report, root, ratchet) => renderNext(report, root, { ratchet, only });
+  }
   return argv.includes("--dots") ? renderDots : render;
 };
 
@@ -35,7 +46,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   const unknown = unknownArgumentsIn(argv, REPORT_FLAGS);
   if (unknown.length > 0) {
     write(`unrecognised: ${unknown.join(" ")}`);
-    write(`known arguments: ${REPORT_FLAGS.join(" ")} --config=<path>`);
+    write(`known arguments: ${REPORT_FLAGS.join(" ")} --config=<path> --next=<claim>`);
     write("commands: init · explain <path> · guard · agent-instructions");
     return EXIT_BAD_USAGE;
   }
