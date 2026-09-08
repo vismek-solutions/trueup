@@ -29,9 +29,9 @@ describe("a boundary crossed through a barrel", () => {
   });
 
   it("is invisible when the edge is anchored on the module the specifier named", () => {
-    expect(
-      boundaryFindings({ from: "components", allow: ["shared"], anchor: "imported-module" }),
-    ).toEqual([]);
+    expect(boundaryFindings({ from: "components", allow: ["shared"], anchor: "imported-module" })).toEqual(
+      [],
+    );
   });
 
   it("does not flag a sibling symbol that the same barrel re-exports", () => {
@@ -41,9 +41,7 @@ describe("a boundary crossed through a barrel", () => {
   });
 
   it("can be told to ignore a type-only import", () => {
-    expect(boundaryFindings({ from: "components", allow: ["shared"], ignoreTypeOnly: true })).toEqual(
-      [],
-    );
+    expect(boundaryFindings({ from: "components", allow: ["shared"], ignoreTypeOnly: true })).toEqual([]);
   });
 
   it("says nothing when the origin zone has no rule", () => {
@@ -63,8 +61,8 @@ describe("two rules for one zone", () => {
     });
 
     const findings =
-      report.claims.find((claim) => claim.claim === "every-import-respects-its-zone-boundary")
-        ?.findings ?? [];
+      report.claims.find((claim) => claim.claim === "every-import-respects-its-zone-boundary")?.findings ??
+      [];
     const warrants = findings.filter((finding) => finding.message.includes("Warrant"));
 
     expect(warrants).toHaveLength(1);

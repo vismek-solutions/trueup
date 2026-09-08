@@ -106,9 +106,7 @@ export function placementOf({ root, path, zones, boundaries }: PlacementInput): 
 
   const rules = boundaries.filter((rule) => rule.from === zone);
   const names = zones.map((entry) => entry.name);
-  const mayReach = names.filter(
-    (name) => name === zone || rules.every((rule) => rule.allow.includes(name)),
-  );
+  const mayReach = names.filter((name) => name === zone || rules.every((rule) => rule.allow.includes(name)));
 
   return { zone, mayReach, mayNotReach: names.filter((name) => !mayReach.includes(name)) };
 }

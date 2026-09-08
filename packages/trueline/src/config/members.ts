@@ -89,8 +89,7 @@ const doorsOf = (member: Member): readonly string[] => {
   return doors.length === 0 ? namesOf(member) : doors.map((zone) => qualified(member, zone.name));
 };
 
-const openIn = (member: Member, invited: boolean): readonly string[] =>
-  invited ? doorsOf(member) : [];
+const openIn = (member: Member, invited: boolean): readonly string[] => (invited ? doorsOf(member) : []);
 
 export const reachRules = (members: readonly Member[]): readonly BoundaryRule[] =>
   members.flatMap((member) => {

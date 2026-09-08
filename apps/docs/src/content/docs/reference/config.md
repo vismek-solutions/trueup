@@ -115,6 +115,7 @@ The root config, every member config and the baseline are covered with no config
 | `npx trueline --dots` | one character per claim |
 | `npx trueline --next` | one problem, then stop |
 | `npx trueline --json` | machine-readable |
+| `npx trueline --gitlab` | [GitLab Code Quality](/start/reports/#on-a-gitlab-merge-request) |
 | `npx trueline --update-baseline` | record current violations |
 | `npx trueline --config=<path>` | use a specific config |
 | `npx trueline explain <path>` | what a file may reach |

@@ -150,6 +150,45 @@ The whole report, claims in the order they ran, each with its guidance and its f
 
 A claim that holds keeps its entry with an empty `findings`, so the shape does not change between a green run and a red one. `file` is absolute and `start` is a character offset into it. The exit code is the same as any other mode.
 
+## On a GitLab merge request
+
+```sh
+npx trueline --gitlab
+```
+
+The same findings in GitLab's Code Quality format, which puts each one on its line in the merge request diff. A red pipeline then says what broke without anyone opening the job log.
+
+```json
+[
+  {
+    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it. …",
+    "check_name": "every-import-respects-its-zone-boundary",
+    "fingerprint": "a6336074136ec154dc9fcaa5bf72dacab993d46e2b1fe6d2ad64dd52a09be576",
+    "severity": "major",
+    "location": { "path": "apps/web/src/cart.ts", "lines": { "begin": 2 } }
+  }
+]
+```
+
+The guidance rides along in `description`, because that is the only field GitLab shows. An error is `major` and a warning is `minor`; nothing is ever `blocker`, since the exit code already fails the pipeline.
+
+```yaml
+architecture:
+  script: npx trueline --gitlab > gl-code-quality-report.json
+  artifacts:
+    when: always
+    reports:
+      codequality: gl-code-quality-report.json
+```
+
+`when: always` is the part to get right. Without it the artifact is dropped on exactly the runs that had something to say.
+
+Findings that name no file — an empty zone, a dead pattern — are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it, so reformatting a file does not resurrect a finding GitLab had already seen.
+
+:::note
+GitLab renders an annotation only on lines the merge request touched. A boundary violation sits on the import that caused it, so it lands; a directory-size finding has no line and shows in the widget instead. The pass or fail is [the baseline's](/agents/baseline/) job either way — do not use the Code Quality widget as the ratchet.
+:::
+
 ## Exit codes
 
 | code | meaning |

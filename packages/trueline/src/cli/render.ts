@@ -1,33 +1,21 @@
-import { readFileSync } from "node:fs";
 import { relative } from "node:path";
 import type { Finding, Report } from "../report/model.ts";
+import { locator, type Locate } from "./position.ts";
 
-const positionOf = (file: string, offset: number, cache: Map<string, string>): string => {
-  let text = cache.get(file);
-  if (text === undefined) {
-    try {
-      text = readFileSync(file, "utf8");
-    } catch {
-      text = "";
-    }
-    cache.set(file, text);
-  }
-  if (text === "") return "";
-  const upTo = text.slice(0, offset);
-  const line = upTo.split("\n").length;
-  const column = offset - (upTo.lastIndexOf("\n") + 1) + 1;
-  return `:${line}:${column}`;
+const positionOf = (file: string, offset: number, at: Locate): string => {
+  const position = at(file, offset);
+  return position === null ? "" : `:${position.line}:${position.column}`;
 };
 
-const locate = (root: string, finding: Finding, cache: Map<string, string>): string => {
+const locate = (root: string, finding: Finding, at: Locate): string => {
   if (finding.file === null) return "";
-  const position = finding.start === null ? "" : positionOf(finding.file, finding.start, cache);
+  const position = finding.start === null ? "" : positionOf(finding.file, finding.start, at);
   return `${relative(root, finding.file)}${position}`;
 };
 
-const listed = (findings: readonly Finding[], root: string, cache: Map<string, string>): readonly string[] =>
+const listed = (findings: readonly Finding[], root: string, at: Locate): readonly string[] =>
   findings.map((finding) => {
-    const where = locate(root, finding, cache);
+    const where = locate(root, finding, at);
     return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
   });
 
@@ -81,14 +69,14 @@ const headerOf = (report: Report, ratchet: RatchetSummary | undefined): string[]
 interface ClaimLinesInput {
   readonly root: string;
   readonly width: number;
-  readonly cache: Map<string, string>;
+  readonly at: Locate;
 }
 
-const claimLines = (claim: Report["claims"][number], { root, width, cache }: ClaimLinesInput): string[] => {
+const claimLines = (claim: Report["claims"][number], { root, width, at }: ClaimLinesInput): string[] => {
   const lines = [`${claim.claim.padEnd(width)}${tallyOf(claim.findings)}`];
 
   for (const finding of claim.findings) {
-    const where = locate(root, finding, cache);
+    const where = locate(root, finding, at);
     lines.push(where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`);
   }
 
@@ -148,7 +136,7 @@ export function renderNext(report: Report, root: string, ratchet?: RatchetSummar
     ].join("\n");
   }
 
-  const shown = listed(first.findings, root, new Map());
+  const shown = listed(first.findings, root, locator());
 
   return [
     `problem 1 of ${problems.length} · ${tally}`,
@@ -160,14 +148,14 @@ export function renderNext(report: Report, root: string, ratchet?: RatchetSummar
 }
 
 export function renderDots(report: Report, root: string, ratchet?: RatchetSummary): string {
-  const cache = new Map<string, string>();
+  const at = locator();
   const { coverage } = report;
   const failed = report.claims.filter((claim) => errorsIn(claim.findings) > 0);
   const width = Math.max(44, ...failed.map((claim) => claim.claim.length + 2));
 
   const detail = failed.flatMap((claim) => {
     const hits = claim.findings.filter((finding) => finding.severity === "error");
-    const shown = listed(hits, root, cache);
+    const shown = listed(hits, root, at);
 
     return [
       "",
@@ -190,7 +178,7 @@ export function render(report: Report, root: string, ratchet?: RatchetSummary): 
   const input: ClaimLinesInput = {
     root,
     width: Math.max(44, ...report.claims.map((claim) => claim.claim.length + 2)),
-    cache: new Map<string, string>(),
+    at: locator(),
   };
 
   return [

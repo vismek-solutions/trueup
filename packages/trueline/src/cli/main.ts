@@ -5,6 +5,7 @@ import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
 import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf, type Report } from "../report/model.ts";
+import { renderGitlab } from "./gitlab.ts";
 import { render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
 
 export const EXIT_CLEAN = 0;
@@ -16,14 +17,14 @@ import type { CommandInput } from "./command.ts";
 
 type Present = (report: Report, root: string, ratchet?: RatchetSummary) => string;
 
-const presenterFor = (argv: readonly string[]): Present => {
+const presenterFor = (argv: readonly string[], rulebook: string): Present => {
   if (argv.includes("--json")) return (report) => JSON.stringify(report, null, 2);
+  if (argv.includes("--gitlab")) return (report, root) => renderGitlab(report, root, rulebook);
   if (argv.includes("--next")) return renderNext;
   return argv.includes("--dots") ? renderDots : render;
 };
 
 export async function runCli({ cwd, argv, write }: CommandInput): Promise<number> {
-  const present = presenterFor(argv);
   const updating = argv.includes("--update-baseline");
   const explicit = argv.find((entry) => entry.startsWith("--config="))?.slice("--config=".length);
   const path = explicit ?? findConfig(cwd);
@@ -33,6 +34,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     return EXIT_NO_CONFIG;
   }
 
+  const present = presenterFor(argv, path);
   const { config, root, memberConfigs } = await loadConfig(path);
   const rulebooks = [path, ...memberConfigs];
   const report = check({
