@@ -9,9 +9,11 @@
   "coverageAnalysis": "perTest",
   "concurrency": 2,
   "tempDirName": "node_modules/.stryker-tmp",
+  "incremental": true,
+  "incrementalFile": "node_modules/.stryker-reports/incremental.json",
   "tsconfigFile": "tsconfig.stryker-skip.json",
   "jsonReporter": { "fileName": "node_modules/.stryker-reports/mutation.json" },
   "clearTextReporter": { "allowColor": false, "maxTestsToLog": 0 },
   "mutate": ["src/claims/members/*.ts", "src/cli/init/*.ts"],
-  "thresholds": { "high": 90, "low": 70, "break": null }
+  "thresholds": { "high": 90, "low": 70, "break": 75 }
 }
