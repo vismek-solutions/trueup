@@ -5,12 +5,14 @@ export interface Position {
   readonly column: number;
 }
 
-export type Locate = (file: string, offset: number) => Position | null;
+export type Locate = (file: string | null, offset: number | null) => Position | null;
 
 export const locator = (): Locate => {
   const cache = new Map<string, string>();
 
   return (file, offset) => {
+    if (file === null || offset === null) return null;
+
     let text = cache.get(file);
     if (text === undefined) {
       try {

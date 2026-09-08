@@ -22,8 +22,7 @@ export function renderGitlab(report: Report, root: string, rulebook: string): st
   const issues = report.claims.flatMap((claim) =>
     claim.findings.map((finding): CodeQualityIssue => {
       const path = posix(relative(root, finding.file ?? rulebook));
-      const position =
-        finding.file === null || finding.start === null ? null : at(finding.file, finding.start);
+      const position = at(finding.file, finding.start);
 
       return {
         description: `${finding.message} — ${claim.guidance}`,
