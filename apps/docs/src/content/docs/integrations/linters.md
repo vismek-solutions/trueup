@@ -41,7 +41,7 @@ What you get: dead code, dependency and catalog hygiene, cycles, leaked private 
 
 What you do not: health, security, feature flags and semantic similarity are separate fallow commands, and this runner does not call them.
 
-Some of fallow's rules ship switched **off**, `private-type-leaks` among them. The category still appears in its output, empty, so nothing about the run would look wrong. `fallowRunner` therefore reads fallow's own resolved config and fails when a category it consumes rests on a rule that is off:
+Some of fallow's rules ship switched **off**. The category still appears in its output, empty, so nothing about the run would look wrong. `fallowRunner` therefore reads fallow's own resolved config and fails when a category it consumes rests on a rule that is off:
 
 ```
 every-delegated-tool-ran                    1 error
@@ -50,10 +50,18 @@ every-delegated-tool-ran                    1 error
     the runner.
 ```
 
-Turn them on in fallow's own config:
+The default set leaves out any category resting on a rule fallow ships off, so this does not fire on a fresh project. `private-type-leaks` is the one it drops. You reach that failure by naming a category yourself, which is a demand you made rather than one the default made for you.
+
+`private-type-leaks` is worth turning on. Do it in fallow's own config, then ask for the whole set:
 
 ```json
 { "rules": { "private-type-leaks": "error", "require-suppression-reason": "error" } }
+```
+
+```ts
+import { FALLOW_CATEGORIES, fallowRunner } from "trueup";
+
+fallowRunner({ categories: [...FALLOW_CATEGORIES] })
 ```
 
 ## Copy-paste, from fallow

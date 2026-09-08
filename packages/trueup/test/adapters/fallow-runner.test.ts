@@ -3,7 +3,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { findingsOf, reasonOf } from "../support/report.ts";
-import { fallowRunner, type FallowDuplicationOptions } from "../../src/adapters/fallow-runner.ts";
+import {
+  DEFAULT_FALLOW_CATEGORIES,
+  FALLOW_CATEGORIES,
+  fallowRunner,
+  type FallowDuplicationOptions,
+} from "../../src/adapters/fallow-runner.ts";
 import type { RunnerFinding, RunnerOutcome } from "../../src/ports/runner.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -247,5 +252,21 @@ describe("refusing to trust a delegated tool", () => {
 
   it("fails when no command was configured at all", () => {
     expect(reasonOf(fallowRunner({ command: [] }).run(ROOT))).toContain("no command");
+  });
+});
+
+describe("the categories it asks for when the project names none", () => {
+  it("leaves out one whose rule fallow ships off, which would fail every run out of the box", () => {
+    expect(DEFAULT_FALLOW_CATEGORIES).not.toContain("private_type_leaks");
+  });
+
+  it("still offers it, for a project that turned that rule on in fallow", () => {
+    expect(FALLOW_CATEGORIES).toContain("private_type_leaks");
+  });
+
+  it("asks for every other category it knows how to read, so none is dropped unnoticed", () => {
+    expect(DEFAULT_FALLOW_CATEGORIES).toEqual(
+      FALLOW_CATEGORIES.filter((category) => category !== "private_type_leaks"),
+    );
   });
 });

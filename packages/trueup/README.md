@@ -850,10 +850,25 @@ Narrow any of them with `categories`. Biome matches by prefix, so `["lint"]` kee
 
 `fallowRunner` reads every category in fallow's check output except the ones this tool answers itself — unresolved imports, and its three boundary categories. So you get its dead code, its dependency and catalog hygiene, its cycles, its leaked private types, its routing and client/server checks, and anything a rule pack of yours emits. On a project none of those apply to they report nothing and cost nothing. Its other analyses — health, security, feature flags, semantic similarity — are separate commands and are not read.
 
-One thing to know, because nothing will tell you. Some of fallow's rules ship switched **off**, `private-type-leaks` among them. The category still appears in its output, empty, so the claim here passes while enforcing nothing. Turn those on in fallow's own config:
+One thing to know, because nothing will tell you. Some of fallow's rules ship switched **off**, and
+the category still appears in its output, empty, so a check resting on one would pass while
+enforcing nothing. `fallowRunner` reads fallow's resolved config and refuses to run rather than
+report that as a pass.
+
+The default set therefore leaves out any category whose rule fallow ships off — `private-type-leaks`
+is the one — so a fresh project is not stopped by another tool's configuration. Name a category
+yourself and the refusal is yours to have asked for.
+
+`private-type-leaks` is worth turning on. Do it in fallow's own config, then ask for everything:
 
 ```json
 { "rules": { "private-type-leaks": "error", "require-suppression-reason": "error" } }
+```
+
+```ts
+import { FALLOW_CATEGORIES, fallowRunner } from "trueup";
+
+fallowRunner({ categories: [...FALLOW_CATEGORIES] })
 ```
 
 ### Copy-paste, from fallow

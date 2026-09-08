@@ -37,7 +37,14 @@ const FALLOW_CATEGORY_RULES: Readonly<Record<string, string>> = {
   stale_suppressions: "stale-suppressions",
 };
 
-export const DEFAULT_FALLOW_CATEGORIES: readonly string[] = Object.keys(FALLOW_CATEGORY_RULES);
+// fallow ships private-type-leaks off, and asking for a category whose rule is off fails the runner
+const OFF_IN_FALLOW: ReadonlySet<string> = new Set(["private_type_leaks"]);
+
+export const FALLOW_CATEGORIES: readonly string[] = Object.keys(FALLOW_CATEGORY_RULES);
+
+export const DEFAULT_FALLOW_CATEGORIES: readonly string[] = FALLOW_CATEGORIES.filter(
+  (category) => !OFF_IN_FALLOW.has(category),
+);
 
 const silencedIn = (
   command: readonly string[],
