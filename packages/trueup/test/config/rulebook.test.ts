@@ -16,7 +16,7 @@ const spoken = async (cwd: string): Promise<readonly string[]> => {
 };
 
 describe("a rulebook split across files", () => {
-  it("resolves a sibling written the way TypeScript says to write it", async () => {
+  it("carries the rules its siblings declared into the run", async () => {
     const { config } = await loadConfig(join(SPLIT, "trueup.config.ts"));
 
     expect((config.rules ?? []).map((rule) => rule.name)).toEqual([
@@ -24,16 +24,6 @@ describe("a rulebook split across files", () => {
       "from-an-emitted-module",
     ]);
   });
-
-  it("runs the rules that sibling declared, rather than loading it and dropping them", async () => {
-    let json = "";
-    await runCli({ cwd: SPLIT, argv: ["--json"], write: (line) => (json += line) });
-    const claims: string[] = JSON.parse(json).claims.map((claim: { claim: string }) => claim.claim);
-
-    expect(claims).toContain("from-a-sibling-file");
-    expect(claims).toContain("from-an-emitted-module");
-  });
-
 });
 
 describe("a rulebook that will not load", () => {

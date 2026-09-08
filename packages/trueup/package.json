@@ -31,7 +31,7 @@
     "prepack": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "mutate": "stryker run",
+    "mutate": "TRUEUP_MUTATION=1 stryker run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

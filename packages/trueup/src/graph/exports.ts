@@ -11,18 +11,14 @@ export type ResolveExport = (path: string, name: string) => EdgeTarget;
 
 const keyOf = (path: string, name: string): string => `${path}\0${name}`;
 
-const identityOf = (target: EdgeTarget): string => {
+type Reached = Extract<EdgeTarget, { kind: "symbol" | "namespace" | "ambiguous" }>;
+
+const identityOf = (target: Reached): string => {
   switch (target.kind) {
     case "symbol":
       return `symbol\0${target.path}\0${target.name}`;
     case "namespace":
       return `namespace\0${target.path}`;
-    case "external":
-      return `external\0${target.path ?? ""}`;
-    case "builtin":
-      return `builtin\0${target.name}`;
-    case "missing-export":
-      return `missing\0${target.path}\0${target.name}`;
     case "ambiguous":
       return `ambiguous\0${target.candidates.map((c) => `${c.path}:${c.name}`).join("|")}`;
   }
