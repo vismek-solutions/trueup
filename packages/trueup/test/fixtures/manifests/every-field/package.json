@@ -1,0 +1,8 @@
+{
+  "name": "@manifests/every-field",
+  "workspaces": ["packages/*"],
+  "dependencies": { "runtime-one": "^1.0.0" },
+  "devDependencies": { "tooling-one": "^2.0.0" },
+  "peerDependencies": { "peer-one": "^3.0.0" },
+  "optionalDependencies": { "optional-one": "^4.0.0" }
+}

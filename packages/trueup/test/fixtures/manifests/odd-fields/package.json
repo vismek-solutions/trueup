@@ -1,0 +1,6 @@
+{
+  "name": "@manifests/odd-fields",
+  "dependencies": null,
+  "devDependencies": "not-an-object",
+  "peerDependencies": { "peer-one": "^3.0.0" }
+}
