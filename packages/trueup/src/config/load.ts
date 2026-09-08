@@ -2,6 +2,7 @@ import { dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { toPosix } from "../paths/posix.ts";
 import { withDerivedDoors } from "./exports.ts";
+import { strayKeysIn, type ConfigKind } from "./keys.ts";
 import {
   apiSurfaces,
   assertReachable,
@@ -38,13 +39,17 @@ export function findConfig(from: string): string | null {
   }
 }
 
-const exportedFrom = async (path: string): Promise<object> => {
+const exportedFrom = async (path: string, kind: ConfigKind): Promise<object> => {
   const imported: unknown = await import(pathToFileURL(path).href);
   const config = (imported as { default?: unknown }).default;
 
   if (config === undefined || config === null || typeof config !== "object") {
     throw new Error(`${path} has no default-exported configuration object`);
   }
+
+  const stray = strayKeysIn(config, kind);
+  if (stray !== null) throw new Error(`${path} ${stray}`);
+
   return config;
 };
 
@@ -60,7 +65,7 @@ const memberAt = async (root: string, directory: string): Promise<Member> => {
     throw new Error(`${relativePath} matches a \`members\` pattern but holds no configuration file`);
   }
 
-  const config = await exportedFrom(configPath);
+  const config = await exportedFrom(configPath, "member");
   if (!declaresZones(config)) throw new Error(`${configPath} declares no zones`);
 
   return {
@@ -105,7 +110,7 @@ const withMembers = (
 };
 
 export async function loadConfig(path: string): Promise<LoadedConfig> {
-  const exported = await exportedFrom(path);
+  const exported = await exportedFrom(path, "root");
   const config = exported as ArchitectureConfig;
   const root = dirname(path);
 
