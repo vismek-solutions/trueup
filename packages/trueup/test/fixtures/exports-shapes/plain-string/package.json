@@ -1,0 +1,5 @@
+{
+  "name": "@shapes/plain-string",
+  "type": "module",
+  "exports": "./src/index.ts"
+}

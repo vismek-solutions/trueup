@@ -1,0 +1,9 @@
+{
+  "name": "@shapes/conditions",
+  "type": "module",
+  "exports": {
+    "import": "./src/esm.ts",
+    "require": "./src/cjs.ts",
+    "default": "./src/fallback.ts"
+  }
+}

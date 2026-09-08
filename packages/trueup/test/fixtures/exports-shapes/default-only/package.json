@@ -1,0 +1,8 @@
+{
+  "name": "@shapes/default-only",
+  "type": "module",
+  "exports": {
+    "require": "./src/cjs.ts",
+    "default": "./src/fallback.ts"
+  }
+}

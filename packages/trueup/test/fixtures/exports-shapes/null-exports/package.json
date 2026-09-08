@@ -1,0 +1,5 @@
+{
+  "name": "@shapes/null-exports",
+  "type": "module",
+  "exports": null
+}

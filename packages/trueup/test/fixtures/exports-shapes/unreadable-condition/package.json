@@ -1,0 +1,7 @@
+{
+  "name": "@shapes/unreadable-condition",
+  "type": "module",
+  "exports": {
+    "import": 5
+  }
+}

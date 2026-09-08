@@ -1,0 +1,7 @@
+{
+  "name": "@shapes/only-wildcards",
+  "type": "module",
+  "exports": {
+    "./features/*": "./src/features/*.ts"
+  }
+}

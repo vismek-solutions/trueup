@@ -1,0 +1,8 @@
+{
+  "name": "@shapes/conditional-subpath",
+  "type": "module",
+  "exports": {
+    ".": { "import": "./src/index.ts", "default": "./src/fallback.ts" },
+    "./vet": { "default": "./src/vet.ts" }
+  }
+}
