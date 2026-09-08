@@ -64,12 +64,15 @@ export const renderRoot = ({ members, zones, runners }: RootInput): string =>
     "defineConfig",
   );
 
-export const renderMember = (zones: readonly ZoneLine[]): string =>
+export const renderMember = (zones: readonly ZoneLine[], allow: readonly string[]): string =>
   file(
     ["defineMember"],
-    block(
-      "zones",
-      zones.map((zone) => zone.declaration),
-    ),
+    [
+      ...(allow.length === 0 ? [] : [`  allow: [${list(allow)}],`]),
+      ...block(
+        "zones",
+        zones.map((zone) => zone.declaration),
+      ),
+    ],
     "defineMember",
   );

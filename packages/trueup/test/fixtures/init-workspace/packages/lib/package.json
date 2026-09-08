@@ -1,0 +1,9 @@
+{
+  "name": "@workspace/lib",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./vet": "./src/vet/index.ts",
+    "./built": "./dist/index.js"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@workspace/web",
+  "type": "module",
+  "dependencies": {
+    "@workspace/lib": "workspace:*",
+    "picomatch": "^4.0.0"
+  }
+}

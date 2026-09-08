@@ -32,7 +32,7 @@ describe("starting a single package", () => {
         '    { name: "spec", patterns: ["test/**"], role: "tests" },',
         '    { name: "api", patterns: ["src/api/**"] },',
         '    { name: "domain", patterns: ["src/domain/**"] },',
-        '    { name: "app", patterns: ["src/**"], role: "wiring" },',
+        '    { name: "app", patterns: ["**"] },',
       ].join("\n"),
     );
   });
@@ -53,6 +53,21 @@ describe("starting a single package", () => {
 
     expect(written).toContain('biomeRunner({ categories: ["lint"], paths: ["test", "src"] })');
     expect(written).toContain('eslintRunner({ patterns: ["test", "src"] })');
+  });
+
+  it("writes no pattern that matches nothing, which its own claims would reject", () => {
+    const directory = staged("init-solo");
+    initIn(directory);
+
+    expect(configAt(directory, CONFIG)).not.toContain("*.spec.*");
+  });
+
+  it("sweeps whatever the source folders missed, rather than only src", () => {
+    const directory = staged("init-workspace");
+    initIn(directory);
+
+    expect(configAt(directory, "apps", "web", CONFIG)).toContain('{ name: "evals", patterns: ["evals/**"] }');
+    expect(configAt(directory, "apps", "web", CONFIG)).toContain('{ name: "app", patterns: ["**"] }');
   });
 
   it("refuses to overwrite a config that is already there", () => {
@@ -101,6 +116,50 @@ describe("starting a workspace", () => {
     const { said } = initIn(directory);
 
     expect(said).toContain("no source packages/empty");
+  });
+
+  it("seeds `allow` from the workspace dependencies the package already declares", () => {
+    const directory = staged("init-workspace");
+    initIn(directory);
+
+    expect(configAt(directory, "apps", "web", CONFIG)).toContain('allow: ["lib"],');
+  });
+
+  it("leaves `allow` out where nothing in the workspace is depended on", () => {
+    const directory = staged("init-workspace");
+    initIn(directory);
+
+    expect(configAt(directory, "packages", "lib", CONFIG)).not.toContain("allow:");
+  });
+
+  it("makes the exported barrel a door, so a grant does not open the whole package", () => {
+    const directory = staged("init-workspace");
+    initIn(directory);
+
+    expect(configAt(directory, "packages", "lib", CONFIG)).toContain(
+      '{ name: "api", patterns: ["src/index.ts", "src/vet/index.ts"], role: "api" }',
+    );
+  });
+
+  it("names the top-level directories no member claims", () => {
+    const directory = staged("init-workspace");
+    const { said } = initIn(directory);
+
+    expect(said).toContain("no zone   e2e");
+  });
+
+  it("does not list the rulebooks it just wrote as uncovered source", () => {
+    const directory = staged("init-workspace");
+    const { said } = initIn(directory);
+
+    expect(said.split("\n").find((line) => line.startsWith("no zone"))).not.toContain(CONFIG);
+  });
+
+  it("says the runners only cover what the zones cover", () => {
+    const directory = staged("init-workspace");
+    const { said } = initIn(directory);
+
+    expect(said).toContain("over packages · apps only");
   });
 });
 

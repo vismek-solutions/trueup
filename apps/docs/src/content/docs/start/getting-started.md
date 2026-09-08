@@ -19,14 +19,16 @@ npx trueup init
 wrote trueup.config.ts
 
 zones     spec · api · domain · app
-runners   biomeRunner · fallowRunner
+runners   biomeRunner · eslintRunner, over test · src only
 
 next      add `boundaries` to say which zones may reach which
           turn on `colocation`, `duplication` and `maxFilesPerDirectory` once a first run is clean
           run `trueup` to see what it finds
 ```
 
-It reads the tree, not your intentions: one zone per top-level folder under `src`, one for wherever your tests live, and a catch-all last. Runners are wired for the linters your `package.json` already has, scoped to the directories the zones cover. Nothing is written if a config is already there, and in a workspace each package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
+It reads the tree, not your intentions: one zone per top-level source folder, one for wherever your tests live, and a catch-all last that sweeps up whatever the others missed. Every pattern it writes matches at least one file, because a pattern matching nothing is a rule you believe you have and do not.
+
+Runners are wired for the linters your `package.json` already has, scoped to the directories the zones cover — given a bare `.`, oxlint and biome lint `node_modules` too. Nothing is written if a config is already there, and in a workspace each package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
 
 What it will not guess is `boundaries`, because a folder layout does not say which direction the dependencies are meant to run. That is the part you write. The rest of this page uses a config with those filled in:
 

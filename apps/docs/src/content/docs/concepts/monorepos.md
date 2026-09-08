@@ -19,18 +19,51 @@ export default defineConfig({
 ```
 wrote trueup.config.ts
 wrote apps/web/trueup.config.ts
-wrote packages/empty/trueup.config.ts
 wrote packages/lib/trueup.config.ts
-kept  packages/ui/trueup.config.ts, already there
+wrote packages/ui/trueup.config.ts
 
 members   packages/* · apps/*
-runners   oxlintRunner
+runners   oxlintRunner, over packages · apps only
 
-no source packages/empty
-          their zones match nothing until those hold code, or narrow `members`
+no zone   e2e
+          source no member claims; give it zones in the root config, or it fails as
+          unclassified and your linters never see it
 ```
 
-A package that already has a rulebook keeps it. A package holding no code yet gets one anyway, and is named in that last block — its zones match nothing, which is an error rather than a silence.
+A package that already has a rulebook keeps it, and is listed as `kept`. A package holding no code yet gets one anyway and is named under `no source` — its zones then match nothing, which is an error rather than a silence.
+
+The `no zone` block is the one to act on first. `init` cannot know what `e2e/` is, so it writes no zone for it, but it walked the tree and can see the code is there. Everything it names will fail as unclassified on the first run, and your linters will not see it either, since the runners cover what the zones cover.
+
+Each member rulebook comes out with its zones and its `allow`:
+
+```ts
+// apps/web/trueup.config.ts
+export default defineMember({
+  allow: ["lib"],
+  zones: [
+    { name: "pages", patterns: ["src/pages/**"] },
+    { name: "evals", patterns: ["evals/**"] },
+    { name: "app", patterns: ["**"] },
+  ],
+});
+```
+
+`allow` is seeded from the workspace dependencies the package already declares, so the first run does not open with one error per cross-package import. It is a starting point, not a derivation — the line is in the rulebook, the guard protects it, and a diff shows it changing. [`every-grant-has-a-dependency`](#a-grant-with-no-dependency) is what keeps it honest afterwards.
+
+A package whose `package.json` names its barrel in `exports` gets that barrel as a `role: "api"` zone, so a grant opens the front door rather than the whole package:
+
+```ts
+// packages/lib/trueup.config.ts
+export default defineMember({
+  zones: [
+    { name: "api", patterns: ["src/index.ts", "src/vet/index.ts"], role: "api" },
+    { name: "domain", patterns: ["src/domain/**"] },
+    { name: "vet", patterns: ["src/vet/**"] },
+  ],
+});
+```
+
+A subpath pointing at build output is skipped, because `init` only writes a door onto a file it actually found in the tree.
 
 The workspace file is read once, here, and never again. `members` is not derived from it at check time, because the two lists are allowed to disagree — a docs app can be a workspace package and still be governed by a zone in the root config rather than being a member. Nothing is lost by that: with `include` left out, a package no member claims still fails as unclassified. What `init` writes is a draft you own.
 
