@@ -16,5 +16,5 @@
   "jsonReporter": { "fileName": "node_modules/.stryker-reports/mutation.json" },
   "clearTextReporter": { "allowColor": false, "maxTestsToLog": 0 },
   "mutate": ["src/**/*.ts"],
-  "thresholds": { "high": 90, "low": 75, "break": 73 }
+  "thresholds": { "high": 90, "low": 78, "break": 76 }
 }
