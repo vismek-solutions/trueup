@@ -38,9 +38,71 @@ describe("keeping sibling directories apart", () => {
     );
   });
 
-  it("leaves the parent alone, since it belongs to no sibling", () => {
+  it("fails loudly for a pattern with no wildcard, rather than making one group of everything", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes" }), CLAIM)).toEqual([
+      "`src/routes` matches no directory, so nothing is being kept apart",
+    ]);
+  });
+
+  it("names a group by its own directory when a globstar above it matched nothing", () => {
+    expect(messagesIn(runWith({ siblings: "src/**/routes/*" }), CLAIM)).toEqual([
+      "is a and may not reach sibling .internal: hidden from src/routes/.internal/hidden.ts",
+      "is a and may not reach sibling b: thing from src/routes/b/thing.ts",
+      "is a and may not reach sibling _shared: util from src/routes/_shared/util.ts",
+      "is c and may not reach sibling b: thing from src/routes/b/thing.ts",
+    ]);
+  });
+
+  it("says nothing when a grouped file reaches one that belongs to no group", () => {
     const reached = messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM);
+
+    expect(reached.some((message) => message.includes("root-util"))).toBe(false);
+  });
+
+  it("says nothing about an import it could not resolve to a file", () => {
+    const reached = messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM);
+
+    expect(reached.some((message) => message.includes("node:path"))).toBe(false);
+  });
+
+  it("reports these crossings and no others, so a lost or invented one is a failure", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM)).toEqual([
+      "is a and may not reach sibling .internal: hidden from src/routes/.internal/hidden.ts",
+      "is a and may not reach sibling b: thing from src/routes/b/thing.ts",
+      "is a and may not reach sibling _shared: util from src/routes/_shared/util.ts",
+      "is c and may not reach sibling b: thing from src/routes/b/thing.ts",
+    ]);
+  });
+
+  it("leaves a file at the parent ungrouped, so it is neither offender nor target", () => {
+    const reached = messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM);
+
+    expect(reached.some((message) => message.startsWith("is index.ts"))).toBe(false);
     expect(reached.some((message) => message.includes("routes/index.ts"))).toBe(false);
+  });
+
+  it("says nothing about a file reaching its own group, which is the whole point of a group", () => {
+    const reached = messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM);
+
+    expect(reached.some((message) => message.includes("helper"))).toBe(false);
+  });
+
+  it("keeps a dot-prefixed directory apart like any other, rather than overlooking it", () => {
+    expect(messagesIn(runWith({ siblings: "src/routes/*" }), CLAIM)).toContain(
+      "is a and may not reach sibling .internal: hidden from src/routes/.internal/hidden.ts",
+    );
+  });
+
+  it("reports a crossing as an error, not a warning", () => {
+    const severities = findingsIn(runWith({ siblings: "src/routes/*" }), CLAIM).map(
+      (finding) => finding.severity,
+    );
+
+    expect(new Set(severities)).toEqual(new Set(["error"]));
+  });
+
+  it("fails as an error too when the pattern matches nothing", () => {
+    expect(findingsIn(runWith({ siblings: "src/pages/*" }), CLAIM)[0]?.severity).toBe("error");
   });
 
   it("exempts a directory everyone is meant to share", () => {
@@ -52,10 +114,13 @@ describe("keeping sibling directories apart", () => {
     );
   });
 
-  it("treats each combination of wildcards as its own island", () => {
-    expect(messagesIn(runWith({ siblings: "src/*/*" }), CLAIM)).toContain(
+  it("treats each combination of wildcards as its own island, and groups nothing shallower", () => {
+    expect(messagesIn(runWith({ siblings: "src/*/*" }), CLAIM)).toEqual([
+      "is routes/a and may not reach sibling routes/.internal: hidden from src/routes/.internal/hidden.ts",
       "is routes/a and may not reach sibling routes/b: thing from src/routes/b/thing.ts",
-    );
+      "is routes/a and may not reach sibling routes/_shared: util from src/routes/_shared/util.ts",
+      "is routes/c and may not reach sibling routes/b: thing from src/routes/b/thing.ts",
+    ]);
   });
 
   it("keeps the same route name in two apps apart, and each app's routes from each other", () => {

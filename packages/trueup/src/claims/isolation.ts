@@ -22,7 +22,7 @@ const groupReader = (root: string, pattern: string): GroupOf => {
     const captured = expression.exec(toPosix(relative(root, file)));
     if (captured === null) return null;
 
-    const segments = captured.slice(1, -1).filter((segment) => segment !== undefined && segment !== "");
+    const segments = captured.slice(1, -1).filter((segment) => segment !== undefined);
     return segments.length === 0 ? null : segments.join("/");
   };
 };
