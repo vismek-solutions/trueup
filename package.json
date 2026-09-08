@@ -1,17 +1,17 @@
 {
-  "name": "trueline-repo",
+  "name": "trueup-repo",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
-    "check": "node ./packages/trueline/bin/trueline.js",
+    "check": "node ./packages/trueup/bin/trueup.js",
     "format": "biome format --write .",
     "lint": "biome check .",
-    "test": "pnpm --filter trueline run test",
-    "typecheck": "pnpm --filter trueline run typecheck",
-    "build": "pnpm --filter trueline run build"
+    "test": "pnpm --filter trueup run test",
+    "typecheck": "pnpm --filter trueup run typecheck",
+    "build": "pnpm --filter trueup run build"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",

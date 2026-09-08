@@ -22,7 +22,7 @@ every-import-respects-its-zone-boundary     1 error
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
     reach the target, or have the target expose what the caller needs through a zone it may reach.
-    Run `trueline explain <file>` to see what a file may reach. Widening the rule is not the fix.
+    Run `trueup explain <file>` to see what a file may reach. Widening the rule is not the fix.
 
 no-zones-form-a-cycle                       ok
 generic-code-names-no-domain-concept        ok
@@ -52,7 +52,7 @@ Under the findings sits the guidance for that claim. It says what the violation 
 ## When you only want the failures
 
 ```sh
-npx trueline --dots
+npx trueup --dots
 ```
 
 One character per claim, then nothing else unless something failed.
@@ -89,7 +89,7 @@ Hand this one to an agent that checks after every change: a green run costs it t
 ## When you want one thing to fix
 
 ```sh
-npx trueline --next
+npx trueup --next
 ```
 
 One problem, then stop.
@@ -113,7 +113,7 @@ Run it, fix what it shows, run it again. It reports `nothing left to fix` when t
 ## When something else has to read it
 
 ```sh
-npx trueline --json
+npx trueup --json
 ```
 
 The whole report, claims in the order they ran, each with its guidance and its findings.
@@ -153,7 +153,7 @@ A claim that holds keeps its entry with an empty `findings`, so the shape does n
 ## On a GitLab merge request
 
 ```sh
-npx trueline --gitlab
+npx trueup --gitlab
 ```
 
 The same findings in GitLab's Code Quality format, which puts each one on its line in the merge request diff. A red pipeline then says what broke without anyone opening the job log.
@@ -176,7 +176,7 @@ Severity follows the baseline. A new violation is `major`; one [the baseline](/a
 
 ```yaml
 architecture:
-  script: npx trueline --gitlab > gl-code-quality-report.json
+  script: npx trueup --gitlab > gl-code-quality-report.json
   artifacts:
     when: always
     reports:
@@ -194,7 +194,7 @@ GitLab renders an annotation only on lines the merge request touched. A boundary
 ## A flag it does not know is an error
 
 ```
-$ npx trueline --claim=no-directory-holds-too-many-files
+$ npx trueup --claim=no-directory-holds-too-many-files
 unrecognised: --claim=no-directory-holds-too-many-files
 known arguments: --json --gitlab --next --dots --update-baseline --config=<path>
 commands: explain <path> · guard · agent-instructions

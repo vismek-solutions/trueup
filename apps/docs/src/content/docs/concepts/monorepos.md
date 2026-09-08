@@ -6,7 +6,7 @@ description: The root names its members. Each member names its own zones and wha
 A monorepo does not need one file listing every zone in every package. The root names its members. Each member names its own zones and what it reaches.
 
 ```ts
-// trueline.config.ts
+// trueup.config.ts
 export default defineConfig({
   members: ["packages/*", "apps/*"],
 });
@@ -14,14 +14,14 @@ export default defineConfig({
 
 ## Starting from the workspace
 
-`trueline init` reads `pnpm-workspace.yaml`, or `workspaces` in `package.json`, and writes that root config plus a rulebook for every package it finds.
+`trueup init` reads `pnpm-workspace.yaml`, or `workspaces` in `package.json`, and writes that root config plus a rulebook for every package it finds.
 
 ```
-wrote trueline.config.ts
-wrote apps/web/trueline.config.ts
-wrote packages/empty/trueline.config.ts
-wrote packages/lib/trueline.config.ts
-kept  packages/ui/trueline.config.ts, already there
+wrote trueup.config.ts
+wrote apps/web/trueup.config.ts
+wrote packages/empty/trueup.config.ts
+wrote packages/lib/trueup.config.ts
+kept  packages/ui/trueup.config.ts, already there
 
 members   packages/* · apps/*
 runners   oxlintRunner
@@ -37,7 +37,7 @@ The workspace file is read once, here, and never again. `members` is not derived
 Leave `include` out. The whole repository is then analysed, so a directory no member claims fails as unclassified instead of going quietly unchecked. Narrowing `include` is how you *stop* seeing something.
 
 ```ts
-// packages/lib/trueline.config.ts
+// packages/lib/trueup.config.ts
 export default defineMember({
   zones: [
     { name: "api", patterns: ["src/index.ts"], role: "api" },
@@ -54,14 +54,14 @@ A member may only constrain itself. Everything it names is its own — and the r
 
 It has to work that way rather than by listing the doors in the rule. An internal rule is anchored on the declaring file, because piercing barrels inside the package is the whole point — and a door is a re-exporter, so a declaring-file anchor resolves straight past it to the file behind. A rule that named the door could never match one.
 
-Being silent rather than forbidding is what `trueline explain` reports too. A zone the internal rule says nothing about stays under `may reach` if another rule allows it, so the answer an agent gets before writing a file is the same answer the check gives after.
+Being silent rather than forbidding is what `trueup explain` reports too. A zone the internal rule says nothing about stays under `may reach` if another rule allows it, so the answer an agent gets before writing a file is the same answer the check gives after.
 
 ## What a member may reach
 
 Nothing, until it says so. A member reaching another it did not name is an error.
 
 ```ts
-// apps/web/trueline.config.ts
+// apps/web/trueup.config.ts
 export default defineMember({
   allow: ["lib"],
   zones: [{ name: "pages", patterns: ["src/**"] }],
@@ -132,7 +132,7 @@ It reports only what it can prove. A member with no `package.json` or no `export
 To remove the duplication instead of policing it:
 
 ```ts
-// packages/shared/trueline.config.ts
+// packages/shared/trueup.config.ts
 export default defineMember({
   doorsFromExports: true,
   zones: [{ name: "inside", patterns: ["src/**"] }],
@@ -149,7 +149,7 @@ This only works where `exports` points at source. A package that publishes build
 
 ```
 every-grant-has-a-dependency                1 error
-    packages/web/trueline.config.ts  allows ui, but package.json does not depend on @grants/ui
+    packages/web/trueup.config.ts  allows ui, but package.json does not depend on @grants/ui
 ```
 
 The other direction is already covered elsewhere. Importing a package that is not a dependency is what fallow's [`unlisted-dependencies`](/integrations/linters/) reports, so this claim only looks for the grant nothing backs.
@@ -161,7 +161,7 @@ It compares rather than derives, for the reason the door check does: `package.js
 A member takes `seams`, `rules` and `maxFilesPerDirectory` as well. A rule about one package's components means nothing to the server beside it, and putting it in the root config rebuilds the single shared rulebook that `members` exists to break up.
 
 ```ts
-// apps/web/trueline.config.ts
+// apps/web/trueup.config.ts
 export default defineMember({
   maxFilesPerDirectory: 30,
   zones: [

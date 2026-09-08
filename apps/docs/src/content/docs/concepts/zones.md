@@ -5,7 +5,7 @@ description: A zone names a group of files by path pattern. Every other rule is 
 
 A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in, so this is the one idea to get right.
 
-Patterns are matched against each file's path **relative to your project root**, the directory holding `trueline.config.ts`.
+Patterns are matched against each file's path **relative to your project root**, the directory holding `trueup.config.ts`.
 
 ```ts
 zones: [
@@ -61,7 +61,7 @@ All three are excluded from being counted as the lone consumer in the [colocatio
 ## Asking where a file belongs
 
 ```sh
-npx trueline explain src/engine/newThing.ts
+npx trueup explain src/engine/newThing.ts
 ```
 
 ```

@@ -1,5 +1,5 @@
 ---
-title: trueline
+title: trueup
 description: Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing it.
 template: splash
 hero:
@@ -16,13 +16,13 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-`trueline` reads your source files without running them, works out which file depends on which, and checks that map against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
+`trueup` reads your source files without running them, works out which file depends on which, and checks that map against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
 
 ## It reads between files, not inside them
 
 A linter reads one file at a time and tells you about that file. An unused variable. A missing `await`. It is looking at the code *inside* a file.
 
-`trueline` looks at the lines *between* files. Which parts of your project may know about which other parts. Where things live. Whether a folder has quietly become a junk drawer.
+`trueup` looks at the lines *between* files. Which parts of your project may know about which other parts. Where things live. Whether a folder has quietly become a junk drawer.
 
 None of that is visible from inside any single file, which is why the shape drifts without anyone noticing.
 

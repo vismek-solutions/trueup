@@ -8,7 +8,7 @@ Config covers direction and vocabulary. Anything else is a plain TypeScript func
 A rule goes in the `rules` key of your config, so the whole file reads:
 
 ```ts
-import { defineConfig, defineRule } from "trueline";
+import { defineConfig, defineRule } from "trueup";
 
 export default defineConfig({
   zones: [

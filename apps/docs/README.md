@@ -1,4 +1,4 @@
-# trueline docs
+# trueup docs
 
 The documentation site, built with Astro and Starlight.
 

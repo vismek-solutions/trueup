@@ -4,7 +4,7 @@ description: Give the agent the shape before it starts, rather than one refusal 
 ---
 
 ```sh
-npx trueline agent-instructions >> CLAUDE.md
+npx trueup agent-instructions >> CLAUDE.md
 ```
 
 ```markdown
@@ -12,9 +12,9 @@ npx trueline agent-instructions >> CLAUDE.md
 
 This project's structure is enforced. Zones: spec, components, hooks, api, domain, app, server.
 
-- `trueline explain <file>` — run this **before** creating or moving a file. It reports the zone that
+- `trueup explain <file>` — run this **before** creating or moving a file. It reports the zone that
   path falls into, which zones it may and may not reach, and the vocabulary it may not name.
-- `trueline --dots` — check the whole project. Run it before calling a change done. It prints
+- `trueup --dots` — check the whole project. Run it before calling a change done. It prints
   one character per claim and explains only what failed.
 
 Every finding is printed with an explanation of what it means and how to resolve it. Read that

@@ -6,12 +6,12 @@ description: Delegated findings arrive as claims of their own, under one report 
 The rules here cover what a linter cannot express. Everything else is delegated. Those findings join the same report and the same baseline.
 
 ```ts
-import { eslintRunner } from "trueline";
+import { eslintRunner } from "trueup";
 
 runners: [eslintRunner()]
 ```
 
-Four runners are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`. Add only the ones your project already installs — a runner whose binary is missing fails the run rather than reporting nothing. [`trueline init`](/start/getting-started/) wires the ones it finds in your `package.json`, scoped to the directories your zones cover, which is also the setting you want by hand: given a bare `.`, oxlint and biome will lint `node_modules` too.
+Four runners are available: `eslintRunner`, `biomeRunner`, `oxlintRunner` and `fallowRunner`. Add only the ones your project already installs — a runner whose binary is missing fails the run rather than reporting nothing. [`trueup init`](/start/getting-started/) wires the ones it finds in your `package.json`, scoped to the directories your zones cover, which is also the setting you want by hand: given a bare `.`, oxlint and biome will lint `node_modules` too.
 
 Each finding's category becomes its own claim, sitting in the report next to the rules from here:
 

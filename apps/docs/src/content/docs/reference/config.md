@@ -3,13 +3,13 @@ title: Configuration
 description: Every key the config file accepts.
 ---
 
-The config is TypeScript. It is discovered by walking upward for `trueline.config.ts`, `.js` or `.mjs`, and the directory holding it is the project root. `npx trueline init` writes a first one from the shape of your tree.
+The config is TypeScript. It is discovered by walking upward for `trueup.config.ts`, `.js` or `.mjs`, and the directory holding it is the project root. `npx trueup init` writes a first one from the shape of your tree.
 
 Because it is TypeScript, it can read the environment — useful for anything that should behave differently in CI.
 
 ```ts
-// trueline.config.ts
-import { defineConfig, oxlintRunner } from "trueline";
+// trueup.config.ts
+import { defineConfig, oxlintRunner } from "trueup";
 
 export default defineConfig({
   zones: [
@@ -53,7 +53,7 @@ Everything below `zones` is optional. A config with zones alone still runs nine 
 | `maxFilesPerDirectory` | `number` | off | [Directory size limit](/checks/placement/#directory-size). |
 | `duplication` | `number` | off | [Shortest declaration worth reporting](/checks/duplication/), in characters. |
 | `colocation` | `boolean` | `false` | Turns on [the placement claims](/checks/placement/). |
-| `command` | `string` | `trueline` | The command named in printed guidance. Set it to `pnpm lint:arch` and every message says that. |
+| `command` | `string` | `trueup` | The command named in printed guidance. Set it to `pnpm lint:arch` and every message says that. |
 
 ## Zones
 
@@ -92,7 +92,7 @@ First match wins, in declaration order. [What each role changes](/concepts/zones
 ## Members
 
 ```ts
-// packages/lib/trueline.config.ts
+// packages/lib/trueup.config.ts
 export default defineMember({
   zones, allow?, boundaries?, seams?, rules?, maxFilesPerDirectory?, doorsFromExports?
 })
@@ -119,16 +119,16 @@ The root config, every member config and the baseline are covered with no config
 
 | | |
 |---|---|
-| `npx trueline init` | write a starting config, and one per workspace package |
-| `npx trueline` | the full report |
-| `npx trueline --dots` | one character per claim |
-| `npx trueline --next` | one problem, then stop |
-| `npx trueline --json` | machine-readable |
-| `npx trueline --gitlab` | [GitLab Code Quality](/start/reports/#on-a-gitlab-merge-request) |
-| `npx trueline --update-baseline` | record current violations |
-| `npx trueline --config=<path>` | use a specific config |
-| `npx trueline explain <path>` | what a file may reach |
-| `npx trueline agent-instructions` | a block to append to `CLAUDE.md` |
-| `npx trueline guard` | read a hook payload on stdin |
+| `npx trueup init` | write a starting config, and one per workspace package |
+| `npx trueup` | the full report |
+| `npx trueup --dots` | one character per claim |
+| `npx trueup --next` | one problem, then stop |
+| `npx trueup --json` | machine-readable |
+| `npx trueup --gitlab` | [GitLab Code Quality](/start/reports/#on-a-gitlab-merge-request) |
+| `npx trueup --update-baseline` | record current violations |
+| `npx trueup --config=<path>` | use a specific config |
+| `npx trueup explain <path>` | what a file may reach |
+| `npx trueup agent-instructions` | a block to append to `CLAUDE.md` |
+| `npx trueup guard` | read a hook payload on stdin |
 
 An argument outside this list is an error, not something to ignore.

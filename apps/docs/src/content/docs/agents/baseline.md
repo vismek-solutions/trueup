@@ -6,10 +6,10 @@ description: Record what is already there, then hold the line.
 Almost nobody starts clean. Record what is already there, then hold the line.
 
 ```sh
-npx trueline --update-baseline
+npx trueup --update-baseline
 ```
 
-That writes `trueline.baseline.json` next to your config, listing the violations that existed when you started. **Commit it.** It is a shared record of what the team has agreed to live with, and a per-developer copy would mean everyone's build failed differently.
+That writes `trueup.baseline.json` next to your config, listing the violations that existed when you started. **Commit it.** It is a shared record of what the team has agreed to live with, and a per-developer copy would mean everyone's build failed differently.
 
 From then on, a new violation fails the build. A recorded one prints as a warning — visible, not hidden, so nobody forgets the debt is there.
 

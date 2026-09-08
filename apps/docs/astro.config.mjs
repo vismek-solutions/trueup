@@ -5,7 +5,7 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
   integrations: [
     starlight({
-      title: "trueline",
+      title: "trueup",
       description:
         "Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing it.",
       customCss: ["./src/styles/custom.css"],

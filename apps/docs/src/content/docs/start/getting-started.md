@@ -1,29 +1,29 @@
 ---
 title: Getting started
-description: Install trueline, write a config that describes your project's shape, and run it.
+description: Install trueup, write a config that describes your project's shape, and run it.
 ---
 
 Requires Node 22.18 or newer.
 
 ```sh
-npm install --save-dev trueline
+npm install --save-dev trueup
 ```
 
 Then write a starting config:
 
 ```sh
-npx trueline init
+npx trueup init
 ```
 
 ```
-wrote trueline.config.ts
+wrote trueup.config.ts
 
 zones     spec · api · domain · app
 runners   biomeRunner · fallowRunner
 
 next      add `boundaries` to say which zones may reach which
           turn on `colocation`, `duplication` and `maxFilesPerDirectory` once a first run is clean
-          run `trueline` to see what it finds
+          run `trueup` to see what it finds
 ```
 
 It reads the tree, not your intentions: one zone per top-level folder under `src`, one for wherever your tests live, and a catch-all last. Runners are wired for the linters your `package.json` already has, scoped to the directories the zones cover. Nothing is written if a config is already there, and in a workspace each package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
@@ -31,8 +31,8 @@ It reads the tree, not your intentions: one zone per top-level folder under `src
 What it will not guess is `boundaries`, because a folder layout does not say which direction the dependencies are meant to run. That is the part you write. The rest of this page uses a config with those filled in:
 
 ```ts
-// trueline.config.ts
-import { defineConfig } from "trueline";
+// trueup.config.ts
+import { defineConfig } from "trueup";
 
 export default defineConfig({
   zones: [
@@ -55,7 +55,7 @@ export default defineConfig({
 Then run it.
 
 ```sh
-npx trueline
+npx trueup
 ```
 
 ```
@@ -69,7 +69,7 @@ every-imported-name-is-unambiguous          ok
 every-file-belongs-to-a-zone                1 error
     scripts/seed.ts  scripts/seed.ts matches no zone
     A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing
-    zone, or declare a zone that covers it. Run `trueline explain <file>` to see what a location
+    zone, or declare a zone that covers it. Run `trueup explain <file>` to see what a location
     would allow.
 
 every-zone-has-a-file                       ok
@@ -80,7 +80,7 @@ every-import-respects-its-zone-boundary     1 error
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
     reach the target, or have the target expose what the caller needs through a zone it may reach.
-    Run `trueline explain <file>` to see what a file may reach. Widening the rule is not the fix.
+    Run `trueup explain <file>` to see what a file may reach. Widening the rule is not the fix.
 
 generic-code-names-no-domain-concept        ok
 no-zones-form-a-cycle                       ok
@@ -92,7 +92,7 @@ Those two findings are the two kinds this exists to show you: a file no zone cla
 
 ## Reading that config
 
-Every path pattern is matched against the file's path **relative to your project root** — the directory holding `trueline.config.ts`.
+Every path pattern is matched against the file's path **relative to your project root** — the directory holding `trueup.config.ts`.
 
 The zones say the project has seven kinds of file. Names are yours to invent; nothing is reserved. A good first pass: one zone per top-level folder under `src`, plus one for tests. Then merge any two zones you would never write a rule between.
 
@@ -113,12 +113,12 @@ If the codebase already has violations you cannot fix today, record them with [a
 ## Running it in CI
 
 ```json
-{ "scripts": { "lint:arch": "trueline" } }
+{ "scripts": { "lint:arch": "trueup" } }
 ```
 
 Then run `npm run lint:arch` as a CI step. It exits non-zero when there is anything to fix, so no extra flags are needed.
 
-One exit code will surprise you. Fixing a violation that was in the baseline exits `2`. The build fails until someone runs `npx trueline --update-baseline` and commits the result. Without that, the baseline slowly turns into a list of exemptions nobody dares delete. [The full table is here](/start/reports/#exit-codes).
+One exit code will surprise you. Fixing a violation that was in the baseline exits `2`. The build fails until someone runs `npx trueup --update-baseline` and commits the result. Without that, the baseline slowly turns into a list of exemptions nobody dares delete. [The full table is here](/start/reports/#exit-codes).
 
 ## What to do next
 

@@ -17,13 +17,13 @@ Two rules for the same zone intersect: the zone may reach only what *every* rule
 
 ## Why barrels break other tools
 
-This is where `trueline` and an import-graph tool give different answers about the same code.
+This is where `trueup` and an import-graph tool give different answers about the same code.
 
 Most projects have a **barrel**: a file, usually `index.ts`, that re-exports everything around it so consumers can import from one place. `import { Warrant } from "@app/shared"` beats a path six directories deep.
 
 Barrels also make dependency rules useless. To a tool that reads import statements, every consumer of that package looks identical — they all import from `shared/index.ts`. A rule saying "components may not touch warrants" then matches all of those imports or none of them. Neither is the truth.
 
-`trueline` follows the re-export chain to the file that actually **declares** the thing you imported, and anchors the rule there.
+`trueup` follows the re-export chain to the file that actually **declares** the thing you imported, and anchors the rule there.
 
 On a real monorepo, the same rule written both ways:
 

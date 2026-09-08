@@ -3,7 +3,7 @@ title: Blocking a bad edit
 description: A hook that judges a proposed write before it reaches disk, and refuses it.
 ---
 
-Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueline guard` is that command.
+Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueup guard` is that command.
 
 It reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
 
@@ -17,13 +17,13 @@ This goes in `.claude/settings.json` in your project root. Create the file if it
     "PreToolUse": [
       {
         "matcher": "Write|Edit|mcp__serena__replace_content",
-        "hooks": [{ "type": "command", "command": "npx trueline guard" }]
+        "hooks": [{ "type": "command", "command": "npx trueup guard" }]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "mcp__serena__(replace_content|replace_symbol_body|replace_in_files|insert_after_symbol|insert_before_symbol|rename_symbol|safe_delete_symbol)",
-        "hooks": [{ "type": "command", "command": "npx trueline guard" }]
+        "hooks": [{ "type": "command", "command": "npx trueup guard" }]
       }
     ]
   }
@@ -64,7 +64,7 @@ The default is a permission prompt, not a refusal.
 ```
 This edit needs your approval under the project's architecture rules.
 
-no-edit-changes-the-rules-themselves  trueline.config.ts
+no-edit-changes-the-rules-themselves  trueup.config.ts
   An agent is asking to change a file the project's rules are read from. Approve it if this is
   setup, or a change to the rules you meant to make. Refuse it if a check was failing just before
   this: editing the rulebook is how a failing check gets switched off, and it leaves no trace that

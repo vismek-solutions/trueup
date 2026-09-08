@@ -27,7 +27,7 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.3)(@types/node@24.13.3)
 
-  packages/trueline:
+  packages/trueup:
     dependencies:
       oxc-parser:
         specifier: ^0.148.0

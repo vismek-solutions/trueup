@@ -4,20 +4,20 @@ description: What overlaps, what does not, and why this is not built on top of i
 ---
 
 :::note
-You do not need fallow to use `trueline`, and nothing on this page is setup. Read it if you already run fallow, or if you want to know why the two overlap.
+You do not need fallow to use `trueup`, and nothing on this page is setup. Read it if you already run fallow, or if you want to know why the two overlap.
 :::
 
-[fallow](https://docs.fallow.tools) is a codebase analyzer covering dead code, duplication, complexity and architecture boundaries. It is also the tool `trueline` delegates most of its commodity analysis to. They overlap in exactly one place — zone boundaries — and the rest of this page draws that line.
+[fallow](https://docs.fallow.tools) is a codebase analyzer covering dead code, duplication, complexity and architecture boundaries. It is also the tool `trueup` delegates most of its commodity analysis to. They overlap in exactly one place — zone boundaries — and the rest of this page draws that line.
 
 ## The overlap is the vocabulary, not the analysis
 
 Both tools describe a project as named zones of file globs, first match wins, and both check that every file lands in one. Both have rules about which zone may reach which. Written down, the two configs look alike.
 
-They part company on what a rule attaches to. fallow reports a violation as a pair of files and the specifier between them. `trueline` follows the re-export chain and anchors the rule on the file that **declares** the symbol — [why barrels break other tools](/concepts/boundaries/#why-barrels-break-other-tools) has what that changes and the measurement behind it.
+They part company on what a rule attaches to. fallow reports a violation as a pair of files and the specifier between them. `trueup` follows the re-export chain and anchors the rule on the file that **declares** the symbol — [why barrels break other tools](/concepts/boundaries/#why-barrels-break-other-tools) has what that changes and the measurement behind it.
 
 fallow's documentation is explicit about the other side of this: a barrel is handled by *exempting* it, so re-exports raise no false positives. That is a reasonable choice for a module-level rule, and the opposite of the one made here.
 
-## What only trueline does
+## What only trueup does
 
 | | |
 |---|---|

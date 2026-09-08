@@ -1,10 +1,10 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
   "entry": [
-    "packages/trueline/src/index.ts",
-    "packages/trueline/bin/trueline.js",
-    "packages/trueline/trueline.config.ts",
-    "trueline.config.ts",
+    "packages/trueup/src/index.ts",
+    "packages/trueup/bin/trueup.js",
+    "packages/trueup/trueup.config.ts",
+    "trueup.config.ts",
     "apps/docs/src/styles/custom.css"
   ],
   "ignorePatterns": ["**/test/fixtures/**"],
