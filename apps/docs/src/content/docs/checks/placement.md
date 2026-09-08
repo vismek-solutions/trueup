@@ -60,6 +60,35 @@ A helper that genuinely exists to serve tests belongs in the tests zone. Putting
 Adding a production caller to satisfy the check is the one fix that makes the codebase worse. The printed guidance says so.
 :::
 
+## Tests that reach an internal
+
+```ts
+testInternals: true,
+```
+
+A separate switch from `colocation`, and off by default. It reports a test importing a symbol that nothing outside the symbol's own directory calls.
+
+```
+no-test-reaches-an-internal                 1 error
+    test/checkout.test.ts  reaches priceWithTax, an internal of src/checkout/tax.ts that only src/checkout/total.ts calls
+```
+
+`priceWithTax` exists because `orderTotal` needed it. Fold it back into `total.ts` and nothing about the checkout behaves differently — but the test breaks. That is what it means for a test to be pinned to a decomposition rather than to behaviour, and an agent refactoring `checkout` later reads the red suite as a regression.
+
+The fix is to drive the same cases through `orderTotal`, which is what production calls. When that is genuinely too expensive, the symbol is asking to become a module with a caller of its own rather than a wider surface on the one it sits in.
+
+Nothing is reported for `orderTotal` or `toCents` in that run: both have a consumer in `src/web`, so their surface already reaches past the directory and a test is welcome there too.
+
+Three kinds of symbol are never reported. One a zone with `role: "wiring"` declares, because a composition root has no internals to protect. One a zone with `role: "api"` re-exports, which is surface wherever it happens to be declared — a `export { x } from "./x.ts"` leaves no import edge behind, so this is read from the api zone's exports rather than its imports. And one no test reaches at all, which is nobody's business but its own.
+
+This is the mirror of the test-only export above. That check asks whether production uses a symbol; this one asks whether production uses it from far enough away to call it a surface.
+
+:::caution
+Widening the surface so the direct test becomes legitimate, and adding a production caller to justify it, both leave the codebase worse than the finding did.
+:::
+
+With no zone carrying `role: "tests"`, the check warns rather than passing — there is nothing to hold to a surface, and silence would read as a pass.
+
 ## Directory size
 
 ```ts

@@ -23,6 +23,7 @@ description: Every claim the tool makes about a project, and which ones fail lou
 | `no-declaration-is-written-twice` | nothing exists in two copies |
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
+| `no-test-reaches-an-internal` | no test is pinned to a split its subject's callers cannot see |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
 ## Imports are checked by name
@@ -82,6 +83,7 @@ Nine claims are always on and need nothing but zones. The rest wait for a config
 | `maxFilesPerDirectory` | [`no-directory-holds-too-many-files`](/checks/placement/#directory-size) |
 | `duplication` | [`no-declaration-is-written-twice`](/checks/duplication/) |
 | `colocation` | `no-value-is-declared-away-from-its-only-consumer`, and `no-export-exists-only-for-a-test` when a zone also has `role: "tests"` |
+| `testInternals` | [`no-test-reaches-an-internal`](/checks/placement/#tests-that-reach-an-internal) |
 | `members` | [`every-api-zone-is-exported`](/concepts/monorepos/#the-door-is-written-down-twice) and [`every-grant-has-a-dependency`](/concepts/monorepos/#a-grant-with-no-dependency), wherever a member's `package.json` says enough to compare |
 | `runners` | [one claim per delegated category](/integrations/linters/) |
 | `rules` | [whatever you name](/checks/custom-rules/) |

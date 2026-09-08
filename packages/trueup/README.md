@@ -265,6 +265,7 @@ Run it, fix what it shows, run it again. It reports `nothing left to fix` when t
 | `no-declaration-is-written-twice` | nothing exists in two copies |
 | `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
 | `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
+| `no-test-reaches-an-internal` | no test is pinned to a split its subject's callers cannot see |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
 The first four are about the analysis itself, and they fail loudly on purpose.
@@ -687,6 +688,31 @@ The fix is to test the behaviour through the surface production code actually ca
 A helper that genuinely exists to serve tests belongs in the tests zone. Put `**/*.fixture.ts` in that zone and its false positives go with it — worth 39 of 169 findings on that monorepo.
 
 Adding a production caller to satisfy the check is the one fix that makes the codebase worse. The printed guidance says so.
+
+## Tests pinned to a split their subject's callers cannot see
+
+```ts
+testInternals: true,
+```
+
+A separate switch from `colocation`, and off by default. It reports a test importing a symbol that nothing outside the symbol's own directory calls.
+
+```
+no-test-reaches-an-internal                 1 error
+    test/checkout.test.ts  reaches priceWithTax, an internal of src/checkout/tax.ts that only src/checkout/total.ts calls
+```
+
+`priceWithTax` exists because `orderTotal` next door needed it. Fold it back into `total.ts` and nothing about the checkout behaves differently — but the test breaks. An agent refactoring `checkout` later reads that red suite as a regression and puts the split back.
+
+Drive the same cases through `orderTotal`, which is what production calls, and the decomposition underneath is free to move. When that is genuinely too expensive, the symbol is asking to become a module with a caller of its own rather than a wider surface on the one it sits in.
+
+A symbol reached from more than one directory is never reported: its surface already extends past the unit, so a test is welcome there too. Neither is one a `wiring` zone declares, since a composition root has no internals to protect, nor one an `api` zone re-exports — that is surface wherever it is declared, and since `export { x } from "./x.ts"` leaves no import edge behind, it is read from the api zone's exports rather than its imports.
+
+This is the mirror of the check above. That one asks whether production uses a symbol at all; this one asks whether production uses it from far enough away to call it a surface.
+
+Widening the surface so the direct test becomes legitimate, and adding a production caller to justify it, both leave the codebase worse than the finding did.
+
+With no zone carrying `role: "tests"`, it warns rather than passing — there is nothing to hold to a surface, and silence would read as a pass.
 
 ## Rules you write yourself
 

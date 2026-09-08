@@ -4,7 +4,11 @@ import { createResolver } from "./adapters/oxc-resolve.ts";
 import { apiSurfaceClaim, type ApiSurface } from "./claims/members/api-surface.ts";
 import { boundaryClaim, boundaryZoneReferences, judges, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
-import { colocationClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
+import {
+  colocationClaim,
+  testInternalsClaim,
+  testOnlyExportClaim,
+} from "./claims/placement/colocation.ts";
 import { cycleClaim } from "./claims/cycles.ts";
 import { customClaims, type Rule } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
@@ -141,6 +145,7 @@ export interface CheckOptions {
   readonly grants?: readonly MemberGrants[] | undefined;
   readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
+  readonly testInternals?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly overlay?: Overlay | undefined;
@@ -178,6 +183,7 @@ export function check({
   grants,
   duplication,
   colocation = false,
+  testInternals = false,
   rules = [],
   runners = [],
   overlay,
@@ -216,6 +222,15 @@ export function check({
       : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits ?? [])]),
     ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),
     ...(colocation ? placementClaims(zones) : []),
+    ...(testInternals
+      ? [
+          testInternalsClaim({
+            testZones: namesOf(zones, "tests"),
+            apiZones: namesOf(zones, "api"),
+            wiringZones: namesOf(zones, "wiring"),
+          }),
+        ]
+      : []),
     ...customClaims(rules),
   ];
 

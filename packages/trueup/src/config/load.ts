@@ -124,6 +124,19 @@ const withMembers = (
   };
 };
 
+const membersUnder = async (root: string, patterns: readonly string[]): Promise<Member[]> => {
+  const settled = await Promise.allSettled(
+    memberDirectories(root, patterns).map((directory) => memberAt(root, directory)),
+  );
+
+  const refused = settled
+    .filter((outcome) => outcome.status === "rejected")
+    .map((outcome) => messageOf(outcome.reason));
+  if (refused.length > 0) throw new Error(refused.join("\n"));
+
+  return settled.filter((outcome) => outcome.status === "fulfilled").map((outcome) => outcome.value);
+};
+
 export async function loadConfig(path: string): Promise<LoadedConfig> {
   const exported = await exportedFrom(path, "root");
   const config = exported as ArchitectureConfig;
@@ -132,9 +145,7 @@ export async function loadConfig(path: string): Promise<LoadedConfig> {
   const patterns = config.members ?? [];
   if (patterns.length === 0 && !declaresZones(exported)) throw new Error(`${path} declares no zones`);
 
-  const members = await Promise.all(
-    memberDirectories(root, patterns).map((directory) => memberAt(root, directory)),
-  );
+  const members = await membersUnder(root, patterns);
 
   return {
     config:

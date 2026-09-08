@@ -89,6 +89,7 @@ const settingLines = (config: ResolvedConfig, read: number): readonly string[] =
         : `declarations from ${config.duplication} characters`,
     ],
     ["colocation", switched(config.colocation)],
+    ["test internals", switched(config.testInternals)],
     [
       "rulebook",
       rulebookGuarded(config.protect)

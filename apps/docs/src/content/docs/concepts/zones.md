@@ -50,11 +50,11 @@ zones: [
 ]
 ```
 
-`wiring` marks the file that assembles everything and is imported by nothing — `src/main.tsx`, or the server entry that mounts your routers.
+`wiring` marks the file that assembles everything and is imported by nothing — `src/main.tsx`, or the server entry that mounts your routers. A composition root has no internals of its own, so [the internals check](/checks/placement/#tests-that-reach-an-internal) never reports one.
 
-`tests` marks a test suite. With `colocation: true` it also enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test).
+`tests` marks a test suite. With `colocation: true` it also enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test), and it is what `testInternals: true` needs to know which imports are a test's.
 
-`api` marks a package's public surface. Names re-exported there answer to consumers outside the analysed code, and in a monorepo it is the only zone another member may enter.
+`api` marks a package's public surface. Names re-exported there answer to consumers outside the analysed code, and in a monorepo it is the only zone another member may enter. They also count as surface for the internals check, wherever they are declared.
 
 All three are excluded from being counted as the lone consumer in the [colocation check](/checks/placement/). Without that exclusion, tests alone accounted for 646 of 758 findings on a large monorepo.
 

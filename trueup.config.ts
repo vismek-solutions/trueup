@@ -16,6 +16,7 @@ export default defineConfig({
   maxFilesPerDirectory: 12,
   duplication: 60,
   colocation: true,
+  testInternals: true,
   runners: [
     biomeRunner({
       command: ["node_modules/.bin/biome", "lint"],

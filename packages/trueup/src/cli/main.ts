@@ -92,6 +92,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     duplication: config.duplication,
     isolate: config.isolate,
     colocation: config.colocation,
+    testInternals: config.testInternals,
     rules: config.rules,
     runners: config.runners,
     extensions: config.extensions,

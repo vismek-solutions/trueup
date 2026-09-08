@@ -2,8 +2,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { runGuard } from "../../src/cli/guard.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
-import { assertReachable, expanded, type Member } from "../../src/config/members.ts";
-import type { MemberConfig } from "../../src/config/model.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
@@ -85,19 +83,18 @@ describe("what one member may reach in another", () => {
 });
 
 describe("naming a member that is not there", () => {
-  const wanting = (name: string, allow: readonly string[]): Member => ({
-    name,
-    directory: `packages/${name}`,
-    configPath: `packages/${name}/trueup.config.ts`,
-    config: { zones: [], allow },
+  const rulebookIn = (fixture: string): string => join(fixtureAt(fixture), "trueup.config.ts");
+
+  it("refuses a name no member declares, rather than reaching nothing in silence", async () => {
+    await expect(loadConfig(rulebookIn("unknown-member"))).rejects.toThrow(
+      "packages/lib may reach typo, which is not a member",
+    );
   });
 
-  it("refuses a name no member declares, rather than reaching nothing in silence", () => {
-    expect(() => assertReachable([wanting("lib", ["typo"])])).toThrow(/not a member/);
-  });
-
-  it("refuses a member that lists itself", () => {
-    expect(() => assertReachable([wanting("lib", ["lib"])])).toThrow(/itself/);
+  it("refuses a member that lists itself", async () => {
+    await expect(loadConfig(rulebookIn("self-allowing-member"))).rejects.toThrow(
+      "packages/lib lists itself in `allow`",
+    );
   });
 });
 
@@ -135,38 +132,34 @@ describe("what a member says about itself", () => {
 });
 
 describe("a root rule that names a member", () => {
-  const memberOf = (name: string, zones: MemberConfig["zones"]): Member => ({
-    name,
-    directory: `packages/${name}`,
-    configPath: `packages/${name}/trueup.config.ts`,
-    config: { zones },
-  });
+  const boundariesOf = async (fixture: string) => {
+    const { config } = await loadConfig(join(fixtureAt(fixture), "trueup.config.ts"));
+    return config.boundaries ?? [];
+  };
 
-  const MEMBERS = [
-    memberOf("lib", [
-      { name: "api", patterns: ["src/index.ts"], role: "api" },
-      { name: "schema", patterns: ["src/schema/**"] },
-    ]),
-    memberOf("web", [{ name: "pages", patterns: ["src/**"] }]),
-  ];
-
-  it("anchors on the imported module, because a door is a re-exporter the declaring file walks past", () => {
-    const [rule] = expanded([{ from: "web", allow: ["lib"] }], MEMBERS);
-
-    expect(rule?.allow).toContain("lib/api");
-    expect(rule?.anchor).toBe("imported-module");
-  });
-
-  it("leaves a rule between plain zones anchored on the declaring file", () => {
-    const [rule] = expanded([{ from: "loose", allow: ["other"] }], MEMBERS);
-
-    expect(rule?.anchor).toBeUndefined();
-  });
-
-  it("refuses declaring-file anchoring on a member rule instead of never matching", () => {
-    expect(() => expanded([{ from: "web", allow: ["lib"], anchor: "declaring-file" }], MEMBERS)).toThrow(
-      /no api zone can ever satisfy/,
+  const crossing = async () =>
+    (await boundariesOf("member-boundary")).find(
+      (rule) => rule.from === "web/pages" && rule.allow.includes("lib/api"),
     );
+
+  it("anchors on the imported module, because a door is a re-exporter the declaring file walks past", async () => {
+    expect((await crossing())?.anchor).toBe("imported-module");
+  });
+
+  it("opens the member's api and not the zones behind it", async () => {
+    expect((await crossing())?.allow).toEqual(["web/pages", "lib/api"]);
+  });
+
+  it("leaves a rule between plain zones anchored on the declaring file", async () => {
+    const plain = (await boundariesOf("member-boundary")).find((rule) => rule.from === "guide");
+
+    expect(plain?.anchor).toBeUndefined();
+  });
+
+  it("refuses declaring-file anchoring on a member rule instead of never matching", async () => {
+    const path = join(fixtureAt("anchored-member-boundary"), "trueup.config.ts");
+
+    await expect(loadConfig(path)).rejects.toThrow(/no api zone can ever satisfy/);
   });
 });
 

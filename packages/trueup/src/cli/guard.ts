@@ -130,6 +130,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       duplication: config.duplication,
       isolate: config.isolate,
       colocation: config.colocation,
+      testInternals: config.testInternals,
       rules: config.rules,
       extensions: config.extensions,
       externals: config.externals,

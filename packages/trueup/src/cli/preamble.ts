@@ -24,7 +24,7 @@ export const rulebookAt = async (
     return await loadConfig(path);
   } catch (failure) {
     write("the rulebook was found but could not be read, so nothing was checked");
-    write(`  ${messageOf(failure)}`);
+    for (const line of messageOf(failure).split("\n")) write(`  ${line}`);
     write("  Until it loads, every rule it declares is off, and no run will say so.");
     return null;
   }

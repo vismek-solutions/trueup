@@ -32,6 +32,7 @@ export interface ArchitectureConfig {
   readonly maxFilesPerDirectory?: number | undefined;
   readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
+  readonly testInternals?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly extensions?: readonly string[] | undefined;

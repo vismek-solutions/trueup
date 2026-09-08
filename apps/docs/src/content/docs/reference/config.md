@@ -53,6 +53,7 @@ Everything below `zones` is optional. A config with zones alone still runs nine 
 | `maxFilesPerDirectory` | `number` | off | [Directory size limit](/checks/placement/#directory-size). |
 | `duplication` | `number` | off | [Shortest declaration worth reporting](/checks/duplication/), in characters. |
 | `colocation` | `boolean` | `false` | Turns on [the placement claims](/checks/placement/). |
+| `testInternals` | `boolean` | `false` | Turns on [the check for a test reaching an internal](/checks/placement/#tests-that-reach-an-internal). |
 | `command` | `string` | `trueup` | The command named in printed guidance. Set it to `pnpm lint:arch` and every message says that. |
 
 ## Zones
