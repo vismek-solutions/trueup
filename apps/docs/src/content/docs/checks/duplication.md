@@ -54,4 +54,15 @@ Writing the shared copy in a deliberately different shape to slip past the rule 
 
 A clone detector compares blocks of lines and needs them long enough to be sure. This compares whole declarations, which is why a 60-character threshold is usable at all.
 
-The two do not overlap, measured: on this tool's repository the declaration rule at 60 characters reports nothing that a clone detector at its defaults also reports, and lowering a clone detector far enough to see declaration-sized copies reports 27% of the codebase. Run both — [the delegated one](/integrations/linters/#copy-paste-from-fallow) finds the near-miss copies this rule structurally cannot.
+The two do not overlap, and there is no setting in between. Measured against a project holding one genuine three-line renamed copy, and against this tool's own repository:
+
+| | the renamed copy | this repository |
+|---|---|---|
+| fallow at its defaults | missed | 0 |
+| fallow at 3 lines, 40 tokens | missed | 0 |
+| fallow at 1 line, 5 tokens, identifiers blinded | found, plus an invented group on three files | 886 groups, 90% of the codebase |
+| this rule | exactly the pair | 0 |
+
+The gap is structural rather than a tuning accident. A clone detector slides a window over a token stream, so it needs enough tokens for a match not to be coincidence — which is why lowering it to declaration size makes everything match everything. Comparing whole declarations removes the window: a short body is a complete unit of meaning, not an arbitrary span, so a small threshold stays sharp.
+
+Run both. [The delegated detector](/integrations/linters/#copy-paste-from-fallow) finds the near-miss copies this rule structurally cannot.

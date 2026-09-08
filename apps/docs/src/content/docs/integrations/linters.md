@@ -35,7 +35,7 @@ Some of fallow's rules ship switched **off**, `private-type-leaks` among them. T
 fallowRunner({ duplication: { mode: "weak", minLines: 5, minTokens: 30 } })
 ```
 
-Off unless you ask for it, and the two answer different questions. Measured on this tool's repository: the declaration rule at 60 characters reports nothing, fallow at its defaults reports nothing, and fallow lowered far enough to see declaration-sized copies reports 27% of the codebase. There is no single setting that does both jobs.
+Off unless you ask for it, and the two answer different questions. Lowering this one until it sees what the [declaration rule](/checks/duplication/) sees does not work: on this tool's repository that setting reports 886 clone groups covering 90% of the codebase, while every quieter setting misses a real renamed copy outright. Run both at their own thresholds.
 
 Each clone group arrives as one finding per instance, sharing a group, so `--next` shows the whole group as one thing to fix.
 
