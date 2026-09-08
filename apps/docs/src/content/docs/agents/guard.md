@@ -97,6 +97,30 @@ protect: { paths: ["CLAUDE.md"], decision: "deny" }
 protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
 ```
 
+## Handing the rulebook over
+
+The opposite is available too, and it is the answer if the prompt is friction you do not want — you review the config diff on the merge request instead, or you run unattended and would rather the agent kept going.
+
+```ts
+protect: { decision: "allow" }
+```
+
+An agent may then edit the config and the baseline freely, in every permission mode.
+
+Understand what that costs. Every rule on this site becomes optional to the thing it is meant to constrain: an agent told to get the build green can widen the boundary it just broke, or record the violation as already known, and both are one edit away. The refusal exists because "fix the code, not the rule" was in every message here and enforced by nothing.
+
+So the report says it out loud, on every run.
+
+```
+coverage  1 files · 0 edges · 0 symbol · 0 external · 0 builtin · 0 unresolved
+zones     all 1 · 0 unclassified
+notice    the rulebook is unguarded: an agent may edit this config and the baseline
+```
+
+A check that can be switched off silently is the failure this tool was built against, so it will not be switched off silently here either.
+
+If what you actually want is for setup not to block overnight, `"ask"` is the setting for it and it costs one keystroke. `"allow"` is for deciding that a later review is your gate.
+
 ## It sees files the analysis never reads
 
 It runs before the roots and extension filters, so it covers files the analysis would never look at — a `.json`, a `.yml`, anything outside `include`.

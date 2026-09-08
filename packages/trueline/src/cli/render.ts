@@ -62,6 +62,7 @@ const headerOf = (report: Report, ratchet: RatchetSummary | undefined): string[]
     `coverage  ${coverage.files} files · ${coverage.edges} edges · ${coverage.symbolEdges} symbol · ${coverage.externalEdges} external · ${coverage.builtinEdges} builtin · ${coverage.unresolvedImports} unresolved`,
     `zones     ${zones || "none"} · ${coverage.unclassifiedFiles} unclassified`,
     ...(ratchet === undefined ? [] : [`baseline  ${ratchet.known} known · ${ratchet.stale} stale`]),
+    ...(report.notices ?? []).map((notice) => `notice    ${notice}`),
     "",
   ];
 };
@@ -168,6 +169,7 @@ export function renderDots(report: Report, root: string, ratchet?: RatchetSummar
   return [
     `${report.claims.map((claim) => markOf(claim.findings)).join("")}  ${coverage.files} files · ${coverage.edges} edges · ${coverage.unresolvedImports} unresolved`,
     ...(ratchet === undefined ? [] : [`baseline  ${ratchet.known} known · ${ratchet.stale} stale`]),
+    ...(report.notices ?? []).map((notice) => `notice    ${notice}`),
     ...detail,
     "",
     tallyLine(report),

@@ -72,5 +72,9 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
     })),
   });
 
-  return { report: { claims, coverage: report.coverage }, known: downgraded, stale: stale.length };
+  return {
+    report: { claims, coverage: report.coverage, notices: report.notices },
+    known: downgraded,
+    stale: stale.length,
+  };
 }

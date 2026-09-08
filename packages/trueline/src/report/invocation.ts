@@ -10,4 +10,5 @@ export const withCommand = (report: Report, command: string): Report => ({
     guidance: claim.guidance.replaceAll(COMMAND_TOKEN, command),
   })),
   coverage: report.coverage,
+  notices: report.notices,
 });

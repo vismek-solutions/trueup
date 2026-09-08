@@ -31,6 +31,7 @@ export interface Coverage {
 export interface Report {
   readonly claims: readonly ClaimResult[];
   readonly coverage: Coverage;
+  readonly notices?: readonly string[] | undefined;
 }
 
 const findingsOf = (report: Report): readonly Finding[] => report.claims.flatMap((claim) => claim.findings);

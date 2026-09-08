@@ -49,7 +49,7 @@ Everything below `zones` is optional. A config with zones alone still runs nine 
 | `extensions` | `string[]` | `.ts .tsx .mts .cts .js .jsx .mjs .cjs` | Replaces that list rather than adding to it. |
 | `externals` | `string[]` | none | [Specifiers your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies). |
 | `ignoreDirectories` | `string[]` | `.git node_modules dist build out coverage .next .turbo` | Directory basenames never walked into. Replaces the list. |
-| `protect` | `string[]` or object | the config and the baseline, always | [Extra paths an agent may not edit](/agents/guard/#the-rulebook-goes-through-you). |
+| `protect` | `string[]` or `{ paths?, decision? }` | the config and the baseline, always | [Extra paths an agent may not edit](/agents/guard/#the-rulebook-goes-through-you). |
 | `maxFilesPerDirectory` | `number` | off | [Directory size limit](/checks/placement/#directory-size). |
 | `duplication` | `number` | off | [Shortest declaration worth reporting](/checks/duplication/), in characters. |
 | `colocation` | `boolean` | `false` | Turns on [the placement claims](/checks/placement/). |
@@ -105,7 +105,9 @@ protect: ["CLAUDE.md"]
 protect: { paths: ["CLAUDE.md"], decision: "deny" }
 ```
 
-The root config, every member config and the baseline are covered with no configuration at all. `decision` defaults to a permission prompt, and is downgraded to a refusal automatically wherever no person would see the prompt.
+The root config, every member config and the baseline are covered with no configuration at all. `decision` is `"ask"`, `"deny"` or `"allow"`. It defaults to a permission prompt, and is downgraded to a refusal automatically wherever no person would see the prompt.
+
+`"allow"` hands the rulebook to the agent in every mode, and every run then prints a `notice` line saying so. [What that gives up](/agents/guard/#handing-the-rulebook-over).
 
 ## Command line
 

@@ -2,6 +2,7 @@ import { relative } from "node:path";
 import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baseline-file.ts";
 import { check } from "../compose.ts";
 import { findConfig, loadConfig, resolveInclude } from "../config/load.ts";
+import { rulebookGuarded } from "../guard/protected.ts";
 import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf, type Report } from "../report/model.ts";
@@ -57,6 +58,9 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
 
   const command = config.command ?? DEFAULT_COMMAND;
   const baselinePath = baselinePathIn(root);
+  const noticed = rulebookGuarded(config.protect)
+    ? report
+    : { ...report, notices: ["the rulebook is unguarded: an agent may edit this config and the baseline"] };
 
   if (updating) {
     const baseline = baselineOf(report, root);
@@ -67,12 +71,12 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
 
   const baseline = readBaseline(baselinePath);
   if (baseline.entries.length === 0) {
-    const finished = withCommand(report, command);
+    const finished = withCommand(noticed, command);
     write(present(finished, root));
     return countOf(finished, "error") > 0 ? EXIT_ERRORS : EXIT_CLEAN;
   }
 
-  const ratcheted = applyBaseline({ report, baseline, root });
+  const ratcheted = applyBaseline({ report: noticed, baseline, root });
   const finished = withCommand(ratcheted.report, command);
   write(present(finished, root, { known: ratcheted.known, stale: ratcheted.stale }));
 

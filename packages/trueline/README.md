@@ -484,6 +484,8 @@ protect: { paths: ["CLAUDE.md"], decision: "deny" }
 protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
 ```
 
+`decision: "allow"` is the opposite: the agent may edit the config and the baseline in every mode, for a project whose gate is a later review. Every run then prints `notice    the rulebook is unguarded`, because a check that can be switched off silently is the failure this was built against.
+
 ### Two things this check does differently
 
 It runs before the roots and extension filters, so it covers files the analysis would never look at — a `.json`, a `.yml`, anything outside `include`.

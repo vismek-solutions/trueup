@@ -30,10 +30,12 @@ const pathsIn = (protect: Protection | undefined): readonly string[] => {
   return (protect as ProtectionRule).paths ?? [];
 };
 
-const verdictIn = (protect: Protection | undefined): Exclude<Verdict, "allow"> => {
+const verdictIn = (protect: Protection | undefined): Verdict => {
   if (protect === undefined || Array.isArray(protect)) return "ask";
   return (protect as ProtectionRule).decision ?? "ask";
 };
+
+export const rulebookGuarded = (protect: Protection | undefined): boolean => verdictIn(protect) !== "allow";
 
 const covered = ({ root, path, always, protect }: ProtectionInput): boolean => {
   if (always.includes(path)) return true;
@@ -43,9 +45,9 @@ const covered = ({ root, path, always, protect }: ProtectionInput): boolean => {
   return picomatch([...patterns], { dot: true })(toPosix(relative(root, path)));
 };
 
-const settled = (protect: Protection | undefined, mode: string | null): Exclude<Verdict, "allow"> => {
+const settled = (protect: Protection | undefined, mode: string | null): Verdict => {
   const wanted = verdictIn(protect);
-  if (wanted === "deny") return "deny";
+  if (wanted === "allow" || wanted === "deny") return wanted;
   return mode !== null && ASKS_NOBODY.has(mode) ? "deny" : "ask";
 };
 
@@ -53,6 +55,7 @@ export function protectionOf(input: ProtectionInput): Decision {
   if (!covered(input)) return ALLOW;
 
   const verdict = settled(input.protect, input.mode);
+  if (verdict === "allow") return ALLOW;
   const guidance = verdict === "deny" ? DENY_GUIDANCE : ASK_GUIDANCE;
   const where = toPosix(relative(input.root, input.path)) || input.path;
 

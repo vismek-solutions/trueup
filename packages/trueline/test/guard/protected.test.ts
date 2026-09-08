@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { protectionOf } from "../../src/guard/protected.ts";
+import { protectionOf, rulebookGuarded } from "../../src/guard/protected.ts";
 import type { Protection } from "../../src/ports/protection.ts";
 
 const ROOT = "/project";
@@ -36,6 +36,19 @@ describe("deciding whether a file is the agent's to change", () => {
     expect(decide("src/thing.ts", { decision: "deny" }).verdict).toBe("allow");
   });
 
+  it("hands the rulebook over when the project asks it to, in every mode", () => {
+    const open: Protection = { decision: "allow" };
+
+    for (const mode of ["default", "plan", "acceptEdits", "bypassPermissions"]) {
+      expect(decide("trueline.config.ts", open, mode).verdict).toBe("allow");
+      expect(decide(".trueline-baseline.json", open, mode).verdict).toBe("allow");
+    }
+  });
+
+  it("says nothing when it allows, since a hook that speaks on every write is noise", () => {
+    expect(decide("trueline.config.ts", { decision: "allow" }).reasons).toEqual([]);
+  });
+
   it("names the file relative to the project", () => {
     expect(decide(".github/workflows/ci.yml", [".github/**"]).reasons[0]).toContain(
       ".github/workflows/ci.yml",
@@ -56,5 +69,17 @@ describe("deciding whether a file is the agent's to change", () => {
   it("addresses the person when it asks, and the agent when it refuses", () => {
     expect(decide("trueline.config.ts").reasons[0]).toContain("An agent is asking");
     expect(decide("trueline.config.ts", { decision: "deny" }).reasons[0]).toContain("fix the code");
+  });
+});
+
+describe("telling the report whether the rulebook is guarded", () => {
+  it("counts an unset, a list and a hardened rule as guarded", () => {
+    expect(rulebookGuarded(undefined)).toBe(true);
+    expect(rulebookGuarded(["CLAUDE.md"])).toBe(true);
+    expect(rulebookGuarded({ decision: "deny" })).toBe(true);
+  });
+
+  it("counts an allowance as unguarded, so the report can say so", () => {
+    expect(rulebookGuarded({ decision: "allow" })).toBe(false);
   });
 });
