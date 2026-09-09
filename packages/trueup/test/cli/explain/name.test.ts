@@ -1,0 +1,134 @@
+import { describe, expect, it } from "vitest";
+import { CUT, explainIn, saidBy, UNRULED } from "../../support/explain.ts";
+
+const about = (target: string) => saidBy(UNRULED, target);
+
+const cutting = (target: string) => saidBy(CUT, target);
+
+describe("who reads one export", () => {
+  it("names every file that reads it, through the declaring file rather than the module named", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "read by     src/core/two.ts · src/web/one.ts",
+    );
+  });
+
+  it("names the zones those readers sit in, since a move is a zone question", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain("zones: core · web");
+  });
+
+  it("says whether the readers are spread, since that is what decides if a split has a home", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain("2 directories read it");
+  });
+
+  it("calls the directory holding the file a dot, so a reader beside it still reads as somewhere", async () => {
+    const said = await cutting("lib.ts#label");
+
+    expect(said).toContain("directories: . · nested");
+    expect(said).toContain("2 directories read it");
+  });
+
+  it("names the one directory rather than only counting it when the readers agree", async () => {
+    expect(await cutting("twin.ts#label")).toContain("directories: nested");
+  });
+
+  it("keeps two files declaring one name apart, since the reader belongs to the declaring file", async () => {
+    expect(await cutting("lib.ts#label")).toContain("read by     nested/deep.ts · reader.ts · stray.ts");
+    expect(await cutting("twin.ts#label")).toContain("read by     nested/twin-reader.ts");
+  });
+
+  it("counts a reader no zone claims among the files but names no zone for it", async () => {
+    const said = (await cutting("lib.ts#label")).split("\n");
+
+    expect(said).toContain("read by     nested/deep.ts · reader.ts · stray.ts");
+    expect(said).toContain("            zones: app");
+  });
+
+  it("says nothing about declaring elsewhere for a name this file does declare", async () => {
+    expect(await cutting("lib.ts#label")).not.toContain("declared elsewhere");
+  });
+
+  it("says so when nothing reads the export, rather than printing an empty list", async () => {
+    expect(await cutting("lib.ts#other")).toContain("read by     nothing in this project");
+  });
+});
+
+describe("pricing what one export would cost to move", () => {
+  it("counts nothing as travelling when the export reaches nothing else in its file", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow",
+    );
+  });
+
+  it("follows the chain out of the export, not just what it names directly", async () => {
+    expect(await cutting("lib.ts#label")).toContain("travels     clean · joinAll");
+  });
+
+  it("keeps back a helper something staying behind also reads, since that one must be promoted", async () => {
+    const said = await cutting("lib.ts#label");
+
+    expect(said).toContain("promote     trim");
+    expect(said).toContain("cutting means promoting them first");
+  });
+
+  it("prices the whole cut in one line, with the numbers agreeing with the lists", async () => {
+    expect(await cutting("lib.ts#label")).toContain(
+      "cut cost    2 declarations would travel with it · 1 would have to be promoted first · 1 import would follow",
+    );
+  });
+
+  it("counts an import as following only when a travelling declaration reaches it", async () => {
+    expect(await cutting("lib.ts#label")).toContain("follows     node:path");
+    expect(await cutting("lib.ts#other")).toContain("follows     none");
+  });
+
+  it("says nothing must be promoted when the export owns everything it reaches", async () => {
+    const said = await cutting("lib.ts#bounce");
+
+    expect(said).toContain("promote     none");
+    expect(said).not.toContain("cutting means promoting them first");
+  });
+
+  it("walks a cycle between two helpers once rather than forever", async () => {
+    expect(await cutting("lib.ts#bounce")).toContain("travels     ping · pong");
+  });
+
+  it("names the import that would follow the export out of the file", async () => {
+    const said = await about("src/core/two.ts#engine");
+
+    expect(said).toContain("1 import would follow");
+    expect(said).toContain("follows     ../tools/three.js");
+  });
+
+  it("says a re-exported name is declared elsewhere rather than pricing a cut it cannot see", async () => {
+    const said = await cutting("barrel.ts#label");
+
+    expect(said).toContain("label  (exported here, declared elsewhere)");
+    expect(said).toContain("travels     none");
+    expect(said).toContain("promote     none");
+    expect(said).toContain("follows     none");
+  });
+});
+
+describe("what already stands against one export", () => {
+  it("gathers a claim standing against the name, anchored where the violation is", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "every-import-respects-its-zone-boundary  src/web/one.ts  is web and may not reach tools: hammer",
+    );
+  });
+
+  it("leaves out a claim standing against some other name in the same file", async () => {
+    expect(await about("src/tools/three.ts#wrench")).toContain("none stand against this name");
+  });
+
+  it("says the delegated tools were not consulted, rather than implying it gathered everything", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain("delegated tools are not consulted");
+  });
+
+  it("says so plainly when the name is in neither the declarations nor the exports", async () => {
+    expect(await about("src/core/two.ts#absent")).toContain("absent is neither declared nor exported here");
+  });
+
+  it("reports a clean run, since pricing a move is a question and not a failure", async () => {
+    expect((await explainIn(UNRULED, ["src/tools/three.ts#hammer"])).code).toBe(0);
+  });
+});

@@ -6,9 +6,9 @@ type About = ReturnType<typeof nameIn>;
 
 const priced = (cut: About["cut"]): string =>
   [
-    `${plural(cut.travels.length, "declaration")} travel with it`,
-    `${cut.promote.length} must be promoted first`,
-    `${plural(cut.follows.length, "import")} follow`,
+    `${plural(cut.travels.length, "declaration")} would travel with it`,
+    `${cut.promote.length} would have to be promoted first`,
+    `${plural(cut.follows.length, "import")} would follow`,
   ].join(" · ");
 
 const meeting = (directories: readonly string[]): string =>
@@ -22,6 +22,7 @@ const readerLines = (readers: About["readers"]): string[] =>
     : [
         `read by     ${list(readers.files)}`,
         `            zones: ${list(readers.zones)}`,
+        `            directories: ${list(readers.directories)}`,
         meeting(readers.directories),
       ];
 
