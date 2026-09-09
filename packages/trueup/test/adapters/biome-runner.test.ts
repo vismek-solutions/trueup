@@ -43,10 +43,38 @@ describe("reading biome's output", () => {
     expect(findingsOf(runWith("ok"))[2]?.start).toBeNull();
   });
 
+  it("keeps a diagnostic biome placed in no file at all", () => {
+    expect(findingsOf(runWith("unlocated-lint"))[0]).toMatchObject({ file: null, start: null });
+  });
+
+  it("keeps a diagnostic biome placed in a file but at no line", () => {
+    expect(findingsOf(runWith("unpositioned-lint"))[0]).toMatchObject({ file: LINTED, start: null });
+  });
+
+  it("carries the name biome's findings are reported under", () => {
+    expect(biomeRunner().name).toBe("biome");
+  });
+
   it("matches a category filter by prefix, so one entry keeps a whole group", () => {
     expect(findingsOf(runWith("ok", ["lint/style"])).map((finding) => finding.category)).toEqual([
       "lint/style/useConst",
     ]);
+  });
+
+  it("matches a filter naming a rule exactly, not only a group above it", () => {
+    expect(findingsOf(runWith("ok", ["deserialize"])).map((finding) => finding.category)).toEqual([
+      "deserialize",
+    ]);
+  });
+
+  it("keeps what any one filter matches, rather than only what they all match", () => {
+    const found = runWith("ok", ["lint/style", "nothing/here"]);
+
+    expect(findingsOf(found).map((finding) => finding.category)).toEqual(["lint/style/useConst"]);
+  });
+
+  it("shows the rule name when biome sent no message to show", () => {
+    expect(findingsOf(runWith("terse"))[0]?.message).toBe("lint/style/useConst");
   });
 
   it("keeps every lint rule under a single lint filter", () => {
@@ -73,6 +101,10 @@ describe("letting biome fix what it can", () => {
     findingsOf(biomeRunner({ command: ["node", TOOL, "report-args"], ...options }).run(ROOT))[0]?.message ??
     "";
 
+  it("asks for json, a ceiling on diagnostics and the whole tree, and nothing else", () => {
+    expect(argsFor({})).toBe("--reporter=json --max-diagnostics=10000 .");
+  });
+
   it("leaves the working tree alone unless asked", () => {
     expect(argsFor({})).not.toContain("--write");
   });
@@ -91,12 +123,42 @@ describe("refusing to trust biome", () => {
     expect(reasonOf(runWith("no-files"))).toContain("processed no files");
   });
 
+  it("lists every path it searched, so the empty run can be reproduced", () => {
+    const found = biomeRunner({ command: ["node", TOOL, "no-files"], paths: ["src", "test"] }).run(ROOT);
+
+    expect(reasonOf(found)).toContain("processed no files under src test");
+  });
+
+  it("adds the two counts rather than comparing them, so an equal run is not read as empty", () => {
+    expect(runWith("churn").kind).toBe("findings");
+  });
+
+  it("fails when the summary is missing a count, rather than reading it as none", () => {
+    expect(reasonOf(runWith("half-summary"))).toContain("summary and diagnostics");
+  });
+
+  it("fails on either count being missing, not only the first", () => {
+    expect(reasonOf(runWith("no-unchanged"))).toContain("summary and diagnostics");
+  });
+
   it("fails when biome withheld diagnostics rather than under-reporting them", () => {
     expect(reasonOf(runWith("withheld"))).toContain("withheld 3 diagnostics");
   });
 
-  it("fails when a file could not be parsed", () => {
-    expect(reasonOf(runWith("parse-error"))).toContain("was not checked");
+  it("fails when a diagnostic is not an object at all", () => {
+    expect(reasonOf(runWith("not-a-diagnostic"))).toContain("summary and diagnostics");
+  });
+
+  it("fails when a diagnostic carries no category to report it under", () => {
+    expect(reasonOf(runWith("no-category"))).toContain("summary and diagnostics");
+  });
+
+  it("fails when a file could not be parsed, naming the file", () => {
+    expect(reasonOf(runWith("parse-error"))).toContain(`${LINTED} was not checked`);
+  });
+
+  it("says a file went unchecked even when biome named none", () => {
+    expect(reasonOf(runWith("unlocated-parse-error"))).toContain("a file was not checked");
   });
 
   it("fails on an internal error rather than passing it off as a finding", () => {

@@ -34,6 +34,76 @@ if (mode === "withheld") {
   emit({ summary: summary({ diagnosticsNotPrinted: 3 }), diagnostics: [], command: "lint" });
 }
 
+if (mode === "half-summary") {
+  emit({ summary: { unchanged: 2, diagnosticsNotPrinted: 0 }, diagnostics: [], command: "lint" });
+}
+
+if (mode === "churn") {
+  emit({
+    summary: summary({ changed: 2, unchanged: 2 }),
+    diagnostics: [
+      { severity: "error", message: "Using == may be unsafe.", category: "lint/suspicious/noDoubleEquals", location: at(3, 14), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "no-unchanged") {
+  emit({ summary: { changed: 1, diagnosticsNotPrinted: 0 }, diagnostics: [], command: "lint" });
+}
+
+if (mode === "unlocated-lint") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "about no file in particular", category: "lint/style/useConst", advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "unpositioned-lint") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "about the whole file", category: "lint/style/useConst", location: { path }, advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "not-a-diagnostic") {
+  emit({ summary: summary({}), diagnostics: ["a bare string"], command: "lint" });
+}
+
+if (mode === "no-category") {
+  emit({
+    summary: summary({}),
+    diagnostics: [{ severity: "error", message: "nothing says what this is", location: at(3, 14), advices: [] }],
+    command: "lint",
+  });
+}
+
+if (mode === "unlocated-parse-error") {
+  emit({
+    summary: summary({ unchanged: 1 }),
+    diagnostics: [
+      { severity: "error", message: "Expected an identifier.", category: "parse", advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "terse") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "", category: "lint/style/useConst", location: at(1, 10), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
 if (mode === "parse-error") {
   emit({
     summary: summary({ unchanged: 1 }),
