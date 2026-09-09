@@ -33,6 +33,7 @@ export default defineConfig({
       command: ["node_modules/.bin/oxlint"],
       paths: PATHS,
       categories: ["eslint/max-params"],
+      write: process.env.CI === undefined,
     }),
   ],
 });
