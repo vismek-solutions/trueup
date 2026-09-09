@@ -19,6 +19,10 @@ describe("a package.json this tool cannot read", () => {
   it("answers nothing when the manifest parses to something that is not an object", () => {
     expect(read("not-an-object")).toBeNull();
   });
+
+  it("answers nothing for a manifest holding null, which typeof calls an object", () => {
+    expect(read("null-manifest")).toBeNull();
+  });
 });
 
 describe("the name a package gives itself", () => {
