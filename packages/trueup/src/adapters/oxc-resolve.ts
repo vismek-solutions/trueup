@@ -7,8 +7,8 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs",
 type ResolvedFile = ReturnType<ResolverFactory["resolveFileSync"]>;
 
 const resolutionOf = (result: ResolvedFile, specifier: string): Resolution => {
-  if (result.builtin !== undefined && result.builtin !== null) return { kind: "builtin", name: specifier };
-  if (result.path !== undefined && result.path !== null) return { kind: "path", path: result.path };
+  if (result.builtin !== undefined) return { kind: "builtin", name: specifier };
+  if (result.path !== undefined) return { kind: "path", path: result.path };
   return { kind: "unresolved", reason: result.error ?? "not resolved" };
 };
 
