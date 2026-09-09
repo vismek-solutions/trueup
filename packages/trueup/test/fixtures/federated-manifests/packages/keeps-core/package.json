@@ -1,0 +1,4 @@
+{
+  "name": "@acme/core",
+  "exports": { ".": "./src/index.ts" }
+}
