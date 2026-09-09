@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
+import { EXIT_BAD_USAGE } from "../../src/cli/command.ts";
 import { runExplain } from "../../src/cli/explain.ts";
 
 const PROJECT = fixtureAt("explained");
@@ -54,5 +55,57 @@ describe("explaining a path before writing it", () => {
     const { code, output } = await explain();
     expect(code).toBe(3);
     expect(output).toContain("usage");
+  });
+
+  it("leads with the path it is explaining, written relative to the project", async () => {
+    const { output } = await explain("src/engine/notYetWritten.ts");
+
+    expect(output.split("\n")[0]).toBe("src/engine/notYetWritten.ts");
+  });
+
+  it("refuses a flag rather than reading it as a path", async () => {
+    const { code, output } = await explain("--verbose", "src/engine/x.ts");
+
+    expect(code).toBe(EXIT_BAD_USAGE);
+    expect(output).toContain("unrecognised: --verbose");
+    expect(output).toContain("usage: trueup explain <path>");
+  });
+
+  it("says none where a zone is held back from nothing, rather than leaving the line blank", async () => {
+    expect((await explain("src/domain/x.ts")).output).toContain("may not     none");
+  });
+});
+
+describe("a vocabulary too long to print", () => {
+  const wide = async (): Promise<string> => {
+    let output = "";
+    await runExplain({
+      cwd: fixtureAt("explained-wide"),
+      argv: ["src/engine/x.ts"],
+      write: (line) => (output += `${line}\n`),
+    });
+    return output;
+  };
+
+  it("shows the first few in order and counts the rest, so the block stays readable", async () => {
+    expect(await wide()).toContain("alpha · bravo · charlie · delta · echo · foxtrot · and 2 more");
+  });
+
+  it("counts the values it withheld the same way", async () => {
+    expect(await wide()).toContain("eight · five · four · one · seven · six · and 2 more");
+  });
+});
+
+describe("a project that configured no rules of its own", () => {
+  it("says nothing about what also runs, rather than an empty list", async () => {
+    let output = "";
+    await runExplain({
+      cwd: fixtureAt("project"),
+      argv: ["src/engine/x.ts"],
+      write: (line) => (output += `${line}\n`),
+    });
+
+    expect(output).toContain("zone        engine");
+    expect(output).not.toContain("also runs");
   });
 });
