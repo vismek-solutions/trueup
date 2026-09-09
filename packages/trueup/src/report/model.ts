@@ -10,6 +10,7 @@ export interface Finding {
   readonly group?: string | undefined;
   readonly accepted?: boolean | undefined;
   readonly symbol?: string | undefined;
+  readonly specifier?: string | undefined;
 }
 
 export interface ClaimResult {

@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -269,6 +269,42 @@ describe("a project whose sources sit under more than one root", () => {
     const said = await refusalIn("tools/added.ts", 'import { thing } from "../src/domain/thing.js";\n');
 
     expect(said).toContain("may not reach domain");
+  });
+});
+
+describe("guarding a file that was already broken", () => {
+  const mending = () => join(PROJECT, "src/engine/mending.ts");
+
+  const startingFrom = (text: string) => {
+    writeFileSync(join(PROJECT, "src/engine/helper.ts"), "export const helper = 1;\n", "utf8");
+    writeFileSync(mending(), text, "utf8");
+  };
+
+  const refusalOf = async (text: string): Promise<string> => {
+    const { output } = await guard(writing(mending(), text));
+    return JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+  };
+
+  it("says an import was unresolved before the edit, so half a repair does not read as the cause", async () => {
+    startingFrom('import { a } from "./gone.js";\nimport { b } from "./missing.js";\n\nexport const both = [a, b];\n');
+
+    const reason = await refusalOf(
+      'import { a } from "./gone.js";\nimport { helper } from "./helper.js";\n\nexport const both = [a, helper];\n',
+    );
+
+    expect(reason).toContain("./gone.js, which does not resolve");
+    expect(reason).toContain("already unresolved before this edit");
+  });
+
+  it("says nothing of the sort about one the edit itself brought in", async () => {
+    startingFrom('import { helper } from "./helper.js";\n\nexport const both = helper;\n');
+
+    const reason = await refusalOf(
+      'import { helper } from "./helper.js";\nimport { typo } from "./typo.js";\n\nexport const both = [helper, typo];\n',
+    );
+
+    expect(reason).toContain("./typo.js, which does not resolve");
+    expect(reason).not.toContain("already unresolved before this edit");
   });
 });
 

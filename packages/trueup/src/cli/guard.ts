@@ -1,7 +1,8 @@
 import { extname, relative, sep } from "node:path";
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
 import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
-import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
+import { IGNORED_DIRECTORIES, readSource, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
+import { parseModule } from "../adapters/oxc-parse.ts";
 import { check, placementOf } from "../compose.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
 import type { ArchitectureConfig, ResolvedConfig } from "../config/model.ts";
@@ -93,6 +94,35 @@ const inIgnoredDirectory = (root: string, path: string, config: ArchitectureConf
     .some((segment) => skipped.has(segment));
 };
 
+const ALREADY = " — already unresolved before this edit";
+
+const importedBefore = (path: string): ReadonlySet<string> => {
+  try {
+    return new Set(parseModule(path, readSource(path)).imports.map((entry) => entry.specifier));
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const markingPriorFailures = (report: Report, request: HookRequest, path: string | null): Report => {
+  if (request.kind !== "propose" || path === null) return report;
+
+  const before = importedBefore(path);
+  if (before.size === 0) return report;
+
+  return {
+    ...report,
+    claims: report.claims.map((claim) => ({
+      ...claim,
+      findings: claim.findings.map((finding) =>
+        finding.file === path && finding.specifier !== undefined && before.has(finding.specifier)
+          ? { ...finding, message: `${finding.message}${ALREADY}` }
+          : finding,
+      ),
+    })),
+  };
+};
+
 const analysed = ({ root, config }: Site, roots: readonly string[], path: string | null): boolean =>
   path === null ||
   ((config.extensions ?? SOURCE_EXTENSIONS).includes(extname(path)) &&
@@ -167,7 +197,8 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const recorded = readBaseline(baseline);
   const { report: effective } = applyBaseline({ report, baseline: recorded, root });
 
-  const decision = decideOnProposal({ report: effective, path: checked, root });
+  const marked = markingPriorFailures(effective, request, checked);
+  const decision = decideOnProposal({ report: marked, path: checked, root });
   const reach = withReach(decision, checked, { root, config });
   const output = answerTo({ request, decision: reach, spread, notes: noticesIn(effective) });
   if (output !== null) write(output);

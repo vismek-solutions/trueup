@@ -22,6 +22,7 @@ const everyImportResolves: Claim = {
       message: `${relative(root, entry.from)} imports ${entry.specifier}, which does not resolve (${entry.reason})`,
       file: entry.from,
       start: entry.start,
+      specifier: entry.specifier,
     })),
 };
 
