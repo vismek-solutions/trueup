@@ -1,4 +1,5 @@
 node_modules/
+.stryker-tmp/
 .idea/
 .serena/
 dist/

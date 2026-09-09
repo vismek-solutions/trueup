@@ -9,7 +9,7 @@
   "coverageAnalysis": "perTest",
   "ignoreStatic": true,
   "concurrency": 6,
-  "tempDirName": "node_modules/.stryker-tmp",
+  "tempDirName": ".stryker-tmp",
   "incremental": true,
   "incrementalFile": "node_modules/.stryker-reports/incremental.json",
   "tsconfigFile": "tsconfig.stryker-skip.json",
