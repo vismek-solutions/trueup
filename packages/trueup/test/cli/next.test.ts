@@ -66,6 +66,28 @@ describe("the next report, to the character", () => {
     expect(renderNext(ACCEPTED, "/p")).not.toContain("no longer reports this");
   });
 
+  it("counts the stale entries beside the accepted one, since both are baseline work", () => {
+    expect(renderNext(ACCEPTED, "/p", { ratchet: { known: 1, stale: 2 } })).toContain(
+      "baseline  1 of 1 accepted · 2 stale",
+    );
+  });
+
+  it("offers an error that names no file, so a claim about the run itself is not skipped", () => {
+    const nowhere = reportOf([
+      { claim: "the-analysis-reached-files", guidance: "g", findings: [error("no files", null)] },
+    ]);
+
+    expect(renderNext(nowhere, "/p")).toBe(
+      [
+        "problem 1 of 1 · 1 claim · 1 error · 0 warnings",
+        "",
+        "the-analysis-reached-files  1 error",
+        "    no files",
+        "    g",
+      ].join("\n"),
+    );
+  });
+
   it("offers what one claim accepted while another still fails, when asked for that claim", () => {
     const shown = renderNext(STILL_FAILING, "/p", { only: "boundary" });
 

@@ -3,15 +3,11 @@ import { DEFAULT_COMMAND } from "../report/invocation.ts";
 import type { Finding, Report } from "../report/model.ts";
 import { locator, type Locate } from "./position.ts";
 
-const positionOf = (file: string, offset: number, at: Locate): string => {
-  const position = at(file, offset);
-  return position === null ? "" : `:${position.line}:${position.column}`;
-};
-
 const locate = (root: string, finding: Finding, at: Locate): string => {
   if (finding.file === null) return "";
-  const position = finding.start === null ? "" : positionOf(finding.file, finding.start, at);
-  return `${relative(root, finding.file)}${position}`;
+  const position = at(finding.file, finding.start);
+  const shown = position === null ? "" : `:${position.line}:${position.column}`;
+  return `${relative(root, finding.file)}${shown}`;
 };
 
 const listed = (findings: readonly Finding[], root: string, at: Locate): readonly string[] =>
@@ -179,18 +175,18 @@ export function renderNext(report: Report, root: string, options: NextInput = {}
 
   const debts = problemsIn(scoped, accepted);
   const owed = debts[0];
-  const stale = ratchet === undefined || ratchet.stale === 0 ? [] : [`${ratchet.stale} stale`];
+  const stale = ratchet === undefined || ratchet.stale === 0 ? "" : `${ratchet.stale} stale`;
 
   if (owed === undefined) {
     return [
       `nothing left to fix${scopeOf(only)} · ${tally}`,
-      ...stale.map((line) => `baseline  ${line}`),
+      ...(stale === "" ? [] : [`baseline  ${stale}`]),
     ].join("\n");
   }
 
   return [
     `nothing failing${scopeOf(only)} · ${tally}`,
-    `baseline  1 of ${debts.length} accepted${stale.map((line) => ` · ${line}`).join("")}`,
+    `baseline  1 of ${debts.length} accepted${stale === "" ? "" : ` · ${stale}`}`,
     ...blockFor(owed, {
       root,
       tally: `${owed.findings.length} accepted`,
