@@ -2,7 +2,7 @@ import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
 import { absoluteIn, numberOf, objectOf, stringOf, summarize } from "./tool-output.ts";
-import { jsonRunner } from "./tool-process.ts";
+import { jsonRunner, toolCallFrom } from "./tool-process.ts";
 
 export const DEFAULT_MAX_DIAGNOSTICS = 10_000;
 
@@ -136,11 +136,12 @@ const collect = (diagnostics: readonly unknown[], context: ConvertInput): Runner
 };
 
 export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
-  const command = options.command ?? ["npx", "--yes", "@biomejs/biome", "lint"];
-  const paths = options.paths ?? ["."];
+  const { command, paths, fixing } = toolCallFrom(options, {
+    command: ["npx", "--yes", "@biomejs/biome", "lint"],
+    fix: ["--write"],
+  });
   const categories = options.categories;
   const maxDiagnostics = options.maxDiagnostics ?? DEFAULT_MAX_DIAGNOSTICS;
-  const fixing = options.write === true ? ["--write"] : [];
 
   return jsonRunner({
     name: "biome",

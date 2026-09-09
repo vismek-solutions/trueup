@@ -70,6 +70,29 @@ export interface JsonSource {
   readonly stderr: string;
 }
 
+export interface ToolOptions {
+  readonly command?: readonly string[] | undefined;
+  readonly paths?: readonly string[] | undefined;
+  readonly write?: boolean | undefined;
+}
+
+export interface ToolDefaults {
+  readonly command: readonly string[];
+  readonly fix: readonly string[];
+}
+
+export interface ToolCall {
+  readonly command: readonly string[];
+  readonly paths: readonly string[];
+  readonly fixing: readonly string[];
+}
+
+export const toolCallFrom = (options: ToolOptions, defaults: ToolDefaults): ToolCall => ({
+  command: options.command ?? defaults.command,
+  paths: options.paths ?? ["."],
+  fixing: options.write === true ? defaults.fix : [],
+});
+
 export interface JsonRunnerPlan {
   readonly name: string;
   readonly invoke: (root: string) => ToolInvocation;

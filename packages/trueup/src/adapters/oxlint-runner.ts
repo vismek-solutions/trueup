@@ -1,7 +1,7 @@
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { absoluteIn, numberOf, objectOf, stringOf } from "./tool-output.ts";
-import { jsonRunner } from "./tool-process.ts";
+import { jsonRunner, toolCallFrom } from "./tool-process.ts";
 
 const CODE = /^([A-Za-z-]+)\(([^)]+)\)$/;
 
@@ -70,10 +70,11 @@ const wanted = (categories: readonly string[], category: string): boolean =>
   categories.some((entry) => category === entry || category.startsWith(`${entry}/`));
 
 export function oxlintRunner(options: OxlintRunnerOptions = {}): Runner {
-  const command = options.command ?? ["npx", "--yes", "oxlint"];
-  const paths = options.paths ?? ["."];
+  const { command, paths, fixing } = toolCallFrom(options, {
+    command: ["npx", "--yes", "oxlint"],
+    fix: ["--fix"],
+  });
   const categories = options.categories ?? [];
-  const fixing = options.write === true ? ["--fix"] : [];
 
   return jsonRunner({
     name: "oxlint",
