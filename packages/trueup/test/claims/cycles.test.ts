@@ -14,6 +14,8 @@ const ZONES: readonly ZoneDefinition[] = [
   { name: "left", patterns: ["left/**"] },
   { name: "right", patterns: ["right/**"] },
   { name: "free", patterns: ["free/**"] },
+  { name: "server", patterns: ["api/**"] },
+  { name: "browser", patterns: ["web/**"] },
 ];
 
 const zonedAs = (zones: readonly ZoneDefinition[]): readonly string[] =>
@@ -29,12 +31,17 @@ describe("zones that depend on each other", () => {
   });
 
   it("reports each tangle once rather than once per zone in it", () => {
-    expect(zonedAs(ZONES)).toHaveLength(2);
+    expect(zonedAs(ZONES)).toHaveLength(3);
   });
 
-  it("keeps two tangles apart when one of them reaches into the other", () => {
+  it("names the zones in a tangle by name, not by the order their imports were read", () => {
+    expect(zonedAs(ZONES)).toContain("zones browser and server form an import cycle");
+  });
+
+  it("keeps tangles apart when one of them reaches into another", () => {
     expect(zonedAs(ZONES)).toEqual([
       "zones alpha, beta and gamma form an import cycle",
+      "zones browser and server form an import cycle",
       "zones left and right form an import cycle",
     ]);
   });
