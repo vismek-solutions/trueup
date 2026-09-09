@@ -3,8 +3,9 @@ import { plural } from "../render.ts";
 import { list } from "./lines.ts";
 
 type About = ReturnType<typeof nameIn>;
+type Priced = NonNullable<About["cut"]>;
 
-const priced = (cut: About["cut"]): string =>
+const priced = (cut: Priced): string =>
   [
     `${plural(cut.travels.length, "declaration")} would travel with it`,
     `${cut.promote.length} would have to be promoted first`,
@@ -32,7 +33,7 @@ const readerLines = (readers: About["readers"]): string[] =>
         meeting(readers),
       ];
 
-const cutLines = (cut: About["cut"]): string[] => [
+const cutLines = (cut: Priced): string[] => [
   `cut cost    ${priced(cut)}`,
   `travels     ${list(cut.travels)}`,
   `promote     ${list(cut.promote)}`,
@@ -63,9 +64,9 @@ export const nameLines = ({ about, against }: NameLinesInput): string[] => {
     "",
     ...readerLines(readers),
     "",
-    ...(declared
-      ? cutLines(cut)
-      : ["cut cost    not priced here, since what would move is declared in another file"]),
+    ...(cut === null
+      ? ["cut cost    not priced here, since what would move is declared in another file"]
+      : cutLines(cut)),
     "",
     `claims      ${against.length === 0 ? "none stand against this name" : `${against.length}`}`,
     ...against.map((said) => `    ${said}`),

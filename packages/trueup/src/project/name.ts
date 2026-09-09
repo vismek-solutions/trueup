@@ -21,7 +21,7 @@ export interface NameReport {
   readonly declared: boolean;
   readonly exported: boolean;
   readonly readers: NameReaders;
-  readonly cut: NameCut;
+  readonly cut: NameCut | null;
 }
 
 const reachedFrom = (
@@ -78,8 +78,6 @@ const readersOf = (project: Project, file: string, name: string): NameReaders =>
 
 const cutOf = (project: Project, file: string, name: string): NameCut => {
   const uses = project.referencesIn(file);
-  if (!uses.has(name)) return { travels: [], promote: [], follows: [], importBack: [] };
-
   const others = project.exportsOf(file).filter((exported) => exported !== name);
   const needs = reachedFrom(uses, [name]);
   needs.delete(name);
@@ -98,10 +96,14 @@ const cutOf = (project: Project, file: string, name: string): NameCut => {
   };
 };
 
-export const aboutName = (project: Project, file: string, name: string): NameReport => ({
-  name,
-  declared: project.declarationsIn(file).some((declaration) => declaration.name === name),
-  exported: project.exportsOf(file).includes(name),
-  readers: readersOf(project, file, name),
-  cut: cutOf(project, file, name),
-});
+export const aboutName = (project: Project, file: string, name: string): NameReport => {
+  const declared = project.declarationsIn(file).some((declaration) => declaration.name === name);
+
+  return {
+    name,
+    declared,
+    exported: project.exportsOf(file).includes(name),
+    readers: readersOf(project, file, name),
+    cut: declared ? cutOf(project, file, name) : null,
+  };
+};
