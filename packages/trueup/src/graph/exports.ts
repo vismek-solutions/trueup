@@ -68,7 +68,6 @@ export function createExportResolver({ modules, resolve }: ExportResolverDeps): 
     if (resolution.kind === "unresolved" || resolution.kind === "external") {
       return { kind: "external", path: null };
     }
-    if (!modules.has(resolution.path)) return { kind: "external", path: resolution.path };
     return step(resolution.path, name);
   };
 
