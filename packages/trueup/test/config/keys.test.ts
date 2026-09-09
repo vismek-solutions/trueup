@@ -28,9 +28,10 @@ describe("a configuration key nothing reads", () => {
       `${rulebookIn("stray-root")} sets \`boundries\`, \`allow\`,` +
         " which a root configuration does not read." +
         " `allow` belongs in the member configuration." +
-        " A root configuration accepts `boundaries`, `colocation`, `command`, `duplication`," +
+        " A root configuration accepts `boundaries`, `changes`, `colocation`, `command`, `duplication`," +
         " `extensions`, `externals`, `ignoreDirectories`, `include`, `isolate`, `maxFilesPerDirectory`," +
-        " `members`, `protect`, `readerships`, `rules`, `runners`, `seams`, `testInternals`, `zones`." +
+        " `members`, `protect`, `readerships`, `reviewable`, `rules`, `runners`, `seams`," +
+        " `testInternals`, `zones`." +
         " A key it does not read is ignored, so the run makes one fewer claim than you configured" +
         " and nothing says so.",
     );

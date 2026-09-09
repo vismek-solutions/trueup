@@ -5,7 +5,11 @@ import type { RatchetResult } from "./model.ts";
 
 export const STALE_CLAIM = "every-baseline-entry-is-still-needed";
 
-const NEVER_BASELINED = new Set(["the-analysis-reached-files", "every-delegated-tool-ran"]);
+const NEVER_BASELINED = new Set([
+  "the-analysis-reached-files",
+  "every-delegated-tool-ran",
+  "no-change-outgrows-its-review",
+]);
 
 const keyOf = (entry: BaselineEntry): string => `${entry.claim}\0${entry.file ?? ""}\0${entry.message}`;
 

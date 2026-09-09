@@ -1,3 +1,4 @@
+import { gitChanges } from "./adapters/git/changes.ts";
 import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
 import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
@@ -12,6 +13,7 @@ import { grantClaim, type MemberGrants } from "./claims/members/grants.ts";
 import { directoryClaim, type DirectoryLimit } from "./claims/placement/directories.ts";
 import { duplicationClaim } from "./claims/placement/duplication.ts";
 import { readershipClaim } from "./claims/placement/readership.ts";
+import { reviewClaim } from "./claims/review/budget.ts";
 import { isolationClaim, loosePlacementClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
@@ -177,15 +179,17 @@ export function check({
   seams = [],
   isolate = [],
   maxFilesPerDirectory,
-  directoryLimits,
-  apiSurfaces,
-  grants,
+  directoryLimits = [],
+  apiSurfaces = [],
+  grants = [],
   duplication,
+  reviewable,
   colocation = false,
   readerships = false,
   testInternals = false,
   rules = [],
   runners = [],
+  changes = gitChanges(),
   overlay,
   extensions,
   externals,
@@ -215,12 +219,13 @@ export function check({
     seamClaim(seams),
     cycleClaim,
     ...isolationClaims(isolate),
-    ...((apiSurfaces ?? []).length === 0 ? [] : [apiSurfaceClaim(apiSurfaces ?? [])]),
-    ...((grants ?? []).length === 0 ? [] : [grantClaim(grants ?? [])]),
-    ...(maxFilesPerDirectory === undefined && (directoryLimits ?? []).length === 0
+    ...(apiSurfaces.length === 0 ? [] : [apiSurfaceClaim(apiSurfaces)]),
+    ...(grants.length === 0 ? [] : [grantClaim(grants)]),
+    ...(maxFilesPerDirectory === undefined && directoryLimits.length === 0
       ? []
-      : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits ?? [])]),
+      : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits)]),
     ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),
+    ...(reviewable === undefined ? [] : [reviewClaim(reviewable, changes)]),
     ...(colocation ? placementClaims(zones) : []),
     ...(readerships ? [readershipClaim(roleZonesIn(zones))] : []),
     ...(testInternals

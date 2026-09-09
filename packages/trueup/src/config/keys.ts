@@ -2,6 +2,7 @@ import type { ArchitectureConfig, MemberConfig } from "./model.ts";
 
 const ROOT: Record<keyof ArchitectureConfig, true> = {
   boundaries: true,
+  changes: true,
   colocation: true,
   command: true,
   duplication: true,
@@ -14,6 +15,7 @@ const ROOT: Record<keyof ArchitectureConfig, true> = {
   members: true,
   protect: true,
   readerships: true,
+  reviewable: true,
   rules: true,
   runners: true,
   seams: true,

@@ -91,6 +91,8 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     apiSurfaces: config.apiSurfaces,
     grants: config.grants,
     duplication: config.duplication,
+    reviewable: config.reviewable,
+    changes: config.changes,
     isolate: config.isolate,
     colocation: config.colocation,
     readerships: config.readerships,
