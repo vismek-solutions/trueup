@@ -1,6 +1,7 @@
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { fixtureAt } from "../support/fixtures.ts";
 import { GUARDED as PROJECT, guardFor } from "../support/guard.ts";
 import { baselinePathIn, writeBaseline } from "../../src/adapters/baseline-file.ts";
 import { check } from "../../src/compose.ts";
@@ -172,5 +173,17 @@ describe("refusing to let the rules be edited", () => {
     expect(result.hookEventName).toBe("PostToolUse");
     expect(result.permissionDecision).toBeUndefined();
     expect(result.additionalContext).toContain(CLAIM);
+  });
+});
+
+describe("a project that lets its rulebook be edited", () => {
+  const RULEBOOK = fixtureAt("guarded-rulebook");
+  const editing = guardFor(RULEBOOK);
+
+  it("does not analyse the rulebook it was told to ignore, so the edit stands", async () => {
+    const path = join(RULEBOOK, "trueup.config.ts");
+    const { output } = await editing(writing(path, "export default { zones: [] };\n"));
+
+    expect(output).toBe("");
   });
 });

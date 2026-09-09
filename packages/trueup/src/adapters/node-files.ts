@@ -21,12 +21,15 @@ export interface DiscoverFilesOptions {
   readonly ignoreFiles?: readonly string[] | undefined;
 }
 
-export function discoverFiles({
-  roots,
-  extensions = SOURCE_EXTENSIONS,
-  ignoreDirectories = IGNORED_DIRECTORIES,
-  ignoreFiles = [],
-}: DiscoverFilesOptions): string[] {
+export function discoverFiles(
+  {
+    roots,
+    extensions = SOURCE_EXTENSIONS,
+    ignoreDirectories = IGNORED_DIRECTORIES,
+    ignoreFiles = [],
+  }: DiscoverFilesOptions,
+  proposed: Iterable<string> = [],
+): string[] {
   const allowed = new Set(extensions);
   const skipped = new Set(ignoreDirectories);
   const excluded = new Set(ignoreFiles);
@@ -44,7 +47,8 @@ export function discoverFiles({
   };
 
   for (const root of roots) walk(root);
-  return found.sort();
+  for (const path of proposed) if (!excluded.has(path)) found.push(path);
+  return [...new Set(found)].sort();
 }
 
 export const readSource = (path: string): string => readFileSync(path, "utf8");

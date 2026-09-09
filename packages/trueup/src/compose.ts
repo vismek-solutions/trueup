@@ -36,10 +36,8 @@ export type Overlay = ReadonlyMap<string, string>;
 
 const NO_OVERLAY: Overlay = new Map();
 
-const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): Map<string, string> => {
-  const paths = [...new Set([...discoverFiles(options), ...overlay.keys()])].sort();
-  return new Map(paths.map((path) => [path, overlay.get(path) ?? readSource(path)]));
-};
+const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): Map<string, string> =>
+  new Map(discoverFiles(options, overlay.keys()).map((path) => [path, overlay.get(path) ?? readSource(path)]));
 
 const parseAll = (sources: ReadonlyMap<string, string>, parse: ParseModule): ModuleRecord[] =>
   [...sources].map(([path, text]) => parse(path, text));
