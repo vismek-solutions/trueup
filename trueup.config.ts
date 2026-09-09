@@ -15,6 +15,7 @@ export default defineConfig({
   command: "node ./packages/trueup/bin/trueup.js",
   maxFilesPerDirectory: 12,
   duplication: 60,
+  readerships: true,
   colocation: true,
   testInternals: true,
   runners: [

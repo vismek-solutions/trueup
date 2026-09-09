@@ -13,6 +13,7 @@ const THREE = "serves 2 readerships that never meet: alpha, omega from src/reade
 const JOBS =
   "serves 2 readerships that never meet: parse from ., src/both, src/reader, src/reader-web;" +
   " render from src/writer";
+const FOUND_BACKWARDS = "serves 2 readerships that never meet: ant from src/writer; zebra from src/reader";
 
 const ZONES: readonly ZoneDefinition[] = [
   { name: "shared", patterns: ["src/shared/**"] },
@@ -33,7 +34,11 @@ const said = (): readonly string[] => messagesIn(runWith(), CLAIM);
 
 describe("a file serving readerships that never meet", () => {
   it("reports each one, in a settled order, naming every group and where it is read from", () => {
-    expect(said()).toEqual([PAIR, THREE, JOBS]);
+    expect(said()).toEqual([PAIR, THREE, JOBS, FOUND_BACKWARDS]);
+  });
+
+  it("names the groups in one order however they were found, so the message cannot churn", () => {
+    expect(said()).toContain(FOUND_BACKWARDS);
   });
 
   it("reports it as an error rather than something to look at later", () => {
@@ -89,7 +94,7 @@ describe("who does not count as a reader", () => {
   });
 
   it("does not count a composition root, which would join every group it wires", () => {
-    expect(messagesIn(runWith(stripped("root")), CLAIM)).toEqual([PAIR, THREE]);
+    expect(messagesIn(runWith(stripped("root")), CLAIM)).toEqual([PAIR, THREE, FOUND_BACKWARDS]);
   });
 
   it("does not count an import of something declared outside the analysis", () => {

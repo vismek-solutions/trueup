@@ -4,5 +4,9 @@ import { head, middleLink } from "../shared/chain.ts";
 import { first } from "../shared/pair.ts";
 import { alpha, omega } from "../shared/three-ways.ts";
 import { parse } from "../shared/two-jobs.ts";
+import { zebra } from "../shared/unsorted.ts";
 
-export const read = join(`${parse("x")}`, `${left}${alpha}${omega}${first}${head}${middleLink}`);
+export const read = join(
+  `${parse("x")}`,
+  `${left}${alpha}${omega}${first}${head}${middleLink}${zebra}`,
+);
