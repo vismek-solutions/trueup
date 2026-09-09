@@ -18,7 +18,7 @@ const limitFor = (directory: string, fallback: number, limits: readonly Director
   return owner?.max ?? fallback;
 };
 
-export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit[] = []): Claim {
+export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit[]): Claim {
   return {
     name: "no-directory-holds-too-many-files",
     guidance: GUIDANCE,
