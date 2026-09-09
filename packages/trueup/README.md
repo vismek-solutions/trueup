@@ -776,6 +776,14 @@ defineRule("domain-is-entered-through-its-index", check,
 
 Rules see a model of the project rather than a syntax tree. The parser stays an implementation detail you never have to learn.
 
+### Reading the text of a file
+
+Some rules cannot be written against the graph — a class name in an attribute and the same string used as a discriminant look identical to a parser. `project.sourceOf(file)` returns the file's text, or `null` for a file outside the analysis.
+
+Read it through `sourceOf` rather than `fs`. Under `trueup guard` the file being written does not exist yet in the form being judged, and `sourceOf` returns the proposed text where reading the disk returns the saved copy. A rule that reads the disk is inverted at exactly the moment the guard exists for: it refuses the edit that removes a violation, and allows the edit that introduces one.
+
+Files of kinds `trueup` does not analyse — a stylesheet, say — are not in the model at all, so `sourceOf` returns `null` for them and reading those from disk stays correct.
+
 ## How this compares to fallow
 
 [fallow](https://docs.fallow.tools) is a codebase analyzer covering dead code, duplication, complexity and architecture boundaries. It is also the tool `trueup` delegates most of its commodity analysis to. The two overlap in one place, and this is the division.

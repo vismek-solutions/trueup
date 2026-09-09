@@ -85,7 +85,7 @@ const analyseProject = ({
     graph,
     zones: assignment,
     lexicon,
-    project: buildProject({ root, graph, zones: assignment, lexicon }),
+    project: buildProject({ root, graph, zones: assignment, lexicon, sources }),
   };
 };
 

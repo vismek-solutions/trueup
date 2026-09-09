@@ -10,12 +10,13 @@ export interface BuildProjectInput {
   readonly graph: SymbolGraph;
   readonly zones: ZoneAssignment;
   readonly lexicon: Lexicon;
+  readonly sources: ReadonlyMap<string, string>;
 }
 
 const declaringPathOf = (target: EdgeTarget): string | null =>
   target.kind === "external" ? null : targetPathOf(target);
 
-export function buildProject({ root, graph, zones, lexicon }: BuildProjectInput): Project {
+export function buildProject({ root, graph, zones, lexicon, sources }: BuildProjectInput): Project {
   const resolved: readonly ResolvedImport[] = graph.edges.map((edge) => {
     const declaredIn = declaringPathOf(edge.to);
     return {
@@ -53,6 +54,7 @@ export function buildProject({ root, graph, zones, lexicon }: BuildProjectInput)
     filesIn: zones.filesIn,
     imports,
     exportsOf: lexicon.exportedNamesIn,
+    sourceOf: (file) => sources.get(file) ?? null,
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
     vocabularyOf: (names) => lexicon.vocabularyOf(names.flatMap((name) => zones.filesIn(name))),

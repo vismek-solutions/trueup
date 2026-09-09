@@ -40,6 +40,7 @@ export interface Project {
   readonly filesIn: (zone: string) => readonly string[];
   readonly imports: (query?: ImportQuery) => readonly ResolvedImport[];
   readonly exportsOf: (file: string) => readonly string[];
+  readonly sourceOf: (file: string) => string | null;
   readonly mentionsIn: (file: string) => readonly Mention[];
   readonly declarationsIn: (file: string) => readonly Declaration[];
   readonly vocabularyOf: (zones: readonly string[]) => Vocabulary;

@@ -43,6 +43,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
         .filter((entry) => inside(directory, entry.from))
         .map(narrow),
     exportsOf: project.exportsOf,
+    sourceOf: project.sourceOf,
     mentionsIn: project.mentionsIn,
     declarationsIn: project.declarationsIn,
     vocabularyOf: (zones) => project.vocabularyOf(zones.map(qualify)),
