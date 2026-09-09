@@ -107,6 +107,14 @@ describe("reviewing an edit Serena has already written", () => {
     expect(said.split("\n")[0]).toContain("That edit broke");
   });
 
+  it("carries only the refusal when the rules were the thing edited, with no note riding along", async () => {
+    const said = await afterEditIn(BUDGETED, "trueup.config.ts");
+
+    expect(said).toContain("no-edit-changes-the-rules-themselves");
+    expect(said).not.toContain("no-change-outgrows-its-review");
+    expect(said.split("\n")).toHaveLength(4);
+  });
+
   it("stays silent where no budget is set and nothing is broken", async () => {
     expect(await afterEditIn(GUARDED_FOR_SERENA, "src/domain/thing.ts")).toBe("");
   });

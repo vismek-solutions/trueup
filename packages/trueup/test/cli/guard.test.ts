@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -222,6 +222,59 @@ describe("refusing to let the rules be edited", () => {
   });
 });
 
+const reviewing = (input: Record<string, unknown>) =>
+  guard({ hook_event_name: "PostToolUse", tool_name: "Write", tool_input: input });
+
+const contextOf = (output: string): string => JSON.parse(output).hookSpecificOutput.additionalContext;
+
+describe("reviewing a change that named no file", () => {
+  it("looks at the whole project rather than asking whether nothing is protected", async () => {
+    const { code, output } = await reviewing({});
+
+    expect(code).toBe(0);
+    expect(contextOf(output)).toContain("src/engine/runner.ts");
+  });
+});
+
+describe("what a review says beside the file it was asked about", () => {
+  const CLEAN = () => ({ file_path: join(PROJECT, "src/domain/thing.ts") });
+
+  it("carries a baseline entry that has gone stale, but only where it named no file", async () => {
+    writeBaseline(BASELINE, {
+      entries: [
+        { claim: "every-import-respects-its-zone-boundary", file: null, message: "a rule since dropped" },
+        {
+          claim: "every-import-respects-its-zone-boundary",
+          file: "src/engine/runner.ts",
+          message: "a finding since fixed",
+        },
+      ],
+    });
+
+    const said = contextOf((await reviewing(CLEAN())).output);
+
+    expect(said).toContain("a rule since dropped");
+    expect(said).not.toContain("a finding since fixed");
+  });
+
+  const withUndeclaredZone = () => {
+    const path = join(PROJECT, "trueup.config.ts");
+    writeFileSync(path, readFileSync(path, "utf8").replace("allow: []", 'allow: ["ghost"]'), "utf8");
+  };
+
+  it("leaves out a rule that is broken project-wide, having been asked about one file", async () => {
+    withUndeclaredZone();
+
+    expect((await reviewing(CLEAN())).output).toBe("");
+  });
+
+  it("names that rule once the review covers the whole project rather than one file", async () => {
+    withUndeclaredZone();
+
+    expect(contextOf((await reviewing({})).output)).toContain("names zone ghost, which is not declared");
+  });
+});
+
 describe("a hook it has no rulebook to answer with", () => {
   it("stays out of the way when nothing above the file declares any rules", async () => {
     const empty = mkdtempSync(join(tmpdir(), "trueup-guard-"));
@@ -246,6 +299,10 @@ describe("a hook it has no rulebook to answer with", () => {
 
     expect(code).toBe(0);
     expect(output).toContain("could not be read");
+  });
+
+  it("says nothing about that rulebook for a payload it could not read in the first place", async () => {
+    expect((await guardFor(fixtureAt("broken-rulebook"))("not json at all")).output).toBe("");
   });
 });
 
