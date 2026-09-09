@@ -57,7 +57,7 @@ const exportedFrom = async (path: string, kind: ConfigKind): Promise<object> => 
   const imported = await importedFrom(path);
   const config = (imported as { default?: unknown }).default;
 
-  if (config === undefined || config === null || typeof config !== "object") {
+  if (config === null || typeof config !== "object") {
     throw new Error(`${path} has no default-exported configuration object`);
   }
 
@@ -93,7 +93,7 @@ const memberAt = async (root: string, directory: string): Promise<Member> => {
 const claimedOnce = (names: readonly string[]): void => {
   const seen = new Set<string>();
   for (const name of names) {
-    if (seen.has(name)) throw new Error(`${name} names both a member and a zone, or two members`);
+    if (seen.has(name)) throw new Error(`${name} is claimed twice, by two zones, two members, or one of each`);
     seen.add(name);
   }
 };
@@ -148,8 +148,7 @@ export async function loadConfig(path: string): Promise<LoadedConfig> {
   const members = await membersUnder(root, patterns);
 
   return {
-    config:
-      members.length === 0 ? { ...config, zones: config.zones ?? [] } : withMembers(config, members, root),
+    config: withMembers(config, members, root),
     path,
     root,
     memberConfigs: members.map((member) => member.configPath),

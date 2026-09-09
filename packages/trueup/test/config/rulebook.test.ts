@@ -1,7 +1,7 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { findConfig, loadConfig } from "../../src/config/load.ts";
+import { findConfig, loadConfig, resolveInclude } from "../../src/config/load.ts";
 import { EXIT_BAD_RULEBOOK } from "../../src/cli/command.ts";
 import { runCli } from "../../src/cli/main.ts";
 import { runActivate } from "../../src/cli/activate.ts";
@@ -48,6 +48,12 @@ describe("a rulebook that will not load", () => {
     expect(code).toBe(EXIT_BAD_RULEBOOK);
   });
 
+  it("keeps the failure it caught attached, so the stack it came from is not lost", async () => {
+    const failure = await loadConfig(join(BROKEN, "trueup.config.ts")).catch((caught: unknown) => caught);
+
+    expect((failure as Error).cause).toBeInstanceOf(Error);
+  });
+
   it("refuses the same way from a command that only reads the rulebook", async () => {
     const lines: string[] = [];
     const code = await runActivate({ cwd: BROKEN, argv: [], write: (line) => lines.push(line) });
@@ -76,8 +82,22 @@ describe("a rulebook this tool cannot make sense of", () => {
     );
   });
 
+  it("refuses a file whose default export is null, which is an object to `typeof` alone", async () => {
+    expect(await refusalFor("null-default")).toBe(
+      `${join(fixtureAt("null-default"), "trueup.config.ts")} has no default-exported configuration object`,
+    );
+  });
+
   it("refuses a name that is both a member and a zone, since a rule could mean either", async () => {
-    expect(await refusalFor("name-clash")).toBe("one names both a member and a zone, or two members");
+    expect(await refusalFor("name-clash")).toBe(
+      "one is claimed twice, by two zones, two members, or one of each",
+    );
+  });
+
+  it("refuses two zones sharing a name, in a rulebook with no members to compare them against", async () => {
+    expect(await refusalFor("zone-clash")).toBe(
+      "twice is claimed twice, by two zones, two members, or one of each",
+    );
   });
 });
 
@@ -106,5 +126,21 @@ describe("looking for a rulebook above the working directory", () => {
 
   it("finds one sitting in the directory it starts from", () => {
     expect(findConfig(SPLIT)).toBe(join(SPLIT, "trueup.config.ts"));
+  });
+
+  it("climbs out of a subdirectory to find one, rather than giving up where it started", () => {
+    const project = fixtureAt("explained");
+
+    expect(findConfig(join(project, "src/engine"))).toBe(join(project, "trueup.config.ts"));
+  });
+});
+
+describe("the roots a rulebook says to read", () => {
+  it("reads an empty include list as the whole project, rather than as nothing at all", () => {
+    expect(resolveInclude("/p", [])).toEqual(["/p"]);
+  });
+
+  it("keeps an absolute entry as it stands, and hangs a relative one off the project", () => {
+    expect(resolveInclude("/p", ["/elsewhere", "src"])).toEqual(["/elsewhere", join("/p", "src")]);
   });
 });
