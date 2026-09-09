@@ -767,9 +767,17 @@ An export nothing reads is left out, rather than forming a group of its own. Unu
 
 ### Granularity
 
-Readers are grouped by **directory**. Per file is finer than the question deserves — one consumer importing two names is not evidence they belong apart — and per zone is too coarse to see a split inside one zone.
+Readers are grouped by **directory**. Per zone is too coarse to see a split inside one zone. Per file is too loud: two exports imported by two different files describes most files, not a defect.
 
-Measured on this repository: 21 files have two or more exports that something reads, and none of them splits, at any of the three granularities. Turning off the sibling-name join makes three of them split falsely, which is the whole reason that join exists. A codebase whose directories are as coarse as its zones has little for this check to find; one with deep feature directories has more.
+Measured on a tree with 70 files carrying two or more read exports — by zone 3, by directory 5, by file 21. This repository has 21 such files and reports nothing at any of the three, because its directories are as coarse as its zones. Turning off the sibling-name join makes three of them split falsely, which is what that join is for.
+
+### Readers, not reach
+
+A reader is a file that imports the export — not a file that could arrive at it by importing something else that does.
+
+That choice moves the count further than the granularity does, and it runs the opposite way to how it sounds. Walking up the import graph makes the check **quieter**. A reach set grows with every step, a larger set overlaps more, and overlapping sets join — so groups that direct readers keep apart disappear. On the tree above, walking took the count from 5 to 2 and collapsed the difference between directory and file entirely.
+
+If the tool you are replacing walked the graph, expect this one to name files that one did not, and do not read the lower number it gave you as the cleaner tree.
 
 ## Rules you write yourself
 
