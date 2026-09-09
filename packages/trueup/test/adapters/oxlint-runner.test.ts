@@ -56,6 +56,18 @@ describe("reading oxlint's output", () => {
     expect(findingsOf(runWith("report-args"))[0]?.message).toBe("--format json .");
   });
 
+  it("asks oxlint to fix what it can first, so an autofixable finding is not reported", () => {
+    const outcome = oxlintRunner({ command: ["node", TOOL, "report-args"], write: true }).run(ROOT);
+
+    expect(findingsOf(outcome)[0]?.message).toBe("--fix --format json .");
+  });
+
+  it("leaves the tree alone unless the project asked it to write", () => {
+    const outcome = oxlintRunner({ command: ["node", TOOL, "report-args"], write: false }).run(ROOT);
+
+    expect(findingsOf(outcome)[0]?.message).toBe("--format json .");
+  });
+
   it("carries the name oxlint's findings are reported under", () => {
     expect(oxlintRunner().name).toBe("oxlint");
   });

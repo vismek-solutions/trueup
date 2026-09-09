@@ -9,6 +9,7 @@ export interface OxlintRunnerOptions {
   readonly command?: readonly string[] | undefined;
   readonly paths?: readonly string[] | undefined;
   readonly categories?: readonly string[] | undefined;
+  readonly write?: boolean | undefined;
 }
 
 interface Payload {
@@ -72,10 +73,11 @@ export function oxlintRunner(options: OxlintRunnerOptions = {}): Runner {
   const command = options.command ?? ["npx", "--yes", "oxlint"];
   const paths = options.paths ?? ["."];
   const categories = options.categories ?? [];
+  const fixing = options.write === true ? ["--fix"] : [];
 
   return jsonRunner({
     name: "oxlint",
-    invoke: (root) => ({ command, args: ["--format", "json", ...paths], cwd: root }),
+    invoke: (root) => ({ command, args: [...fixing, "--format", "json", ...paths], cwd: root }),
     read: (source, root): RunnerOutcome => {
       const read = readPayload(source.payload);
       if (read.kind === "failed") return read;
