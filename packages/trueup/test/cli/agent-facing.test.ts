@@ -35,7 +35,7 @@ describe("telling an agent which command to reach for", () => {
 
     try {
       const output = await capture((write) => runCli({ cwd: STALED, argv: [], write }));
-      expect(output).toContain("--update-baseline");
+      expect(output).toContain("`trueup --update-baseline`");
       expect(output).not.toContain(COMMAND_TOKEN);
     } finally {
       rmSync(baseline, { force: true });

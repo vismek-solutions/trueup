@@ -55,6 +55,19 @@ describe("being told which rulebook to read", () => {
 
     expect(said.join("\n")).not.toContain("no trueup.config.ts found");
   });
+
+  it("keeps the claim filter apart from the path, whichever order the two arrive in", async () => {
+    const [headline] = await nowhere((cwd) => spoken(cwd, `--config=${config}`, "--next=boundary"));
+
+    expect(headline).toContain("in `boundary`");
+  });
+
+  it("leaves every rulebook out of the code it checks, the members' rulebooks included", async () => {
+    const federated = join(fixtureAt("federated"), "trueup.config.ts");
+    const said = await nowhere((cwd) => spoken(cwd, `--config=${federated}`));
+
+    expect(said.join("\n")).not.toContain("trueup.config.ts");
+  });
 });
 
 describe("finding no rulebook at all", () => {
