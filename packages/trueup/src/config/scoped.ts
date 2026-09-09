@@ -46,6 +46,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
     sourceOf: project.sourceOf,
     mentionsIn: project.mentionsIn,
     declarationsIn: project.declarationsIn,
+    referencesIn: project.referencesIn,
     vocabularyOf: (zones) => project.vocabularyOf(zones.map(qualify)),
   };
 };

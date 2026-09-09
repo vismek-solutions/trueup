@@ -1,4 +1,6 @@
-import type { Ungoverned, ZoneFlow } from "../../report/flows.ts";
+import type { ungovernedIn } from "../../compose.ts";
+
+type ZoneFlow = ReturnType<typeof ungovernedIn>["unspoken"][number];
 
 const SHOWN = 20;
 
@@ -21,7 +23,11 @@ const headed = ({ label, said, flows }: Section, width: number): string[] => [
   "",
 ];
 
-export const ungovernedLines = ({ unspoken, allowed, silentZones }: Ungoverned): string[] => {
+export const ungovernedLines = ({
+  unspoken,
+  allowed,
+  silentZones,
+}: ReturnType<typeof ungovernedIn>): string[] => {
   const width = Math.max(0, ...[...unspoken, ...allowed].map((flow) => pairOf(flow).length));
 
   return [

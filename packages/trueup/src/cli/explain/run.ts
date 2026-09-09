@@ -1,16 +1,17 @@
 import { isAbsolute, relative, resolve } from "node:path";
-import { placementOf, ungovernedIn } from "../../compose.ts";
+import { check, nameIn, placementOf, ungovernedIn } from "../../compose.ts";
+import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
 import { openedIn } from "../preamble.ts";
+import { list } from "./lines.ts";
+import { nameLines } from "./name.ts";
 import { ungovernedLines } from "./ungoverned.ts";
 
 const UNGOVERNED = "--ungoverned";
 
 const SAMPLE = 6;
-
-const list = (values: readonly string[]): string => (values.length === 0 ? "none" : values.join(" · "));
 
 const sampleOf = (values: Iterable<string>): string => {
   const sorted = [...values].sort();
@@ -24,6 +25,37 @@ const ungovernedFor = async (cwd: string, write: (line: string) => void): Promis
 
   const { config, project } = opened;
   for (const line of ungovernedLines(ungovernedIn(project, config.boundaries ?? []))) write(line);
+  return 0;
+};
+
+const nameFor = async (cwd: string, target: string, write: (line: string) => void): Promise<number> => {
+  const [where = "", name = ""] = target.split("#");
+  const path = isAbsolute(where) ? where : resolve(cwd, where);
+
+  const opened = await openedIn(cwd, write);
+  if (typeof opened === "number") return opened;
+
+  const { config, root, project, rulebooks } = opened;
+  const report = check({
+    ...config,
+    root,
+    roots: resolveInclude(root, config.include),
+    ignoreFiles: rulebooks,
+    runners: [],
+  });
+
+  const about = nameIn(project, path, name);
+  const readers = new Set(about.readers.files);
+  const against = report.claims.flatMap((claim) =>
+    claim.findings
+      .filter((finding) => finding.symbol === name && finding.file !== null)
+      .filter((finding) => finding.file === path || readers.has(project.relative(finding.file ?? "")))
+      .map((finding) => `${claim.claim}  ${project.relative(finding.file ?? "")}  ${finding.message}`),
+  );
+
+  write(`${relative(root, path)}#${name}`);
+  write("");
+  for (const line of nameLines({ about, against })) write(line);
   return 0;
 };
 
@@ -42,6 +74,8 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     write(`usage: ${DEFAULT_COMMAND} explain <path>`);
     return 3;
   }
+
+  if (target.includes("#")) return nameFor(cwd, target, write);
 
   const path = isAbsolute(target) ? target : resolve(cwd, target);
   const opened = await openedIn(cwd, write, new Map([[path, ""]]));

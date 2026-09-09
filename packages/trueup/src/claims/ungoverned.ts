@@ -1,6 +1,17 @@
 import type { Project } from "../project/model.ts";
-import type { Ungoverned, ZoneFlow } from "../report/flows.ts";
 import { judges, type BoundaryRule } from "./boundary.ts";
+
+export interface ZoneFlow {
+  readonly from: string;
+  readonly to: string;
+  readonly edges: number;
+}
+
+export interface Ungoverned {
+  readonly unspoken: readonly ZoneFlow[];
+  readonly allowed: readonly ZoneFlow[];
+  readonly silentZones: readonly string[];
+}
 
 const flowsIn = (project: Project): ReadonlyMap<string, ReadonlyMap<string, number>> => {
   const counts = new Map<string, Map<string, number>>();

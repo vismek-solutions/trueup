@@ -46,6 +46,7 @@ const findingsFor = (copies: readonly Copy[], project: Project, group: string): 
       file: copy.file,
       start: copy.start,
       group,
+      symbol: copy.name,
     };
   });
 };

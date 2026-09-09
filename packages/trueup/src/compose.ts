@@ -17,7 +17,7 @@ import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
 import { seamClaim, seamZoneReferences } from "./claims/seam.ts";
-import { ungovernedFlows } from "./claims/ungoverned.ts";
+import { ungovernedFlows, type Ungoverned } from "./claims/ungoverned.ts";
 import { zoneReferencesExistClaim } from "./claims/zone-references.ts";
 import type { Settings } from "./config/model.ts";
 import { buildSymbolGraph } from "./graph/build.ts";
@@ -26,7 +26,7 @@ import { buildLexicon } from "./lexicon/build.ts";
 import type { ModuleRecord, ParseModule } from "./ports/module-record.ts";
 import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
-import type { Ungoverned } from "./report/flows.ts";
+import { aboutName, type NameReport } from "./project/name.ts";
 import { withoutDuplicates, type Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
 import type { ZoneDefinition, ZoneRole } from "./zones/model.ts";
@@ -65,16 +65,8 @@ export interface InspectOptions {
   readonly overlay?: Overlay | undefined;
 }
 
-const analyseProject = ({
-  root,
-  roots,
-  zones,
-  extensions,
-  externals,
-  ignoreDirectories,
-  ignoreFiles,
-  overlay,
-}: InspectOptions) => {
+const analyseProject = (options: InspectOptions) => {
+  const { root, roots, zones, extensions, externals, ignoreDirectories, ignoreFiles, overlay } = options;
   const discovery = { roots: roots ?? [root], extensions, ignoreDirectories, ignoreFiles };
   const sources = readSources(discovery, overlay);
   const modules = parseAll(sources, parseModule);
@@ -94,6 +86,9 @@ export const inspect = (options: InspectOptions): Project => analyseProject(opti
 
 export const ungovernedIn = (project: Project, boundaries: readonly BoundaryRule[]): Ungoverned =>
   ungovernedFlows(project, boundaries);
+
+export const nameIn = (project: Project, file: string, name: string): NameReport =>
+  aboutName(project, file, name);
 
 export interface PlacementInput {
   readonly root: string;

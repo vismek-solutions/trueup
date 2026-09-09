@@ -9,6 +9,7 @@ export interface Finding {
   readonly start: number | null;
   readonly group?: string | undefined;
   readonly accepted?: boolean | undefined;
+  readonly symbol?: string | undefined;
 }
 
 export interface ClaimResult {

@@ -38,20 +38,14 @@ const readersByFile = (project: Project, roles: ReadonlySet<string>): Map<string
 };
 
 const kinIn = (project: Project, file: string): ReadonlyMap<string, ReadonlySet<string>> => {
-  const declarations = project.declarationsIn(file);
-  const named = new Set(declarations.map((declaration) => declaration.name));
-  const kin = new Map(declarations.map((declaration) => [declaration.name, new Set<string>()]));
+  const uses = project.referencesIn(file);
+  const kin = new Map([...uses.keys()].map((name) => [name, new Set<string>()]));
 
-  for (const mention of project.mentionsIn(file)) {
-    if (mention.form !== "name" || !named.has(mention.text)) continue;
-
-    const holder = declarations.find(
-      (declaration) => mention.start >= declaration.start && mention.start < declaration.end,
-    );
-    if (holder === undefined || holder.name === mention.text) continue;
-
-    kin.get(holder.name)?.add(mention.text);
-    kin.get(mention.text)?.add(holder.name);
+  for (const [holder, used] of uses) {
+    for (const name of used) {
+      kin.get(holder)?.add(name);
+      kin.get(name)?.add(holder);
+    }
   }
 
   return kin;

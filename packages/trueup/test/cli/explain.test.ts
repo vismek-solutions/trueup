@@ -20,6 +20,8 @@ const explain = (...argv: string[]) => explainIn(PROJECT, argv);
 
 const gaps = async (cwd: string): Promise<string> => (await explainIn(cwd, ["--ungoverned"])).output;
 
+const about = async (target: string): Promise<string> => (await explainIn(UNRULED, [target])).output;
+
 describe("explaining a path before writing it", () => {
   it("names the zone a file that does not exist yet would fall into", async () => {
     const { output } = await explain("src/engine/notYetWritten.ts");
@@ -247,5 +249,56 @@ describe("finding the boundaries nobody wrote", () => {
 
     expect(code).toBe(EXIT_BAD_USAGE);
     expect(output).toContain("unrecognised: --verbose");
+  });
+});
+
+describe("pricing what one export would cost to move", () => {
+  it("names every file that reads it, through the declaring file rather than the module named", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "read by     src/core/two.ts · src/web/one.ts",
+    );
+  });
+
+  it("names the zones those readers sit in, since a move is a zone question", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain("zones: core · web");
+  });
+
+  it("says whether the readers are spread, since that is what decides if a split has a home", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain("2 directories read it");
+  });
+
+  it("counts nothing as travelling when the export reaches nothing else in its file", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "cut cost    0 declarations travel with it · 0 must be promoted first · 0 imports follow",
+    );
+  });
+
+  it("names the import that would follow the export out of the file", async () => {
+    const said = await about("src/core/two.ts#engine");
+
+    expect(said).toContain("1 import follow");
+    expect(said).toContain("follows     ../tools/three.js");
+  });
+
+  it("gathers a claim standing against the name, anchored where the violation is", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "every-import-respects-its-zone-boundary  src/web/one.ts  is web and may not reach tools: hammer",
+    );
+  });
+
+  it("leaves out a claim standing against some other name in the same file", async () => {
+    expect(await about("src/tools/three.ts#wrench")).toContain("none stand against this name");
+  });
+
+  it("says the delegated tools were not consulted, rather than implying it gathered everything", async () => {
+    expect(await about("src/tools/three.ts#hammer")).toContain("delegated tools are not consulted");
+  });
+
+  it("says so plainly when the name is in neither the declarations nor the exports", async () => {
+    expect(await about("src/core/two.ts#absent")).toContain("absent is neither declared nor exported here");
+  });
+
+  it("reports a clean run, since pricing a move is a question and not a failure", async () => {
+    expect((await explainIn(UNRULED, ["src/tools/three.ts#hammer"])).code).toBe(0);
   });
 });

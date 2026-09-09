@@ -33,6 +33,24 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     };
   });
 
+  const referencesIn = (file: string): ReadonlyMap<string, ReadonlySet<string>> => {
+    const declarations = lexicon.declarationsIn(file);
+    const named = new Set(declarations.map((declaration) => declaration.name));
+    const uses = new Map(declarations.map((declaration) => [declaration.name, new Set<string>()]));
+
+    for (const mention of lexicon.mentionsIn(file)) {
+      if (mention.form !== "name" || !named.has(mention.text)) continue;
+
+      const holder = declarations.find(
+        (declaration) => mention.start >= declaration.start && mention.start < declaration.end,
+      );
+      if (holder === undefined || holder.name === mention.text) continue;
+      uses.get(holder.name)?.add(mention.text);
+    }
+
+    return uses;
+  };
+
   const imports = (query?: ImportQuery): readonly ResolvedImport[] =>
     query === undefined
       ? resolved
@@ -54,6 +72,7 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     sourceOf: (file) => sources.get(file) ?? null,
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
+    referencesIn,
     vocabularyOf: (names) => lexicon.vocabularyOf(names.flatMap((name) => zones.filesIn(name))),
     relative: (file) => relative(root, file),
   };
