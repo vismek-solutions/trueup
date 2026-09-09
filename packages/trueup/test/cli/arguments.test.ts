@@ -1,6 +1,10 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { EXIT_BAD_USAGE, EXIT_CLEAN, EXIT_ERRORS } from "../../src/cli/command.ts";
+import { EXIT_BAD_USAGE, EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG } from "../../src/cli/command.ts";
 import { runCli } from "../../src/cli/main.ts";
+import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 
 const VIOLATING = fixtureAt("violating");
@@ -13,6 +17,55 @@ const spoken = async (cwd: string, ...argv: readonly string[]): Promise<readonly
 
 const codeFor = async (cwd: string, ...argv: readonly string[]): Promise<number> =>
   runCli({ cwd, argv, write: () => undefined });
+
+const nowhere = async <T>(run: (cwd: string) => Promise<T>): Promise<T> => {
+  const empty = mkdtempSync(join(tmpdir(), "trueup-"));
+  try {
+    return await run(empty);
+  } finally {
+    rmSync(empty, { recursive: true });
+  }
+};
+
+describe("handing the whole report to another program", () => {
+  const parsed = async (): Promise<Report> => JSON.parse((await spoken(VIOLATING, "--json")).join("\n"));
+
+  it("writes JSON naming the claim that failed, not the text a person reads", async () => {
+    expect((await parsed()).claims.map((claim) => claim.claim)).toContain(
+      "every-import-respects-its-zone-boundary",
+    );
+  });
+
+  it("carries the coverage counts, so a shrunken graph is visible in the machine form too", async () => {
+    expect((await parsed()).coverage.files).toBeGreaterThan(0);
+  });
+});
+
+describe("being told which rulebook to read", () => {
+  const config = join(VIOLATING, "trueup.config.ts");
+
+  it("reads the file it was handed rather than searching upward from the directory", async () => {
+    const said = await nowhere((cwd) => spoken(cwd, `--config=${config}`));
+
+    expect(said.join("\n")).toContain("may not reach domain");
+  });
+
+  it("checks the tree around that rulebook, not the directory it was run from", async () => {
+    const said = await nowhere((cwd) => spoken(cwd, `--config=${config}`, "--dots"));
+
+    expect(said.join("\n")).not.toContain("no trueup.config.ts found");
+  });
+});
+
+describe("finding no rulebook at all", () => {
+  it("says so rather than reporting a clean run over nothing", async () => {
+    expect(await nowhere((cwd) => spoken(cwd))).toEqual(["no trueup.config.ts found"]);
+  });
+
+  it("exits with a code of its own, apart from clean and from failing", async () => {
+    expect(await nowhere((cwd) => codeFor(cwd))).toBe(EXIT_NO_CONFIG);
+  });
+});
 
 describe("choosing which claim to fix first", () => {
   it("scopes the next problem to the claim named", async () => {

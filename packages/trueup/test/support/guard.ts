@@ -1,7 +1,6 @@
 import { runGuard } from "../../src/cli/guard.ts";
 import { fixtureAt } from "./fixtures.ts";
 
-export const GUARDED = fixtureAt("guarded");
 export const GUARDED_FOR_SERENA = fixtureAt("guarded-serena");
 
 export const guardFor =

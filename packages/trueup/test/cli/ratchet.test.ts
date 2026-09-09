@@ -1,7 +1,6 @@
-import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { fixtureAt } from "../support/fixtures.ts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { copyOfFixture, discard, fixtureAt } from "../support/fixtures.ts";
 import { baselinePathIn, readBaseline, writeBaseline } from "../../src/adapters/baseline-file.ts";
 import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE } from "../../src/cli/command.ts";
 import { runCli } from "../../src/cli/main.ts";
@@ -146,18 +145,37 @@ describe("a baseline", () => {
   });
 });
 
-const PROJECT = fixtureAt("project");
-const BASELINE = baselinePathIn(PROJECT);
+const UNRATCHETED = fixtureAt("explained");
 
-const runIn = async (argv: readonly string[]): Promise<{ code: number; output: string }> => {
+let PROJECT = "";
+let BASELINE = "";
+
+const runFrom = async (cwd: string, argv: readonly string[]) => {
   let output = "";
-  const code = await runCli({ cwd: PROJECT, argv, write: (line) => (output += `${line}\n`) });
+  const code = await runCli({ cwd, argv, write: (line) => (output += `${line}\n`) });
   return { code, output };
 };
 
+const runIn = (argv: readonly string[]) => runFrom(PROJECT, argv);
+
+describe("a project that has never adopted the ratchet", () => {
+  it("says nothing about baseline entries, since there is no list to keep honest", async () => {
+    expect((await runFrom(UNRATCHETED, [])).output).not.toContain("every-baseline-entry-is-still-needed");
+  });
+
+  it("exits clean, so an absent baseline cannot read as a failing one", async () => {
+    expect((await runFrom(UNRATCHETED, [])).code).toBe(EXIT_CLEAN);
+  });
+});
+
 describe("adopting the ratchet from the command line", () => {
+  beforeEach(() => {
+    PROJECT = copyOfFixture("project");
+    BASELINE = baselinePathIn(PROJECT);
+  });
+
   afterEach(() => {
-    if (existsSync(BASELINE)) rmSync(BASELINE);
+    discard(PROJECT);
   });
 
   it("fails on a fresh repository with no baseline", async () => {
@@ -169,6 +187,26 @@ describe("adopting the ratchet from the command line", () => {
   it("accepts the current findings into a baseline file", async () => {
     expect((await runIn(["--update-baseline"])).code).toBe(EXIT_CLEAN);
     expect(readBaseline(BASELINE).entries).toHaveLength(1);
+  });
+
+  it("says how many findings it took and the file it put them in", async () => {
+    expect((await runIn(["--update-baseline"])).output).toContain(
+      "accepted 1 findings into trueup.baseline.json",
+    );
+  });
+
+  it("fails on a violation the baseline never recorded, whatever else the baseline holds", async () => {
+    writeBaseline(BASELINE, {
+      entries: [
+        {
+          claim: "every-import-respects-its-zone-boundary",
+          file: "src/engine/runner.ts",
+          message: "a different violation entirely",
+        },
+      ],
+    });
+
+    expect((await runIn([])).code).toBe(EXIT_ERRORS);
   });
 
   it("passes afterwards, reporting the violation as known rather than hiding it", async () => {
@@ -187,7 +225,7 @@ describe("adopting the ratchet from the command line", () => {
     expect(output).toContain("nothing failing");
     expect(output).toContain("baseline  1 of 1 accepted");
     expect(output).toContain("may not reach domain");
-    expect(output).toContain("--update-baseline` to drop its entry");
+    expect(output).toContain("`trueup --update-baseline` to drop its entry");
   });
 
   it("keeps that a clean exit, since an accepted violation is not a failure", async () => {

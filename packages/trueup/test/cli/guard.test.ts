@@ -1,15 +1,17 @@
-import { existsSync, rmSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { fixtureAt } from "../support/fixtures.ts";
-import { GUARDED as PROJECT, guardFor } from "../support/guard.ts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { copyOfFixture, discard, fixtureAt } from "../support/fixtures.ts";
+import { guardFor } from "../support/guard.ts";
 import { baselinePathIn, writeBaseline } from "../../src/adapters/baseline-file.ts";
 import { check } from "../../src/compose.ts";
 import { baselineOf } from "../../src/ratchet/apply.ts";
 
-const guard = guardFor(PROJECT);
-const BASELINE = baselinePathIn(PROJECT);
-const NEW_FILE = join(PROJECT, "src/engine/added.ts");
+let PROJECT = "";
+let BASELINE = "";
+let NEW_FILE = "";
+
+const guard = (payload: unknown) => guardFor(PROJECT)(payload);
 
 const writing = (path: string, content: string) => ({
   tool_name: "Write",
@@ -19,10 +21,17 @@ const writing = (path: string, content: string) => ({
 const REACHES_DOMAIN = 'import { thing } from "../domain/thing.js";\n\nexport const added = thing;\n';
 const REACHES_NOTHING = "export const added = 1;\n";
 
+beforeEach(() => {
+  PROJECT = copyOfFixture("guarded");
+  BASELINE = baselinePathIn(PROJECT);
+  NEW_FILE = join(PROJECT, "src/engine/added.ts");
+});
+
+afterEach(() => {
+  discard(PROJECT);
+});
+
 describe("guarding a proposed write", () => {
-  afterEach(() => {
-    if (existsSync(BASELINE)) rmSync(BASELINE);
-  });
 
   it("blocks a file that has not been written yet", async () => {
     const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));

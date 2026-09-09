@@ -68,7 +68,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   const explicit = argv.find((entry) => entry.startsWith("--config="))?.slice("--config=".length);
   const path = explicit ?? findConfig(cwd);
 
-  if (path === null || path === undefined) {
+  if (path === null) {
     write("no trueup.config.ts found");
     return EXIT_NO_CONFIG;
   }
