@@ -6,6 +6,8 @@ import type { Report } from "../../../src/report/model.ts";
 
 const ROOT = fixtureAt("copied");
 const CLAIM = "no-declaration-is-written-twice";
+const SHARED_DECLARATION = 80;
+const SHARED = "declares label, which is written the same way in src/notice.ts";
 
 const runWith = (duplication?: number): Report =>
   check({
@@ -32,8 +34,42 @@ describe("finding the same declaration written twice", () => {
     );
   });
 
+  it("reports a copy that appears in exactly two files", () => {
+    expect(messagesIn(runWith(40), CLAIM)).toContain(SHARED);
+  });
+
+  it("matches a copy written over more lines, since a run of whitespace counts as one space", () => {
+    expect(messagesIn(runWith(40), CLAIM)).toContain(
+      "declares headers, which is written the same way in src/mirror.ts",
+    );
+  });
+
+  it("keeps the space that tells two texts apart, rather than deleting it", () => {
+    expect(messagesIn(runWith(40), CLAIM).some((message) => message.includes("heading"))).toBe(false);
+  });
+
   it("ignores a declaration shorter than the size given", () => {
     expect(messagesIn(runWith(400), CLAIM)).toEqual([]);
+  });
+
+  it("keeps a declaration exactly as long as the size given", () => {
+    expect(messagesIn(runWith(SHARED_DECLARATION), CLAIM)).toContain(SHARED);
+  });
+
+  it("measures the declaration without the space in front of it", () => {
+    expect(messagesIn(runWith(SHARED_DECLARATION + 1), CLAIM)).not.toContain(SHARED);
+  });
+
+  it("orders the copies by what was written, not by where it was found", () => {
+    expect(messagesIn(runWith(40), CLAIM)).toEqual([
+      SHARED,
+      "declares notice, which is written the same way in src/label.ts",
+      "declares slugify, which is written the same way in src/three.ts, src/two.ts",
+      "declares toSlug, which is written the same way in src/one.ts, src/two.ts",
+      "declares slugify, which is written the same way in src/one.ts, src/three.ts",
+      "declares headers, which is written the same way in src/mirror.ts",
+      "declares headers, which is written the same way in src/gateway.ts",
+    ]);
   });
 
   it("leaves a declaration that only looks similar alone", () => {
