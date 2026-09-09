@@ -1,5 +1,5 @@
 import { bundled, join, outside, shared } from "./index.js";
 import { legacyThing } from "./legacy.cjs";
-import { ghost, unknowable } from "./porous.js";
+import { certain, ghost, unknowable } from "./porous.js";
 
-export const used = [bundled, join, outside, shared, legacyThing, ghost, unknowable] as const;
+export const used = [bundled, join, outside, shared, legacyThing, ghost, unknowable, certain] as const;

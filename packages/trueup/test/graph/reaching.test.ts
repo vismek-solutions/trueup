@@ -59,6 +59,14 @@ describe("a barrel that stars in a package this analysis cannot see", () => {
     expect(targetOf("ghost")).toEqual({ kind: "external", path: null });
   });
 
+  it("still names the declaration it can see, rather than disputing it with the package it cannot", () => {
+    expect(targetOf("certain")).toEqual({
+      kind: "symbol",
+      path: join(ROOT, "certain.ts"),
+      name: "certain",
+    });
+  });
+
   it("leaves every one of those specifiers resolved, so none is reported unresolved", () => {
     expect(graph().unresolvedImports).toEqual([]);
   });
@@ -80,6 +88,14 @@ describe("a name two star re-exports reach apart", () => {
       kind: "ambiguous",
       candidates: [{ path: join(APART, "seven.ts"), name: "tangled" }],
     });
+  });
+
+  it("keeps none, when the two are whole modules and neither is a declaration", () => {
+    expect(apart("split")).toEqual({ kind: "ambiguous", candidates: [] });
+  });
+
+  it("keeps none, when the two are themselves disputes rather than declarations", () => {
+    expect(apart("contested")).toEqual({ kind: "ambiguous", candidates: [] });
   });
 
   it("keeps both when they differ only in the name each renamed", () => {
