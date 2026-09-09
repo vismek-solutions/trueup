@@ -43,6 +43,20 @@ describe("reading biome's output", () => {
     expect(findingsOf(runWith("ok"))[2]?.start).toBeNull();
   });
 
+  it("reports no position for a line before the first, since no byte sits there", () => {
+    expect(findingsOf(runWith("edge-positions"))[0]?.start).toBeNull();
+  });
+
+  it("reports no position in a file it cannot read, rather than an offset into a file that is absent", () => {
+    expect(findingsOf(runWith("edge-positions"))[1]?.start).toBeNull();
+  });
+
+  it("places a line past the last one just past the last byte, counting no line that is absent", () => {
+    expect(findingsOf(runWith("edge-positions"))[2]?.start).toBe(
+      readFileSync(LINTED, "utf8").length + 1,
+    );
+  });
+
   it("keeps a diagnostic biome placed in no file at all", () => {
     expect(findingsOf(runWith("unlocated-lint"))[0]).toMatchObject({ file: null, start: null });
   });

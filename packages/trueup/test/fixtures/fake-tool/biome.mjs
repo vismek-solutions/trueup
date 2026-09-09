@@ -193,6 +193,19 @@ if (mode === "report-args") {
   });
 }
 
+if (mode === "edge-positions") {
+  const gone = join(process.cwd(), "src/engine/gone.ts");
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "before the first line", category: "lint/style/useConst", location: at(0, 1), advices: [] },
+      { severity: "error", message: "in a file that is not there", category: "lint/style/useConst", location: { path: gone, start: { line: 1, column: 1 }, end: { line: 1, column: 1 } }, advices: [] },
+      { severity: "error", message: "past the last line", category: "lint/style/useConst", location: at(40, 1), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
 if (mode === "relative-paths") {
   emit({
     summary: summary({}),
