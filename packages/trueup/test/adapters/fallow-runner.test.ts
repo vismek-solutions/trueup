@@ -297,6 +297,12 @@ describe("refusing to trust a delegated tool", () => {
     expect(reason).toContain("Turn them on in fallow, or drop the category from the runner");
   });
 
+  it("names every switched-off rule apart, rather than running them into one word", () => {
+    const reason = reasonOf(runWith("rules-off", ["unused_exports", "unused_types"]));
+
+    expect(reason).toContain("unused-exports, unused-types");
+  });
+
   it("lets a category through when its rule is live", () => {
     expect(runWith("ok", ["unused_exports"]).kind).toBe("findings");
   });
