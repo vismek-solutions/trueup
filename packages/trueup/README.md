@@ -761,6 +761,16 @@ The remedy for a group of one is usually not a new file. A value a single caller
 
 Two exports stay together when they share a reader, and also when **one names the other in the same file**. `export type RowKey = keyof Row` cannot be moved away from `Row`, so counting the two apart would report every carved-out type as a split. The same holds for a value built from a sibling.
 
+Two exports that merely reach the same private third do **not** join. Sharing a helper is not being one thing, and promoting that helper is exactly the cost the split would carry.
+
+### The shape it reports most
+
+A module holding one private object that every export goes through — a context, a client, a connection, a table. Each export is built from that object, so by the rule above each is joined to it; none is joined to the others, because it is private and a private declaration is not one of the groups being partitioned.
+
+These files are reported whenever their exports serve disjoint audiences, which is often. Measured on a real tree, five of seven findings in one application were this shape, and three of the five were confirmed as real by a separate colocation check naming the same export.
+
+Making the join travel through the private object would silence them, and that is the wrong fix. What the check sees is true — the audiences differ. What it cannot see is which side should move, and for this shape the answer is usually to move the one export with its own audience out rather than to cut the file in two. The printed guidance says so.
+
 Readers in a zone with a `role` do not count, for the reverse of the reason they do not count as lone consumers: a composition root wires both halves, and counting it would join every group it touches and hide the split. A file in a role zone is not reported either — a barrel answers to readers this analysis cannot see.
 
 An export nothing reads is left out, rather than forming a group of its own. Unused code is a different finding, and `fallow` already reports it.

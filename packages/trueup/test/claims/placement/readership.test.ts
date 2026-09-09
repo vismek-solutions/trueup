@@ -105,4 +105,8 @@ describe("switching it on", () => {
   it("names dissolving the group as the answer, and rehousing it as the mistake", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain("dissolving it usually beats rehousing it");
   });
+
+  it("admits it cannot say which side of the split should move", () => {
+    expect(claimIn(runWith(), CLAIM)?.guidance).toContain("it cannot tell you which side should move");
+  });
 });
