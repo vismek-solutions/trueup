@@ -52,9 +52,7 @@ describe("reading biome's output", () => {
   });
 
   it("places a line past the last one just past the last byte, counting no line that is absent", () => {
-    expect(findingsOf(runWith("edge-positions"))[2]?.start).toBe(
-      readFileSync(LINTED, "utf8").length + 1,
-    );
+    expect(findingsOf(runWith("edge-positions"))[2]?.start).toBe(readFileSync(LINTED, "utf8").length + 1);
   });
 
   it("keeps a diagnostic biome placed in no file at all", () => {

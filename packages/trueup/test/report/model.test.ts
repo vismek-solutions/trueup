@@ -69,7 +69,10 @@ describe("a claim with nothing to remove", () => {
 
 describe("counting what a report found", () => {
   const report: Report = {
-    claims: [claimOf(finding(), finding({ severity: "warning", start: 40 })), claimOf(finding({ start: 70 }))],
+    claims: [
+      claimOf(finding(), finding({ severity: "warning", start: 40 })),
+      claimOf(finding({ start: 70 })),
+    ],
     coverage: {
       files: 1,
       edges: 0,

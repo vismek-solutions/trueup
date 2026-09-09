@@ -59,8 +59,7 @@ const sizedIn = (budget: ReviewBudget, base: string, changed: readonly FileChang
 
   const over = added > budget.additions || removed > budget.deletions;
   const edge = budget.nearing;
-  const close =
-    edge !== undefined && (added > budget.additions * edge || removed > budget.deletions * edge);
+  const close = edge !== undefined && (added > budget.additions * edge || removed > budget.deletions * edge);
   if (!over && !close) return [];
 
   const cap = `+${budget.additions} / -${budget.deletions}`;
@@ -77,7 +76,12 @@ const sizedIn = (budget: ReviewBudget, base: string, changed: readonly FileChang
 
 const budgetFindings = (budget: ReviewBudget, changed: ChangeSet): readonly Finding[] =>
   changed.kind === "unmeasured"
-    ? [finding("warning", `the change could not be measured, so nothing was held to the review budget: ${changed.reason}`)]
+    ? [
+        finding(
+          "warning",
+          `the change could not be measured, so nothing was held to the review budget: ${changed.reason}`,
+        ),
+      ]
     : sizedIn(budget, changed.base, changed.files);
 
 export function reviewClaim(budget: ReviewBudget, changes: Changes): Claim {

@@ -33,8 +33,7 @@ export interface RatchetSummary {
   readonly stale: number;
 }
 
-export const plural = (count: number, noun: string): string =>
-  `${count} ${noun}${count === 1 ? "" : "s"}`;
+export const plural = (count: number, noun: string): string => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
 const errorsIn = (findings: readonly Finding[]): number =>
   findings.filter((finding) => finding.severity === "error").length;

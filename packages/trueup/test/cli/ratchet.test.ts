@@ -158,10 +158,7 @@ describe("a baseline", () => {
       },
     ]);
 
-    expect(baselineOf(shared, ROOT).entries.map((entry) => entry.file)).toEqual([
-      "src/one.ts",
-      "src/two.ts",
-    ]);
+    expect(baselineOf(shared, ROOT).entries.map((entry) => entry.file)).toEqual(["src/one.ts", "src/two.ts"]);
   });
 
   it("records a finding that names no file, since a claim about the run itself can be accepted", () => {

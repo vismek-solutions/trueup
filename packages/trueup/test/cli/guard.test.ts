@@ -33,7 +33,6 @@ afterEach(() => {
 });
 
 describe("guarding a proposed write", () => {
-
   it("blocks a file that has not been written yet", async () => {
     const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));
     const decision = JSON.parse(output);
@@ -286,7 +285,9 @@ describe("guarding a file that was already broken", () => {
   };
 
   it("says an import was unresolved before the edit, so half a repair does not read as the cause", async () => {
-    startingFrom('import { a } from "./gone.js";\nimport { b } from "./missing.js";\n\nexport const both = [a, b];\n');
+    startingFrom(
+      'import { a } from "./gone.js";\nimport { b } from "./missing.js";\n\nexport const both = [a, b];\n',
+    );
 
     const reason = await refusalOf(
       'import { a } from "./gone.js";\nimport { helper } from "./helper.js";\n\nexport const both = [a, helper];\n',

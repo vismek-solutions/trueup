@@ -102,11 +102,7 @@ const NO_TEST_ZONE: Finding = {
   start: null,
 };
 
-const reachingInternal = (
-  reach: Reach,
-  project: Project,
-  tests: ReadonlySet<string>,
-): readonly Finding[] => {
+const reachingInternal = (reach: Reach, project: Project, tests: ReadonlySet<string>): readonly Finding[] => {
   const consumers = [...reach.files].filter((file) => file !== reach.declaredIn);
   const inTests = consumers.filter((file) => tests.has(project.zoneOf(file) ?? ""));
   const inside = consumers.filter((file) => !tests.has(project.zoneOf(file) ?? ""));
@@ -115,7 +111,10 @@ const reachingInternal = (
   const unit = dirname(reach.declaredIn);
   if (inside.some((file) => dirname(file) !== unit)) return [];
 
-  const calls = inside.map((file) => project.relative(file)).sort().join(", ");
+  const calls = inside
+    .map((file) => project.relative(file))
+    .sort()
+    .join(", ");
   const where = project.relative(reach.declaredIn);
 
   return inTests.sort().map((file) => ({

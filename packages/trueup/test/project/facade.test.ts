@@ -127,9 +127,7 @@ describe("asking for a subset of the imports", () => {
   it("narrows by the zone reaching", () => {
     const project = projectAt();
 
-    expect(named(project, project.imports({ fromZone: "domain" }))).toEqual([
-      "src/domain/helper.ts thing",
-    ]);
+    expect(named(project, project.imports({ fromZone: "domain" }))).toEqual(["src/domain/helper.ts thing"]);
   });
 
   it("narrows by the zone reached into, which drops what resolved outside the analysis", () => {

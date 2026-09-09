@@ -57,9 +57,7 @@ describe("the next report, to the character", () => {
   });
 
   it("names the command the project runs it by, not the one this tool is called by default", () => {
-    expect(renderNext(ACCEPTED, "/p", { command: "pnpm arch" })).toContain(
-      "`pnpm arch --update-baseline`",
-    );
+    expect(renderNext(ACCEPTED, "/p", { command: "pnpm arch" })).toContain("`pnpm arch --update-baseline`");
   });
 
   it("leaves a stale entry out of what it offers, since that is not a violation to fix", () => {

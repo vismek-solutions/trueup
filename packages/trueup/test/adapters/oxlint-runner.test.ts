@@ -43,9 +43,7 @@ describe("reading oxlint's output", () => {
   });
 
   it("matches a filter naming a rule exactly, not only a scope above it", () => {
-    expect(findingsOf(runWith("ok", ["oxc/bad-shape"])).map((f) => f.category)).toEqual([
-      "oxc/bad-shape",
-    ]);
+    expect(findingsOf(runWith("ok", ["oxc/bad-shape"])).map((f) => f.category)).toEqual(["oxc/bad-shape"]);
   });
 
   it("keeps what any one filter matches, rather than only what they all match", () => {

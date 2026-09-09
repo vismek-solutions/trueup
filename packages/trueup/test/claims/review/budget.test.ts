@@ -75,11 +75,14 @@ describe("a change too large to review", () => {
   });
 
   it("names only the heaviest few, so a wide change does not print every file it touched", () => {
-    const changed = measured(of("wide.ts", 10, 500), of("mid.ts", 200), of("small.ts", 100), of("tiny.ts", 1));
-
-    expect(said(CAP, changed)[0]).toContain(
-      "heaviest: wide.ts +10/-500, mid.ts +200/-0, small.ts +100/-0",
+    const changed = measured(
+      of("wide.ts", 10, 500),
+      of("mid.ts", 200),
+      of("small.ts", 100),
+      of("tiny.ts", 1),
     );
+
+    expect(said(CAP, changed)[0]).toContain("heaviest: wide.ts +10/-500, mid.ts +200/-0, small.ts +100/-0");
     expect(said(CAP, changed)[0]).not.toContain("tiny.ts");
   });
 

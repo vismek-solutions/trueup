@@ -10,13 +10,11 @@ const countOf = (value: string): number => {
 };
 
 const tracked = (stdout: string): FileChange[] =>
-  stdout
-    .split("\n")
-    .flatMap((line) => {
-      const [added = "", removed = "", ...rest] = line.split("\t");
-      const file = rest.join("\t");
-      return file === "" ? [] : [{ file, added: countOf(added), removed: countOf(removed) }];
-    });
+  stdout.split("\n").flatMap((line) => {
+    const [added = "", removed = "", ...rest] = line.split("\t");
+    const file = rest.join("\t");
+    return file === "" ? [] : [{ file, added: countOf(added), removed: countOf(removed) }];
+  });
 
 const linesIn = (root: string, file: string): number => {
   let text: string;

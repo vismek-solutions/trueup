@@ -93,7 +93,8 @@ const memberAt = async (root: string, directory: string): Promise<Member> => {
 const claimedOnce = (names: readonly string[]): void => {
   const seen = new Set<string>();
   for (const name of names) {
-    if (seen.has(name)) throw new Error(`${name} is claimed twice, by two zones, two members, or one of each`);
+    if (seen.has(name))
+      throw new Error(`${name} is claimed twice, by two zones, two members, or one of each`);
     seen.add(name);
   }
 };

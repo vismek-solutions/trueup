@@ -140,9 +140,7 @@ describe("when there is nothing to measure against", () => {
 
     const said = gitChanges().since(clone, "main");
 
-    expect(said.kind === "unmeasured" && said.reason).toMatch(
-      /^could not read the change since main: \S/,
-    );
+    expect(said.kind === "unmeasured" && said.reason).toMatch(/^could not read the change since main: \S/);
   });
 
   it("says what git said about the diff where the excludes config it reads is unusable", () => {

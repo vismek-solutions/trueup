@@ -29,10 +29,7 @@ describe("finding the boundaries nobody wrote", () => {
     const said = (await gaps(UNRULED)).split("\n");
     const from = said.indexOf("allowed     a rule permits these, so someone decided");
 
-    expect(said.slice(from + 1, from + 3)).toEqual([
-      "    aardvark → core  1",
-      "    web → core       1",
-    ]);
+    expect(said.slice(from + 1, from + 3)).toEqual(["    aardvark → core  1", "    web → core       1"]);
   });
 
   it("counts nothing for a zone reaching itself, which every zone may always do", async () => {

@@ -6,7 +6,8 @@ import { fixtureAt } from "../support/fixtures.ts";
 
 const ROOT = fixtureAt("federated-manifests");
 
-const configured = async (): Promise<ResolvedConfig> => (await loadConfig(join(ROOT, "trueup.config.ts"))).config;
+const configured = async (): Promise<ResolvedConfig> =>
+  (await loadConfig(join(ROOT, "trueup.config.ts"))).config;
 
 const at = (member: string, file: string): string => join(ROOT, "packages", member, file);
 
@@ -29,9 +30,7 @@ describe("members beside a directory the pattern does not name", () => {
 
 describe("a rule a member states about its own tree", () => {
   it("reads the sibling pattern as sitting under the member, and names no wiring it was not given", async () => {
-    expect((await configured()).isolate).toEqual([
-      { siblings: "packages/keeps-core/src/engine/*" },
-    ]);
+    expect((await configured()).isolate).toEqual([{ siblings: "packages/keeps-core/src/engine/*" }]);
   });
 });
 

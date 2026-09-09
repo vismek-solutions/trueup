@@ -97,6 +97,8 @@ describe("holding a test to the surface its subject already has", () => {
   });
 
   it("tells the reader when a direct test is the honest answer", () => {
-    expect(claimIn(runWith(), CLAIM)?.guidance).toContain("asking to become a module with a caller of its own");
+    expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
+      "asking to become a module with a caller of its own",
+    );
   });
 });

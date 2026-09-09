@@ -68,11 +68,7 @@ export const rulebookIn = async (
   return (await rulebookAt(path, write)) ?? EXIT_BAD_RULEBOOK;
 };
 
-const projectFor = (
-  { config, root }: LoadedConfig,
-  rulebooks: readonly string[],
-  overlay?: Overlay,
-) =>
+const projectFor = ({ config, root }: LoadedConfig, rulebooks: readonly string[], overlay?: Overlay) =>
   inspect({
     root,
     roots: resolveInclude(root, config.include),

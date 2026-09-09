@@ -279,8 +279,7 @@ describe("answering the hook after the write", () => {
   });
 
   it("says the findings may pre-date a change that could have touched any file", () => {
-    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput
-      .additionalContext;
+    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput.additionalContext;
 
     expect(said.split("\n")[0]).toBe(
       "That change could have touched any file, so this is the whole project. Some of it may pre-date the change; repair what the change caused.",
@@ -288,8 +287,7 @@ describe("answering the hook after the write", () => {
   });
 
   it("does not blame the change for findings it cannot have caused", () => {
-    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput
-      .additionalContext;
+    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput.additionalContext;
 
     expect(said).not.toContain("That edit broke");
   });

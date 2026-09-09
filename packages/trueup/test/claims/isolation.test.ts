@@ -29,7 +29,9 @@ describe("keeping sibling directories apart", () => {
 
   it("names the file that reached, not the one that was reached", () => {
     const findings = findingsIn(runWith({ siblings: "src/routes/*" }), CLAIM);
-    const reaching = findings.find((finding) => finding.message.startsWith("is a and may not reach sibling b"));
+    const reaching = findings.find((finding) =>
+      finding.message.startsWith("is a and may not reach sibling b"),
+    );
 
     expect(reaching?.file).toBe(join(ROOT, "src/routes/a/page.ts"));
   });
@@ -275,13 +277,21 @@ describe("a file sitting beside a group rather than in one", () => {
   it("says nothing about a file inside a sibling, which is where files are meant to be", () => {
     const report = runWith({ siblings: "src/routes/*", wiring: [] });
 
-    expect(findingsIn(report, LOOSE).map((finding) => finding.file).join()).not.toContain("page.ts");
+    expect(
+      findingsIn(report, LOOSE)
+        .map((finding) => finding.file)
+        .join(),
+    ).not.toContain("page.ts");
   });
 
   it("reads only the group's own parent, so a file a level above was never being kept apart", () => {
     const report = runWith({ siblings: "src/routes/*/*", wiring: [] });
 
-    expect(findingsIn(report, LOOSE).map((finding) => finding.file).join()).not.toContain("routes/index.ts");
+    expect(
+      findingsIn(report, LOOSE)
+        .map((finding) => finding.file)
+        .join(),
+    ).not.toContain("routes/index.ts");
   });
 
   it("leaves a directory that holds no group alone, since its files sit beside no sibling", () => {

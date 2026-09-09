@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseModule, readDeclarations, readMentions } from "../../src/adapters/oxc-parse.ts";
 import type { ImportStatement } from "../../src/ports/module-record.ts";
 
-const importsIn = (source: string): readonly ImportStatement[] =>
-  parseModule("/p/a.ts", source).imports;
+const importsIn = (source: string): readonly ImportStatement[] => parseModule("/p/a.ts", source).imports;
 
 const bindingsIn = (source: string) => importsIn(source)[0]?.bindings ?? [];
 
@@ -42,9 +41,7 @@ describe("what an import statement binds", () => {
   });
 
   it("keeps a side-effect import, which binds nothing but still reaches a file", () => {
-    expect(importsIn('import "./side.ts";\n')).toEqual([
-      { specifier: "./side.ts", start: 0, bindings: [] },
-    ]);
+    expect(importsIn('import "./side.ts";\n')).toEqual([{ specifier: "./side.ts", start: 0, bindings: [] }]);
   });
 
   it("carries the position of each binding rather than of the statement", () => {
@@ -141,9 +138,7 @@ describe("the declarations a file makes", () => {
   });
 
   it("takes the text after the name, so two functions differing only in name are one shape", () => {
-    expect(declaredIn("function fn(a: number) { return a; }\n")[0]?.text).toBe(
-      "(a: number) { return a; }",
-    );
+    expect(declaredIn("function fn(a: number) { return a; }\n")[0]?.text).toBe("(a: number) { return a; }");
   });
 
   it("looks through an export wrapper to the declaration it carries", () => {

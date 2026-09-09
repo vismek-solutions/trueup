@@ -19,8 +19,7 @@ const entryOf = (claim: string, finding: Finding, root: string): BaselineEntry =
   message: finding.message,
 });
 
-const byEntry = (left: BaselineEntry, right: BaselineEntry): number =>
-  keyOf(left) < keyOf(right) ? -1 : 1;
+const byEntry = (left: BaselineEntry, right: BaselineEntry): number => (keyOf(left) < keyOf(right) ? -1 : 1);
 
 export function baselineOf(report: Report, root: string): Baseline {
   const entries = report.claims

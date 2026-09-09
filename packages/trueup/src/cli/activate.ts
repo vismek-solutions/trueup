@@ -96,7 +96,6 @@ const standingIn = (config: ResolvedConfig, root: string): readonly string[] => 
   return [`  +${added} / -${removed} so far, ${plural(left, "addition")} left`];
 };
 
-
 const switched = (value: boolean | undefined): string | undefined => {
   if (value === undefined) return undefined;
   return value ? "on" : "off";
@@ -113,9 +112,7 @@ const settingLines = (config: ResolvedConfig, read: number): readonly string[] =
     ["max files per directory", counted(config.maxFilesPerDirectory)],
     [
       "duplication",
-      config.duplication === undefined
-        ? undefined
-        : `declarations from ${config.duplication} characters`,
+      config.duplication === undefined ? undefined : `declarations from ${config.duplication} characters`,
     ],
     ["reviewable", budgetSaid(config.reviewable)],
     ["colocation", switched(config.colocation)],
