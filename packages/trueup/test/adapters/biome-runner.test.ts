@@ -63,6 +63,10 @@ describe("reading biome's output", () => {
     expect(findingsOf(runWith("unpositioned-lint"))[0]).toMatchObject({ file: LINTED, start: null });
   });
 
+  it("keeps a diagnostic placed at a line in a file it could not read a name for", () => {
+    expect(findingsOf(runWith("unnamed-position"))[0]).toMatchObject({ file: null, start: null });
+  });
+
   it("carries the name biome's findings are reported under", () => {
     expect(biomeRunner().name).toBe("biome");
   });

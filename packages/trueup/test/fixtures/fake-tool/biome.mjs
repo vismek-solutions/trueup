@@ -91,6 +91,17 @@ if (mode === "unpositioned-lint") {
   });
 }
 
+// biome has spelt location.path both as a bare string and as an object across releases
+if (mode === "unnamed-position") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "at a line in a file it did not name", category: "lint/style/useConst", location: { path: { file: "src/engine/runner.ts" }, start: { line: 3, column: 14 }, end: { line: 3, column: 14 } }, advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
 if (mode === "not-a-diagnostic") {
   emit({ summary: summary({}), diagnostics: ["a bare string"], command: "lint" });
 }
