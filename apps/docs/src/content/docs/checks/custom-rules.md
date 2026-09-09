@@ -50,6 +50,7 @@ Calling project.imports() with no argument returns every import in the project. 
 | `declaredZone` | that file's zone |
 | `kind` | `"value"` or `"type"` |
 | `at` | byte offset of the binding, for the caret |
+| `target` | what the import landed on: a symbol, a whole namespace, something external, a Node builtin, a name the module does not export, or two candidates it could not choose between |
 
 Two of those fields are worth a second look. A barrel is a file that re-exports its neighbours so people can import from one place. The field via is the module the author named, so it is often the barrel. The field declaredIn is where the thing really lives, after every re-export has been followed. Compare the two in your rules, because a tool that treats them as one is blind through a barrel.
 
@@ -71,7 +72,26 @@ The message says what happened. The guidance says what to do, and where it matte
 
 Rules are handed a view of the project rather than a syntax tree. The parser stays an implementation detail you never have to learn, and swapping it never breaks a rule you wrote.
 
-Besides imports(), a project answers files, zoneNames, zoneOf(file), filesIn(zone), exportsOf(file) and relative(file).
+Besides the imports, a project will answer any of these:
+
+| what you ask for | what comes back |
+|---|---|
+| `root` | the project root, as an absolute path |
+| `files` | every file the run read |
+| `zoneNames` | every zone name, in the order you declared them |
+| `zoneOf(file)` | the zone that file landed in, or nothing if no zone claimed it |
+| `filesIn(zone)` | the files in one zone |
+| `exportsOf(file)` | the names a file exports |
+| `relative(file)` | that path relative to the project root, which is what you want in a message |
+| `sourceOf(file)` | the text of a file, or nothing if the run never read it |
+| `declarationsIn(file)` | each declaration in a file, with its name, its text, and where it starts and ends |
+| `mentionsIn(file)` | every identifier and every string literal in a file, each with its position |
+| `referencesIn(file)` | for each declaration in a file, which of the file's other declarations it mentions |
+| `vocabularyOf(zones)` | the names those zones export, and the string values their files contain |
+
+One of those deserves a warning. When you need the text of a file, ask sourceOf for it rather than reading the disk yourself.
+
+The guard is the part that inspects an edit before it is saved. At that moment the file on disk still holds the old text, so a rule that reads the disk directly answers the opposite of what it answers in a full run. That is a hard thing to notice and a worse thing to debug.
 
 ## When to write one instead of asking for a feature
 
