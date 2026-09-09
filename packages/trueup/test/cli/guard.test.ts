@@ -297,6 +297,20 @@ describe("guarding a file that was already broken", () => {
     expect(reason).toContain("already unresolved before this edit");
   });
 
+  it("says nothing about a prior state once the write has landed, there being no edit to compare", async () => {
+    startingFrom('import { a } from "./gone.js";\n\nexport const both = [a];\n');
+
+    const { output } = await guard({
+      hook_event_name: "PostToolUse",
+      tool_name: "Write",
+      tool_input: { file_path: mending() },
+    });
+    const said: string = JSON.parse(output).hookSpecificOutput.additionalContext;
+
+    expect(said).toContain("./gone.js, which does not resolve");
+    expect(said).not.toContain("already unresolved before this edit");
+  });
+
   it("says nothing of the sort about one the edit itself brought in", async () => {
     startingFrom('import { helper } from "./helper.js";\n\nexport const both = helper;\n');
 
