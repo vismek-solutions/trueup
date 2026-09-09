@@ -50,6 +50,36 @@ describe("reading eslint's output", () => {
   it("treats a lint failure exit code as a normal result", () => {
     expect(runWith("ok").kind).toBe("findings");
   });
+
+  it("asks eslint for json over the whole tree, and nothing else", () => {
+    expect(findingsOf(runWith("report-args"))[0]?.message).toBe(". --format json");
+  });
+
+  it("carries the name eslint's findings are reported under", () => {
+    expect(eslintRunner().name).toBe("eslint");
+  });
+});
+
+describe("a message eslint left incomplete", () => {
+  const sparse = () => findingsOf(runWith("sparse"));
+
+  it("files a message no rule claimed under a category saying so", () => {
+    expect(sparse()[0]?.category).toBe("unattributed");
+  });
+
+  it("shows the rule name when eslint sent no message to show", () => {
+    expect(sparse()[1]?.message).toBe("no-message");
+  });
+
+  it("reports no position when eslint gave no line", () => {
+    expect(sparse()[0]?.start).toBeNull();
+  });
+
+  it("reads a line with no column as starting at the first one", () => {
+    const start = sparse()[2]?.start ?? 0;
+
+    expect(readFileSync(LINTED, "utf8").slice(start, start + 6)).toBe("export");
+  });
 });
 
 describe("surfacing what an inline comment silenced", () => {
@@ -82,11 +112,57 @@ describe("surfacing what an inline comment silenced", () => {
   it("fails rather than reporting none when eslint does not report suppressions at all", () => {
     expect(reasonOf(runReportingSuppressed("no-suppressed-field"))).toContain("does not report suppressed");
   });
+
+  it("states a suppression plainly when eslint recorded nothing about it", () => {
+    expect(findingsOf(runReportingSuppressed("odd-suppressions"))[0]?.message).toBe(
+      "silenced by nothing recorded",
+    );
+  });
+
+  it("trims the justification and drops the ones that said nothing", () => {
+    expect(findingsOf(runReportingSuppressed("odd-suppressions"))[1]?.message).toBe(
+      "silenced once suppressed because: padded",
+    );
+  });
+
+  it("joins two justifications rather than running them together", () => {
+    expect(findingsOf(runReportingSuppressed("odd-suppressions"))[2]?.message).toBe(
+      "silenced twice suppressed because: first; second",
+    );
+  });
+
+  it("filters a suppressed rule by the category it is reported under", () => {
+    const found = eslintRunner({
+      command: ["node", TOOL, "ok"],
+      reportSuppressed: true,
+      categories: ["suppressed/no-console"],
+    }).run(ROOT);
+
+    expect(findingsOf(found).map((finding) => finding.category)).toEqual(["suppressed/no-console"]);
+  });
+
+  it("still fails on a parse error rather than going looking for suppressions", () => {
+    expect(reasonOf(runReportingSuppressed("fatal"))).toContain("could not be parsed");
+  });
 });
 
 describe("refusing to trust eslint", () => {
   it("fails when eslint linted no files at all", () => {
     expect(reasonOf(runWith("empty"))).toContain("linted no files");
+  });
+
+  it("lists every pattern it searched, so the empty run can be reproduced", () => {
+    const found = eslintRunner({ command: ["node", TOOL, "empty"], patterns: ["src", "test"] }).run(ROOT);
+
+    expect(reasonOf(found)).toContain("linted no files under src test");
+  });
+
+  it("fails when a file result names no file", () => {
+    expect(reasonOf(runWith("no-file-path"))).toContain("array of file results");
+  });
+
+  it("fails on a later file result, not only the first", () => {
+    expect(reasonOf(runWith("second-bad"))).toContain("array of file results");
   });
 
   it("fails when a file could not be parsed", () => {
@@ -115,6 +191,10 @@ describe("refusing to trust eslint", () => {
 
   it("fails when eslint printed nothing", () => {
     expect(reasonOf(runWith("silent"))).toContain("no output");
+  });
+
+  it("reads whitespace alone as nothing printed, rather than trying to parse it", () => {
+    expect(reasonOf(runWith("whitespace"))).toContain("no output");
   });
 
   it("fails when the command does not exist", () => {
