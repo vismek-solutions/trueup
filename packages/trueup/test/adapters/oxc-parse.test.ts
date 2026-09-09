@@ -163,6 +163,14 @@ describe("the declarations a file makes", () => {
   it("says nothing about a statement that declares nothing", () => {
     expect(declaredIn("callSomething();\n")).toEqual([]);
   });
+
+  it("says nothing about a destructured binding, which carries no name of its own", () => {
+    expect(declaredIn("const { a } = obj;\n")).toEqual([]);
+  });
+
+  it("reads past an export that carries no declaration, rather than tripping over it", () => {
+    expect(declaredIn("const a = 1;\nexport { a };\n").map((found) => found.name)).toEqual(["a"]);
+  });
 });
 
 describe("the names and strings a file mentions", () => {
@@ -188,6 +196,14 @@ describe("the names and strings a file mentions", () => {
 
   it("reads a name a file exports, since it declared that name itself", () => {
     expect(mentionedIn("export const own = 1;\n")).toEqual(["name:own"]);
+  });
+
+  it("reads no mention of the words between jsx tags, which are prose and not names", () => {
+    expect(mentionedIn("const El = <Widget>plain text</Widget>;\n", "/p/view.tsx")).toEqual([
+      "name:El",
+      "name:Widget",
+      "name:Widget",
+    ]);
   });
 
   it("reads jsx element and attribute names, which is where a domain word usually leaks", () => {
