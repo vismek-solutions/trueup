@@ -35,7 +35,7 @@ const reachedBy = (named: readonly string[], zones: number): string => {
 };
 
 const boundaryLines = (config: ResolvedConfig): readonly string[] => {
-  const boundaries = config.boundaries ?? [];
+  const boundaries = config.boundaries;
   if (boundaries.length === 0) return [];
 
   const width = Math.max(...config.zones.map((zone) => zone.name.length));
@@ -47,7 +47,7 @@ const boundaryLines = (config: ResolvedConfig): readonly string[] => {
 };
 
 const seamLines = (config: ResolvedConfig): readonly string[] =>
-  (config.seams ?? []).map((rule) => {
+  config.seams.map((rule) => {
     const spared = rule.allow === undefined ? "" : `, except ${rule.allow.join(" · ")}`;
     const shortest =
       rule.minLiteralLength === undefined ? "" : `, literals from ${rule.minLiteralLength} characters`;
@@ -55,7 +55,7 @@ const seamLines = (config: ResolvedConfig): readonly string[] =>
   });
 
 const isolateLines = (config: ResolvedConfig): readonly string[] =>
-  (config.isolate ?? []).map((rule) => {
+  config.isolate.map((rule) => {
     const spared = rule.except === undefined ? "" : `, except ${rule.except.join(" · ")}`;
     const beside =
       rule.wiring === undefined ? "" : `, and only ${rule.wiring.join(" · ")} may sit beside them`;

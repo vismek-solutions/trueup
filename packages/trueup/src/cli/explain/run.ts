@@ -24,7 +24,7 @@ const ungovernedFor = async (cwd: string, write: (line: string) => void): Promis
   if (typeof opened === "number") return opened;
 
   const { config, project } = opened;
-  for (const line of ungovernedLines(ungovernedIn(project, config.boundaries ?? []))) write(line);
+  for (const line of ungovernedLines(ungovernedIn(project, config.boundaries))) write(line);
   return 0;
 };
 
@@ -47,10 +47,12 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
   const about = nameIn(project, path, name);
   const readers = new Set(about.readers.files);
   const against = report.claims.flatMap((claim) =>
-    claim.findings
-      .filter((finding) => finding.symbol === name && finding.file !== null)
-      .filter((finding) => finding.file === path || readers.has(project.relative(finding.file ?? "")))
-      .map((finding) => `${claim.claim}  ${project.relative(finding.file ?? "")}  ${finding.message}`),
+    claim.findings.flatMap((finding) => {
+      if (finding.symbol !== name || finding.file === null) return [];
+      const at = project.relative(finding.file);
+      const mine = finding.file === path || readers.has(at);
+      return mine ? [`${claim.claim}  ${at}  ${finding.message}`] : [];
+    }),
   );
 
   write(`${relative(root, path)}#${name}`);
@@ -101,13 +103,13 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     return 0;
   }
 
-  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries ?? [] });
+  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries });
 
   write(`zone        ${zone}`);
   write(`may reach   ${list(placement.mayReach)}`);
   write(`may not     ${list(placement.mayNotReach)}`);
 
-  for (const seam of (config.seams ?? []).filter((rule) => rule.generic === zone)) {
+  for (const seam of config.seams.filter((rule) => rule.generic === zone)) {
     const vocabulary = project.vocabularyOf(seam.domain);
     write("");
     write(`vocabulary  ${list([...seam.domain])} owns names this file may not use:`);
@@ -116,7 +118,7 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     write(`            ${sampleOf(vocabulary.literals)}`);
   }
 
-  const named = (config.rules ?? []).map((rule) => rule.name);
+  const named = config.rules.map((rule) => rule.name);
   if (named.length > 0) {
     write("");
     write(`also runs   ${list(named)}`);

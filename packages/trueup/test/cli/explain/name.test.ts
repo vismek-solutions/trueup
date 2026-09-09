@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { CUT, explainIn, saidBy, UNRULED } from "../../support/explain.ts";
+import { CLAIMED, CUT, explainIn, saidBy, UNRULED } from "../../support/explain.ts";
 
 const about = (target: string) => saidBy(UNRULED, target);
 
 const cutting = (target: string) => saidBy(CUT, target);
+
+const standing = async (target: string): Promise<string[]> =>
+  (await saidBy(CLAIMED, target)).split("\n").filter((line) => /^ {4}\S/.test(line));
 
 describe("who reads one export", () => {
   it("names every file that reads it, through the declaring file rather than the module named", async () => {
@@ -122,8 +125,26 @@ describe("what already stands against one export", () => {
     );
   });
 
-  it("leaves out a claim standing against some other name in the same file", async () => {
+  it("says none stand against a name nothing has flagged, rather than printing an empty list", async () => {
     expect(await about("src/tools/three.ts#wrench")).toContain("none stand against this name");
+  });
+
+  it("gathers a claim standing on the declaration itself, which no reader would name", async () => {
+    expect(await standing("lib/one.ts#label")).toContain(
+      "    no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
+    );
+  });
+
+  it("leaves out the same claim against the same name declared in another file", async () => {
+    expect((await standing("lib/one.ts#label")).join()).not.toContain("lib/two.ts  declares label");
+  });
+
+  it("leaves out a claim standing against another name in the same file", async () => {
+    expect((await standing("lib/one.ts#label")).join()).not.toContain("declares badge");
+  });
+
+  it("counts what it gathered, so a list that grew silently would show", async () => {
+    expect(await saidBy(CLAIMED, "lib/one.ts#label")).toContain("claims      2");
   });
 
   it("says the delegated tools were not consulted, rather than implying it gathered everything", async () => {
@@ -136,5 +157,20 @@ describe("what already stands against one export", () => {
 
   it("reports a clean run, since pricing a move is a question and not a failure", async () => {
     expect((await explainIn(UNRULED, ["src/tools/three.ts#hammer"])).code).toBe(0);
+  });
+
+  it("reports there is no rulebook rather than pricing a name in a project it never found", async () => {
+    const { code, output } = await explainIn("/", ["x.ts#label"]);
+
+    expect(code).toBe(3);
+    expect(output).toBe("no trueup.config.ts found\n");
+  });
+
+  it("leads with the file and the name, written relative to the project, then a blank line", async () => {
+    expect((await saidBy(CLAIMED, "lib/one.ts#label")).split("\n").slice(0, 3)).toEqual([
+      "lib/one.ts#label",
+      "",
+      "label",
+    ]);
   });
 });

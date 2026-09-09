@@ -44,7 +44,7 @@ const overlayOf = (request: HookRequest): Map<string, string> =>
 const withReach = (decision: Decision, path: string | null, { root, config }: Site) => {
   if (decision.verdict === "allow" || path === null) return decision;
 
-  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries ?? [] });
+  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries });
   if (placement.zone === null) return decision;
 
   const footer = `${placement.zone} may reach ${placement.mayReach.join(" · ")}`;

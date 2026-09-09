@@ -4,6 +4,7 @@ import { fixtureAt } from "./fixtures.ts";
 export const EXPLAINED = fixtureAt("explained");
 export const UNRULED = fixtureAt("ungoverned");
 export const CUT = fixtureAt("cut");
+export const CLAIMED = fixtureAt("claimed");
 
 export const explainIn = async (
   cwd: string,

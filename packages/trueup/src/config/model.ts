@@ -46,6 +46,10 @@ export interface ArchitectureConfig extends Settings {
 
 export type ResolvedConfig = ArchitectureConfig & {
   readonly zones: readonly ZoneDefinition[];
+  readonly boundaries: readonly BoundaryRule[];
+  readonly seams: readonly SeamRule[];
+  readonly isolate: readonly IsolationRule[];
+  readonly rules: readonly Rule[];
   readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
   readonly apiSurfaces?: readonly ApiSurface[] | undefined;
   readonly grants?: readonly MemberGrants[] | undefined;

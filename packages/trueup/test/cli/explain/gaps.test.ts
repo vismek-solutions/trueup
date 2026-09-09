@@ -100,6 +100,13 @@ describe("finding the boundaries nobody wrote", () => {
     expect((await explainIn(UNRULED, ["--ungoverned"])).code).toBe(0);
   });
 
+  it("reports there is no rulebook rather than ranking the pairs of a project it never found", async () => {
+    const { code, output } = await explainIn("/", ["--ungoverned"]);
+
+    expect(code).toBe(3);
+    expect(output).toBe("no trueup.config.ts found\n");
+  });
+
   it("still refuses a flag it does not know when asked for the gaps", async () => {
     const { code, output } = await explainIn(UNRULED, ["--ungoverned", "--verbose"]);
 
