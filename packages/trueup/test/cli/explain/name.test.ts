@@ -20,14 +20,29 @@ describe("who reads one export", () => {
   });
 
   it("says whether the readers are spread, since that is what decides if a split has a home", async () => {
-    expect(await about("src/tools/three.ts#hammer")).toContain("2 directories read it");
+    expect(await about("src/tools/three.ts#hammer")).toContain(
+      "2 directories beyond its own read it, so a split has somewhere to land",
+    );
   });
 
   it("calls the directory holding the file a dot, so a reader beside it still reads as somewhere", async () => {
     const said = await cutting("lib.ts#label");
 
     expect(said).toContain("directories: . · nested");
-    expect(said).toContain("2 directories read it");
+  });
+
+  it("does not count the directory it already lives in as somewhere a split could land", async () => {
+    const said = await cutting("lib.ts#label");
+
+    expect(said).toContain("every reader outside that directory sits in one, so a move has one target");
+    expect(said).not.toContain("directories beyond its own read it");
+  });
+
+  it("says a move has nowhere to go when every reader sits beside it already", async () => {
+    const said = await cutting("lib.ts#beside");
+
+    expect(said).toContain("directories: .");
+    expect(said).toContain("every reader sits in the directory it is declared in");
   });
 
   it("names the one directory rather than only counting it when the readers agree", async () => {
@@ -196,7 +211,7 @@ describe("what already stands against one export", () => {
         "read by     app/reader.ts",
         "            zones: app",
         "            directories: app",
-        "            every reader sits in one directory",
+        "            every reader outside that directory sits in one, so a move has one target",
         "",
         "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 0 here would import it back",
         "travels     none",

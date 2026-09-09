@@ -12,10 +12,15 @@ const priced = (cut: About["cut"]): string =>
     `${cut.importBack.length} here would import it back`,
   ].join(" · ");
 
-const meeting = (directories: readonly string[]): string =>
-  directories.length < 2
-    ? "            every reader sits in one directory"
-    : `            ${directories.length} directories read it, so a split has somewhere to land`;
+const meeting = (readers: About["readers"]): string => {
+  if (readers.elsewhere.length === 0) {
+    return "            every reader sits in the directory it is declared in";
+  }
+  if (readers.elsewhere.length === 1) {
+    return "            every reader outside that directory sits in one, so a move has one target";
+  }
+  return `            ${readers.elsewhere.length} directories beyond its own read it, so a split has somewhere to land`;
+};
 
 const readerLines = (readers: About["readers"]): string[] =>
   readers.files.length === 0
@@ -24,7 +29,7 @@ const readerLines = (readers: About["readers"]): string[] =>
         `read by     ${list(readers.files)}`,
         `            zones: ${list(readers.zones)}`,
         `            directories: ${list(readers.directories)}`,
-        meeting(readers.directories),
+        meeting(readers),
       ];
 
 const cutLines = (cut: About["cut"]): string[] => [

@@ -5,6 +5,7 @@ import type { Project } from "./model.ts";
 export interface NameReaders {
   readonly files: readonly string[];
   readonly directories: readonly string[];
+  readonly elsewhere: readonly string[];
   readonly zones: readonly string[];
 }
 
@@ -64,10 +65,13 @@ const followedFrom = (project: Project, file: string, moving: ReadonlySet<string
 
 const readersOf = (project: Project, file: string, name: string): NameReaders => {
   const edges = project.imports().filter((edge) => edge.declaredIn === file && edge.symbol === name);
+  const home = project.relative(dirname(file)) || ".";
+  const directories = spelt(edges.map((edge) => project.relative(dirname(edge.from)) || "."));
 
   return {
     files: spelt(edges.map((edge) => project.relative(edge.from))),
-    directories: spelt(edges.map((edge) => project.relative(dirname(edge.from)) || ".")),
+    directories,
+    elsewhere: directories.filter((directory) => directory !== home),
     zones: spelt(edges.flatMap((edge) => (edge.fromZone === null ? [] : [edge.fromZone]))),
   };
 };

@@ -1,3 +1,3 @@
-import { label } from "./lib.js";
+import { beside, label } from "./lib.js";
 
-export const shown = label(["one", "two"]);
+export const shown = `${beside}${label(["one", "two"])}`;

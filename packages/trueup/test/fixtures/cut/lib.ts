@@ -23,3 +23,5 @@ export const seed = "[seed]";
 const decorate = (value: string): string => `${seed}${value}`;
 
 export const grown = (value: string): string => decorate(value);
+
+export const beside = "[beside]";
