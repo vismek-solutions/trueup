@@ -46,6 +46,21 @@ describe("explaining a path before writing it", () => {
     expect(output).toContain("every-file-belongs-to-a-zone");
   });
 
+  it("says a rulebook sits outside the analysis, rather than naming a check it cannot fail", async () => {
+    const { output } = await explain("trueup.config.ts");
+
+    expect(output).toBe(
+      [
+        "trueup.config.ts",
+        "",
+        "zone        none",
+        "            this is a rulebook, so it sits outside the analysis it configures",
+        "            no zone, boundary or seam rule applies to it",
+        "",
+      ].join("\n"),
+    );
+  });
+
   it("accepts an absolute path", async () => {
     const { output } = await explain(join(PROJECT, "src/engine/notYetWritten.ts"));
     expect(output).toContain("zone        engine");

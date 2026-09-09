@@ -33,11 +33,18 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
   const opened = await openedIn(cwd, write, new Map([[path, ""]]));
   if (typeof opened === "number") return opened;
 
-  const { config, root, project } = opened;
+  const { config, root, project, rulebooks } = opened;
   const zone = project.zoneOf(path);
 
   write(relative(root, path));
   write("");
+
+  if (rulebooks.includes(path)) {
+    write("zone        none");
+    write("            this is a rulebook, so it sits outside the analysis it configures");
+    write("            no zone, boundary or seam rule applies to it");
+    return 0;
+  }
 
   if (zone === null) {
     write("zone        none");

@@ -43,7 +43,11 @@ export const rulebookIn = async (
   return (await rulebookAt(path, write)) ?? EXIT_BAD_RULEBOOK;
 };
 
-const projectFor = ({ config, path, root, memberConfigs }: LoadedConfig, overlay?: Overlay) =>
+const projectFor = (
+  { config, root }: LoadedConfig,
+  rulebooks: readonly string[],
+  overlay?: Overlay,
+) =>
   inspect({
     root,
     roots: resolveInclude(root, config.include),
@@ -51,7 +55,7 @@ const projectFor = ({ config, path, root, memberConfigs }: LoadedConfig, overlay
     extensions: config.extensions,
     externals: config.externals,
     ignoreDirectories: config.ignoreDirectories,
-    ignoreFiles: [path, ...memberConfigs],
+    ignoreFiles: rulebooks,
     overlay,
   });
 
@@ -59,6 +63,7 @@ export interface Opened {
   readonly config: ResolvedConfig;
   readonly root: string;
   readonly project: ReturnType<typeof inspect>;
+  readonly rulebooks: readonly string[];
 }
 
 export const openedIn = async (
@@ -69,5 +74,11 @@ export const openedIn = async (
   const loaded = await rulebookIn(cwd, write);
   if (typeof loaded === "number") return loaded;
 
-  return { config: loaded.config, root: loaded.root, project: projectFor(loaded, overlay) };
+  const rulebooks = [loaded.path, ...loaded.memberConfigs];
+  return {
+    config: loaded.config,
+    root: loaded.root,
+    project: projectFor(loaded, rulebooks, overlay),
+    rulebooks,
+  };
 };
