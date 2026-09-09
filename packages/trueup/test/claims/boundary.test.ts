@@ -10,6 +10,7 @@ const ZONES = [
   { name: "warrants", patterns: ["shared/warrants.ts"] },
   { name: "shared", patterns: ["shared/**"] },
   { name: "components", patterns: ["components/**"] },
+  { name: "reaching", patterns: ["reaching/**"] },
 ];
 
 const boundaryFindings = (rule: BoundaryRule): readonly Finding[] => {
@@ -46,6 +47,19 @@ describe("a boundary crossed through a barrel", () => {
 
   it("says nothing when the origin zone has no rule", () => {
     expect(boundaryFindings({ from: "shared", allow: ["warrants"] })).toEqual([]);
+  });
+});
+
+describe("a boundary crossed by something other than a plain named import", () => {
+  const messages = (): readonly string[] =>
+    boundaryFindings({ from: "reaching", allow: [] }).map((finding) => finding.message);
+
+  it("is crossed by taking the whole module, which lands in the module's own zone", () => {
+    expect(messages()).toContain("is reaching and may not reach warrants: * from shared/warrants.ts");
+  });
+
+  it("is crossed by asking for a name the module never exported", () => {
+    expect(messages()).toContain("is reaching and may not reach warrants: absent from shared/warrants.ts");
   });
 });
 
