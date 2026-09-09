@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { gitChanges } from "../../../src/adapters/git/changes.ts";
 import type { FileChange } from "../../../src/ports/changes.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
 
 const git = (root: string, ...args: string[]) => spawnSync("git", ["-C", root, ...args]);
 
@@ -152,5 +153,32 @@ describe("when there is nothing to measure against", () => {
     const said = gitChanges().since(root, "main");
 
     expect(said.kind === "unmeasured" && said.reason).toContain("could not read the change since main");
+  });
+});
+
+describe("when git stops answering part way through", () => {
+  const FAKE = join(fixtureAt("fake-tool"), "git.mjs");
+
+  const asked = (mode: string) =>
+    gitChanges(["node", FAKE, mode]).since(mkdtempSync(join(tmpdir(), "trueup-fake-")), "main");
+
+  const DIFFED = [{ file: "kept.ts", added: 2, removed: 1 }];
+
+  it("says so where git is killed reading the diff, rather than reporting a change of no size", () => {
+    const said = asked("dies-on-diff");
+
+    expect(said.kind === "unmeasured" && said.reason).toContain("killed before it finished");
+  });
+
+  it("keeps the diff it already has where git is killed listing untracked files", () => {
+    const said = asked("dies-on-others");
+
+    expect(said.kind === "measured" && said.files).toEqual(DIFFED);
+  });
+
+  it("leaves out what a refused listing printed, since that is a complaint and not a file", () => {
+    const said = asked("prints-then-refuses");
+
+    expect(said.kind === "measured" && said.files).toEqual(DIFFED);
   });
 });

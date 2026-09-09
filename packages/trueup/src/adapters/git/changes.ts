@@ -4,9 +4,6 @@ import type { ChangeSet, Changes, FileChange } from "../../ports/changes.ts";
 import { captureTool } from "../tool-process.ts";
 import { summarize } from "../tool-output.ts";
 
-const git = (root: string, args: readonly string[]) =>
-  captureTool({ command: ["git"], args: ["-C", root, ...args] });
-
 const countOf = (value: string): number => {
   const parsed = Number.parseInt(value, 10);
   return Number.isNaN(parsed) ? 0 : parsed;
@@ -43,20 +40,25 @@ const refused = (reason: string, stderr: string): ChangeSet => {
   return { kind: "unmeasured", reason: detail === "" ? reason : `${reason}: ${detail}` };
 };
 
-export const gitChanges = (): Changes => ({
-  since: (root, base): ChangeSet => {
-    const point = git(root, ["merge-base", "HEAD", base]);
-    if (point.kind === "failed") return { kind: "unmeasured", reason: point.reason };
-    if (point.status !== 0) return refused(`no common commit with ${base}`, point.stderr);
+export const gitChanges = (command: readonly string[] = ["git"]): Changes => {
+  const git = (root: string, args: readonly string[]) =>
+    captureTool({ command, args: ["-C", root, ...args] });
 
-    const at = point.stdout.trim();
-    const diff = git(root, ["diff", "--numstat", "--no-renames", at, "--"]);
-    if (diff.kind === "failed") return { kind: "unmeasured", reason: diff.reason };
-    if (diff.status !== 0) return refused(`could not read the change since ${base}`, diff.stderr);
+  return {
+    since: (root, base): ChangeSet => {
+      const point = git(root, ["merge-base", "HEAD", base]);
+      if (point.kind === "failed") return { kind: "unmeasured", reason: point.reason };
+      if (point.status !== 0) return refused(`no common commit with ${base}`, point.stderr);
 
-    const others = git(root, ["ls-files", "--others", "--exclude-standard"]);
-    const added = others.kind === "captured" && others.status === 0 ? others.stdout : "";
+      const at = point.stdout.trim();
+      const diff = git(root, ["diff", "--numstat", "--no-renames", at, "--"]);
+      if (diff.kind === "failed") return { kind: "unmeasured", reason: diff.reason };
+      if (diff.status !== 0) return refused(`could not read the change since ${base}`, diff.stderr);
 
-    return { kind: "measured", base, files: [...tracked(diff.stdout), ...untracked(root, added)] };
-  },
-});
+      const others = git(root, ["ls-files", "--others", "--exclude-standard"]);
+      const added = others.kind === "captured" && others.status === 0 ? others.stdout : "";
+
+      return { kind: "measured", base, files: [...tracked(diff.stdout), ...untracked(root, added)] };
+    },
+  };
+};
