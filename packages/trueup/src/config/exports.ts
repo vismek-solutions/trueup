@@ -47,10 +47,7 @@ export const exportedFilesIn = (directory: string): PublicSurface | null => {
   const manifest = manifestIn(directory);
   if (manifest === null) return null;
 
-  const field = manifest.exports;
-  if (field === undefined || field === null) return null;
-
-  const subpaths = subpathsIn(field);
+  const subpaths = subpathsIn(manifest.exports);
   const named = subpaths.filter(([subpath, target]) => !subpath.includes("*") && !target.includes("*"));
   if (named.length === 0) return null;
 

@@ -1,0 +1,7 @@
+{
+  "name": "@shapes/subpath-only",
+  "type": "module",
+  "exports": {
+    "./vet": "./src/vet.ts"
+  }
+}

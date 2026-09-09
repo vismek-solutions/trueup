@@ -31,6 +31,18 @@ describe("reading a package's public surface from its manifest", () => {
     expect(readableIn("conditional-subpath")).toEqual([".=src/index.ts", "./vet=src/vet.ts"]);
   });
 
+  it("reads a map that names a subpath but never the package itself", () => {
+    expect(readableIn("subpath-only")).toEqual(["./vet=src/vet.ts"]);
+  });
+
+  it("reads a map holding one subpath beside a key that is not one", () => {
+    expect(readableIn("mixed-keys")).toEqual([".=src/index.ts"]);
+  });
+
+  it("leaves out a subpath published as nothing, rather than treating it as a file", () => {
+    expect(readableIn("withheld-subpath")).toEqual([".=src/index.ts"]);
+  });
+
   it("resolves every target against the package, so a caller never joins paths itself", () => {
     const first = surfaceOf("plain-string")?.files[0];
 
@@ -57,6 +69,10 @@ describe("a manifest that names no surface this analysis can read", () => {
 
   it("says nothing when every subpath is a wildcard, since none names a file", () => {
     expect(surfaceOf("only-wildcards")).toBeNull();
+  });
+
+  it("says nothing when a plain subpath points at a wildcard, since the target names no one file", () => {
+    expect(surfaceOf("wildcard-target")).toBeNull();
   });
 
   it("says nothing for a directory holding no manifest at all", () => {

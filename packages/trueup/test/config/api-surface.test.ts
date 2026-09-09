@@ -81,4 +81,10 @@ describe("deriving the doors from package.json", () => {
       /also declares an api zone/,
     );
   });
+
+  it("refuses a member deriving doors from a manifest that names no file, saying which", async () => {
+    await expect(loadConfig(join(fixtureAt("doors-unreadable"), "trueup.config.ts"))).rejects.toThrow(
+      /opaque sets `doorsFromExports` but its package.json exports nothing readable/,
+    );
+  });
 });

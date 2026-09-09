@@ -1,0 +1,7 @@
+{
+  "name": "@shapes/wildcard-target",
+  "type": "module",
+  "exports": {
+    "./everything": "./src/*.ts"
+  }
+}

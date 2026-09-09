@@ -1,0 +1,7 @@
+{
+  "name": "@doors/opaque",
+  "type": "module",
+  "exports": {
+    "./features/*": "./src/features/*.ts"
+  }
+}
