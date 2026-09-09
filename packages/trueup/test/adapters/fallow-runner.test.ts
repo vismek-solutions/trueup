@@ -138,6 +138,7 @@ describe("reading a delegated tool's duplicate code", () => {
 
   it("drops a group whose copies it cannot place, rather than reporting one that names nowhere", () => {
     expect(clonesOf(runDupes("partial"))).toEqual([]);
+    expect(findingsOf(runDupes("partial"))).toHaveLength(1);
   });
 
   it("drops a group where every copy is missing a line, not only one missing a file", () => {
@@ -146,6 +147,21 @@ describe("reading a delegated tool's duplicate code", () => {
 
   it("drops a group that carries no copies at all", () => {
     expect(clonesOf(runDupes("no-instances"))).toEqual([]);
+  });
+
+  it("keeps the copies it can place in a group where some copy it cannot", () => {
+    expect(clonesOf(runDupes("mixed")).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/engine/runner.ts"),
+      join(ROOT, "src/domain/thing.ts"),
+      join(ROOT, "src/engine/other.ts"),
+    ]);
+    expect(findingsOf(runDupes("mixed"))).toHaveLength(4);
+  });
+
+  it("names only the copies it could place, separated so they can be told apart", () => {
+    expect(clonesOf(runDupes("mixed"))[0]?.message).toBe(
+      "5 lines written the same way at src/domain/thing.ts:1 · src/engine/other.ts:2",
+    );
   });
 
   it("leaves the other categories alone", () => {
@@ -186,6 +202,37 @@ describe("reading a delegated tool's duplicate code", () => {
     ]);
   });
 
+  it("asks for no duplication settings when it was given none of them", () => {
+    const outcome = fallowRunner({
+      command: ["node", TOOL, "argv"],
+      categories: ["unused_exports"],
+      duplication: {},
+    }).run(ROOT);
+
+    expect(findingsOf(outcome).map((finding) => finding.message)).toEqual([
+      "unused exports: --root",
+      `unused exports: ${ROOT}`,
+      "unused exports: --format",
+      "unused exports: json",
+      "unused exports: --quiet",
+    ]);
+  });
+
+  it("asks for no duplication settings at all when duplication was never mentioned", () => {
+    const outcome = fallowRunner({
+      command: ["node", TOOL, "argv"],
+      categories: ["unused_exports"],
+    }).run(ROOT);
+
+    expect(findingsOf(outcome).map((finding) => finding.message)).toEqual([
+      "unused exports: --root",
+      `unused exports: ${ROOT}`,
+      "unused exports: --format",
+      "unused exports: json",
+      "unused exports: --quiet",
+    ]);
+  });
+
   it("asks for nothing it was not given", () => {
     const outcome = fallowRunner({
       command: ["node", TOOL, "argv"],
@@ -210,6 +257,22 @@ describe("refusing to trust a delegated tool", () => {
     expect(reasonOf(runDupes("ok"))).toContain("no clone groups");
   });
 
+  it("fails when the dupes section is there but empty of meaning", () => {
+    expect(reasonOf(runDupes("null-dupes"))).toContain("no clone groups");
+  });
+
+  it("fails when the tool would not say which of its own rules are on", () => {
+    expect(reasonOf(runWith("config-silent", ["unused_exports"]))).toContain("severities were unreadable");
+  });
+
+  it("asks for every category it knows when it was given none, and says which is missing", () => {
+    expect(reasonOf(runWith("ok"))).toContain("unused_files");
+  });
+
+  it("carries the name a delegated tool's findings are reported under", () => {
+    expect(fallowRunner().name).toBe("fallow");
+  });
+
   it("fails when the output schema is not the one it was written against", () => {
     expect(reasonOf(runWith("old-schema"))).toContain("is not the expected 9");
   });
@@ -231,6 +294,7 @@ describe("refusing to trust a delegated tool", () => {
 
     expect(reason).toContain("unused-exports");
     expect(reason).toContain("can never report");
+    expect(reason).toContain("Turn them on in fallow, or drop the category from the runner");
   });
 
   it("lets a category through when its rule is live", () => {

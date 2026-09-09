@@ -1,6 +1,7 @@
 const mode = process.argv[2];
 
 if (process.argv.includes("config")) {
+  if (mode === "config-silent") process.exit(0);
   // real fallow reads its config regardless; this one answers only the exact call the runner owes it
   const [subcommand, rootFlag, , formatFlag, format] = process.argv.slice(3);
   const shape = [subcommand, rootFlag, formatFlag, format].join(" ");
@@ -76,6 +77,17 @@ const CLONES = {
     instances: [{ file: "src/engine/runner.ts" }, { start_line: 3 }],
   },
   "no-instances": { line_count: 4, fingerprint: "an-empty-group" },
+  mixed: {
+    line_count: 5,
+    fingerprint: "a-mixed-group",
+    instances: [
+      { file: "src/engine/runner.ts", start_line: 3, start_col: 13 },
+      { file: "src/domain/thing.ts", start_line: 1, start_col: 1 },
+      { file: "src/engine/other.ts", start_line: 2, start_col: 1 },
+      { start_line: 9 },
+      { file: "src/domain/nameless.ts" },
+    ],
+  },
 };
 
 if (mode in CLONES) {
@@ -85,6 +97,11 @@ if (mode in CLONES) {
 
 if (mode === "no-clone-groups") {
   process.stdout.write(JSON.stringify({ check, dupes: {} }));
+  process.exit(0);
+}
+
+if (mode === "null-dupes") {
+  process.stdout.write(JSON.stringify({ check, dupes: null }));
   process.exit(0);
 }
 
