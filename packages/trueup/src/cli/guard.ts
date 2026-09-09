@@ -1,11 +1,10 @@
-import { extname, relative, sep } from "node:path";
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
 import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
-import { IGNORED_DIRECTORIES, readSource, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
+import { readSource } from "../adapters/node-files.ts";
 import { parseModule } from "../adapters/oxc-parse.ts";
 import { check, placementOf } from "../compose.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
-import type { ArchitectureConfig, ResolvedConfig } from "../config/model.ts";
+import type { ResolvedConfig } from "../config/model.ts";
 import { decideOnProposal } from "../guard/decide.ts";
 import { protectionOf } from "../guard/protected.ts";
 import type { Protection } from "../ports/protection.ts";
@@ -13,7 +12,7 @@ import type { Decision, HookRequest } from "../ports/proposal.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import type { Report } from "../report/model.ts";
-import { rulebookAt } from "./preamble.ts";
+import { type Analysable, rulebookAt, unanalysed } from "./preamble.ts";
 
 export interface RunGuardInput {
   readonly cwd: string;
@@ -33,9 +32,6 @@ interface Rulebook {
   readonly protect: Protection | undefined;
   readonly mode: string | null;
 }
-
-const under = (roots: readonly string[], path: string): boolean =>
-  roots.some((root) => path === root || path.startsWith(`${root}${sep}`));
 
 const targetOf = (request: HookRequest): string | null =>
   request.kind === "propose" ? request.proposal.path : request.path;
@@ -86,14 +82,6 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
   return decision.verdict === "allow" ? null : answerTo({ request, decision, spread: false });
 };
 
-const inIgnoredDirectory = (root: string, path: string, config: ArchitectureConfig): boolean => {
-  const skipped = new Set(config.ignoreDirectories ?? IGNORED_DIRECTORIES);
-  return relative(root, path)
-    .split(sep)
-    .slice(0, -1)
-    .some((segment) => skipped.has(segment));
-};
-
 const ALREADY = " — already unresolved before this edit";
 
 const importedBefore = (path: string): ReadonlySet<string> => {
@@ -123,11 +111,8 @@ const markingPriorFailures = (report: Report, request: HookRequest, path: string
   };
 };
 
-const analysed = ({ root, config }: Site, roots: readonly string[], path: string | null): boolean =>
-  path === null ||
-  ((config.extensions ?? SOURCE_EXTENSIONS).includes(extname(path)) &&
-    under(roots, path) &&
-    !inIgnoredDirectory(root, path, config));
+const analysed = (site: Analysable, path: string | null): boolean =>
+  path === null || unanalysed(site, path) === null;
 
 export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<number> {
   let payload: unknown;
@@ -167,7 +152,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const checked = spread ? null : target;
 
   const roots = resolveInclude(root, config.include);
-  if (!analysed({ root, config }, roots, checked)) return 0;
+  if (!analysed({ root, config, roots }, checked)) return 0;
 
   const report = withCommand(
     check({

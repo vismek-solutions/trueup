@@ -1,8 +1,33 @@
+import { extname, relative, sep } from "node:path";
+import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
 import { inspect, type Overlay } from "../compose.ts";
 import { findConfig, loadConfig, messageOf, resolveInclude, type LoadedConfig } from "../config/load.ts";
 import type { ResolvedConfig } from "../config/model.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
 import { EXIT_BAD_RULEBOOK, EXIT_NO_CONFIG } from "./command.ts";
+
+export interface Analysable {
+  readonly root: string;
+  readonly config: ResolvedConfig;
+  readonly roots: readonly string[];
+}
+
+const skipsDirectoryOf = (root: string, config: ResolvedConfig, path: string): boolean => {
+  const skipped = new Set(config.ignoreDirectories ?? IGNORED_DIRECTORIES);
+  const segments = relative(root, path).split(sep).slice(0, -1);
+  return segments.some((segment) => skipped.has(segment));
+};
+
+export const unanalysed = ({ root, config, roots }: Analysable, path: string): string | null => {
+  const extensions = config.extensions ?? SOURCE_EXTENSIONS;
+  if (!extensions.includes(extname(path))) {
+    return `the analysis reads ${extensions.join(" · ")}, and this is not one of them`;
+  }
+  if (!roots.some((entry) => path === entry || path.startsWith(`${entry}${sep}`))) {
+    return "it sits outside the roots the analysis reads";
+  }
+  return skipsDirectoryOf(root, config, path) ? "it sits in a directory the analysis skips" : null;
+};
 
 export const refusedArguments = (
   argv: readonly string[],

@@ -58,11 +58,11 @@ describe("explaining a path before writing it", () => {
   });
 
   it("warns that a path in no zone would fail the check, and says what to do about it", async () => {
-    const { output } = await explain("docs/notes.ts");
+    const { output } = await explain("src/loose.ts");
 
     expect(output).toBe(
       [
-        "docs/notes.ts",
+        "src/loose.ts",
         "",
         "zone        none",
         "            this path matches no zone, so writing here fails every-file-belongs-to-a-zone",
@@ -70,6 +70,29 @@ describe("explaining a path before writing it", () => {
         "",
       ].join("\n"),
     );
+  });
+
+  it("names no check for a path outside the roots, since nothing there is analysed", async () => {
+    const { output } = await explain("docs/notes.ts");
+
+    expect(output).toBe(
+      [
+        "docs/notes.ts",
+        "",
+        "zone        none",
+        "            this path is not analysed, so no claim applies to it",
+        "            it sits outside the roots the analysis reads",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("says an extension the analysis never reads is not governed, whatever zone it falls in", async () => {
+    const { output } = await explain("src/engine/theme.css");
+
+    expect(output).toContain("zone        engine");
+    expect(output).toContain("this path is not analysed, so no claim applies to it");
+    expect(output).not.toContain("may reach");
   });
 
   it("says a rulebook sits outside the analysis, rather than naming a check it cannot fail", async () => {

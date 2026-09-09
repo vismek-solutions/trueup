@@ -4,7 +4,7 @@ import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
-import { openedIn } from "../preamble.ts";
+import { openedIn, unanalysed } from "../preamble.ts";
 import { list } from "./lines.ts";
 import { nameLines } from "./name.ts";
 import { ungovernedLines } from "./ungoverned.ts";
@@ -93,6 +93,14 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     write("zone        none");
     write("            this is a rulebook, so it sits outside the analysis it configures");
     write("            no zone, boundary or seam rule applies to it");
+    return 0;
+  }
+
+  const missing = unanalysed({ root, config, roots: resolveInclude(root, config.include) }, path);
+  if (missing !== null) {
+    write(`zone        ${zone ?? "none"}`);
+    write("            this path is not analysed, so no claim applies to it");
+    write(`            ${missing}`);
     return 0;
   }
 
