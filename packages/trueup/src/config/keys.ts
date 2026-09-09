@@ -13,6 +13,7 @@ const ROOT: Record<keyof ArchitectureConfig, true> = {
   maxFilesPerDirectory: true,
   members: true,
   protect: true,
+  readerships: true,
   rules: true,
   runners: true,
   seams: true,

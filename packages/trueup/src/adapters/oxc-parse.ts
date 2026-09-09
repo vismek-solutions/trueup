@@ -165,7 +165,8 @@ const namedOf = (node: AstNode, text: string): Declaration | null => {
 
   const body = bodyAfterName(node, id, text);
   const span = spanOf(node);
-  return body === null || span === null ? null : { name: id.name as string, text: body, start: span.start };
+  if (body === null || span === null) return null;
+  return { name: id.name as string, text: body, start: span.start, end: span.end };
 };
 
 const unwrapped = (node: AstNode): AstNode => {

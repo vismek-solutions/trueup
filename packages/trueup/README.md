@@ -740,6 +740,37 @@ Widening the surface so the direct test becomes legitimate, and adding a product
 
 With no zone carrying `role: "tests"`, it warns rather than passing — there is nothing to hold to a surface, and silence would read as a pass.
 
+## One file answering to two audiences
+
+```ts
+readerships: true,
+```
+
+Off by default, and a separate switch again. It partitions a file's exports by who reads them, and reports the file when more than one group is left standing.
+
+```
+no-file-serves-two-readerships              1 error
+    src/shared/format.ts  serves 2 readerships that never meet: parseAmount from src/billing; renderBadge from src/inbox
+```
+
+This is the companion to the colocation check above, and it asks something that one structurally cannot. Colocation is per symbol: it fires when a symbol has exactly one consumer. A file whose every export has plenty of readers passes it, and is still two files when no reader ever wants both halves. Split it, and each half goes where its readers are.
+
+The remedy for a group of one is usually not a new file. A value a single caller derives from what it already holds belongs inside that caller, and dissolving it leaves nothing to place. Reaching for a new home first is the common mistake.
+
+### What joins two exports
+
+Two exports stay together when they share a reader, and also when **one names the other in the same file**. `export type RowKey = keyof Row` cannot be moved away from `Row`, so counting the two apart would report every carved-out type as a split. The same holds for a value built from a sibling.
+
+Readers in a zone with a `role` do not count, for the reverse of the reason they do not count as lone consumers: a composition root wires both halves, and counting it would join every group it touches and hide the split. A file in a role zone is not reported either — a barrel answers to readers this analysis cannot see.
+
+An export nothing reads is left out, rather than forming a group of its own. Unused code is a different finding, and `fallow` already reports it.
+
+### Granularity
+
+Readers are grouped by **directory**. Per file is finer than the question deserves — one consumer importing two names is not evidence they belong apart — and per zone is too coarse to see a split inside one zone.
+
+Measured on this repository: 21 files have two or more exports that something reads, and none of them splits, at any of the three granularities. Turning off the sibling-name join makes three of them split falsely, which is the whole reason that join exists. A codebase whose directories are as coarse as its zones has little for this check to find; one with deep feature directories has more.
+
 ## Rules you write yourself
 
 Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project.
@@ -803,7 +834,7 @@ fallow's documentation is explicit about the other side of this: a barrel is han
 | Rules anchored on the declaring file | a rule reaches through the barrel to the symbol |
 | Imports checked by name | a named export that does not exist, and a name two `export *` barrels both supply |
 | Zone roles | `wiring`, `tests` and `api` change what a rule counts as a consumer |
-| Placement rules | where a file should live, given who uses it — colocation, test-only exports, directory size |
+| Placement rules | where a file should live, given who uses it — colocation, readerships, test-only exports, directory size |
 | Zone-level cycles | one finding per tangle, at zone granularity, with no rule written |
 | Sibling isolation by pattern | one rule keeps `routes/*` apart without naming the routes |
 | Seams | a generic zone naming a domain concept, with the vocabulary derived from your zones |

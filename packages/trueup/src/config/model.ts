@@ -20,24 +20,28 @@ export interface MemberConfig {
   readonly doorsFromExports?: boolean | undefined;
 }
 
-export interface ArchitectureConfig {
-  readonly command?: string | undefined;
-  readonly include?: readonly string[] | undefined;
-  readonly members?: readonly string[] | undefined;
+export interface Settings {
   readonly zones?: readonly ZoneDefinition[] | undefined;
   readonly boundaries?: readonly BoundaryRule[] | undefined;
   readonly seams?: readonly SeamRule[] | undefined;
   readonly isolate?: readonly IsolationRule[] | undefined;
-  readonly protect?: Protection | undefined;
   readonly maxFilesPerDirectory?: number | undefined;
   readonly duplication?: number | undefined;
   readonly colocation?: boolean | undefined;
+  readonly readerships?: boolean | undefined;
   readonly testInternals?: boolean | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly extensions?: readonly string[] | undefined;
   readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
+}
+
+export interface ArchitectureConfig extends Settings {
+  readonly command?: string | undefined;
+  readonly include?: readonly string[] | undefined;
+  readonly members?: readonly string[] | undefined;
+  readonly protect?: Protection | undefined;
 }
 
 export type ResolvedConfig = ArchitectureConfig & {

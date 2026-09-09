@@ -69,6 +69,7 @@ export interface Declaration {
   readonly name: string;
   readonly text: string;
   readonly start: number;
+  readonly end: number;
 }
 
 export type ReadDeclarations = (path: string, text: string) => readonly Declaration[];

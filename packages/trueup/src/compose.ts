@@ -4,28 +4,25 @@ import { createResolver } from "./adapters/oxc-resolve.ts";
 import { apiSurfaceClaim, type ApiSurface } from "./claims/members/api-surface.ts";
 import { boundaryClaim, boundaryZoneReferences, judges, type BoundaryRule } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
-import {
-  colocationClaim,
-  testInternalsClaim,
-  testOnlyExportClaim,
-} from "./claims/placement/colocation.ts";
+import { colocationClaim, testInternalsClaim, testOnlyExportClaim } from "./claims/placement/colocation.ts";
 import { cycleClaim } from "./claims/cycles.ts";
-import { customClaims, type Rule } from "./claims/custom.ts";
+import { customClaims } from "./claims/custom.ts";
 import { runDelegated } from "./claims/delegated.ts";
 import { grantClaim, type MemberGrants } from "./claims/members/grants.ts";
 import { directoryClaim, type DirectoryLimit } from "./claims/placement/directories.ts";
 import { duplicationClaim } from "./claims/placement/duplication.ts";
+import { readershipClaim } from "./claims/placement/readership.ts";
 import { isolationClaim, loosePlacementClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
-import { seamClaim, seamZoneReferences, type SeamRule } from "./claims/seam.ts";
+import { seamClaim, seamZoneReferences } from "./claims/seam.ts";
 import { zoneReferencesExistClaim } from "./claims/zone-references.ts";
+import type { Settings } from "./config/model.ts";
 import { buildSymbolGraph } from "./graph/build.ts";
 import type { SymbolGraph } from "./graph/model.ts";
 import { buildLexicon } from "./lexicon/build.ts";
 import type { ModuleRecord, ParseModule } from "./ports/module-record.ts";
-import type { Runner } from "./ports/runner.ts";
 import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
 import { withoutDuplicates, type Report } from "./report/model.ts";
@@ -37,7 +34,9 @@ export type Overlay = ReadonlyMap<string, string>;
 const NO_OVERLAY: Overlay = new Map();
 
 const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): Map<string, string> =>
-  new Map(discoverFiles(options, overlay.keys()).map((path) => [path, overlay.get(path) ?? readSource(path)]));
+  new Map(
+    discoverFiles(options, overlay.keys()).map((path) => [path, overlay.get(path) ?? readSource(path)]),
+  );
 
 const parseAll = (sources: ReadonlyMap<string, string>, parse: ParseModule): ModuleRecord[] =>
   [...sources].map(([path, text]) => parse(path, text));
@@ -130,26 +129,14 @@ export function placementOf({ root, path, zones, boundaries }: PlacementInput): 
   return { zone, ...reachOf({ zone, zones, boundaries }) };
 }
 
-export interface CheckOptions {
+export interface CheckOptions extends Settings {
   readonly root: string;
   readonly roots?: readonly string[] | undefined;
   readonly zones: readonly ZoneDefinition[];
-  readonly boundaries?: readonly BoundaryRule[] | undefined;
-  readonly seams?: readonly SeamRule[] | undefined;
-  readonly isolate?: readonly IsolationRule[] | undefined;
-  readonly maxFilesPerDirectory?: number | undefined;
   readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
   readonly apiSurfaces?: readonly ApiSurface[] | undefined;
   readonly grants?: readonly MemberGrants[] | undefined;
-  readonly duplication?: number | undefined;
-  readonly colocation?: boolean | undefined;
-  readonly testInternals?: boolean | undefined;
-  readonly rules?: readonly Rule[] | undefined;
-  readonly runners?: readonly Runner[] | undefined;
   readonly overlay?: Overlay | undefined;
-  readonly extensions?: readonly string[] | undefined;
-  readonly externals?: readonly string[] | undefined;
-  readonly ignoreDirectories?: readonly string[] | undefined;
   readonly ignoreFiles?: readonly string[] | undefined;
 }
 
@@ -158,12 +145,18 @@ const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessCl
 const namesOf = (zones: readonly ZoneDefinition[], role: ZoneRole): string[] =>
   zones.filter((zone) => zone.role === role).map((zone) => zone.name);
 
+const roleZonesIn = (zones: readonly ZoneDefinition[]): string[] => [
+  ...namesOf(zones, "wiring"),
+  ...namesOf(zones, "tests"),
+  ...namesOf(zones, "api"),
+];
+
 const placementClaims = (zones: readonly ZoneDefinition[]): Claim[] => {
   const testZones = namesOf(zones, "tests");
   const apiZones = namesOf(zones, "api");
 
   return [
-    colocationClaim([...namesOf(zones, "wiring"), ...testZones, ...apiZones]),
+    colocationClaim(roleZonesIn(zones)),
     ...(testZones.length === 0 ? [] : [testOnlyExportClaim({ testZones, apiZones })]),
   ];
 };
@@ -189,6 +182,7 @@ export function check({
   grants,
   duplication,
   colocation = false,
+  readerships = false,
   testInternals = false,
   rules = [],
   runners = [],
@@ -228,6 +222,7 @@ export function check({
       : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits ?? [])]),
     ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),
     ...(colocation ? placementClaims(zones) : []),
+    ...(readerships ? [readershipClaim(roleZonesIn(zones))] : []),
     ...(testInternals
       ? [
           testInternalsClaim({

@@ -30,7 +30,7 @@ describe("a configuration key nothing reads", () => {
         " `allow` belongs in the member configuration." +
         " A root configuration accepts `boundaries`, `colocation`, `command`, `duplication`," +
         " `extensions`, `externals`, `ignoreDirectories`, `include`, `isolate`, `maxFilesPerDirectory`," +
-        " `members`, `protect`, `rules`, `runners`, `seams`, `testInternals`, `zones`." +
+        " `members`, `protect`, `readerships`, `rules`, `runners`, `seams`, `testInternals`, `zones`." +
         " A key it does not read is ignored, so the run makes one fewer claim than you configured" +
         " and nothing says so.",
     );
