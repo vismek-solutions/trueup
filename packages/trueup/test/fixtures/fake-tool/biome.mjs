@@ -9,6 +9,25 @@ if (mode === "not-json") {
   process.exit(1);
 }
 
+if (mode === "killed") {
+  process.kill(process.pid, "SIGKILL");
+}
+
+if (mode === "whitespace") {
+  process.stdout.write("   \n\n");
+  process.exit(1);
+}
+
+if (mode === "stderr-only") {
+  process.stderr.write("biome could not start\n");
+  process.exit(2);
+}
+
+if (mode === "null-json") {
+  process.stdout.write("null");
+  process.exit(1);
+}
+
 if (mode === "no-summary") {
   process.stdout.write(JSON.stringify({ diagnostics: [], command: "lint" }));
   process.exit(1);
@@ -89,6 +108,46 @@ if (mode === "unlocated-parse-error") {
     summary: summary({ unchanged: 1 }),
     diagnostics: [
       { severity: "error", message: "Expected an identifier.", category: "parse", advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "long-message") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "a".repeat(301), category: "lint/style/useConst", location: at(1, 10), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "longest-message") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "a".repeat(300), category: "lint/style/useConst", location: at(1, 10), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "banner-message") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: "  headline  \n\n\n  detail  ", category: "lint/style/useConst", location: at(1, 10), advices: [] },
+    ],
+    command: "lint",
+  });
+}
+
+if (mode === "shapeless-message") {
+  emit({
+    summary: summary({}),
+    diagnostics: [
+      { severity: "error", message: { text: "not a string" }, category: "lint/style/useConst", location: at(1, 10), advices: [] },
     ],
     command: "lint",
   });

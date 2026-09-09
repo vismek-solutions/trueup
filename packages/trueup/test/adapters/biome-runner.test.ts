@@ -77,6 +77,24 @@ describe("reading biome's output", () => {
     expect(findingsOf(runWith("terse"))[0]?.message).toBe("lint/style/useConst");
   });
 
+  it("shows the rule name when the message is not text at all", () => {
+    expect(findingsOf(runWith("shapeless-message"))[0]?.message).toBe("lint/style/useConst");
+  });
+
+  it("puts a message spread over lines onto one, trimmed and without the blanks", () => {
+    expect(findingsOf(runWith("banner-message"))[0]?.message).toBe("headline detail");
+  });
+
+  it("keeps a message that is exactly as long as one may be", () => {
+    expect(findingsOf(runWith("longest-message"))[0]?.message).toBe("a".repeat(300));
+  });
+
+  it("cuts a message one longer than that, and marks that it did", () => {
+    const message = findingsOf(runWith("long-message"))[0]?.message ?? "";
+
+    expect(message).toBe(`${"a".repeat(300)}…`);
+  });
+
   it("keeps every lint rule under a single lint filter", () => {
     expect(findingsOf(runWith("ok", ["lint"])).map((finding) => finding.category)).toEqual([
       "lint/suspicious/noDoubleEquals",
@@ -185,8 +203,26 @@ describe("refusing to trust biome", () => {
     expect(reasonOf(runWith("silent"))).toContain("no output");
   });
 
-  it("fails when the command does not exist", () => {
-    expect(biomeRunner({ command: ["definitely-not-a-real-binary-xyz"] }).run(ROOT).kind).toBe("failed");
+  it("reads whitespace alone as nothing printed, rather than trying to parse it", () => {
+    expect(reasonOf(runWith("whitespace"))).toBe("no output (exit 1)");
+  });
+
+  it("carries what biome said on the way out when it said nothing on the way in", () => {
+    expect(reasonOf(runWith("stderr-only"))).toBe("no output (exit 2): biome could not start");
+  });
+
+  it("fails when the output is json but not an object to read fields from", () => {
+    expect(reasonOf(runWith("null-json"))).toBe("output was not a JSON object");
+  });
+
+  it("fails when the process was killed rather than reporting an empty run", () => {
+    expect(reasonOf(runWith("killed"))).toBe("the process was killed before it finished");
+  });
+
+  it("fails when the command does not exist, saying which one", () => {
+    const outcome = biomeRunner({ command: ["definitely-not-a-real-binary-xyz"] }).run(ROOT);
+
+    expect(reasonOf(outcome)).toContain("definitely-not-a-real-binary-xyz");
   });
 
   it("fails when no command was configured at all", () => {
