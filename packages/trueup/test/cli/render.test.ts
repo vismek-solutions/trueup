@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, renderDots } from "../../src/cli/render.ts";
 import type { Report } from "../../src/report/model.ts";
-import { COVERAGE, error, MIXED } from "../support/sample-report.ts";
+import { COVERAGE, error, MIXED, reportOf } from "../support/sample-report.ts";
 
 const LONG = "a-claim-whose-name-runs-past-the-default-column";
 
@@ -121,5 +124,37 @@ describe("the dots report, to the character", () => {
   it("adds a baseline line only when there is a baseline", () => {
     expect(renderDots(MIXED, "/p", { known: 4, stale: 0 })).toContain("baseline  4 known · 0 stale");
     expect(renderDots(MIXED, "/p")).not.toContain("baseline");
+  });
+});
+
+describe("pointing at a place inside a file that is really there", () => {
+  let root = "";
+  let file = "";
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), "trueup-render-"));
+    file = join(root, "a.ts");
+    writeFileSync(file, "alpha\nbravo\ncharlie\n", "utf8");
+  });
+
+  const shown = (start: number | null): string =>
+    render(
+      reportOf([
+        {
+          claim: "a-claim",
+          guidance: "g",
+          findings: [{ severity: "error", message: "here", file, start }],
+        },
+      ]),
+      root,
+    );
+
+  it("counts the column from the start of its own line rather than from the file", () => {
+    expect(shown(8)).toContain("a.ts:2:3  here");
+  });
+
+  it("names the file alone where the finding carries no offset, rather than guessing the first byte", () => {
+    expect(shown(null)).toContain("    a.ts  here");
+    expect(shown(null)).not.toContain("a.ts:");
   });
 });
