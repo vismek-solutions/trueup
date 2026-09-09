@@ -41,6 +41,42 @@ describe("reading oxlint's output", () => {
     const findings = findingsOf(runWith("ok", ["eslint"]));
     expect(findings.map((finding) => finding.category)).toEqual(["eslint/max-params"]);
   });
+
+  it("matches a filter naming a rule exactly, not only a scope above it", () => {
+    expect(findingsOf(runWith("ok", ["oxc/bad-shape"])).map((f) => f.category)).toEqual([
+      "oxc/bad-shape",
+    ]);
+  });
+
+  it("keeps what any one filter matches, rather than only what they all match", () => {
+    expect(findingsOf(runWith("ok", ["eslint", "nothing"])).map((f) => f.category)).toEqual([
+      "eslint/max-params",
+    ]);
+  });
+
+  it("asks oxlint for json over the whole tree, and nothing else", () => {
+    expect(findingsOf(runWith("report-args"))[0]?.message).toBe("--format json .");
+  });
+
+  it("carries the name oxlint's findings are reported under", () => {
+    expect(oxlintRunner().name).toBe("oxlint");
+  });
+});
+
+describe("a diagnostic oxlint left incomplete", () => {
+  const odd = () => findingsOf(runWith("odd-diagnostics"));
+
+  it("drops what carries no code or no message, keeping the rest", () => {
+    expect(odd().map((finding) => finding.category)).toEqual([
+      "oxc/no-labels",
+      "oxc/empty-labels",
+      "oxc/label-no-span",
+    ]);
+  });
+
+  it("reports no position for a diagnostic pointing at nothing", () => {
+    expect(odd().map((finding) => finding.start)).toEqual([null, null, null]);
+  });
 });
 
 describe("distrusting oxlint", () => {
