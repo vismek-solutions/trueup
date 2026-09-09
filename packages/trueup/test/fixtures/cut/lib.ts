@@ -17,3 +17,9 @@ export const label = (values: readonly string[]): string => joinAll(values);
 export const other = (value: string): string => shared(value);
 
 export const bounce = (steps: number): number => ping(steps);
+
+export const seed = "[seed]";
+
+const decorate = (value: string): string => `${seed}${value}`;
+
+export const grown = (value: string): string => decorate(value);

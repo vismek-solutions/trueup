@@ -97,6 +97,30 @@ describe("pricing what one export would cost to move", () => {
     );
   });
 
+  it("names what stays behind and reads it, since that is what the move would break", async () => {
+    const said = await cutting("lib.ts#seed");
+
+    expect(said).toContain("import back decorate");
+    expect(said).toContain("the cut is not free until they import it back");
+  });
+
+  it("counts a reader that stays in the price, so three zeroes cannot read as free", async () => {
+    expect(await cutting("lib.ts#seed")).toContain(
+      "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 1 here would import it back",
+    );
+  });
+
+  it("finds a reader that stays even where nothing exported reaches it", async () => {
+    expect(await cutting("lib.ts#seed")).not.toContain("import back none");
+  });
+
+  it("says nothing needs it back when what stays never reads it", async () => {
+    const said = await cutting("lib.ts#bounce");
+
+    expect(said).toContain("import back none");
+    expect(said).toContain("the file it leaves needs nothing back");
+  });
+
   it("walks a cycle between two helpers once rather than forever", async () => {
     expect(await cutting("lib.ts#bounce")).toContain("travels     ping · pong");
   });
@@ -174,11 +198,13 @@ describe("what already stands against one export", () => {
         "            directories: app",
         "            every reader sits in one directory",
         "",
-        "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow",
+        "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 0 here would import it back",
         "travels     none",
         "promote     none",
         "            nothing that stays reads what it reaches, so no one else has to agree",
         "follows     none",
+        "import back none",
+        "            nothing that stays reads it, so the file it leaves needs nothing back",
         "",
         "claims      2",
         "    every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",

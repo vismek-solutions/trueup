@@ -9,6 +9,7 @@ const priced = (cut: About["cut"]): string =>
     `${plural(cut.travels.length, "declaration")} would travel with it`,
     `${cut.promote.length} would have to be promoted first`,
     `${plural(cut.follows.length, "import")} would follow`,
+    `${cut.importBack.length} here would import it back`,
   ].join(" · ");
 
 const meeting = (directories: readonly string[]): string =>
@@ -34,6 +35,10 @@ const cutLines = (cut: About["cut"]): string[] => [
     ? "            nothing that stays reads what it reaches, so no one else has to agree"
     : "            something that stays reads these, so cutting means promoting them first",
   `follows     ${list(cut.follows)}`,
+  `import back ${list(cut.importBack)}`,
+  cut.importBack.length === 0
+    ? "            nothing that stays reads it, so the file it leaves needs nothing back"
+    : "            these stay and read it, so the cut is not free until they import it back",
 ];
 
 export interface NameLinesInput {

@@ -12,6 +12,7 @@ export interface NameCut {
   readonly travels: readonly string[];
   readonly promote: readonly string[];
   readonly follows: readonly string[];
+  readonly importBack: readonly string[];
 }
 
 export interface NameReport {
@@ -73,7 +74,7 @@ const readersOf = (project: Project, file: string, name: string): NameReaders =>
 
 const cutOf = (project: Project, file: string, name: string): NameCut => {
   const uses = project.referencesIn(file);
-  if (!uses.has(name)) return { travels: [], promote: [], follows: [] };
+  if (!uses.has(name)) return { travels: [], promote: [], follows: [], importBack: [] };
 
   const others = project.exportsOf(file).filter((exported) => exported !== name);
   const needs = reachedFrom(uses, [name]);
@@ -81,11 +82,15 @@ const cutOf = (project: Project, file: string, name: string): NameCut => {
   const keeps = reachedFrom(uses, others);
 
   const travels = [...needs].filter((other) => !keeps.has(other));
+  const leaving = new Set([name, ...travels]);
 
   return {
     travels: spelt(travels),
     promote: spelt([...needs].filter((other) => keeps.has(other))),
-    follows: followedFrom(project, file, new Set([name, ...travels])),
+    follows: followedFrom(project, file, leaving),
+    importBack: spelt(
+      [...uses].filter(([other, reads]) => !leaving.has(other) && reads.has(name)).map(([other]) => other),
+    ),
   };
 };
 
