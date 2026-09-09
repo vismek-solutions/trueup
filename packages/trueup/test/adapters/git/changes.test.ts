@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -68,6 +68,14 @@ describe("measuring a branch against where it left the base", () => {
   it("leaves out a file that has not moved since the base", () => {
     expect(changedIn(REPO).map((changed) => changed.file)).not.toContain("untouched.ts");
   });
+
+  it("reports those files and nothing else, so an empty name cannot ride along", () => {
+    expect(changedIn(madeRepo())).toEqual([
+      { file: "added.ts", added: 2, removed: 0 },
+      { file: "kept.ts", added: 2, removed: 1 },
+      { file: "fresh.ts", added: 3, removed: 0 },
+    ]);
+  });
 });
 
 describe("counting a file that is not text", () => {
@@ -82,6 +90,20 @@ describe("counting a file that is not text", () => {
 
     expect(forFile(REPO, "nonewline.ts")?.added).toBe(2);
   });
+
+  it("counts nothing for an empty file, which adds no line to read", () => {
+    const root = madeRepo();
+    wrote(root, "empty.ts", "");
+
+    expect(forFile(root, "empty.ts")).toEqual({ file: "empty.ts", added: 0, removed: 0 });
+  });
+
+  it("counts nothing for a link pointing nowhere, rather than failing the measurement", () => {
+    const root = madeRepo();
+    symlinkSync(join(root, "no-such-target"), join(root, "dangling.ts"));
+
+    expect(forFile(root, "dangling.ts")).toEqual({ file: "dangling.ts", added: 0, removed: 0 });
+  });
 });
 
 describe("when there is nothing to measure against", () => {
@@ -89,7 +111,7 @@ describe("when there is nothing to measure against", () => {
     const said = gitChanges().since(REPO, "no-such-branch");
 
     expect(said.kind).toBe("unmeasured");
-    expect(said.kind === "unmeasured" && said.reason).toContain("no-such-branch");
+    expect(said.kind === "unmeasured" && said.reason).toContain("no common commit with no-such-branch");
   });
 
   it("says so outside a repository, so a budget cannot look satisfied where git cannot answer", () => {
@@ -97,5 +119,38 @@ describe("when there is nothing to measure against", () => {
     const said = gitChanges().since(bare, "main");
 
     expect(said.kind).toBe("unmeasured");
+  });
+
+  it("says so where git cannot be run at all, not only where it answers badly", () => {
+    const path = process.env.PATH;
+    process.env.PATH = "";
+    try {
+      const said = gitChanges().since(REPO, "main");
+
+      expect(said.kind === "unmeasured" && said.reason).toContain("ENOENT");
+    } finally {
+      process.env.PATH = path;
+    }
+  });
+
+  it("repeats what git said about the diff, not only which base it was given", () => {
+    const clone = join(mkdtempSync(join(tmpdir(), "trueup-bare-")), "clone.git");
+    git(REPO, "clone", "--bare", REPO, clone);
+
+    const said = gitChanges().since(clone, "main");
+
+    expect(said.kind === "unmeasured" && said.reason).toMatch(
+      /^could not read the change since main: \S/,
+    );
+  });
+
+  it("says what git said about the diff where the excludes config it reads is unusable", () => {
+    const root = madeRepo();
+    mkdirSync(join(root, "excludes"));
+    git(root, "config", "core.excludesFile", join(root, "excludes"));
+
+    const said = gitChanges().since(root, "main");
+
+    expect(said.kind === "unmeasured" && said.reason).toContain("could not read the change since main");
   });
 });

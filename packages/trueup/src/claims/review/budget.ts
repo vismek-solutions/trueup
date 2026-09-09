@@ -65,7 +65,7 @@ const sizedIn = (budget: ReviewBudget, base: string, changed: readonly FileChang
 
   const cap = `+${budget.additions} / -${budget.deletions}`;
   const said = over ? "over" : "nearing";
-  const where = files.length === 0 ? "" : `; heaviest: ${heaviest(files)}`;
+  const where = `; heaviest: ${heaviest(files)}`;
 
   return [
     finding(

@@ -74,6 +74,15 @@ describe("a change too large to review", () => {
     );
   });
 
+  it("names only the heaviest few, so a wide change does not print every file it touched", () => {
+    const changed = measured(of("wide.ts", 10, 500), of("mid.ts", 200), of("small.ts", 100), of("tiny.ts", 1));
+
+    expect(said(CAP, changed)[0]).toContain(
+      "heaviest: wide.ts +10/-500, mid.ts +200/-0, small.ts +100/-0",
+    );
+    expect(said(CAP, changed)[0]).not.toContain("tiny.ts");
+  });
+
   it("warns rather than failing, so an unattended agent is not stopped mid-change", () => {
     expect(severityOf(CAP, measured(of("src/one.ts", 601)))).toBe("warning");
   });
@@ -98,6 +107,14 @@ describe("a change nearing its cap", () => {
     expect(said(NEARING, measured(of("src/one.ts", 481)))[0]).not.toContain("over the");
   });
 
+  it("warns inside the band on deletions alone, since a large removal is still a large review", () => {
+    expect(said(NEARING, measured(of("src/one.ts", 0, 321)))[0]).toContain("nearing the +600 / -400");
+  });
+
+  it("says nothing at the edge of the deletions band, which is not yet inside it", () => {
+    expect(said(NEARING, measured(of("src/one.ts", 0, 320)))).toEqual([]);
+  });
+
   it("warns inside the band even where the cap itself would fail", () => {
     const failing = { ...NEARING, severity: "error" as const };
 
@@ -120,6 +137,10 @@ describe("what the budget leaves out", () => {
 
   it("matches a pattern against the whole path, not only the file name", () => {
     expect(said(SPARING, measured(of("src/generated/api.ts", 900)))).toEqual([]);
+  });
+
+  it("leaves out a dotted file the project named, since a generated file often carries a dot", () => {
+    expect(said(SPARING, measured(of(".deps.lock", 900)))).toEqual([]);
   });
 
   it("keeps counting everything the project did not name", () => {
