@@ -64,7 +64,7 @@ const isolateLines = (config: ResolvedConfig): readonly string[] =>
   });
 
 const limitLines = (config: ResolvedConfig, root: string): readonly string[] =>
-  (config.directoryLimits ?? []).map(
+  config.directoryLimits.map(
     (limit) => `  ${toPosix(relative(root, limit.within))} holds at most ${limit.max} files`,
   );
 
@@ -102,7 +102,7 @@ const settingLines = (config: ResolvedConfig, read: number): readonly string[] =
     ],
     ["also protected", pathsIn(config.protect).join(" · ")],
     ["also runs", config.runners?.map((runner) => runner.name).join(" · ")],
-    ["custom rules", config.rules?.map((rule) => rule.name).join(" · ")],
+    ["custom rules", config.rules.map((rule) => rule.name).join(" · ")],
   ];
 
   return values.flatMap(([label, value]) =>

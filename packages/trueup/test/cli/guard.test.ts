@@ -236,6 +236,28 @@ describe("a hook it has no rulebook to answer with", () => {
   });
 });
 
+describe("a project whose sources sit under more than one root", () => {
+  const TWO_ROOTS = fixtureAt("guarded-two-roots");
+  const proposing = guardFor(TWO_ROOTS);
+
+  const refusalIn = async (path: string, content: string): Promise<string> => {
+    const { output } = await proposing(writing(join(TWO_ROOTS, path), content));
+    return output === "" ? "" : JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+  };
+
+  it("judges a write under the first root", async () => {
+    const said = await refusalIn("src/engine/added.ts", 'import { thing } from "../domain/thing.js";\n');
+
+    expect(said).toContain("may not reach domain");
+  });
+
+  it("judges a write under the second root, not only the one listed first", async () => {
+    const said = await refusalIn("tools/added.ts", 'import { thing } from "../src/domain/thing.js";\n');
+
+    expect(said).toContain("may not reach domain");
+  });
+});
+
 describe("a project that lets its rulebook be edited", () => {
   const RULEBOOK = fixtureAt("guarded-rulebook");
   const editing = guardFor(RULEBOOK);

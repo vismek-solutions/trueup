@@ -143,8 +143,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   );
 
   const recorded = readBaseline(baseline);
-  const effective =
-    recorded.entries.length === 0 ? report : applyBaseline({ report, baseline: recorded, root }).report;
+  const { report: effective } = applyBaseline({ report, baseline: recorded, root });
 
   const decision = decideOnProposal({ report: effective, path: target, root });
   const output = answerTo(request, withReach(decision, target, { root, config }));

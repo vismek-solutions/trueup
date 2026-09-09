@@ -129,6 +129,33 @@ describe("the block an agent reads at the start of a session", () => {
     );
   });
 
+  it("names every switch a project turned on, and who may sit beside a sibling", async () => {
+    expect(await capture(fixtureAt("activated-switches"))).toBe(
+      [
+        "## Architecture",
+        "",
+        "2 files in 2 zones, and every rule below is enforced.",
+        "",
+        ZONE_HEADING,
+        "  app     1 file  src/app/**",
+        "  lib     1 file  src/lib/**",
+        "",
+        "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
+        "  src/*, and nothing may sit beside them",
+        "  src/app/*, and only src/app/index.ts · src/app/main.ts may sit beside them",
+        "",
+        "settings",
+        "  files read                2",
+        "  colocation                on",
+        "  readerships               on",
+        "  test internals            on",
+        "  rulebook                  guarded, so an edit to it is ruled on",
+        "",
+        ...ADVICE,
+      ].join("\n"),
+    );
+  });
+
   it("refuses an argument it does not know rather than ignoring it", async () => {
     const lines: string[] = [];
     const code = await runActivate({

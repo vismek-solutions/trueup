@@ -50,9 +50,9 @@ export type ResolvedConfig = ArchitectureConfig & {
   readonly seams: readonly SeamRule[];
   readonly isolate: readonly IsolationRule[];
   readonly rules: readonly Rule[];
-  readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
-  readonly apiSurfaces?: readonly ApiSurface[] | undefined;
-  readonly grants?: readonly MemberGrants[] | undefined;
+  readonly directoryLimits: readonly DirectoryLimit[];
+  readonly apiSurfaces: readonly ApiSurface[];
+  readonly grants: readonly MemberGrants[];
 };
 
 export const defineConfig = (config: ArchitectureConfig): ArchitectureConfig => config;
