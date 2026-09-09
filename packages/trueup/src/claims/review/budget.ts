@@ -36,16 +36,26 @@ const finding = (severity: Severity, message: string): Finding => ({
   start: null,
 });
 
-const kept = (changed: readonly FileChange[], except: readonly string[] | undefined): FileChange[] => {
-  if (except === undefined || except.length === 0) return [...changed];
-  const spared = picomatch([...except], { dot: true });
-  return changed.filter((file) => !spared(file.file));
+export interface ChangeSize {
+  readonly added: number;
+  readonly removed: number;
+  readonly files: readonly FileChange[];
+}
+
+export const sizeOf = (changed: readonly FileChange[], budget: ReviewBudget): ChangeSize => {
+  const except = budget.except;
+  const spared = except === undefined || except.length === 0 ? null : picomatch([...except], { dot: true });
+  const files = spared === null ? [...changed] : changed.filter((file) => !spared(file.file));
+
+  return {
+    added: files.reduce((total, file) => total + file.added, 0),
+    removed: files.reduce((total, file) => total + file.removed, 0),
+    files,
+  };
 };
 
 const sizedIn = (budget: ReviewBudget, base: string, changed: readonly FileChange[]): Finding[] => {
-  const files = kept(changed, budget.except);
-  const added = files.reduce((total, file) => total + file.added, 0);
-  const removed = files.reduce((total, file) => total + file.removed, 0);
+  const { added, removed, files } = sizeOf(changed, budget);
 
   const over = added > budget.additions || removed > budget.deletions;
   const edge = budget.nearing;

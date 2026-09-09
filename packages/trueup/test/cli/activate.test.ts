@@ -159,9 +159,23 @@ describe("the block an agent reads at the start of a session", () => {
         "  test internals            on",
         "  rulebook                  guarded, so an edit to it is ruled on",
         "",
+        "this branch",
+        "  +120 / -30 so far, 480 additions left",
+        "",
         ...ADVICE,
       ].join("\n"),
     );
+  });
+
+  it("says nothing about the branch where no budget was set", async () => {
+    expect(await capture(ACTIVATED)).not.toContain("this branch");
+  });
+
+  it("says the branch was not measured rather than reading silence as room left", async () => {
+    const said = await capture(fixtureAt("explained-budget"));
+
+    expect(said).toContain("this branch");
+    expect(said).toContain("  not measured, so nothing holds it:");
   });
 
   it("refuses an argument it does not know rather than ignoring it", async () => {

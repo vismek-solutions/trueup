@@ -13,7 +13,7 @@ import { grantClaim, type MemberGrants } from "./claims/members/grants.ts";
 import { directoryClaim, type DirectoryLimit } from "./claims/placement/directories.ts";
 import { duplicationClaim } from "./claims/placement/duplication.ts";
 import { readershipClaim } from "./claims/placement/readership.ts";
-import { reviewClaim } from "./claims/review/budget.ts";
+import { reviewClaim, sizeOf, type ChangeSize, type ReviewBudget } from "./claims/review/budget.ts";
 import { isolationClaim, loosePlacementClaim, type IsolationRule } from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
@@ -25,6 +25,7 @@ import type { Settings } from "./config/model.ts";
 import { buildSymbolGraph } from "./graph/build.ts";
 import type { SymbolGraph } from "./graph/model.ts";
 import { buildLexicon } from "./lexicon/build.ts";
+import type { FileChange } from "./ports/changes.ts";
 import type { ModuleRecord, ParseModule } from "./ports/module-record.ts";
 import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
@@ -91,6 +92,9 @@ export const ungovernedIn = (project: Project, boundaries: readonly BoundaryRule
 
 export const nameIn = (project: Project, file: string, name: string): NameReport =>
   aboutName(project, file, name);
+
+export const changeSizeIn = (changed: readonly FileChange[], budget: ReviewBudget): ChangeSize =>
+  sizeOf(changed, budget);
 
 export interface PlacementInput {
   readonly root: string;
@@ -171,48 +175,13 @@ const isolationClaims = (isolate: readonly IsolationRule[]): Claim[] =>
         ...(isolate.some((rule) => rule.wiring !== undefined) ? [loosePlacementClaim(isolate)] : []),
       ];
 
-export function check({
-  root,
-  roots,
-  zones,
-  boundaries = [],
-  seams = [],
-  isolate = [],
-  maxFilesPerDirectory,
-  directoryLimits = [],
-  apiSurfaces = [],
-  grants = [],
-  duplication,
-  reviewable,
-  colocation = false,
-  readerships = false,
-  testInternals = false,
-  rules = [],
-  runners = [],
-  changes = gitChanges(),
-  overlay,
-  extensions,
-  externals,
-  ignoreDirectories,
-  ignoreFiles,
-}: CheckOptions): Report {
-  const {
-    graph,
-    zones: assignment,
-    lexicon,
-    project,
-  } = analyseProject({
-    root,
-    roots,
-    zones,
-    extensions,
-    externals,
-    ignoreDirectories,
-    ignoreFiles,
-    overlay,
-  });
+const claimsFor = (options: CheckOptions): Claim[] => {
+  const { zones, boundaries = [], seams = [], isolate = [], rules = [] } = options;
+  const { maxFilesPerDirectory, directoryLimits = [], apiSurfaces = [], grants = [] } = options;
+  const { duplication, reviewable, colocation, readerships, testInternals } = options;
+  const { changes = gitChanges() } = options;
 
-  const claims = [
+  return [
     ...standardClaims,
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
     boundaryClaim(boundaries),
@@ -239,8 +208,13 @@ export function check({
       : []),
     ...customClaims(rules),
   ];
+};
 
-  const report = runClaims(claims, { root, graph, zones: assignment, lexicon, project });
+export function check(options: CheckOptions): Report {
+  const { root, runners = [] } = options;
+  const { graph, zones, lexicon, project } = analyseProject(options);
+  const report = runClaims(claimsFor(options), { root, graph, zones, lexicon, project });
+
   return {
     claims: withoutDuplicates([...report.claims, ...runDelegated(runners, root)]),
     coverage: report.coverage,

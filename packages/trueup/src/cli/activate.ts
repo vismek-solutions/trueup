@@ -1,5 +1,6 @@
 import { relative } from "node:path";
-import { reachOf } from "../compose.ts";
+import { gitChanges } from "../adapters/git/changes.ts";
+import { changeSizeIn, reachOf } from "../compose.ts";
 import type { ResolvedConfig } from "../config/model.ts";
 import { pathsIn, rulebookGuarded } from "../guard/protected.ts";
 import { toPosix } from "../paths/posix.ts";
@@ -83,6 +84,18 @@ const budgetSaid = (budget: Budget | undefined): string | undefined => {
   return `${capOf(budget)} against ${budget.base ?? "main"}, ${bite} past it${band}`;
 };
 
+const standingIn = (config: ResolvedConfig, root: string): readonly string[] => {
+  const budget = config.reviewable;
+  if (budget === undefined) return [];
+
+  const changed = (config.changes ?? gitChanges()).since(root, budget.base ?? "main");
+  if (changed.kind === "unmeasured") return [`  not measured, so nothing holds it: ${changed.reason}`];
+
+  const { added, removed } = changeSizeIn(changed.files, budget);
+  const left = Math.max(0, budget.additions - added);
+  return [`  +${added} / -${removed} so far, ${plural(left, "addition")} left`];
+};
+
 
 const switched = (value: boolean | undefined): string | undefined => {
   if (value === undefined) return undefined;
@@ -155,6 +168,7 @@ export async function runActivate({ cwd, argv, write }: CommandInput): Promise<n
     ),
     ...section("directory limits", limitLines(config, root)),
     ...section("settings", settingLines(config, project.files.length)),
+    ...section("this branch", standingIn(config, root)),
     "",
     ...adviceLines(config.command ?? DEFAULT_COMMAND),
   ]) {

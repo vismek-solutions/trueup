@@ -109,17 +109,24 @@ export function verdictFor(decision: Decision): string | null {
   });
 }
 
-export function contextFor(decision: Decision, spread: boolean): string | null {
-  if (decision.verdict === "allow") return null;
+const headlineFor = (broke: boolean, spread: boolean): string => {
+  if (!broke) return "Nothing is broken, but this is worth knowing before you go on.";
 
-  const headline = spread
+  return spread
     ? "That change could have touched any file, so this is the whole project. Some of it may pre-date the change; repair what the change caused."
     : "That edit broke one of the project's architecture rules. Repair it before moving on.";
+};
 
+export function contextFor(
+  decision: Decision,
+  spread: boolean,
+  notes: readonly string[] = [],
+): string | null {
+  const broke = decision.verdict !== "allow";
+  if (!broke && notes.length === 0) return null;
+
+  const said = [headlineFor(broke, spread), "", ...decision.reasons, ...notes];
   return JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: "PostToolUse",
-      additionalContext: [headline, "", ...decision.reasons].join("\n"),
-    },
+    hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: said.join("\n") },
   });
 }

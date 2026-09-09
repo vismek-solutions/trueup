@@ -11,6 +11,7 @@ import type { Protection } from "../ports/protection.ts";
 import type { Decision, HookRequest } from "../ports/proposal.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
+import type { Report } from "../report/model.ts";
 import { rulebookAt } from "./preamble.ts";
 
 export interface RunGuardInput {
@@ -53,8 +54,22 @@ const withReach = (decision: Decision, path: string | null, { root, config }: Si
   return { ...decision, reasons: [...decision.reasons, footer] };
 };
 
-const answerTo = (request: HookRequest, decision: Decision, spread: boolean): string | null =>
-  request.kind === "propose" ? verdictFor(decision) : contextFor(decision, spread);
+interface Answer {
+  readonly request: HookRequest;
+  readonly decision: Decision;
+  readonly spread: boolean;
+  readonly notes?: readonly string[] | undefined;
+}
+
+const answerTo = ({ request, decision, spread, notes = [] }: Answer): string | null =>
+  request.kind === "propose" ? verdictFor(decision) : contextFor(decision, spread, notes);
+
+const noticesIn = (report: Report): string[] =>
+  report.claims.flatMap((claim) =>
+    claim.findings
+      .filter((finding) => finding.severity === "warning" && finding.file === null)
+      .map((finding) => `${claim.claim}\n  ${finding.message}`),
+  );
 
 const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebook): string | null => {
   if (path === null) return null;
@@ -67,7 +82,7 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
     mode: rulebook.mode,
   });
 
-  return decision.verdict === "allow" ? null : answerTo(request, decision, false);
+  return decision.verdict === "allow" ? null : answerTo({ request, decision, spread: false });
 };
 
 const inIgnoredDirectory = (root: string, path: string, config: ArchitectureConfig): boolean => {
@@ -133,6 +148,8 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       seams: config.seams,
       maxFilesPerDirectory: config.maxFilesPerDirectory,
       duplication: config.duplication,
+      reviewable: config.reviewable,
+      changes: config.changes,
       isolate: config.isolate,
       colocation: config.colocation,
       readerships: config.readerships,
@@ -151,7 +168,8 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const { report: effective } = applyBaseline({ report, baseline: recorded, root });
 
   const decision = decideOnProposal({ report: effective, path: checked, root });
-  const output = answerTo(request, withReach(decision, checked, { root, config }), spread);
+  const reach = withReach(decision, checked, { root, config });
+  const output = answerTo({ request, decision: reach, spread, notes: noticesIn(effective) });
   if (output !== null) write(output);
   return 0;
 }

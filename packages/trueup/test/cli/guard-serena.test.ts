@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GUARDED_FOR_SERENA, guardFor } from "../support/guard.ts";
+import { fixtureAt } from "../support/fixtures.ts";
 
 const guard = guardFor(GUARDED_FOR_SERENA);
 const RUNNER = "src/engine/runner.ts";
@@ -80,6 +81,34 @@ describe("reviewing an edit Serena has already written", () => {
     });
 
     expect(said).toContain(RUNNER);
+  });
+
+  const BUDGETED = fixtureAt("guarded-budget");
+
+  const afterEditIn = async (cwd: string, path: string): Promise<string> => {
+    const { output } = await guardFor(cwd)(afterTool("replace_symbol_body", { relative_path: path }));
+    return output === "" ? "" : JSON.parse(output).hookSpecificOutput.additionalContext;
+  };
+
+  it("carries the review budget, which is about the change and not the file just edited", async () => {
+    expect(await afterEditIn(BUDGETED, "src/domain/thing.ts")).toContain("no-change-outgrows-its-review");
+  });
+
+  it("says nothing is broken when only the budget has something to say", async () => {
+    const said = await afterEditIn(BUDGETED, "src/domain/thing.ts");
+
+    expect(said.split("\n")[0]).toBe("Nothing is broken, but this is worth knowing before you go on.");
+  });
+
+  it("carries the budget beside a real refusal rather than instead of it", async () => {
+    const said = await afterEditIn(BUDGETED, "src/engine/runner.ts");
+
+    expect(said).toContain("no-change-outgrows-its-review");
+    expect(said.split("\n")[0]).toContain("That edit broke");
+  });
+
+  it("stays silent where no budget is set and nothing is broken", async () => {
+    expect(await afterEditIn(GUARDED_FOR_SERENA, "src/domain/thing.ts")).toBe("");
   });
 
   it("says the findings may pre-date a change that named no single file", async () => {
