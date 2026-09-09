@@ -152,6 +152,27 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 });
 
+describe("an edge with a file outside every zone at one end", () => {
+  const UNZONED = fixtureAt("unzoned");
+
+  const misplacements = (): readonly string[] =>
+    claimIn(
+      check({
+        root: UNZONED,
+        colocation: true,
+        zones: [
+          { name: "core", patterns: ["src/core/**"] },
+          { name: "web", patterns: ["src/web/**"] },
+        ],
+      }),
+      CLAIM,
+    )?.findings.map((finding) => finding.message) ?? [];
+
+  it("reports only the crossing where both ends have a zone to compare", () => {
+    expect(misplacements()).toEqual(["declares onlyWebUses, used only by src/web/page.ts"]);
+  });
+});
+
 describe("a shared zone that is not actually shared", () => {
   it("counts the files in the owning zone rather than naming one of them", () => {
     expect(messagesFor(CLAIM)).toContain("declares forWebOnly, used only by web (2 files)");

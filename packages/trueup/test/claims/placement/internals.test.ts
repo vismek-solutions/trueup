@@ -25,9 +25,9 @@ describe("holding a test to the surface its subject already has", () => {
     expect(claimIn(check({ root: ROOT, zones: ZONES }), CLAIM)).toBeUndefined();
   });
 
-  it("reports a test reaching a symbol only the file next door calls", () => {
+  it("reports a test reaching a symbol only the files next door call, naming every one of them", () => {
     expect(messagesIn(runWith(), CLAIM)).toEqual([
-      "reaches strayIn, an internal of src/core/keys.ts that only src/core/load.ts calls",
+      "reaches strayIn, an internal of src/core/keys.ts that only src/core/also.ts, src/core/load.ts calls",
     ]);
   });
 
