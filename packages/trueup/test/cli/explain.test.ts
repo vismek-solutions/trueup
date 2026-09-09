@@ -203,7 +203,51 @@ describe("finding the boundaries nobody wrote", () => {
     const said = (await gaps(UNRULED)).split("\n");
     const from = said.indexOf("ungoverned  no rule speaks about these pairs");
 
-    expect(said.slice(from + 1, from + 3)).toEqual(["    core → tools  2", "    loose → core  1"]);
+    expect(said.slice(from + 1, from + 5)).toEqual([
+      "    loose → core     3",
+      "    core → tools     2",
+      "    extra → core     1",
+      "    extra → tools    1",
+    ]);
+  });
+
+  it("settles two pairs from one zone by where they reach, not by the order they were found", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+    const core = said.indexOf("    extra → core     1");
+
+    expect(said[core + 1]).toBe("    extra → tools    1");
+  });
+
+  it("sorts what a rule permits too, so neither list drifts run to run", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+    const from = said.indexOf("allowed     a rule permits these, so someone decided");
+
+    expect(said.slice(from + 1, from + 3)).toEqual([
+      "    aardvark → core  1",
+      "    web → core       1",
+    ]);
+  });
+
+  it("counts nothing for a zone reaching itself, which every zone may always do", async () => {
+    expect(await gaps(UNRULED)).not.toContain("core → core");
+  });
+
+  it("counts nothing for an edge leaving a file no zone claims", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+
+    expect(said.filter((line) => line.includes("→ core"))).toEqual([
+      "    loose → core     3",
+      "    extra → core     1",
+      "    aardvark → core  1",
+      "    web → core       1",
+    ]);
+  });
+
+  it("counts nothing for a reach into something no zone declares, like a builtin", async () => {
+    expect(await gaps(UNRULED)).not.toContain("core → \n");
+    expect((await gaps(UNRULED)).split("\n").filter((line) => line.startsWith("    core →"))).toEqual([
+      "    core → tools     2",
+    ]);
   });
 
   it("leaves out a pair a rule already refuses, since that is a violation and not a gap", async () => {
@@ -214,19 +258,26 @@ describe("finding the boundaries nobody wrote", () => {
     const said = (await gaps(UNRULED)).split("\n");
     const from = said.indexOf("allowed     a rule permits these, so someone decided");
 
-    expect(said[from + 1]).toBe("    web → core    1");
+    expect(said.slice(from + 1, from + 3)).toContain("    web → core       1");
+    expect(said.slice(0, from)).not.toContain("    web → core       1");
   });
 
   it("counts a pair as ungoverned when the rule naming that zone judges only other zones", async () => {
     const said = (await gaps(UNRULED)).split("\n");
     const governed = said.indexOf("allowed     a rule permits these, so someone decided");
 
-    expect(said.slice(0, governed)).toContain("    loose → core  1");
+    expect(said.slice(0, governed)).toContain("    loose → core     3");
   });
 
-  it("names a zone no boundary rule mentions, even where nothing flows out of it", async () => {
-    expect(await gaps(UNRULED)).toContain("silent      named by no boundary rule");
-    expect((await gaps(UNRULED)).split("\n")).toContain("    tools");
+  it("names every zone no boundary rule mentions, and only those", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+    const from = said.indexOf("silent      named by no boundary rule, so they may reach anything");
+
+    expect(said.slice(from + 1).filter((line) => line !== "")).toEqual([
+      "    core",
+      "    tools",
+      "    extra",
+    ]);
   });
 
   it("still finds ungoverned zones in a project where every claim holds", async () => {
