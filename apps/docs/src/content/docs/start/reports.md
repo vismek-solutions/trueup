@@ -1,9 +1,11 @@
 ---
 title: Reading a report
-description: What a claim is, why the whole list always prints, and the two other output modes.
+description: How to read what trueup prints, and the other ways it can print it.
 ---
 
-Here is a run with one violation.
+Every run prints a list of claims. A claim is one sentence trueup believes about your project, and a run either proves it or shows you the places where it is not true.
+
+Here is a run where one claim did not hold.
 
 ```
 coverage  898 files · 7524 edges · 5816 symbol · 1663 external · 41 builtin · 0 unresolved
@@ -30,9 +32,15 @@ generic-code-names-no-domain-concept        ok
 11 claims · 1 error · 0 warnings
 ```
 
-The first two lines are a receipt. They exist so a clean report cannot mean "I checked nothing".
+The first two lines are a receipt. They exist so that a clean report cannot mean "I checked nothing".
 
-An **edge** is one imported name in one file, so `import { a, b } from "./x"` is two. Each is counted by what it reaches:
+An edge is one name imported by one file. So this line is two edges rather than one:
+
+```ts
+import { a, b } from "./x"
+```
+
+Each edge is counted by what it reaches.
 
 | | |
 |---|---|
@@ -41,13 +49,13 @@ An **edge** is one imported name in one file, so `import { a, b } from "./x"` is
 | `builtin` | a `node:` module |
 | `unresolved` | a specifier that pointed nowhere |
 
-You are looking for two things. `unresolved` should be `0`, because an unresolved import is an edge no rule could judge. And the file count should look like your project — if it is far too small, the run is checking less than you think.
+Two things on that first line are worth a look. The unresolved count should be zero, because an unresolved import is an edge no rule could judge. And the file count should look like your project. If it is far too small, the run is checking less than you think.
 
-Each line after that is a **claim**: a statement about the project that is either true, or true except for the counterexamples listed underneath.
+Each line after the receipt is one claim. It either holds, or it holds everywhere except the places listed underneath.
 
 Every claim runs on every pass, and the whole list always prints. Fixing one thing still tells you whether everything else moved.
 
-Under the findings sits the guidance for that claim. It says what the violation means and how to resolve it, written for whoever hits the rule without having read these pages — which, most of the time, is the agent.
+Under that list sits the guidance for that claim. It says what the violation means and what to do about it. It is written for whoever meets the rule without having read these pages, and most of the time that is an agent, meaning a coding assistant writing code in your project.
 
 ## When you only want the failures
 
@@ -69,7 +77,7 @@ One character per claim, then nothing else unless something failed.
 | `!` | a claim whose only findings are in the baseline |
 | `E` | a claim with real errors |
 
-Only `E` claims are explained, and only their errors. Warnings stay in the tally.
+Only the claims with real errors are explained, and only their errors. Warnings stay in the tally.
 
 ```
 ........E...!...  80 files · 496 edges · 0 unresolved
@@ -82,9 +90,9 @@ every-import-respects-its-zone-boundary  1 error
 16 claims · 1 error · 2 warnings
 ```
 
-The counts stay on the first line even here, for the reason given above.
+The counts stay on the first line even here. A short report still has to show you that something was checked.
 
-Hand this one to an agent that checks after every change: a green run costs it two lines instead of twenty.
+This is the mode to hand to an agent that checks after every change it makes. A green run costs it two lines instead of twenty.
 
 ## When you want one thing to fix
 
@@ -104,11 +112,11 @@ no-declaration-is-written-twice  3 errors
     The same declaration was written more than once, in files that could have shared it. …
 ```
 
-A problem is not a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.
+This is the part people find surprising, so here it is slowly. A problem is not the same as a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.
 
 Problems arrive in the order the claims run, so the checks about the analysis itself come first. While an import fails to resolve, every other answer is drawn from a graph with a hole in it.
 
-Run it, fix what it shows, run it again. It reports `nothing left to fix` when the errors are gone.
+Run it, fix what it shows, run it again. When the errors are gone it tells you there is nothing left to fix.
 
 ## When something else has to read it
 
@@ -148,7 +156,7 @@ The whole report, claims in the order they ran, each with its guidance and its f
 }
 ```
 
-A claim that holds keeps its entry with an empty `findings`, so the shape does not change between a green run and a red one. `file` is absolute and `start` is a character offset into it. The exit code is the same as any other mode.
+A claim that holds keeps its entry, with an empty list of findings. The shape does not change between a green run and a red one. The file path is absolute, and the start is a character offset into that file. The exit code is the same as in any other mode.
 
 ## On a GitLab merge request
 
@@ -170,9 +178,9 @@ The same findings in GitLab's Code Quality format, which puts each one on its li
 ]
 ```
 
-The guidance rides along in `description`, because that is the only field GitLab shows.
+The guidance rides along in the description field, because that is the only field GitLab shows.
 
-Severity follows the baseline. A new violation is `major`; one [the baseline](/agents/baseline/) already accepted is `minor`, so it stays visible in the widget without competing with what this branch broke. Nothing is ever `blocker` — the exit code already fails the pipeline.
+Severity follows the baseline, which is the recorded list of problems you have agreed to live with for now. A new violation is major. One [the baseline](/agents/baseline/) already accepted is minor, so it stays visible in the widget without competing with what this branch broke. Nothing is ever a blocker, because the exit code already fails the pipeline.
 
 ```yaml
 architecture:
@@ -183,24 +191,33 @@ architecture:
       codequality: gl-code-quality-report.json
 ```
 
-`when: always` is the part to get right. Without it the artifact is dropped on exactly the runs that had something to say.
+The part to get right is the line that keeps the artifact on every run. Without it, the artifact is dropped on exactly the runs that had something to say.
 
-Findings that name no file — an empty zone, a dead pattern — are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it, so reformatting a file does not resurrect a finding GitLab had already seen.
+Some findings name no file at all: an empty zone, or a pattern nothing matches. Those are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it, so reformatting a file does not bring back a finding GitLab had already seen.
 
 :::note
-GitLab renders an annotation only on lines the merge request touched. A boundary violation sits on the import that caused it, so it lands; a directory-size finding has no line and shows in the widget instead. The pass or fail is [the baseline's](/agents/baseline/) job either way — do not use the Code Quality widget as the ratchet.
+GitLab renders an annotation only on lines the merge request touched. A boundary violation sits on the import that caused it, so it lands. A directory-size finding has no line, so it shows in the widget instead. Either way the pass or fail is [the baseline's](/agents/baseline/) job, and we would ask you not to use the Code Quality widget as the ratchet.
 :::
 
-## A flag it does not know is an error
+## A flag trueup does not know
 
 ```
 $ npx trueup --claim=no-directory-holds-too-many-files
 unrecognised: --claim=no-directory-holds-too-many-files
-known arguments: --json --gitlab --next --dots --update-baseline --config=<path>
-commands: explain <path> · guard · agent-instructions
+
+trueup — checks that the code matches the architecture its rulebook describes
+
+usage: trueup [options]
+       trueup <command> [arguments]
 ```
 
-A tool that ignored `--dot` and ran the default check would report a clean project while doing something other than what you asked. That is the same silence the completeness claims exist to prevent, so it gets its own exit code rather than being folded into a failed run.
+The full list of options and commands follows that, so a mistyped flag also shows you the right one. You can ask for the same list at any time:
+
+```sh
+npx trueup --help
+```
+
+Suppose trueup had quietly ignored that flag and run the default check instead. It would tell you the project is clean, having done something other than what you asked. That is the same silence the completeness claims exist to prevent, so it gets its own exit code rather than being folded into a failed run.
 
 ## Exit codes
 
@@ -208,12 +225,13 @@ A tool that ignored `--dot` and ran the default check would report a clean proje
 |---|---|
 | `0` | clean |
 | `1` | errors |
-| `2` | the baseline holds entries whose violations are gone |
-| `3` | no config found |
-| `4` | an argument was not recognised |
+| `2` | the baseline holds entries nothing reports any more |
+| `3` | no rulebook found |
+| `4` | an argument it does not know |
+| `5` | the rulebook would not load |
 
 ## Cost
 
-A full check on a 900-file monorepo takes about a tenth of a second. The guard takes about the same, including process startup.
+A full check on a 900-file monorepo takes about a tenth of a second. The guard is the part that inspects an edit before it is saved, and it takes about the same, including the time to start the process.
 
 Identifiers are only read when a [seam rule](/checks/seams/) or a [rule of your own](/checks/custom-rules/) asks for them. A run without either never builds a syntax tree.

@@ -1,9 +1,9 @@
 ---
 title: trueup
-description: Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing it.
+description: Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding assistant from quietly changing it.
 template: splash
 hero:
-  tagline: Keeps a TypeScript codebase in the shape you meant it to have — and stops a coding agent from quietly changing it.
+  tagline: Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding assistant from quietly changing it.
   actions:
     - text: Getting started
       link: /start/getting-started/
@@ -16,37 +16,47 @@ hero:
 
 import { Card, CardGrid } from "@astrojs/starlight/components";
 
-`trueup` reads your source files without running them, works out which file depends on which, and checks that map against rules you wrote down. When something breaks a rule, it names the file, says what it did, and says what to do about it.
+Every project starts with an idea of how its parts fit together. This part may use that one. That folder knows nothing about this one. Usually the idea lives in somebody's head, or in a document nobody opens twice.
+
+trueup lets you write that idea down in one small file. After that it reads your code and tells you, in plain words, whether the idea is still true.
 
 ## It reads between files, not inside them
 
-A linter reads one file at a time and tells you about that file. An unused variable. A missing `await`. It is looking at the code *inside* a file.
+A linter reads one file at a time and tells you about that file. A variable nobody uses. A keyword you forgot. It is looking at the code *inside* a file.
 
-`trueup` looks at the lines *between* files. Which parts of your project may know about which other parts. Where things live. Whether a folder has quietly become a junk drawer.
+trueup looks at the lines *between* files. Which parts of your project are allowed to know about which other parts. Where a file should live. Whether a folder has quietly turned into a junk drawer.
 
-None of that is visible from inside any single file, which is why the shape drifts without anyone noticing.
+None of that can be seen from inside any single file. That is why the shape of a project drifts for months and nobody notices.
 
-You describe the shape once, in a config file. Every run after that answers one question: is this still true?
+You describe the shape once. Every run after that answers a single question: is this still true?
 
 ## Why it exists
 
-Every edit an agent makes is defensible on its own. Reaching into another module is the shortest path to a working feature, the tests stay green, and after a hundred of them the project is a shape nobody chose. You cannot review your way out of it — not reading every line is the point.
+A coding agent is an assistant that writes code in your project. Every edit it makes looks reasonable on its own. Reaching into another part of the project is the shortest road to a working feature, the tests stay green, and nobody objects. After a hundred edits like that, the project has a shape nobody chose.
 
-So the constraints have to live where the agent runs into them, every time, without you. And because an agent told to get the build green will widen a rule as readily as fix the code, every message this prints says which one is meant.
+You cannot read your way out of that. Not reading every line is the reason you asked for help in the first place.
+
+So the rules have to sit where the agent meets them, every time, with nobody watching. And because an agent under pressure to make the build pass will widen a rule as readily as fix the code, every message here says which of the two we mean.
 
 <CardGrid>
   <Card title="Sees through re-exports" icon="puzzle">
-    Most projects have an `index.ts` that re-exports a folder. Other tools then see everyone importing `shared/index.ts` and can tell nobody apart. This one follows the chain to the file that declares what you imported.
+    Most projects have one file that gathers up a folder and passes it along. Other tools then see everybody importing that same file and cannot tell any of them apart. trueup follows the chain to the file where the thing you asked for is actually written.
   </Card>
   <Card title="Refuses a bad edit" icon="error">
-    Run it as a Claude Code hook and it judges a proposed write before it lands, with the reason the agent needs to correct course in the same turn.
+    Run it as a hook in Claude Code and it inspects a change before the change is saved. The agent gets the reason back and corrects itself in the same turn, without a trip through you.
   </Card>
   <Card title="Fails loudly" icon="warning">
-    An import that does not resolve, a zone matching nothing, a file no rule covers: each is an error. A check that passes while enforcing nothing is worse than no check.
+    An import that leads nowhere. A rule that matches no file. A file no rule covers. Each of those is an error here, because a check that passes while checking nothing is worse than no check at all.
   </Card>
   <Card title="One report" icon="document">
-    Your linter's findings show up in the same report, with the same pass or fail.
+    Findings from the linter you already use arrive in the same report, under the same pass or fail.
   </Card>
 </CardGrid>
 
-New to it? [Getting started](/start/getting-started/) sets it up on a normal project in about ten minutes.
+## Is this for you?
+
+It helps most when you have a TypeScript project that more than one person or one agent works on, and you have an opinion about how that project should be arranged.
+
+It helps least when the whole project still fits in your head, or when you have not made up your mind about the arrangement yet. In that case there is nothing to hold the code to, and you would only be writing down a guess.
+
+New here? [Getting started](/start/getting-started/) sets it up on an ordinary project in about ten minutes.

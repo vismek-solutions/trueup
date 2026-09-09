@@ -1,13 +1,19 @@
 ---
 title: What it checks
-description: Every claim the tool makes about a project, and which ones fail loudly.
+description: The full list of what trueup looks for, and what you set up to turn each one on.
 ---
 
-| claim | asserts |
+Everything trueup checks is written as a claim. A claim is one sentence the tool believes about your project, and every run either proves it or disproves it.
+
+Many of the claims talk about zones. A zone is a name you give to a group of files, chosen by where the files sit. You invent the names yourself.
+
+Here is the whole list. Read down the right-hand column to see which ones matter to you.
+
+| claim | what it says |
 |---|---|
-| `the-analysis-reached-files` | the run analysed something |
-| `every-import-resolves` | no import failed to resolve to a real file |
-| `every-imported-name-is-exported` | every imported name exists in the module it came from |
+| `the-analysis-reached-files` | the run found files to look at |
+| `every-import-resolves` | every import found the file it names |
+| `every-imported-name-is-exported` | every name you imported is really in the module it came from |
 | `every-imported-name-is-unambiguous` | no name arrives through two different re-export chains |
 | `every-file-belongs-to-a-zone` | every file is claimed by some zone |
 | `every-zone-has-a-file` | no zone is empty |
@@ -15,21 +21,25 @@ description: Every claim the tool makes about a project, and which ones fail lou
 | `every-rule-names-a-declared-zone` | no rule mentions a zone that does not exist |
 | `every-api-zone-is-exported` | a package's api zones and its `package.json` exports agree |
 | `every-grant-has-a-dependency` | a package reaches only what its `package.json` depends on |
-| `every-import-respects-its-zone-boundary` | the boundaries hold |
+| `every-import-respects-its-zone-boundary` | every import stays inside the reach its zone was given |
 | `no-zones-form-a-cycle` | no group of zones depends on itself |
 | `no-sibling-directory-reaches-another` | sibling directories stay independent |
-| `generic-code-names-no-domain-concept` | the seams hold |
-| `no-directory-holds-too-many-files` | no directory has become a drawer |
+| `generic-code-names-no-domain-concept` | reusable code stays clear of the words your domain owns |
+| `no-directory-holds-too-many-files` | no directory has grown past the file count you allow |
 | `no-declaration-is-written-twice` | nothing exists in two copies |
-| `no-value-is-declared-away-from-its-only-consumer` | nothing crosses a boundary for a single caller |
-| `no-export-exists-only-for-a-test` | nothing is public just so a test can reach it |
-| `no-test-reaches-an-internal` | no test is pinned to a split its subject's callers cannot see |
-| `no-file-sits-loose-beside-a-group` | nothing sits at a group's parent but what assembles it |
+| `no-value-is-declared-away-from-its-only-consumer` | nothing sits in one zone when a single file in another is its only user |
+| `no-file-serves-two-readerships` | no file holds two sets of exports whose readers never overlap |
+| `no-export-exists-only-for-a-test` | nothing is public only so a test can reach it |
+| `no-test-reaches-an-internal` | no test is pinned to a split the callers of its subject cannot see |
+| `no-file-sits-loose-beside-a-group` | the only file sitting beside a group of directories is the one that assembles it |
+| `no-change-outgrows-its-review` | no change has grown past the size a person can review |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
 ## Imports are checked by name
 
-Most tools stop once a specifier resolves to a file. Two of these claims go one step further and ask whether the *name* you imported is really there.
+Most tools stop as soon as an import points at a file that exists. Two of these claims go one step further. They ask whether the name you imported is really in that file.
+
+Here is a barrel, which is a file that re-exports its neighbours so everyone can import from one place:
 
 ```ts
 // src/pricing/index.ts
@@ -37,12 +47,14 @@ export * from "./net.js";
 export * from "./gross.js";
 ```
 
-Both of those modules export `price`. So this import compiles, and which `price` you get is anyone's guess:
+Both of those modules export a value called price. So the import below compiles, and there is no telling which of the two you get:
 
 ```ts
 // src/checkout/total.ts
 import { price } from "../pricing/index.js";
 ```
+
+A run that hits a missing name and an ambiguous one reports them like this:
 
 ```
 every-imported-name-is-exported             1 error
@@ -56,25 +68,43 @@ every-imported-name-is-unambiguous          1 error
     can say where it came from. Export it from one place, or re-export it by name.
 ```
 
-A CommonJS file is the exception. `module.exports = { … }` declares nothing this analysis can enumerate, so its export list is unknown rather than empty, and a name imported from it is never reported as missing. Claiming absence requires having seen the exports.
+A file written in CommonJS is the exception. Assigning the whole exports object in one statement declares nothing this analysis can list, so its export list counts as unknown rather than empty. A name imported from a file like that is never reported as missing. To say a name is absent, the tool has to have seen the exports first.
 
-Ambiguity is also why the rest of the run has to stop and say so. Every boundary rule here is anchored on the file that *declares* a symbol, and this import has two candidates. Export the name from one place, or re-export it by name instead of with `*`.
+An ambiguous name is also why the rest of the run has to stop and say so. Every rule about which files may reach which is anchored on the declaring file: the file where a thing is actually written, once you have followed every re-export. An ambiguous import has two of those. Export the name from one place, or re-export it by name instead of with a star.
 
-## Why the completeness checks are errors
+## Why a half-blind run is an error
 
-An import that does not resolve, a name no module exports, a zone pattern matching nothing: each means the tool is seeing less than you think it is.
+An import that does not resolve. A name no module exports. A zone pattern that matches nothing. Each one means the tool is seeing less of your project than you think it is.
 
-A check that reports success while enforcing nothing is worse than no check at all — it is a gate that keeps passing while the thing it guards drifts. Four architecture tools were measured doing exactly that:
+A check that reports success while enforcing nothing is worse than no check at all. It is a gate that keeps passing while the thing it guards drifts. Four architecture tools were measured doing exactly that:
 
 - config globs resolved against the wrong directory, so zero files were checked
 - unresolved specifiers marked valid and skipped
 - a scope narrowed until the query returned nothing, then reported high confidence
 
-So an empty or degraded input is an error here, never a pass. The coverage line at the top of every report is counted from the run itself, not declared by the config.
+So an empty or degraded input is an error here, never a pass. The coverage line at the top of every report is counted from the run itself. Your config does not get to declare it.
+
+## How big a change can be reviewed
+
+Every other check on this page reads your code. This one reads the size of the change you are about to hand somebody.
+
+```ts
+reviewable: { additions: 400, deletions: 400, nearing: 0.8 },
+```
+
+The two numbers are the most added lines and the most removed lines one change may carry. Past that, a change gets reviewed by skimming, and skimming is not reviewing.
+
+The finding says how many lines were added and removed, which branch that was measured against, the budget those lines passed, and the three files carrying most of the weight. Going over prints a warning by default. Set the severity to error and it fails the run instead. The nearing value asks to hear about it earlier, so 0.8 speaks up once four fifths of the budget is gone.
+
+The change is measured from where your branch left the base branch, which is main unless you name another. Work you have not committed yet counts too, new files included, because it is still work somebody has to read.
+
+Some files grow without anybody reading them. A lock file, generated output, a vendored copy: name those in the except list rather than raising the numbers.
+
+This claim is never recorded in the baseline. Accepting it once would switch the budget off for good.
 
 ## What turns each one on
 
-Nine claims are always on and need nothing but zones. The rest wait for a config key:
+Nine claims are always on, and they need nothing from you but zones. The rest wait until you add a key to your config:
 
 | key | turns on |
 |---|---|
@@ -84,9 +114,11 @@ Nine claims are always on and need nothing but zones. The rest wait for a config
 | `maxFilesPerDirectory` | [`no-directory-holds-too-many-files`](/checks/placement/#directory-size) |
 | `duplication` | [`no-declaration-is-written-twice`](/checks/duplication/) |
 | `colocation` | `no-value-is-declared-away-from-its-only-consumer`, and `no-export-exists-only-for-a-test` when a zone also has `role: "tests"` |
+| `readerships` | [`no-file-serves-two-readerships`](/checks/placement/#one-file-answering-to-two-audiences) |
 | `testInternals` | [`no-test-reaches-an-internal`](/checks/placement/#tests-that-reach-an-internal) |
+| `reviewable` | [`no-change-outgrows-its-review`](#how-big-a-change-can-be-reviewed) |
 | `members` | [`every-api-zone-is-exported`](/concepts/monorepos/#the-door-is-written-down-twice) and [`every-grant-has-a-dependency`](/concepts/monorepos/#a-grant-with-no-dependency), wherever a member's `package.json` says enough to compare |
 | `runners` | [one claim per delegated category](/integrations/linters/) |
 | `rules` | [whatever you name](/checks/custom-rules/) |
 
-`no-zones-form-a-cycle` needs no configuration, because there is no version of a zone cycle anyone wants.
+One claim has no key of its own. That is no-zones-form-a-cycle, and it needs no setting up, because there is no version of a zone cycle that anyone wants.

@@ -1,15 +1,15 @@
 ---
-title: Blocking a bad edit
-description: A hook that judges a proposed write before it reaches disk, and refuses it.
+title: Stopping an edit before it lands
+description: A check that reads a proposed edit, works out what it would do, and can turn it down.
 ---
 
-Claude Code can run a command before it writes a file, and cancel the write if that command objects. `trueup guard` is that command.
+Claude Code can run a command of your choosing before it saves a file, and cancel the write if that command objects. The guard is that command.
 
-It reads the proposed edit, applies it to a copy of the file in memory, and checks the *result* against the real project. The file never has to exist on disk.
+It reads the edit the agent is proposing, applies it to a copy of the file in memory, and checks the result against the rest of your project. Your file on disk is untouched while that happens. It does not even have to exist yet.
 
-## The hook
+## Setting up the hook
 
-This goes in `.claude/settings.json` in your project root. Create the file if it is not there; if it already has a `hooks` key, merge these entries into it rather than replacing them.
+The settings go in .claude/settings.json in your project root. Create the file if it is not there. If it already has a hooks key, merge these entries into it rather than replacing them.
 
 ```json
 {
@@ -30,9 +30,9 @@ This goes in `.claude/settings.json` in your project root. Create the file if it
 }
 ```
 
-The agent gets the refusal as its tool result, carrying the same explanation the report prints. It corrects course inside the same turn. Nothing lands on disk, and no round trip through you is needed.
+The agent gets the refusal as its tool result, carrying the same explanation the report prints. It corrects course inside the same turn. Nothing lands on disk, and nothing has to travel through you first.
 
-The refusal ends with what the file *may* reach, not just what it may not.
+A refusal ends with what the file may reach, not only with what it may not.
 
 ```
 every-import-respects-its-zone-boundary  src/engine/table.ts
@@ -41,23 +41,25 @@ every-import-respects-its-zone-boundary  src/engine/table.ts
 engine may reach engine · shared
 ```
 
-A refused agent will otherwise guess at where the code should go. One line of allowed zones saves that turn.
+An agent that hears only no will guess at where the code should go instead. That one line of allowed zones saves it the guess.
 
-The second block is only for [Serena](https://github.com/oraios/serena), an MCP server that edits code through a language server. If you have not deliberately installed it, you do not have it — drop that block and keep the `Write|Edit` matcher, which covers everything else.
+The second block is there only for [Serena](https://github.com/oraios/serena), an MCP server that edits code through a language server. If you have not deliberately installed it, you do not have it, so drop that block. The first matcher, the one covering Write and Edit, covers everything else.
 
-## What can and cannot block
+## What blocks and what does not
 
-A write is blocked only by findings on the file being written. A standing violation somewhere else is not this edit's problem, and if it blocked, no edit in an existing codebase would ever land.
+Only findings on the file being written can block it. A violation somewhere else is not this edit's problem, and if it were enough to block, no edit in an existing codebase would ever land.
 
-Anything already in the baseline does not block either.
+Anything already in your baseline does not block either. A baseline is the recorded list of problems you have agreed to live with for now.
 
-An unusable payload, a missing config, a file type you do not analyse — all of those allow the write. A guard that errors would block *every* edit rather than the wrong ones.
+When the guard cannot make sense of the situation, it stands aside and lets the write happen. An edit it cannot read, a missing config, a file type you do not analyse: each of those allows the write. A guard that fell over on surprises would block every edit rather than the wrong ones.
 
 ## The rulebook goes through you
 
-Any rule on this site can be switched off by editing the config. So an agent editing the config is itself the thing the guard stops, and hands to you.
+Your rulebook is the file your rules are read from, either at the root of the project or inside one package. Any rule on this site can be switched off by editing it.
 
-Two files are covered with no configuration at all: the config the rules were read from, and the baseline. Those are the two ways to make a failing check pass without touching any code — widen the boundary, or record the violation as already known.
+This is the part people find surprising, so here it is slowly. An edit to the rulebook is the one edit the guard will not settle by itself. It stops that edit, and hands the decision to you.
+
+Two files are covered with no configuration at all: the rulebook the rules were read from, and the baseline. Those are the two ways to make a failing check pass without touching any code. You can widen the boundary that objected, or you can record the violation as already known.
 
 The default is a permission prompt, not a refusal.
 
@@ -71,9 +73,9 @@ no-edit-changes-the-rules-themselves  trueup.config.ts
   it ever failed.
 ```
 
-That keeps setup work possible. An agent can draft your zones, add one for a directory you just made, or wire the hooks — you approve each one. What it cannot do is quietly widen a rule that is red right now, because you see the request and the reason for suspecting it.
+That keeps setup work possible. An agent can draft your zones, add one for a new directory, or wire up the hooks, and you approve each one. What it cannot do is quietly widen a rule that is failing right now, because the request reaches you along with the reason to look twice.
 
-Add anything else that should come to you first.
+Anything else that should come to you first, you can name.
 
 ```ts
 protect: [".claude/settings.json", ".github/workflows/**", "CLAUDE.md"]
@@ -83,15 +85,15 @@ Copy the hook settings entry at least. Without it, the shortest way past the gua
 
 ## When nobody is there to answer
 
-A prompt is only a gate while someone is at the keyboard, so in `acceptEdits`, `auto`, `dontAsk` and `bypassPermissions` it becomes a refusal automatically. You do not configure that. An unanswered prompt never turns into an approval either — waiting would be the way past the guard.
+A prompt is a gate only while someone is at the keyboard. In the permission modes that ask you nothing, acceptEdits, auto, dontAsk and bypassPermissions, the prompt becomes a refusal on its own. You do not configure that. An unanswered prompt never turns into an approval either, because waiting would be a way past the guard.
 
-That leaves `default` mode with nobody at the desk: the prompt waits, and so does the agent. If that matters more than agent-driven setup, ask for a refusal outright.
+That leaves default mode with nobody at the desk. The prompt waits, and so does the agent. If that costs you more than agent-driven setup is worth, ask for a refusal outright.
 
 ```ts
 protect: { paths: ["CLAUDE.md"], decision: "deny" }
 ```
 
-`decision` on its own hardens the config and the baseline without naming anything else.
+A decision on its own hardens the rulebook and the baseline without naming anything else, and it can depend on where the run is happening.
 
 ```ts
 protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
@@ -99,15 +101,15 @@ protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
 
 ## Handing the rulebook over
 
-The opposite is available too, and it is the answer if the prompt is friction you do not want — you review the config diff on the merge request instead, or you run unattended and would rather the agent kept going.
+The opposite is available too. It is the answer if the prompt is friction you do not want, because you read the rulebook diff on the merge request anyway, or because you run unattended and would rather the agent kept going.
 
 ```ts
 protect: { decision: "allow" }
 ```
 
-An agent may then edit the config and the baseline freely, in every permission mode.
+An agent may then edit the rulebook and the baseline freely, in every permission mode.
 
-Understand what that costs. Every rule on this site becomes optional to the thing it is meant to constrain: an agent told to get the build green can widen the boundary it just broke, or record the violation as already known, and both are one edit away. The refusal exists because "fix the code, not the rule" was in every message here and enforced by nothing.
+There is a cost to that, and you should hear it plainly. Every rule on this site becomes optional to the thing it is meant to constrain. An agent told to get the build green can widen the boundary it broke a moment ago, or record the violation as already known, and both are one edit away. The refusal exists because "fix the code, not the rule" was in every message here and enforced by nothing.
 
 So the report says it out loud, on every run.
 
@@ -119,18 +121,18 @@ notice    the rulebook is unguarded: an agent may edit this config and the basel
 
 A check that can be switched off silently is the failure this tool was built against, so it will not be switched off silently here either.
 
-If what you actually want is for setup not to block overnight, `"ask"` is the setting for it and it costs one keystroke. `"allow"` is for deciding that a later review is your gate.
+If what you actually want is for setup not to block overnight, ask is the setting for that, and it costs one keystroke. Choose allow when you have decided that a later review is your gate.
 
-## It sees files the analysis never reads
+## Files the analysis never reads
 
-It runs before the roots and extension filters, so it covers files the analysis would never look at — a `.json`, a `.yml`, anything outside `include`.
+The guard runs before the filters for roots and file extensions, so it also covers files the analysis would never open: a JSON file, a YAML file, anything outside the include setting.
 
-It has no counterpart in a full run, because a snapshot of the code cannot show that the config was edited. This is the only rule that exists purely at write time.
+It has no counterpart in a full run, because a snapshot of your code cannot show that the rulebook was edited on the way. This is the only rule that exists purely at write time.
 
 You still edit these files yourself, directly. The hook only sees what an agent does.
 
 ## Why there are two hooks
 
-The guard has to know what the file would look like after the edit. It can reproduce a find-and-replace exactly, so those are checked before the write and refused. An edit like "replace this function's body" depends on the language server's idea of where the function ends, so those are checked immediately after the write and come back as a correction. The guard never guesses at another tool's edit semantics.
+The guard has to know what the file would look like after the edit. A find and replace is something it can reproduce exactly, so edits of that kind are checked before the write and refused. An edit such as "replace this function's body" depends on the language server's idea of where the function ends, so those are checked immediately after the write and come back as a correction. The guard never guesses at how another tool's edits work.
 
-Delegated tools do not run here. Spawning a whole-repo lint on every edit costs far more than it catches.
+Delegated tools do not run here. A runner hands a job to another tool you already use, and starting a whole-repo lint on every edit would cost far more than it catches.

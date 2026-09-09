@@ -1,11 +1,13 @@
 ---
 title: Zones
-description: A zone names a group of files by path pattern. Every other rule is written in that vocabulary.
+description: A zone is a name you give to a group of files, and every other rule is written in those names.
 ---
 
-A **zone** is a name for a group of files, chosen by path patterns. Zones are the vocabulary every other rule is written in, so this is the one idea to get right.
+A zone is a name you give to a group of files. You choose the files by their location, and you choose the name yourself.
 
-Patterns are matched against each file's path **relative to your project root**, the directory holding `trueup.config.ts`.
+Zones are worth taking your time over. Every other rule on this site is written in the names you invent here, so this is the one idea to get right.
+
+You pick the files with path patterns. Each pattern is matched against a file's path relative to your project root, which is the directory holding trueup.config.ts. A pattern that starts with src therefore counts from there, not from wherever you happened to be standing when you ran the tool.
 
 ```ts
 zones: [
@@ -16,31 +18,33 @@ zones: [
 ]
 ```
 
-## Order matters
+The last pattern in that list is deliberately wide. It catches whatever the first three did not, and something has to.
 
-A file belongs to the first zone whose pattern matches it. Order them narrowest first.
+## The first pattern that matches wins
 
-Above, `src/domain/user.test.ts` is `spec` rather than `domain`, because `spec` comes first.
+A file belongs to the first zone whose pattern matches it, so the order you write them in is part of the rule. Put the narrow zones first and the catch-all last.
+
+In the list above, the file src/domain/user.test.ts lands in spec rather than domain, because spec is written first.
 
 ## Every file must land somewhere
 
 A file in no zone is an error. Nothing has classified it, so no rule can govern it.
 
-Put your tests in their own zone, ahead of everything else. Left inside a source zone, they leak fixture text into the other checks.
+Give your tests a zone of their own, and put it ahead of everything else. Tests left inside a source zone leak their fixture text into the other checks.
 
-Three claims guard the vocabulary itself, and all three are errors:
+Three claims watch the zone names themselves. A claim is one sentence the tool believes about your project, which each run either proves or disproves. All three of these are errors when they fail:
 
-| claim | asserts |
+| claim | what it believes |
 |---|---|
 | `every-file-belongs-to-a-zone` | every file matches a zone |
 | `every-zone-has-a-file` | no zone is empty |
 | `every-zone-pattern-matches-a-file` | no pattern is dead |
 
-An empty zone or a dead pattern usually means a directory was renamed and a rule quietly stopped applying. That is the failure worth catching early, because nothing else about the run looks different when it happens.
+An empty zone or a dead pattern usually means a directory was renamed and a rule quietly stopped applying. Nothing else about the run looks any different when that happens, which is why it is worth catching early.
 
 ## Roles
 
-A zone can declare what kind of thing it is. The role changes what other rules count it as, and it is stated once rather than granted per rule.
+A zone can also say what kind of thing it holds. You state that once, on the zone, and the other rules take it into account from then on, instead of you granting the same exception over and over.
 
 ```ts
 zones: [
@@ -50,30 +54,43 @@ zones: [
 ]
 ```
 
-`wiring` marks the file that assembles everything and is imported by nothing — `src/main.tsx`, or the server entry that mounts your routers. A composition root has no internals of its own, so [the internals check](/checks/placement/#tests-that-reach-an-internal) never reports one.
+The wiring role marks the file that assembles everything and is imported by nothing. In a front end that is usually src/main.tsx. On a server it is the entry that mounts your routers. A file like that has no internals of its own, so [the internals check](/checks/placement/#tests-that-reach-an-internal) never reports one.
 
-`tests` marks a test suite. With `colocation: true` it also enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test), and it is what `testInternals: true` needs to know which imports are a test's.
+The tests role marks a test suite. With colocation switched on, it also enables the check for [exports that exist only for a test](/checks/placement/#exports-that-exist-only-for-a-test). And when you turn testInternals on, this role is how the tool knows which imports belong to a test.
 
-`api` marks a package's public surface. Names re-exported there answer to consumers outside the analysed code, and in a monorepo it is the only zone another member may enter. They also count as surface for the internals check, wherever they are declared.
+The api role marks a package's public surface. Names re-exported there answer to consumers outside the code being analysed, and in a monorepo it is the only zone another member may enter. A member is one package inside a workspace that keeps its own rules. Those names also count as surface for the internals check, wherever they are declared.
 
-All three are excluded from being counted as the lone consumer in the [colocation check](/checks/placement/). Without that exclusion, tests alone accounted for 646 of 758 findings on a large monorepo.
+None of the three roles counts as the lone consumer of a name in the [colocation check](/checks/placement/). Without that exclusion, tests alone accounted for 646 of 758 findings on a large monorepo.
 
 ## Asking where a file belongs
+
+When you are unsure which zone something falls into, ask.
 
 ```sh
 npx trueup explain src/engine/newThing.ts
 ```
 
 ```
+src/engine/newThing.ts
+
 zone        engine
 may reach   engine · shared
 may not     domain
+
 vocabulary  domain owns names this file may not use:
             Warrant · WarrantKind · warrantKinds
             and values it may not repeat:
             search · testimony
 ```
 
-Useful to you when deciding where something goes, and useful to an agent told to run it before creating a file. A path in no zone is reported as such — the answer you want before making a directory nothing covers.
+Useful when you are deciding where something goes, and useful to an agent, a coding assistant that writes code in your project, if you tell it to run this before it creates a file. A path in no zone is reported as such, which is the answer you want before you make a directory nothing covers.
 
-The `vocabulary` block only appears when a [seam rule](/checks/seams/) covers the file. Without one, the first three lines are the whole answer.
+The vocabulary block only appears when a [seam rule](/checks/seams/) covers the file. A seam is the line between reusable code and code that knows your business. Without such a rule, the zone and its reach are the whole answer.
+
+Add a name to the path and the question changes. Instead of where this file may reach, you are asking who reads this one thing, and what it would cost to move it somewhere else:
+
+```sh
+npx trueup explain src/engine/table.ts#rowKey
+```
+
+The answer names the files and directories that read it, whether enough of them are far enough away for a move to have somewhere to land, how many declarations would have to travel with it, and which of the ones staying behind would need to import it back. That last number is the honest price of the move.

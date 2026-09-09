@@ -1,11 +1,11 @@
 ---
 title: Rules you write yourself
-description: A plain TypeScript function over the project, with the parser kept out of sight.
+description: Anything the config does not cover, written as a plain TypeScript function over your project.
 ---
 
-Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project.
+Config covers direction and vocabulary. Anything else is a plain TypeScript function over the project, and you write it.
 
-A rule goes in the `rules` key of your config, so the whole file reads:
+A rule goes in the rules key of your config, so the whole file reads:
 
 ```ts
 import { defineConfig, defineRule } from "trueup";
@@ -30,18 +30,18 @@ export default defineConfig({
 });
 ```
 
-Return a list of issues. A message alone is enough; `file` and `at` place the caret, and severity defaults to `error`.
+Return a list of issues. A message on its own is enough. Adding file and at places the caret, and severity defaults to error.
 
-### What an import gives you
+## What an import gives you
 
-`project.imports()` returns every import in the project, or you can narrow it with `{ fromZone, declaredZone, kind }`. Each one carries:
+Calling project.imports() with no argument returns every import in the project. You can narrow it by fromZone, declaredZone or kind. Each import carries:
 
 | field | |
 |---|---|
 | `from` | the importing file |
 | `fromZone` | its zone |
 | `specifier` | the text as written in the import |
-| `via` | the file that specifier resolved to — the barrel, if there is one |
+| `via` | the file that specifier resolved to, the barrel if there is one |
 | `viaZone` | that file's zone |
 | `imported` | the exported name asked for |
 | `local` | the name it was bound to |
@@ -51,7 +51,7 @@ Return a list of issues. A message alone is enough; `file` and `at` place the ca
 | `kind` | `"value"` or `"type"` |
 | `at` | byte offset of the binding, for the caret |
 
-Compare `via` against `declaredIn`. `via` is the module the author named; `declaredIn` is where the thing really lives. A tool that treats them as one is blind through a barrel.
+Two of those fields are worth a second look. A barrel is a file that re-exports its neighbours so people can import from one place. The field via is the module the author named, so it is often the barrel. The field declaredIn is where the thing really lives, after every re-export has been followed. Compare the two in your rules, because a tool that treats them as one is blind through a barrel.
 
 ## Give the rule a remedy
 
@@ -65,16 +65,16 @@ defineRule(
 )
 ```
 
-The message says what happened; the guidance says what to do, and — where it matters — names the fix that would make things worse.
+The message says what happened. The guidance says what to do, and where it matters, it names the fix that would make things worse.
 
 ## Rules see a model, not a syntax tree
 
-Rules are handed a view of the project rather than an AST. The parser stays an implementation detail you never have to learn, and swapping it never breaks a rule you wrote.
+Rules are handed a view of the project rather than a syntax tree. The parser stays an implementation detail you never have to learn, and swapping it never breaks a rule you wrote.
 
-Besides `imports()`, a project answers `files`, `zoneNames`, `zoneOf(file)`, `filesIn(zone)`, `exportsOf(file)` and `relative(file)`.
+Besides imports(), a project answers files, zoneNames, zoneOf(file), filesIn(zone), exportsOf(file) and relative(file).
 
 ## When to write one instead of asking for a feature
 
-Write a rule when the constraint is specific to your project — a naming convention, an entry point everything must go through, a package that may only be imported from one place.
+Write a rule when the constraint is specific to your project: a naming convention, an entry point everything must go through, a package that may only be imported from one place.
 
-A claim is built in when it is true of many projects, or when a rule cannot express it. Zone cycles are the second case: finding one means walking the whole zone graph, and a rule only sees one import at a time.
+A claim is one sentence the tool believes about your project, which every run proves or disproves. A claim is built in when it is true of many projects, or when a rule cannot express it. Zone cycles are the second case. Finding one means walking the whole zone graph, and a rule only sees one import at a time.

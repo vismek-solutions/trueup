@@ -1,15 +1,17 @@
 ---
 title: Getting started
-description: Install trueup, write a config that describes your project's shape, and run it.
+description: Install trueup, write down the shape of your project in one file, and run it.
 ---
 
-Requires Node 22.18 or newer.
+This takes about ten minutes on an ordinary project. You need Node 22.18 or newer.
+
+Install it as a development dependency:
 
 ```sh
 npm install --save-dev trueup
 ```
 
-Then write a starting config:
+Then let it write a first draft of your rules for you:
 
 ```sh
 npx trueup init
@@ -26,11 +28,15 @@ next      add `boundaries` to say which zones may reach which
           run `trueup` to see what it finds
 ```
 
-It reads the tree, not your intentions: one zone per top-level source folder, one for wherever your tests live, and a catch-all last that sweeps up whatever the others missed. Every pattern it writes matches at least one file, because a pattern matching nothing is a rule you believe you have and do not.
+That draft comes from your folders, not from your intentions. You get one zone for each top level source folder, one for wherever your tests live, and a catch all at the end that sweeps up whatever the others missed. A zone is a name you give to a group of files, and the next page explains them properly.
 
-Runners are wired for the linters your `package.json` already has, scoped to the directories the zones cover — given a bare `.`, oxlint and biome lint `node_modules` too. Nothing is written if a config is already there, and in a workspace each package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
+Every pattern it writes matches at least one real file. A pattern that matches nothing is a rule you believe you have and do not, so it will not write one.
 
-What it will not guess is `boundaries`, because a folder layout does not say which direction the dependencies are meant to run. That is the part you write. The rest of this page uses a config with those filled in:
+It also wires up the linters your project already installs, so their findings come back inside the same report. Each one is pointed at the directories your zones cover. That part matters more than it looks: told to check the whole current folder, oxlint and biome would happily lint everything inside node_modules too. If a config file is already sitting there, nothing is overwritten, and in a workspace every package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
+
+There is one thing it will not guess, and that is the boundaries. A folder layout cannot tell anybody which direction the dependencies are meant to run. That part is yours to write, and it is the part worth thinking about.
+
+The rest of this page uses a config with those filled in:
 
 ```ts
 // trueup.config.ts
@@ -90,27 +96,39 @@ no-zones-form-a-cycle                       ok
 11 claims · 2 errors · 0 warnings
 ```
 
-Those two findings are the two kinds this exists to show you: a file no zone claims, and a boundary you did not know was being crossed.
+Those two findings are the two kinds this tool exists to show you. One is a file that no zone claims, so no rule is watching it. The other is a line between two parts of the project that you did not know was being crossed.
 
 ## Reading that config
 
-Every path pattern is matched against the file's path **relative to your project root** — the directory holding `trueup.config.ts`.
+Every pattern is matched against a file's location **relative to your project root**, which is the folder holding your config file.
 
-The zones say the project has seven kinds of file. Names are yours to invent; nothing is reserved. A good first pass: one zone per top-level folder under `src`, plus one for tests. Then merge any two zones you would never write a rule between.
+The zones say this project has seven kinds of file. The names are yours to invent and none of them are reserved. For a first pass, take one zone per top level folder inside your source directory, plus one for tests. Then merge any two zones you would never write a rule between.
 
-Order matters, because a file belongs to the **first** zone that matches it. `spec` comes first so a test inside `src/components` is a test rather than a component. `app` comes last as a catch-all for everything under `src` no earlier zone claimed.
+Order matters, because a file belongs to the **first** zone that matches it. The test zone is listed first, so a test sitting inside the components folder counts as a test rather than as a component. The catch all zone is listed last and picks up everything under the source directory that no earlier zone claimed.
 
-The boundaries say `components` may reach `hooks` and `api`, `hooks` may reach `api`, and `api` may reach nothing. A zone always reaches itself, and a zone with no rule of its own — `app`, `server`, `spec` here — is unrestricted. So you can add rules one zone at a time.
+The boundaries here say that components may reach hooks and the api, hooks may reach the api, and the api may reach nothing at all. A zone can always reach itself, so it never has to say so. And a zone with no rule of its own is unrestricted, which here means the catch all zone, the server zone and the test zone. That is what lets you add rules one zone at a time instead of all at once.
 
 ## What it will not complain about
 
-**Path aliases resolve on their own.** `import { Button } from "@/components/Button"` works if `@/*` is mapped in your `tsconfig.json`, with or without a file extension. There is nothing to configure.
+**Short import paths work on their own.** If your tsconfig.json maps a prefix to a folder, an import written with that prefix resolves, with or without a file extension. There is nothing for you to set up.
 
-**Imports of non-source files are fine.** `import "./App.css"`, `import logo from "./logo.svg"` and `import data from "./config.json"` are counted as external and never reported. Only files with a source extension are read and zoned; everything else is a leaf.
+```ts
+import { Button } from "@/components/Button";
+```
 
-If something genuinely does not resolve — a real typo, or a specifier your bundler invents — see [imports your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies).
+**Imports of things that are not code are fine.** A stylesheet, an image, a data file: each of these counts as coming from outside your source, and none of them is ever reported.
 
-If the codebase already has violations you cannot fix today, record them with [a baseline](/agents/baseline/) rather than weakening a rule.
+```ts
+import "./App.css";
+import logo from "./logo.svg";
+import data from "./config.json";
+```
+
+Only files with a source extension are read and sorted into zones. For everything else the trail simply stops there.
+
+If something genuinely fails to resolve, it is one of two things. Either a real typo, which you want to know about, or an import name that your build tool invents out of thin air. The second case is covered in [imports your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies).
+
+If that first run turns up problems you cannot fix this week, you are in very good company. Write them down with [a baseline](/agents/baseline/) and hold the line from there. Weakening a rule is the one move we would ask you not to make.
 
 ## Running it in CI
 
@@ -118,12 +136,18 @@ If the codebase already has violations you cannot fix today, record them with [a
 { "scripts": { "lint:arch": "trueup" } }
 ```
 
-Then run `npm run lint:arch` as a CI step. It exits non-zero when there is anything to fix, so no extra flags are needed.
+Then run that script as a step in your pipeline. It exits with a failure code whenever there is something to fix, so no extra flags are needed.
 
-One exit code will surprise you. Fixing a violation that was in the baseline exits `2`. The build fails until someone runs `npx trueup --update-baseline` and commits the result. Without that, the baseline slowly turns into a list of exemptions nobody dares delete. [The full table is here](/start/reports/#exit-codes).
+One exit code is likely to surprise you the first time you meet it. If you fix a violation that the baseline had recorded, the run fails with code 2. It keeps failing until somebody updates the baseline and commits the result:
+
+```sh
+npx trueup --update-baseline
+```
+
+That sounds fussy, and it is on purpose. Without it, a baseline slowly turns into a list of exemptions nobody dares to delete. [The full table of exit codes is here](/start/reports/#exit-codes).
 
 ## What to do next
 
-- [Zones](/concepts/zones/) — the one concept everything else is built on.
-- [The write-time guard](/agents/guard/), if an agent writes code in this repository. It is the only part that stops a violation instead of reporting it.
-- [Your existing linter](/integrations/linters/), so one command and one exit code cover everything.
+- [Zones](/concepts/zones/), which is the one idea everything else is built on.
+- [The write time guard](/agents/guard/), if an agent writes code in this repository. It is the only part that stops a violation instead of reporting it.
+- [Your existing linter](/integrations/linters/), so that one command and one exit code cover everything.

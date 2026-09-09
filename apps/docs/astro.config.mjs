@@ -34,8 +34,8 @@ export default defineConfig({
             { label: "The full list", link: "/checks/" },
             { label: "Sibling directories", link: "/checks/isolation/" },
             { label: "Seams", link: "/checks/seams/" },
-            { label: "Placement", link: "/checks/placement/" },
-            { label: "Written twice", link: "/checks/duplication/" },
+            { label: "Where files belong", link: "/checks/placement/" },
+            { label: "The same thing twice", link: "/checks/duplication/" },
             { label: "Rules you write", link: "/checks/custom-rules/" },
           ],
         },
@@ -43,8 +43,8 @@ export default defineConfig({
           label: "Working with an agent",
           items: [
             { label: "Blocking a bad edit", link: "/agents/guard/" },
-            { label: "Teaching it up front", link: "/agents/instructions/" },
-            { label: "Adopting on real code", link: "/agents/baseline/" },
+            { label: "Teaching the agent", link: "/agents/instructions/" },
+            { label: "Starting on existing code", link: "/agents/baseline/" },
           ],
         },
         {

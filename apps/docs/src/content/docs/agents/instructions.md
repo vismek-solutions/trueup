@@ -1,11 +1,15 @@
 ---
 title: Teaching the agent up front
-description: Give the agent the shape before it starts, rather than one refusal at a time.
+description: Give your agent the shape of the project before it starts writing.
 ---
+
+An agent that knows the shape of your project before it writes anything will break fewer rules. One command writes that briefing for you, into the file your agent already reads.
 
 ```sh
 npx trueup agent-instructions >> CLAUDE.md
 ```
+
+Here is what it appends.
 
 ```markdown
 ## Architecture
@@ -16,6 +20,7 @@ This project's structure is enforced. Zones: spec, components, hooks, api, domai
   path falls into, which zones it may and may not reach, and the vocabulary it may not name.
 - `trueup --dots` — check the whole project. Run it before calling a change done. It prints
   one character per claim and explains only what failed.
+- `trueup --next` — the first problem to fix, with its remedy. `--next=<claim>` picks the claim.
 
 Every finding is printed with an explanation of what it means and how to resolve it. Read that
 explanation before changing anything.
@@ -25,14 +30,41 @@ violation in the baseline to make a check pass defeats the check. If a rule look
 and leave it failing rather than editing it to be quiet.
 ```
 
-The zone list comes from your config, and the command name from [`command`](/reference/config/) — so the block names how *your* project runs it.
+A zone is a name you give to a group of files, chosen by where the files sit. The zone list here comes from your own config, and the command name from the [command setting](/reference/config/), so the block names the way your project runs trueup.
 
-`CLAUDE.md` is a file in your project root that Claude Code reads at the start of every session. Create it if you do not have one. For a different agent, append the same output to whatever file it reads; the block is plain markdown and names no tool.
+CLAUDE.md is a file in your project root that Claude Code reads at the start of every session. Create it if you do not have one. For a different agent, append the same output to whatever file that agent reads. The block is plain markdown and names no tool.
 
 [Blocking an edit](/agents/guard/) teaches the agent one rule at a time, at the moment it breaks it. This teaches it the shape before it starts.
 
-## Why the instruction is always the same
+## Handing an agent the whole shape
+
+The briefing above is short on purpose. Sometimes you want the opposite, which is everything actually in force, printed in full.
+
+```sh
+npx trueup activate
+```
+
+You get every zone with the number of files in it, the reach each zone has left once all the rules have been combined, and which settings are switched on. That combining is the part worth having. A zone's real reach is rarely what any single rule says, because rules narrow each other, and in a workspace the root can narrow what a package granted itself. A list of rules is something an agent has to work out. A list of reaches is something it can act on.
+
+Put it in a hook and your agent is handed all of that at the start of every session, with nobody remembering to paste anything:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [{ "type": "command", "command": "npx trueup activate" }]
+      }
+    ]
+  }
+}
+```
+
+## Why every message says the same thing
 
 An agent under pressure to make the output green has two ways to get there. One is to fix the code. The other is to widen the rule that objected.
 
-The second is faster, looks like progress, and leaves no trace that a check ever failed. So every message this tool prints says which one is meant, the guidance on every claim names the fix that would make things worse, and the rulebook itself is [protected from agent edits](/agents/guard/#the-rulebook-goes-through-you).
+The second is faster, looks like progress, and leaves no trace that a check ever failed. It is an easy road to take, and not only for an agent.
+
+So every message this tool prints says which of the two is meant. The guidance on every claim names the fix that would make things worse. And the rulebook itself is [protected from agent edits](/agents/guard/#the-rulebook-goes-through-you).
