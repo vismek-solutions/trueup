@@ -129,6 +129,13 @@ describe("the block an agent reads at the start of a session", () => {
     );
   });
 
+  it("says a bare review budget only warns, so the agent knows it will not be stopped", async () => {
+    const said = await capture(fixtureAt("explained-budget"));
+
+    expect(said).toContain("  reviewable                +90 / -40 against trunk, warns past it");
+    expect(said).not.toContain("warning from");
+  });
+
   it("names every switch a project turned on, and who may sit beside a sibling", async () => {
     expect(await capture(fixtureAt("activated-switches"))).toBe(
       [
@@ -146,6 +153,7 @@ describe("the block an agent reads at the start of a session", () => {
         "",
         "settings",
         "  files read                2",
+        "  reviewable                +600 / -400 against main, fails past it, warning from 80%",
         "  colocation                on",
         "  readerships               on",
         "  test internals            on",

@@ -22,12 +22,6 @@ export interface ReviewBudget {
   readonly except?: readonly string[] | undefined;
 }
 
-const kept = (files: readonly FileChange[], except: readonly string[] | undefined): FileChange[] => {
-  if (except === undefined || except.length === 0) return [...files];
-  const spared = picomatch([...except], { dot: true });
-  return files.filter((file) => !spared(file.file));
-};
-
 const heaviest = (files: readonly FileChange[]): string =>
   [...files]
     .sort((left, right) => right.added + right.removed - (left.added + left.removed))
@@ -41,6 +35,12 @@ const finding = (severity: Severity, message: string): Finding => ({
   file: null,
   start: null,
 });
+
+const kept = (changed: readonly FileChange[], except: readonly string[] | undefined): FileChange[] => {
+  if (except === undefined || except.length === 0) return [...changed];
+  const spared = picomatch([...except], { dot: true });
+  return changed.filter((file) => !spared(file.file));
+};
 
 const sizedIn = (budget: ReviewBudget, base: string, changed: readonly FileChange[]): Finding[] => {
   const files = kept(changed, budget.except);

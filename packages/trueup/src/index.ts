@@ -9,11 +9,20 @@ export type { Mention, MentionForm, BindingKind } from "./ports/module-record.ts
 export type { ZoneDefinition } from "./zones/model.ts";
 export type { Finding, Report, Severity } from "./report/model.ts";
 export { analyze, check, type AnalyzeOptions, type CheckOptions } from "./compose.ts";
+export {
+  inspect,
+  placementOf,
+  type InspectOptions,
+  type Placement,
+  type PlacementInput,
+} from "./compose.ts";
 export { consumersOf } from "./graph/model.ts";
 export { COMMAND_TOKEN, DEFAULT_COMMAND } from "./report/invocation.ts";
 export { EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG, EXIT_STALE_BASELINE } from "./cli/command.ts";
 export type { Baseline, BaselineEntry } from "./ports/baseline.ts";
 export type { Runner, RunnerFinding, RunnerOutcome } from "./ports/runner.ts";
+export type { ChangeSet, Changes, FileChange } from "./ports/changes.ts";
+export type { ReviewBudget } from "./claims/review/budget.ts";
 export {
   fallowRunner,
   DEFAULT_FALLOW_CATEGORIES,

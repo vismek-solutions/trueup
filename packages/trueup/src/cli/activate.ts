@@ -71,6 +71,19 @@ const limitLines = (config: ResolvedConfig, root: string): readonly string[] =>
 const counted = (value: number | undefined): string | undefined =>
   value === undefined ? undefined : String(value);
 
+type Budget = NonNullable<ResolvedConfig["reviewable"]>;
+
+const capOf = (budget: Budget): string => `+${budget.additions} / -${budget.deletions}`;
+
+const budgetSaid = (budget: Budget | undefined): string | undefined => {
+  if (budget === undefined) return undefined;
+  const band = budget.nearing === undefined ? "" : `, warning from ${budget.nearing * 100}%`;
+  const bite = budget.severity === "error" ? "fails" : "warns";
+
+  return `${capOf(budget)} against ${budget.base ?? "main"}, ${bite} past it${band}`;
+};
+
+
 const switched = (value: boolean | undefined): string | undefined => {
   if (value === undefined) return undefined;
   return value ? "on" : "off";
@@ -91,6 +104,7 @@ const settingLines = (config: ResolvedConfig, read: number): readonly string[] =
         ? undefined
         : `declarations from ${config.duplication} characters`,
     ],
+    ["reviewable", budgetSaid(config.reviewable)],
     ["colocation", switched(config.colocation)],
     ["readerships", switched(config.readerships)],
     ["test internals", switched(config.testInternals)],
