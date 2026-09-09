@@ -62,4 +62,30 @@ describe("reviewing an edit Serena has already written", () => {
     );
     expect(output).toBe("");
   });
+
+  const contextAfter = async (tool: string, input: Record<string, unknown>): Promise<string> => {
+    const { output } = await guard(afterTool(tool, input));
+    return output === "" ? "" : JSON.parse(output).hookSpecificOutput.additionalContext;
+  };
+
+  it("looks past a directory a bulk replace was scoped to, which names no file to check", async () => {
+    expect(await contextAfter("replace_in_files", { relative_path: "src/domain" })).toContain(RUNNER);
+  });
+
+  it("looks past the file a rename named, since the files it rewrote are the others", async () => {
+    const said = await contextAfter("rename_symbol", {
+      relative_path: "src/domain/thing.ts",
+      name_path: "thing",
+      new_name: "widget",
+    });
+
+    expect(said).toContain(RUNNER);
+  });
+
+  it("says the findings may pre-date a change that named no single file", async () => {
+    const said = await contextAfter("replace_in_files", { needle: "a", repl: "b", mode: "literal" });
+
+    expect(said.split("\n")[0]).toContain("may pre-date the change");
+    expect(said).not.toContain("That edit broke");
+  });
 });

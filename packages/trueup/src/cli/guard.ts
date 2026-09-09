@@ -38,6 +38,8 @@ const under = (roots: readonly string[], path: string): boolean =>
 const targetOf = (request: HookRequest): string | null =>
   request.kind === "propose" ? request.proposal.path : request.path;
 
+const spreadIn = (request: HookRequest): boolean => request.kind === "review" && request.spread;
+
 const overlayOf = (request: HookRequest): Map<string, string> =>
   request.kind === "propose" ? new Map([[request.proposal.path, request.proposal.text]]) : new Map();
 
@@ -51,8 +53,8 @@ const withReach = (decision: Decision, path: string | null, { root, config }: Si
   return { ...decision, reasons: [...decision.reasons, footer] };
 };
 
-const answerTo = (request: HookRequest, decision: Decision): string | null =>
-  request.kind === "propose" ? verdictFor(decision) : contextFor(decision);
+const answerTo = (request: HookRequest, decision: Decision, spread: boolean): string | null =>
+  request.kind === "propose" ? verdictFor(decision) : contextFor(decision, spread);
 
 const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebook): string | null => {
   if (path === null) return null;
@@ -65,7 +67,7 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
     mode: rulebook.mode,
   });
 
-  return decision.verdict === "allow" ? null : answerTo(request, decision);
+  return decision.verdict === "allow" ? null : answerTo(request, decision, false);
 };
 
 const inIgnoredDirectory = (root: string, path: string, config: ArchitectureConfig): boolean => {
@@ -116,8 +118,11 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     return 0;
   }
 
+  const spread = spreadIn(request);
+  const checked = spread ? null : target;
+
   const roots = resolveInclude(root, config.include);
-  if (!analysed({ root, config }, roots, target)) return 0;
+  if (!analysed({ root, config }, roots, checked)) return 0;
 
   const report = withCommand(
     check({
@@ -145,8 +150,8 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const recorded = readBaseline(baseline);
   const { report: effective } = applyBaseline({ report, baseline: recorded, root });
 
-  const decision = decideOnProposal({ report: effective, path: target, root });
-  const output = answerTo(request, withReach(decision, target, { root, config }));
+  const decision = decideOnProposal({ report: effective, path: checked, root });
+  const output = answerTo(request, withReach(decision, checked, { root, config }), spread);
   if (output !== null) write(output);
   return 0;
 }

@@ -5,7 +5,7 @@ export interface Proposal {
 
 export type HookRequest =
   | { readonly kind: "propose"; readonly proposal: Proposal }
-  | { readonly kind: "review"; readonly path: string | null };
+  | { readonly kind: "review"; readonly path: string | null; readonly spread: boolean };
 
 export type Verdict = "allow" | "ask" | "deny";
 

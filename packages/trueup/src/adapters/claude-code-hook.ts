@@ -5,6 +5,12 @@ import { stringOf } from "./tool-output.ts";
 
 const SERENA_REPLACE = "mcp__serena__replace_content";
 
+const EDITS_BEYOND_ITS_PATH = new Set([
+  "mcp__serena__rename_symbol",
+  "mcp__serena__safe_delete_symbol",
+  "mcp__serena__replace_in_files",
+]);
+
 interface HookPayload {
   readonly hook_event_name?: unknown;
   readonly permission_mode?: unknown;
@@ -72,7 +78,10 @@ export function requestFrom(payload: unknown, root: string): HookRequest | null 
   const { hook_event_name: event, tool_name: tool, tool_input: input } = payload as HookPayload;
   if (input === undefined || typeof tool !== "string") return null;
 
-  if (event === "PostToolUse") return { kind: "review", path: fileIn(root, input) };
+  if (event === "PostToolUse") {
+    const path = fileIn(root, input);
+    return { kind: "review", path, spread: path === null || EDITS_BEYOND_ITS_PATH.has(tool) };
+  }
 
   const proposal = proposalIn(tool, input, root);
   return proposal === null ? null : { kind: "propose", proposal };
@@ -100,17 +109,17 @@ export function verdictFor(decision: Decision): string | null {
   });
 }
 
-export function contextFor(decision: Decision): string | null {
+export function contextFor(decision: Decision, spread: boolean): string | null {
   if (decision.verdict === "allow") return null;
+
+  const headline = spread
+    ? "That change could have touched any file, so this is the whole project. Some of it may pre-date the change; repair what the change caused."
+    : "That edit broke one of the project's architecture rules. Repair it before moving on.";
 
   return JSON.stringify({
     hookSpecificOutput: {
       hookEventName: "PostToolUse",
-      additionalContext: [
-        "That edit broke one of the project's architecture rules. Repair it before moving on.",
-        "",
-        ...decision.reasons,
-      ].join("\n"),
+      additionalContext: [headline, "", ...decision.reasons].join("\n"),
     },
   });
 }

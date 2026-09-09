@@ -157,16 +157,51 @@ describe("reading a replacement proposed through Serena", () => {
 });
 
 describe("reading a payload that is not a proposal", () => {
-  it("reviews rather than proposes after the tool has already run", () => {
-    const payload = { hook_event_name: "PostToolUse", tool_name: "Write", tool_input: { file_path: PATH } };
+  const reviewing = (tool: unknown, input: Record<string, unknown>) =>
+    requestFrom({ hook_event_name: "PostToolUse", tool_name: tool, tool_input: input }, ROOT);
 
-    expect(requestFrom(payload, ROOT)).toEqual({ kind: "review", path: PATH });
+  it("reviews rather than proposes after the tool has already run", () => {
+    expect(reviewing("Write", { file_path: PATH })).toEqual({
+      kind: "review",
+      path: PATH,
+      spread: false,
+    });
   });
 
   it("reviews with no path when the tool named none", () => {
-    const payload = { hook_event_name: "PostToolUse", tool_name: "Write", tool_input: {} };
+    expect(reviewing("Write", {})).toEqual({ kind: "review", path: null, spread: true });
+  });
 
-    expect(requestFrom(payload, ROOT)).toEqual({ kind: "review", path: null });
+  it("looks past the file a rename named, since a rename rewrites every reference to it", () => {
+    expect(reviewing("mcp__serena__rename_symbol", { file_path: PATH })).toEqual({
+      kind: "review",
+      path: PATH,
+      spread: true,
+    });
+  });
+
+  it("looks past the file a symbol deletion named, for the same reason", () => {
+    expect(reviewing("mcp__serena__safe_delete_symbol", { file_path: PATH })).toEqual({
+      kind: "review",
+      path: PATH,
+      spread: true,
+    });
+  });
+
+  it("looks past the path a bulk replace named, which may be a whole directory", () => {
+    expect(reviewing("mcp__serena__replace_in_files", { relative_path: "src" })).toEqual({
+      kind: "review",
+      path: join(ROOT, "src"),
+      spread: true,
+    });
+  });
+
+  it("keeps a tool that edits only the file it named to that file", () => {
+    expect(reviewing("mcp__serena__replace_symbol_body", { file_path: PATH })).toEqual({
+      kind: "review",
+      path: PATH,
+      spread: false,
+    });
   });
 
   it("says nothing about a payload that is not an object", () => {
@@ -234,7 +269,7 @@ describe("answering the hook before the write", () => {
 
 describe("answering the hook after the write", () => {
   it("hands back context rather than a verdict, since the write already happened", () => {
-    expect(JSON.parse(contextFor(decision("deny")) ?? "")).toEqual({
+    expect(JSON.parse(contextFor(decision("deny"), false) ?? "")).toEqual({
       hookSpecificOutput: {
         hookEventName: "PostToolUse",
         additionalContext:
@@ -243,7 +278,24 @@ describe("answering the hook after the write", () => {
     });
   });
 
+  it("says the findings may pre-date a change that could have touched any file", () => {
+    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput
+      .additionalContext;
+
+    expect(said.split("\n")[0]).toBe(
+      "That change could have touched any file, so this is the whole project. Some of it may pre-date the change; repair what the change caused.",
+    );
+  });
+
+  it("does not blame the change for findings it cannot have caused", () => {
+    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput
+      .additionalContext;
+
+    expect(said).not.toContain("That edit broke");
+  });
+
   it("stays silent on an allowance", () => {
-    expect(contextFor(decision("allow"))).toBeNull();
+    expect(contextFor(decision("allow"), false)).toBeNull();
+    expect(contextFor(decision("allow"), true)).toBeNull();
   });
 });

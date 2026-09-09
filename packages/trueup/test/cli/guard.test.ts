@@ -207,6 +207,20 @@ describe("refusing to let the rules be edited", () => {
     expect(result.permissionDecision).toBeUndefined();
     expect(result.additionalContext).toContain(CLAIM);
   });
+
+  it("blames the edit itself, since a protected file is the one the tool named", async () => {
+    const { output } = await guard({
+      hook_event_name: "PostToolUse",
+      tool_name: "mcp__serena__rename_symbol",
+      tool_input: { relative_path: "trueup.config.ts", name_path: "zones", new_name: "areas" },
+    });
+    const said: string = JSON.parse(output).hookSpecificOutput.additionalContext;
+
+    expect(said.split("\n")[0]).toBe(
+      "That edit broke one of the project's architecture rules. Repair it before moving on.",
+    );
+    expect(said).toContain(CLAIM);
+  });
 });
 
 describe("a hook it has no rulebook to answer with", () => {
