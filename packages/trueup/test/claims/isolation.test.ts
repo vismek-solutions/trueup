@@ -248,9 +248,22 @@ describe("a file sitting beside a group rather than in one", () => {
     const report = runWith({ siblings: "src/routes/*", wiring: [] });
 
     expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/.rc.ts"),
       join(ROOT, "src/routes/index.ts"),
       join(ROOT, "src/routes/root-util.ts"),
     ]);
+  });
+
+  it("reads a dot-named file sitting there like any other, rather than overlooking it", () => {
+    const report = runWith({ siblings: "src/routes/*", wiring: ["**/index.ts"] });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toContain(
+      join(ROOT, "src/routes/.rc.ts"),
+    );
+  });
+
+  it("lets a wildcard in `wiring` cover that file too, as the same wildcard covers the rest", () => {
+    expect(findingsIn(runWith({ siblings: "src/routes/*", wiring: ["**/*.ts"] }), LOOSE)).toEqual([]);
   });
 
   it("names the pattern whose parent it is sitting in, so the reader knows which rule spoke", () => {
@@ -263,6 +276,7 @@ describe("a file sitting beside a group rather than in one", () => {
     const report = runWith({ siblings: "src/routes/*", wiring: ["**/index.ts"] });
 
     expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/.rc.ts"),
       join(ROOT, "src/routes/root-util.ts"),
     ]);
   });
@@ -338,6 +352,26 @@ describe("a file sitting beside a group rather than in one", () => {
 
     expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
       join(fixtureAt("member-isolate"), "apps/web/src/routes/stray.ts"),
+    ]);
+  });
+
+  it("reads each parent against the groups under it, not against every group the rule matched", () => {
+    const report = check({
+      root: fixtureAt("many-routes"),
+      zones: [{ name: "apps", patterns: ["apps/**"] }],
+      isolate: [{ siblings: "apps/*/src/routes/*", wiring: [] }],
+    });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(fixtureAt("many-routes"), "apps/web/src/routes/index.ts"),
+    ]);
+  });
+
+  it("reads only the group that said which files may sit beside it, where another stays silent", () => {
+    const report = runWith({ siblings: "src/routes/c/*", wiring: [] }, { siblings: "src/routes/*" });
+
+    expect(findingsIn(report, LOOSE).map((finding) => finding.file)).toEqual([
+      join(ROOT, "src/routes/c/loose.ts"),
     ]);
   });
 
