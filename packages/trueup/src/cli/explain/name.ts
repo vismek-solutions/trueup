@@ -26,6 +26,16 @@ const readerLines = (readers: About["readers"]): string[] =>
         meeting(readers.directories),
       ];
 
+const cutLines = (cut: About["cut"]): string[] => [
+  `cut cost    ${priced(cut)}`,
+  `travels     ${list(cut.travels)}`,
+  `promote     ${list(cut.promote)}`,
+  cut.promote.length === 0
+    ? "            nothing that stays reads what it reaches, so no one else has to agree"
+    : "            something that stays reads these, so cutting means promoting them first",
+  `follows     ${list(cut.follows)}`,
+];
+
 export interface NameLinesInput {
   readonly about: ReturnType<typeof nameIn>;
   readonly against: readonly string[];
@@ -43,13 +53,9 @@ export const nameLines = ({ about, against }: NameLinesInput): string[] => {
     "",
     ...readerLines(readers),
     "",
-    `cut cost    ${priced(cut)}`,
-    `travels     ${list(cut.travels)}`,
-    `promote     ${list(cut.promote)}`,
-    ...(cut.promote.length === 0
-      ? []
-      : ["            something that stays reads these, so cutting means promoting them first"]),
-    `follows     ${list(cut.follows)}`,
+    ...(declared
+      ? cutLines(cut)
+      : ["cut cost    not priced here, since what would move is declared in another file"]),
     "",
     `claims      ${against.length === 0 ? "none stand against this name" : `${against.length}`}`,
     ...against.map((said) => `    ${said}`),

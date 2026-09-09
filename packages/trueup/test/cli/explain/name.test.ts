@@ -88,6 +88,12 @@ describe("pricing what one export would cost to move", () => {
     expect(said).not.toContain("cutting means promoting them first");
   });
 
+  it("says a bare promote count means nobody else has to agree, not that the move is free", async () => {
+    expect(await cutting("lib.ts#bounce")).toContain(
+      "nothing that stays reads what it reaches, so no one else has to agree",
+    );
+  });
+
   it("walks a cycle between two helpers once rather than forever", async () => {
     expect(await cutting("lib.ts#bounce")).toContain("travels     ping · pong");
   });
@@ -99,13 +105,13 @@ describe("pricing what one export would cost to move", () => {
     expect(said).toContain("follows     ../tools/three.js");
   });
 
-  it("says a re-exported name is declared elsewhere rather than pricing a cut it cannot see", async () => {
+  it("refuses to price a re-export rather than reporting zeroes that would read as free", async () => {
     const said = await cutting("barrel.ts#label");
 
     expect(said).toContain("label  (exported here, declared elsewhere)");
-    expect(said).toContain("travels     none");
-    expect(said).toContain("promote     none");
-    expect(said).toContain("follows     none");
+    expect(said).toContain("cut cost    not priced here, since what would move is declared in another file");
+    expect(said).not.toContain("travels");
+    expect(said).not.toContain("promote");
   });
 });
 
