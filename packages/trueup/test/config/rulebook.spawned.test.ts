@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 
 const SPLIT = fixtureAt("split-rulebook");
+const TYPELESS = fixtureAt("typeless-package");
 const BIN = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "bin", "trueup.js");
 
 // vitest resolves `./x.js` to `./x.ts` itself, so only a real node process can tell whether the
@@ -25,5 +26,15 @@ describe("a rulebook split across files, read by node rather than by the test ru
 
   it("runs those rules rather than loading the sibling and dropping them", () => {
     expect(underNode(SPLIT).status).toBe(0);
+  });
+});
+
+describe("a rulebook in a package that declares no module type", () => {
+  it("reads it without node warning the project about how it had to be parsed", () => {
+    expect(underNode(TYPELESS).said).not.toContain("MODULE_TYPELESS_PACKAGE_JSON");
+  });
+
+  it("still reads the rulebook, rather than buying quiet by refusing it", () => {
+    expect(underNode(TYPELESS).status).toBe(0);
   });
 });

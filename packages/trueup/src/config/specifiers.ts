@@ -15,6 +15,17 @@ const sourceFor = (specifier: string): string | null => {
   return `${specifier.slice(0, -emitted.length)}${AS_EMITTED[emitted]}`;
 };
 
+const typed = (resolved: unknown): unknown => {
+  if (process.features.typescript === false) return resolved;
+  if (typeof resolved !== "object" || resolved === null) return resolved;
+
+  const { url, format } = resolved as { url?: unknown; format?: unknown };
+  if (format !== null && format !== undefined) return resolved;
+  if (typeof url !== "string" || !url.endsWith(".ts")) return resolved;
+
+  return { ...resolved, format: "module-typescript" };
+};
+
 const attempt = (specifier: string, context: unknown, next: Resolve): unknown => {
   try {
     return next(specifier, context);
@@ -32,13 +43,13 @@ export const allowEmittedSpecifiers = (): void => {
   registerHooks({
     resolve: (specifier, context, next) => {
       const direct = attempt(specifier, context, next as Resolve);
-      if (direct !== null) return direct as ReturnType<typeof next>;
+      if (direct !== null) return typed(direct) as ReturnType<typeof next>;
 
       const source = sourceFor(specifier);
       const found = source === null ? null : attempt(source, context, next as Resolve);
-      if (found !== null) return found as ReturnType<typeof next>;
+      if (found !== null) return typed(found) as ReturnType<typeof next>;
 
-      return next(specifier, context);
+      return typed(next(specifier, context)) as ReturnType<typeof next>;
     },
   });
 };
