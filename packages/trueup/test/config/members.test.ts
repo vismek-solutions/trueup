@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { runGuard } from "../../src/cli/guard.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
+import { memberDirectories } from "../../src/config/members.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
@@ -55,6 +56,19 @@ describe("a root that names members", () => {
 
   it("leaves the rulebooks themselves out of the analysis", async () => {
     expect(messagesIn(await reportOf(), "every-file-belongs-to-a-zone")).toEqual([]);
+  });
+});
+
+describe("finding the directories a members pattern names", () => {
+  const under = (patterns: readonly string[]): readonly string[] =>
+    memberDirectories(ROOT, patterns).map((directory) => directory.slice(ROOT.length + 1));
+
+  it("takes one directory per pattern match, from wherever in the tree they sit", () => {
+    expect(under(["packages/*", "apps/*"])).toEqual(["apps/docs", "packages/lib", "packages/ui"]);
+  });
+
+  it("looks no deeper than the patterns reach, so a directory inside a member is never one", () => {
+    expect(under(["packages/**"])).toEqual(["packages", "packages/lib", "packages/ui"]);
   });
 });
 
