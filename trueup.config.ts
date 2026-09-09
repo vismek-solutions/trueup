@@ -11,7 +11,7 @@ export default defineConfig({
   zones: [{ name: "docs", patterns: ["apps/docs/**"] }],
   boundaries: [{ from: "docs", allow: [] }],
   externals: ["astro:*"],
-  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro"],
+  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro", ".stryker-tmp"],
   command: "node ./packages/trueup/bin/trueup.js",
   maxFilesPerDirectory: 12,
   duplication: 60,
