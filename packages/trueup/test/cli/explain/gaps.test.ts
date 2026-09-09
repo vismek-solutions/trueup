@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EXIT_BAD_USAGE } from "../../../src/cli/command.ts";
 import { EXPLAINED, explainIn, saidBy, UNRULED } from "../../support/explain.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
 
 const gaps = (cwd: string) => saidBy(cwd, "--ungoverned");
 
@@ -85,15 +86,23 @@ describe("finding the boundaries nobody wrote", () => {
     ]);
   });
 
-  it("still finds ungoverned zones in a project where every claim holds", async () => {
-    const said = await gaps(EXPLAINED);
-
-    expect(said).toContain("ungoverned  none");
-    expect(said.split("\n")).toContain("    domain");
-  });
-
-  it("says so plainly rather than printing an empty column when a section is bare", async () => {
-    expect(await gaps(EXPLAINED)).toContain("allowed     none");
+  it("says the whole block for a project where every claim holds, spacing and all", async () => {
+    expect(await gaps(EXPLAINED)).toBe(
+      [
+        "Every pair below carries traffic that no boundary rule refuses, so none of it is a violation.",
+        "A heavy pair is either the architecture nobody wrote down or a hole nobody noticed, and only",
+        "reading it tells you which. Counted by the zone that declares the symbol, not the module named.",
+        "",
+        "ungoverned  none",
+        "",
+        "allowed     none",
+        "",
+        "silent      named by no boundary rule, so they may reach anything",
+        "    domain",
+        "    shared",
+        "",
+      ].join("\n"),
+    );
   });
 
   it("reports a clean run, since a missing boundary is a question and not a failure", async () => {
@@ -112,5 +121,43 @@ describe("finding the boundaries nobody wrote", () => {
 
     expect(code).toBe(EXIT_BAD_USAGE);
     expect(output).toContain("unrecognised: --verbose");
+  });
+});
+
+const pairsIn = (said: string): string[] => {
+  const lines = said.split("\n");
+  const from = lines.findIndex((line) => line.startsWith("ungoverned "));
+  return lines.slice(from + 1, lines.indexOf("", from));
+};
+
+describe("more pairs than the block will print", () => {
+  const wide = () => gaps(fixtureAt("ungoverned-wide"));
+
+  it("shows the first twenty in order and counts the rest, so the block stays readable", async () => {
+    const pairs = pairsIn(await wide());
+
+    expect(pairs[0]).toBe("    a → c  1");
+    expect(pairs[19]).toBe("    e → d  1");
+    expect(pairs[20]).toBe("    and 4 more");
+  });
+
+  it("counts only what it withheld, not the whole list over again", async () => {
+    expect(pairsIn(await wide())).toHaveLength(21);
+  });
+
+  it("says none for a project where every zone is named by some rule", async () => {
+    expect(await wide()).toContain("silent      none");
+  });
+});
+
+describe("exactly as many pairs as the block will print", () => {
+  const brim = () => gaps(fixtureAt("ungoverned-brim"));
+
+  it("shows all of them, with nothing counted after", async () => {
+    expect(pairsIn(await brim())).toHaveLength(20);
+  });
+
+  it("says nothing about more, since there are none", async () => {
+    expect(await brim()).not.toContain("more");
   });
 });

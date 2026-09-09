@@ -143,10 +143,6 @@ describe("what already stands against one export", () => {
     expect((await standing("lib/one.ts#label")).join()).not.toContain("declares badge");
   });
 
-  it("counts what it gathered, so a list that grew silently would show", async () => {
-    expect(await saidBy(CLAIMED, "lib/one.ts#label")).toContain("claims      2");
-  });
-
   it("says the delegated tools were not consulted, rather than implying it gathered everything", async () => {
     expect(await about("src/tools/three.ts#hammer")).toContain("delegated tools are not consulted");
   });
@@ -166,11 +162,30 @@ describe("what already stands against one export", () => {
     expect(output).toBe("no trueup.config.ts found\n");
   });
 
-  it("leads with the file and the name, written relative to the project, then a blank line", async () => {
-    expect((await saidBy(CLAIMED, "lib/one.ts#label")).split("\n").slice(0, 3)).toEqual([
-      "lib/one.ts#label",
-      "",
-      "label",
-    ]);
+  it("says the whole block for a name, spacing and all", async () => {
+    expect(await saidBy(CLAIMED, "lib/one.ts#label")).toBe(
+      [
+        "lib/one.ts#label",
+        "",
+        "label",
+        "",
+        "read by     app/reader.ts",
+        "            zones: app",
+        "            directories: app",
+        "            every reader sits in one directory",
+        "",
+        "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow",
+        "travels     none",
+        "promote     none",
+        "            nothing that stays reads what it reaches, so no one else has to agree",
+        "follows     none",
+        "",
+        "claims      2",
+        "    every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",
+        "    no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
+        "            delegated tools are not consulted here; run the check itself for those",
+        "",
+      ].join("\n"),
+    );
   });
 });
