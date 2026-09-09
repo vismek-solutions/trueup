@@ -129,6 +129,14 @@ describe("pricing what one export would cost to move", () => {
     expect(await cutting("lib.ts#seed")).not.toContain("import back none");
   });
 
+  it("leaves out an import the declaration only sits above, rather than one it reaches", async () => {
+    expect(await cutting("lib.ts#seed")).toContain("follows     none");
+  });
+
+  it("leaves out an import a declaration names in a string, which imports nothing", async () => {
+    expect(await cutting("lib.ts#seed")).not.toContain("node:os");
+  });
+
   it("says nothing needs it back when what stays never reads it", async () => {
     const said = await cutting("lib.ts#bounce");
 

@@ -1,3 +1,4 @@
+import { EOL } from "node:os";
 import { sep } from "node:path";
 
 const trim = (value: string): string => value.trim();
@@ -18,9 +19,9 @@ export const other = (value: string): string => shared(value);
 
 export const bounce = (steps: number): number => ping(steps);
 
-export const seed = "[seed]";
+export const seed = "EOL";
 
-const decorate = (value: string): string => `${seed}${value}`;
+const decorate = (value: string): string => `${seed}${value}${EOL}`;
 
 export const grown = (value: string): string => decorate(value);
 
