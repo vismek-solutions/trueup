@@ -8,6 +8,7 @@ export interface Finding {
   readonly file: string | null;
   readonly start: number | null;
   readonly group?: string | undefined;
+  readonly accepted?: boolean | undefined;
 }
 
 export interface ClaimResult {

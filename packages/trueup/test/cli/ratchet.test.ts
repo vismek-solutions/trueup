@@ -180,6 +180,26 @@ describe("adopting the ratchet from the command line", () => {
     expect(output).toContain("may not reach domain");
   });
 
+  it("offers a violation the baseline accepted, so the backlog needs no reading of the file", async () => {
+    await runIn(["--update-baseline"]);
+    const { output } = await runIn(["--next"]);
+
+    expect(output).toContain("nothing failing");
+    expect(output).toContain("baseline  1 of 1 accepted");
+    expect(output).toContain("may not reach domain");
+    expect(output).toContain("--update-baseline` to drop its entry");
+  });
+
+  it("keeps that a clean exit, since an accepted violation is not a failure", async () => {
+    await runIn(["--update-baseline"]);
+
+    expect((await runIn(["--next"])).code).toBe(EXIT_CLEAN);
+  });
+
+  it("offers the live error while there is no baseline holding it", async () => {
+    expect((await runIn(["--next"])).output).toContain("problem 1 of");
+  });
+
   it("exits apart from both clean and failing when an entry has gone stale", async () => {
     await runIn(["--update-baseline"]);
     const accepted = readBaseline(BASELINE);

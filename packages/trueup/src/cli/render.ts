@@ -1,4 +1,5 @@
 import { relative } from "node:path";
+import { DEFAULT_COMMAND } from "../report/invocation.ts";
 import type { Finding, Report } from "../report/model.ts";
 import { locator, type Locate } from "./position.ts";
 
@@ -111,11 +112,11 @@ interface Problem {
 const keyOf = (claim: string, finding: Finding): string =>
   `${claim}\0${finding.group ?? `${finding.file ?? ""}\0${finding.start ?? ""}\0${finding.message}`}`;
 
-const problemsIn = (report: Report): Problem[] => {
+const problemsIn = (report: Report, keep: (finding: Finding) => boolean): Problem[] => {
   const byKey = new Map<string, Problem>();
 
   for (const claim of report.claims) {
-    for (const finding of claim.findings.filter((entry) => entry.severity === "error")) {
+    for (const finding of claim.findings.filter(keep)) {
       const key = keyOf(claim.claim, finding);
       const found = byKey.get(key);
       if (found === undefined) byKey.set(key, { claim, findings: [finding] });
@@ -131,9 +132,29 @@ const scopeOf = (only: string | undefined): string => (only === undefined ? "" :
 export interface NextInput {
   readonly ratchet?: RatchetSummary | undefined;
   readonly only?: string | undefined;
+  readonly command?: string | undefined;
 }
 
-export function renderNext(report: Report, root: string, { ratchet, only }: NextInput = {}): string {
+const failing = (finding: Finding): boolean => finding.severity === "error";
+
+const accepted = (finding: Finding): boolean => finding.accepted === true;
+
+interface BlockInput {
+  readonly root: string;
+  readonly tally: string;
+  readonly after?: readonly string[] | undefined;
+}
+
+const blockFor = (problem: Problem, { root, tally, after = [] }: BlockInput): string[] => [
+  "",
+  `${problem.claim.claim}  ${tally}`,
+  ...listed(problem.findings, root, locator()),
+  ...wrap(problem.claim.guidance, 96).map((line) => `    ${line}`),
+  ...after,
+];
+
+export function renderNext(report: Report, root: string, options: NextInput = {}): string {
+  const { ratchet, only, command = DEFAULT_COMMAND } = options;
   const claims = only === undefined ? report.claims : report.claims.filter((c) => c.claim.includes(only));
   const tally = tallyLine(report);
 
@@ -145,24 +166,36 @@ export function renderNext(report: Report, root: string, { ratchet, only }: Next
     ].join("\n");
   }
 
-  const problems = problemsIn({ ...report, claims });
+  const scoped = { ...report, claims };
+  const problems = problemsIn(scoped, failing);
   const first = problems[0];
 
-  if (first === undefined) {
+  if (first !== undefined) {
     return [
-      `nothing left to fix${scopeOf(only)} · ${tally}`,
-      ...(ratchet === undefined || ratchet.stale === 0 ? [] : [`baseline  ${ratchet.stale} stale`]),
+      `problem 1 of ${problems.length}${scopeOf(only)} · ${tally}`,
+      ...blockFor(first, { root, tally: plural(first.findings.length, "error") }),
     ].join("\n");
   }
 
-  const shown = listed(first.findings, root, locator());
+  const debts = problemsIn(scoped, accepted);
+  const owed = debts[0];
+  const stale = ratchet === undefined || ratchet.stale === 0 ? [] : [`${ratchet.stale} stale`];
+
+  if (owed === undefined) {
+    return [
+      `nothing left to fix${scopeOf(only)} · ${tally}`,
+      ...stale.map((line) => `baseline  ${line}`),
+    ].join("\n");
+  }
 
   return [
-    `problem 1 of ${problems.length}${scopeOf(only)} · ${tally}`,
-    "",
-    `${first.claim.claim}  ${plural(first.findings.length, "error")}`,
-    ...shown,
-    ...wrap(first.claim.guidance, 96).map((line) => `    ${line}`),
+    `nothing failing${scopeOf(only)} · ${tally}`,
+    `baseline  1 of ${debts.length} accepted${stale.map((line) => ` · ${line}`).join("")}`,
+    ...blockFor(owed, {
+      root,
+      tally: `${owed.findings.length} accepted`,
+      after: [`    Fixing this one also needs \`${command} --update-baseline\` to drop its entry.`],
+    }),
   ].join("\n");
 }
 

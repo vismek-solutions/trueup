@@ -53,7 +53,7 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
         if (!known.has(key)) return finding;
         matched.add(key);
         downgraded += 1;
-        return { ...finding, severity: "warning" as const };
+        return { ...finding, severity: "warning" as const, accepted: true };
       }),
     };
   });

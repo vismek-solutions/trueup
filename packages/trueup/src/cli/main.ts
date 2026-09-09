@@ -35,13 +35,13 @@ const claimFilterIn = (argv: readonly string[]): string | undefined => {
   return named === "" ? undefined : named;
 };
 
-const presenterFor = (argv: readonly string[], rulebook: string): Present => {
+const presenterFor = (argv: readonly string[], rulebook: string, command: string): Present => {
   if (argv.includes("--json")) return (report) => JSON.stringify(report, null, 2);
   if (argv.includes("--gitlab")) return (report, root) => renderGitlab(report, root, rulebook);
 
   const only = claimFilterIn(argv);
   if (argv.includes("--next") || argv.some((entry) => entry.startsWith("--next="))) {
-    return (report, root, ratchet) => renderNext(report, root, { ratchet, only });
+    return (report, root, ratchet) => renderNext(report, root, { ratchet, only, command });
   }
   return argv.includes("--dots") ? renderDots : render;
 };
@@ -73,11 +73,12 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     return EXIT_NO_CONFIG;
   }
 
-  const present = presenterFor(argv, path);
   const loaded = await rulebookAt(path, write);
   if (loaded === null) return EXIT_BAD_RULEBOOK;
 
   const { config, root, memberConfigs } = loaded;
+  const command = config.command ?? DEFAULT_COMMAND;
+  const present = presenterFor(argv, path, command);
   const rulebooks = [path, ...memberConfigs];
   const report = check({
     root,
@@ -102,7 +103,6 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     ignoreFiles: rulebooks,
   });
 
-  const command = config.command ?? DEFAULT_COMMAND;
   const baselinePath = baselinePathIn(root);
   const noticed = rulebookGuarded(config.protect)
     ? report
