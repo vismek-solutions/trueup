@@ -1,4 +1,5 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { copyOfFixture, discard, fixtureAt } from "../support/fixtures.ts";
@@ -49,6 +50,29 @@ describe("guarding a proposed write", () => {
     expect(reason).toContain("every-import-respects-its-zone-boundary  src/engine/added.ts");
     expect(reason.split("src/engine/added.ts").length - 1).toBe(1);
     expect(reason).not.toContain(PROJECT);
+  });
+
+  it("says nothing about reach when the refused path falls in no zone", async () => {
+    const { output } = await guard(writing(join(PROJECT, "src/loose.ts"), "export const loose = 1;\n"));
+    const reason = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+
+    expect(reason).toContain("matches no zone");
+    expect(reason).not.toContain("may reach");
+  });
+
+  it("names the command the project is run by inside the guidance it hands back", async () => {
+    const { output } = await guard(writing(join(PROJECT, "src/loose.ts"), "export const loose = 1;\n"));
+    const reason = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+
+    expect(reason).toContain("`trueup explain <file>`");
+  });
+
+  it("separates the zones a refused file may reach rather than running them together", async () => {
+    const gap = 'import { nope } from "./nowhere.js";\n\nexport const gap = nope;\n';
+    const { output } = await guard(writing(join(PROJECT, "src/domain/gap.ts"), gap));
+    const reason = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+
+    expect(reason).toContain("domain may reach engine · domain");
   });
 
   it("says what the file may reach, so the next attempt is not a guess", async () => {
@@ -182,6 +206,33 @@ describe("refusing to let the rules be edited", () => {
     expect(result.hookEventName).toBe("PostToolUse");
     expect(result.permissionDecision).toBeUndefined();
     expect(result.additionalContext).toContain(CLAIM);
+  });
+});
+
+describe("a hook it has no rulebook to answer with", () => {
+  it("stays out of the way when nothing above the file declares any rules", async () => {
+    const empty = mkdtempSync(join(tmpdir(), "trueup-guard-"));
+
+    try {
+      const { code, output } = await guardFor(empty)(
+        writing(join(empty, "src/x.ts"), "export const x = 1;\n"),
+      );
+
+      expect(code).toBe(0);
+      expect(output).toBe("");
+    } finally {
+      rmSync(empty, { recursive: true });
+    }
+  });
+
+  it("says the rulebook would not load rather than judging the edit against nothing", async () => {
+    const broken = fixtureAt("broken-rulebook");
+    const { code, output } = await guardFor(broken)(
+      writing(join(broken, "src/x.ts"), "export const x = 1;\n"),
+    );
+
+    expect(code).toBe(0);
+    expect(output).toContain("could not be read");
   });
 });
 

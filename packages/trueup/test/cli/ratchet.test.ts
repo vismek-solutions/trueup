@@ -134,13 +134,47 @@ describe("a baseline", () => {
 
   it("records each distinct violation once and in a stable order", () => {
     const many = reportOf([
-      { claim: "b-claim", guidance: "", findings: [violation("second", 1), violation("second", 2)] },
-      { claim: "a-claim", guidance: "", findings: [violation("first", 3)] },
+      { claim: "c-claim", guidance: "", findings: [violation("third", 1)] },
+      { claim: "a-claim", guidance: "", findings: [violation("first", 2), violation("first", 3)] },
+      { claim: "b-claim", guidance: "", findings: [violation("second", 4)] },
     ]);
 
     expect(baselineOf(many, ROOT).entries.map((entry) => `${entry.claim} ${entry.message}`)).toEqual([
       "a-claim first",
       "b-claim second",
+      "c-claim third",
+    ]);
+  });
+
+  it("keeps one message reported in two files as two entries, ordered by the file", () => {
+    const shared = reportOf([
+      {
+        claim: "a-claim",
+        guidance: "",
+        findings: [
+          { severity: "error", message: "same words", file: join(ROOT, "src/two.ts"), start: 1 },
+          { severity: "error", message: "same words", file: join(ROOT, "src/one.ts"), start: 1 },
+        ],
+      },
+    ]);
+
+    expect(baselineOf(shared, ROOT).entries.map((entry) => entry.file)).toEqual([
+      "src/one.ts",
+      "src/two.ts",
+    ]);
+  });
+
+  it("records a finding that names no file, since a claim about the run itself can be accepted", () => {
+    const nowhere = reportOf([
+      {
+        claim: "a-claim",
+        guidance: "",
+        findings: [{ severity: "error", message: "no file at all", file: null, start: null }],
+      },
+    ]);
+
+    expect(baselineOf(nowhere, ROOT).entries).toEqual([
+      { claim: "a-claim", file: null, message: "no file at all" },
     ]);
   });
 });
