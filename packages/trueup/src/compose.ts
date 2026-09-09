@@ -17,6 +17,7 @@ import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
 import { seamClaim, seamZoneReferences } from "./claims/seam.ts";
+import { ungovernedFlows } from "./claims/ungoverned.ts";
 import { zoneReferencesExistClaim } from "./claims/zone-references.ts";
 import type { Settings } from "./config/model.ts";
 import { buildSymbolGraph } from "./graph/build.ts";
@@ -25,6 +26,7 @@ import { buildLexicon } from "./lexicon/build.ts";
 import type { ModuleRecord, ParseModule } from "./ports/module-record.ts";
 import { buildProject } from "./project/build.ts";
 import type { Project } from "./project/model.ts";
+import type { Ungoverned } from "./report/flows.ts";
 import { withoutDuplicates, type Report } from "./report/model.ts";
 import { assignZones } from "./zones/assign.ts";
 import type { ZoneDefinition, ZoneRole } from "./zones/model.ts";
@@ -89,6 +91,9 @@ const analyseProject = ({
 };
 
 export const inspect = (options: InspectOptions): Project => analyseProject(options).project;
+
+export const ungovernedIn = (project: Project, boundaries: readonly BoundaryRule[]): Ungoverned =>
+  ungovernedFlows(project, boundaries);
 
 export interface PlacementInput {
   readonly root: string;

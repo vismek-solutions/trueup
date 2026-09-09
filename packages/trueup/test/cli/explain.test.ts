@@ -2,15 +2,23 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { EXIT_BAD_USAGE } from "../../src/cli/command.ts";
-import { runExplain } from "../../src/cli/explain.ts";
+import { runExplain } from "../../src/cli/explain/run.ts";
 
 const PROJECT = fixtureAt("explained");
+const UNRULED = fixtureAt("ungoverned");
 
-const explain = async (...argv: string[]): Promise<{ code: number; output: string }> => {
+const explainIn = async (
+  cwd: string,
+  argv: readonly string[],
+): Promise<{ code: number; output: string }> => {
   let output = "";
-  const code = await runExplain({ cwd: PROJECT, argv, write: (line) => (output += `${line}\n`) });
+  const code = await runExplain({ cwd, argv: [...argv], write: (line) => (output += `${line}\n`) });
   return { code, output };
 };
+
+const explain = (...argv: string[]) => explainIn(PROJECT, argv);
+
+const gaps = async (cwd: string): Promise<string> => (await explainIn(cwd, ["--ungoverned"])).output;
 
 describe("explaining a path before writing it", () => {
   it("names the zone a file that does not exist yet would fall into", async () => {
@@ -185,5 +193,59 @@ describe("a project that configured no rules of its own", () => {
 
     expect(output).toContain("zone        engine");
     expect(output).not.toContain("also runs");
+  });
+});
+
+describe("finding the boundaries nobody wrote", () => {
+  it("ranks the pairs no rule speaks about, heaviest first", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+    const from = said.indexOf("ungoverned  no rule speaks about these pairs");
+
+    expect(said.slice(from + 1, from + 3)).toEqual(["    core → tools  2", "    loose → core  1"]);
+  });
+
+  it("leaves out a pair a rule already refuses, since that is a violation and not a gap", async () => {
+    expect(await gaps(UNRULED)).not.toContain("web → tools");
+  });
+
+  it("keeps a pair some rule permits apart from one nothing governs", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+    const from = said.indexOf("allowed     a rule permits these, so someone decided");
+
+    expect(said[from + 1]).toBe("    web → core    1");
+  });
+
+  it("counts a pair as ungoverned when the rule naming that zone judges only other zones", async () => {
+    const said = (await gaps(UNRULED)).split("\n");
+    const governed = said.indexOf("allowed     a rule permits these, so someone decided");
+
+    expect(said.slice(0, governed)).toContain("    loose → core  1");
+  });
+
+  it("names a zone no boundary rule mentions, even where nothing flows out of it", async () => {
+    expect(await gaps(UNRULED)).toContain("silent      named by no boundary rule");
+    expect((await gaps(UNRULED)).split("\n")).toContain("    tools");
+  });
+
+  it("still finds ungoverned zones in a project where every claim holds", async () => {
+    const said = await gaps(PROJECT);
+
+    expect(said).toContain("ungoverned  none");
+    expect(said.split("\n")).toContain("    domain");
+  });
+
+  it("says so plainly rather than printing an empty column when a section is bare", async () => {
+    expect(await gaps(PROJECT)).toContain("allowed     none");
+  });
+
+  it("reports a clean run, since a missing boundary is a question and not a failure", async () => {
+    expect((await explainIn(UNRULED, ["--ungoverned"])).code).toBe(0);
+  });
+
+  it("still refuses a flag it does not know when asked for the gaps", async () => {
+    const { code, output } = await explainIn(UNRULED, ["--ungoverned", "--verbose"]);
+
+    expect(code).toBe(EXIT_BAD_USAGE);
+    expect(output).toContain("unrecognised: --verbose");
   });
 });

@@ -1,9 +1,12 @@
 import { isAbsolute, relative, resolve } from "node:path";
-import { placementOf } from "../compose.ts";
-import { DEFAULT_COMMAND } from "../report/invocation.ts";
+import { placementOf, ungovernedIn } from "../../compose.ts";
+import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
-import { EXIT_BAD_USAGE, type CommandInput } from "./command.ts";
-import { openedIn } from "./preamble.ts";
+import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
+import { openedIn } from "../preamble.ts";
+import { ungovernedLines } from "./ungoverned.ts";
+
+const UNGOVERNED = "--ungoverned";
 
 const SAMPLE = 6;
 
@@ -15,13 +18,24 @@ const sampleOf = (values: Iterable<string>): string => {
   return sorted.length > SAMPLE ? `${shown} · and ${sorted.length - SAMPLE} more` : shown;
 };
 
+const ungovernedFor = async (cwd: string, write: (line: string) => void): Promise<number> => {
+  const opened = await openedIn(cwd, write);
+  if (typeof opened === "number") return opened;
+
+  const { config, project } = opened;
+  for (const line of ungovernedLines(ungovernedIn(project, config.boundaries ?? []))) write(line);
+  return 0;
+};
+
 export async function runExplain({ cwd, argv, write }: CommandInput): Promise<number> {
-  const flags = argv.filter((entry) => entry.startsWith("-"));
+  const flags = argv.filter((entry) => entry.startsWith("-") && entry !== UNGOVERNED);
   if (flags.length > 0) {
     write(`unrecognised: ${flags.join(" ")}`);
     write(`usage: ${DEFAULT_COMMAND} explain <path>`);
     return EXIT_BAD_USAGE;
   }
+
+  if (argv.includes(UNGOVERNED)) return ungovernedFor(cwd, write);
 
   const target = argv[0];
   if (target === undefined) {

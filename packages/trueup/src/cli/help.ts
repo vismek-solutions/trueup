@@ -14,12 +14,13 @@ const OPTIONS: readonly (readonly [string, string])[] = [
 const COMMANDS: readonly (readonly [string, string])[] = [
   ["init", "write a rulebook for this project by reading its shape"],
   ["explain <path>", "the zone a path falls in, what it may reach, and what it may not name"],
+  ["explain --ungoverned", "zone pairs with traffic that no boundary rule refuses, heaviest first"],
   ["activate", "every zone, boundary and setting in force, for an agent's context"],
   ["guard", "rule on a proposed edit, reading a hook payload from stdin"],
   ["agent-instructions", "a short block to paste into an agent's memory file"],
 ];
 
-const WIDTH = 20;
+const WIDTH = 22;
 
 const listed = (entries: readonly (readonly [string, string])[]): readonly string[] =>
   entries.map(([name, said]) => `  ${name.padEnd(WIDTH)}${said}`);

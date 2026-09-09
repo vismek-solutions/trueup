@@ -2,7 +2,7 @@
 import { runActivate } from "./activate.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
 import type { CommandInput } from "./command.ts";
-import { runExplain } from "./explain.ts";
+import { runExplain } from "./explain/run.ts";
 import { runGuard } from "./guard.ts";
 import { runInit } from "./init/run.ts";
 import { runCli } from "./main.ts";
