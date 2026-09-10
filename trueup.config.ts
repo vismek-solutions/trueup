@@ -13,6 +13,7 @@ export default defineConfig({
   externals: ["astro:*"],
   ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro", ".stryker-tmp"],
   command: "node ./packages/trueup/bin/trueup.js",
+  protect: ["CLAUDE.md", ".claude/settings.json"],
   maxFilesPerDirectory: 12,
   duplication: 60,
   readerships: true,
