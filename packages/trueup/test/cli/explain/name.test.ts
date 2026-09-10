@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CLAIMED, CUT, explainIn, saidBy, UNRULED } from "../../support/explain.ts";
+import { CLAIMED, CUT, explainIn, ISOLATED, saidBy, UNRULED } from "../../support/explain.ts";
 
 const about = (target: string) => saidBy(UNRULED, target);
 
@@ -211,6 +211,12 @@ describe("what already stands against one export", () => {
 
   it("leaves out a claim standing against another name in the same file", async () => {
     expect((await standing("lib/one.ts#label")).join()).not.toContain("declares badge");
+  });
+
+  it("gathers a sibling breach, since an isolation rule refuses a name and not only a file", async () => {
+    expect(await saidBy(ISOLATED, "apps/web/src/routes/b/thing.ts#thing")).toContain(
+      "no-sibling-directory-reaches-another  apps/web/src/routes/a/page.ts  is a and may not reach sibling b",
+    );
   });
 
   it("says the delegated tools were not consulted, rather than implying it gathered everything", async () => {

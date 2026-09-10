@@ -58,6 +58,7 @@ const breachOf = (edge: ResolvedImport, { groupOf, shared, project }: Grouping):
       : `is ${from} and may not reach sibling ${to}: ${what}`,
     file: edge.from,
     start: edge.at,
+    symbol: edge.imported,
   };
 };
 

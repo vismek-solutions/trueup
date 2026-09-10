@@ -5,6 +5,7 @@ export const EXPLAINED = fixtureAt("explained");
 export const UNRULED = fixtureAt("ungoverned");
 export const CUT = fixtureAt("cut");
 export const CLAIMED = fixtureAt("claimed");
+export const ISOLATED = fixtureAt("member-isolate");
 
 export const explainIn = async (
   cwd: string,
