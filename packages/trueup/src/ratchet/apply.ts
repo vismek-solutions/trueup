@@ -1,7 +1,7 @@
 import { join, relative } from "node:path";
 import type { Baseline, BaselineEntry } from "../ports/baseline.ts";
 import type { ClaimResult, Finding, Report } from "../report/model.ts";
-import type { RatchetResult } from "./model.ts";
+import type { Acceptance, RatchetResult } from "./model.ts";
 
 export const STALE_CLAIM = "every-baseline-entry-is-still-needed";
 
@@ -28,6 +28,11 @@ export function baselineOf(report: Report, root: string): Baseline {
 
   const unique = new Map(entries.map((entry) => [keyOf(entry), entry]));
   return { entries: [...unique.values()].sort(byEntry) };
+}
+
+export function acceptanceOf(next: Baseline, previous: Baseline): Acceptance {
+  const had = new Set(previous.entries.map(keyOf));
+  return { added: next.entries.filter((entry) => !had.has(keyOf(entry))), first: had.size === 0 };
 }
 
 export interface ApplyBaselineInput {

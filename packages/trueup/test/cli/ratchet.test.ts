@@ -1,3 +1,4 @@
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { copyOfFixture, discard, fixtureAt } from "../support/fixtures.ts";
@@ -5,7 +6,7 @@ import { baselinePathIn, readBaseline, writeBaseline } from "../../src/adapters/
 import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE } from "../../src/cli/command.ts";
 import { runCli } from "../../src/cli/main.ts";
 import type { Baseline } from "../../src/ports/baseline.ts";
-import { applyBaseline, baselineOf, STALE_CLAIM } from "../../src/ratchet/apply.ts";
+import { acceptanceOf, applyBaseline, baselineOf, STALE_CLAIM } from "../../src/ratchet/apply.ts";
 import type { Report } from "../../src/report/model.ts";
 
 const ROOT = "/project";
@@ -176,6 +177,39 @@ describe("a baseline", () => {
   });
 });
 
+describe("comparing a baseline with the one before it", () => {
+  const previous = baselineOf(claimOf("engine reaches domain"), ROOT);
+
+  const grown = baselineOf(
+    reportOf([
+      {
+        claim: "every-import-respects-its-zone-boundary",
+        guidance: "",
+        findings: [violation("engine reaches domain", 1), violation("engine reaches persistence", 2)],
+      },
+    ]),
+    ROOT,
+  );
+
+  it("names only what the previous one never held, so a total cannot hide a new entry", () => {
+    expect(acceptanceOf(grown, previous).added.map((entry) => entry.message)).toEqual([
+      "engine reaches persistence",
+    ]);
+  });
+
+  it("names nothing when the list has not moved", () => {
+    expect(acceptanceOf(previous, previous).added).toEqual([]);
+  });
+
+  it("marks a run with no baseline behind it, since none of that list is growth", () => {
+    expect(acceptanceOf(grown, { entries: [] }).first).toBe(true);
+  });
+
+  it("marks a run that had one, even where every entry it held is now gone", () => {
+    expect(acceptanceOf({ entries: [] }, previous).first).toBe(false);
+  });
+});
+
 const UNRATCHETED = fixtureAt("explained");
 
 let PROJECT = "";
@@ -222,8 +256,36 @@ describe("adopting the ratchet from the command line", () => {
 
   it("says how many findings it took and the file it put them in", async () => {
     expect((await runIn(["--update-baseline"])).output).toContain(
-      "accepted 1 findings into trueup.baseline.json",
+      "accepted 1 finding into trueup.baseline.json",
     );
+  });
+
+  it("counts a first baseline per claim rather than listing every entry in it", async () => {
+    const { output } = await runIn(["--update-baseline"]);
+
+    expect(output).toContain("the first baseline");
+    expect(output).toContain("every-import-respects-its-zone-boundary");
+    expect(output).not.toContain("src/engine/runner.ts");
+  });
+
+  it("names the entry a later run adds, so the commit accepting it says what it accepted", async () => {
+    await runIn(["--update-baseline"]);
+    writeFileSync(
+      join(PROJECT, "src/engine/other.ts"),
+      'import { thing } from "../domain/thing.js";\n\nexport const other = (): number => thing.length;\n',
+    );
+
+    const { output } = await runIn(["--update-baseline"]);
+
+    expect(output).toContain("· 1 new");
+    expect(output).toContain("src/engine/other.ts");
+    expect(output).not.toContain("src/engine/runner.ts");
+  });
+
+  it("says nothing is new when it accepts the list it already held", async () => {
+    await runIn(["--update-baseline"]);
+
+    expect((await runIn(["--update-baseline"])).output).toContain("nothing new");
   });
 
   it("fails on a violation the baseline never recorded, whatever else the baseline holds", async () => {

@@ -3,9 +3,10 @@ import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baselin
 import { check } from "../compose.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
 import { rulebookGuarded } from "../guard/protected.ts";
-import { applyBaseline, baselineOf } from "../ratchet/apply.ts";
+import { acceptanceOf, applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { countOf, type Report } from "../report/model.ts";
+import { renderAcceptance } from "./acceptance.ts";
 import { renderGitlab } from "./gitlab.ts";
 import { helpLines } from "./help.ts";
 import { rulebookAt } from "./preamble.ts";
@@ -106,6 +107,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   });
 
   const baselinePath = baselinePathIn(root);
+  const previous = readBaseline(baselinePath);
   const noticed = rulebookGuarded(config.protect)
     ? report
     : { ...report, notices: ["the rulebook is unguarded: an agent may edit this config and the baseline"] };
@@ -113,18 +115,23 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   if (updating) {
     const baseline = baselineOf(report, root);
     writeBaseline(baselinePath, baseline);
-    write(`accepted ${baseline.entries.length} findings into ${relative(cwd, baselinePath) || baselinePath}`);
+    write(
+      renderAcceptance({
+        ...acceptanceOf(baseline, previous),
+        total: baseline.entries.length,
+        path: relative(cwd, baselinePath) || baselinePath,
+      }),
+    );
     return EXIT_CLEAN;
   }
 
-  const baseline = readBaseline(baselinePath);
-  if (baseline.entries.length === 0) {
+  if (previous.entries.length === 0) {
     const finished = withCommand(noticed, command);
     write(present(finished, root));
     return countOf(finished, "error") > 0 ? EXIT_ERRORS : EXIT_CLEAN;
   }
 
-  const ratcheted = applyBaseline({ report: noticed, baseline, root });
+  const ratcheted = applyBaseline({ report: noticed, baseline: previous, root });
   const finished = withCommand(ratcheted.report, command);
   write(present(finished, root, { known: ratcheted.known, stale: ratcheted.stale }));
 

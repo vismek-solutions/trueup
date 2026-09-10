@@ -17,6 +17,31 @@ From then on, a new violation fails the build. A recorded one prints as a warnin
 
 Nothing in that file is a promise to fix it this week. It is a note saying you have seen it.
 
+## What the run says it accepted
+
+The first run has nothing to compare against, so it counts what it took, one line per claim:
+
+```
+accepted 1 finding into trueup.baseline.json · the first baseline
+
+every-import-respects-its-zone-boundary     1 new
+```
+
+Every run after that names each entry it added:
+
+```
+accepted 2 findings into trueup.baseline.json · 1 new
+
+every-import-respects-its-zone-boundary     1 new
+    src/engine/report.ts  is engine and may not reach domain: thing from src/domain/thing.ts
+```
+
+That list is what makes the commit reviewable. A baseline that grows is a decision to live with something new, and whoever reads the commit should be able to see what it was. When the run accepts only what the file already held, it says so in one line:
+
+```
+accepted 2 findings into trueup.baseline.json · nothing new
+```
+
 ## When you fix one
 
 If you fix a violation that was in the baseline, the run exits with code 2 and tells you to update the file. Nothing has gone wrong. The list has grown shorter, and the record needs to catch up.
