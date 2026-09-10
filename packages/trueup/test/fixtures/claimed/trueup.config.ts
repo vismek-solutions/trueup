@@ -7,4 +7,5 @@ export default defineConfig({
   ],
   boundaries: [{ from: "app", allow: [] }],
   duplication: 40,
+  colocation: true,
 });

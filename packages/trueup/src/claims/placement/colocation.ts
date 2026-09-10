@@ -83,6 +83,7 @@ export function colocationClaim(roleZones: readonly string[]): Claim {
             message: `declares ${reach.symbol}, used only by ${where}`,
             file: reach.declaredIn,
             start: null,
+            symbol: reach.symbol,
             group: reach.declaredIn,
           };
         }),
@@ -122,6 +123,7 @@ const reachingInternal = (reach: Reach, project: Project, tests: ReadonlySet<str
     message: `reaches ${reach.symbol}, an internal of ${where} that only ${calls} calls`,
     file,
     start: null,
+    symbol: reach.symbol,
     group: file,
   }));
 };
@@ -169,6 +171,7 @@ export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput
           message: `exports ${reach.symbol}, which only tests use`,
           file: reach.declaredIn,
           start: null,
+          symbol: reach.symbol,
         }));
     },
   };

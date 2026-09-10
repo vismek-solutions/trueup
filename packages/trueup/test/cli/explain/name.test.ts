@@ -186,6 +186,12 @@ describe("what already stands against one export", () => {
     expect((await standing("lib/one.ts#label")).join()).not.toContain("lib/two.ts  declares label");
   });
 
+  it("gathers a placement claim, so explain cannot say nothing stands while the check reports it", async () => {
+    expect(await standing("lib/one.ts#label")).toContain(
+      "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used only by app/reader.ts",
+    );
+  });
+
   it("leaves out a claim standing against another name in the same file", async () => {
     expect((await standing("lib/one.ts#label")).join()).not.toContain("declares badge");
   });
@@ -229,9 +235,10 @@ describe("what already stands against one export", () => {
         "import back none",
         "            nothing that stays reads it, so the file it leaves needs nothing back",
         "",
-        "claims      2",
+        "claims      3",
         "    every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",
         "    no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
+        "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used only by app/reader.ts",
         "            delegated tools are not consulted here; run the check itself for those",
         "",
       ].join("\n"),
