@@ -146,6 +146,12 @@ The same guides live in [apps/docs](../../apps/docs/src/content/docs), and cover
 - [Monorepos](../../apps/docs/src/content/docs/concepts/monorepos.md), where each package keeps its own rules
 - [Configuration](../../apps/docs/src/content/docs/reference/config.md), every key and every command
 
+## How this is tested
+
+The suite is checked with [Stryker](https://stryker-mutator.io), which changes one thing in the source at a time and runs the tests again. A test that executes a branch without asserting anything about it lets the change through, so it counts as a gap here rather than as coverage.
+
+That is the same failure this tool exists to catch between files, turned back on the tests themselves.
+
 ## Cost
 
 A full check on a 900-file monorepo takes about a tenth of a second. The guard takes about the same, including the time to start the process.
