@@ -2,6 +2,7 @@
 import { runActivate } from "./activate.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
 import type { CommandInput } from "./command.ts";
+import { runDocs } from "./docs/run.ts";
 import { runExplain } from "./explain/run.ts";
 import { runGuard } from "./guard.ts";
 import { runInit } from "./init/run.ts";
@@ -19,6 +20,7 @@ const COMMANDS: Record<string, Command> = {
   explain: runExplain,
   activate: runActivate,
   "agent-instructions": runAgentInstructions,
+  docs: runDocs,
 };
 
 const read = async (): Promise<string> => {

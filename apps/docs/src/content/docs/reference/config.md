@@ -179,6 +179,8 @@ The rulebook is the config file holding the rules, whether at the root or inside
 | `npx trueup explain --ungoverned` | [zone pairs no boundary rule refuses](/concepts/boundaries/#traffic-no-rule-refuses) |
 | `npx trueup activate` | [every zone, boundary and setting in force](/agents/instructions/#handing-an-agent-the-whole-shape) |
 | `npx trueup agent-instructions` | a block to append to your agent's memory file |
+| `npx trueup docs` | [every guide that ships with this version](/agents/instructions/#the-guides-travel-with-the-package) |
+| `npx trueup docs <topic>` | one of those guides, printed in full |
 | `npx trueup guard` | read a hook payload on stdin |
 
 An argument that is not on this list is an error rather than something to ignore quietly.

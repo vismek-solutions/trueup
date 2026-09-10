@@ -27,7 +27,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -R ../../apps/docs/src/content/docs dist/docs",
     "prepack": "pnpm run build",
     "test": "vitest run",
     "test:watch": "vitest",

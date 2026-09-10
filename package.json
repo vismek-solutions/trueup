@@ -7,6 +7,7 @@
   },
   "scripts": {
     "check": "node ./packages/trueup/bin/trueup.js",
+    "docs": "node ./packages/trueup/bin/trueup.js docs",
     "biome": "biome check --write --unsafe .",
     "test": "pnpm --filter trueup run test",
     "typecheck": "pnpm --filter trueup run typecheck",

@@ -61,6 +61,25 @@ Put it in a hook and your agent is handed all of that at the start of every sess
 }
 ```
 
+## The guides travel with the package
+
+An agent that meets a rule it has not seen before can read the page about it without leaving the
+terminal. These guides are installed alongside the tool, so they answer for the version the project
+has rather than for whatever the site says today.
+
+```sh
+npx trueup docs
+```
+
+That lists every page with one line about each. Name one and it prints in full.
+
+```sh
+npx trueup docs seams
+```
+
+A claim name works in the same place, because the lookup falls back to searching the pages for it.
+Where more than one page mentions it, you get those pages listed rather than a guess.
+
 ## Why every message says the same thing
 
 An agent under pressure to make the output green has two ways to get there. One is to fix the code. The other is to widen the rule that objected.

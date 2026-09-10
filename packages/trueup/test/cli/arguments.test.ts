@@ -141,6 +141,7 @@ const HELP = [
   "  activate                every zone, boundary and setting in force, for an agent's context",
   "  guard                   rule on a proposed edit, reading a hook payload from stdin",
   "  agent-instructions      a short block to paste into an agent's memory file",
+  "  docs [<topic>]          the guides that ship with this version, one page at a time",
   "",
   "Exit codes: 0 clean · 1 errors · 2 the baseline has entries nothing reports any more ·",
   "3 no rulebook found · 4 an argument it does not know · 5 the rulebook would not load.",
