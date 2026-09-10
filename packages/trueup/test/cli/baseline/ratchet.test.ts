@@ -1,13 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { copyOfFixture, discard, fixtureAt } from "../support/fixtures.ts";
-import { baselinePathIn, readBaseline, writeBaseline } from "../../src/adapters/baseline-file.ts";
-import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE } from "../../src/cli/command.ts";
-import { runCli } from "../../src/cli/main.ts";
-import type { Baseline } from "../../src/ports/baseline.ts";
-import { acceptanceOf, applyBaseline, baselineOf, STALE_CLAIM } from "../../src/ratchet/apply.ts";
-import type { Report } from "../../src/report/model.ts";
+import { copyOfFixture, discard, fixtureAt } from "../../support/fixtures.ts";
+import { baselinePathIn, readBaseline, writeBaseline } from "../../../src/adapters/baseline-file.ts";
+import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE } from "../../../src/cli/command.ts";
+import { runCli } from "../../../src/cli/main.ts";
+import type { Baseline } from "../../../src/ports/baseline.ts";
+import { acceptanceOf, applyBaseline, baselineOf, STALE_CLAIM } from "../../../src/ratchet/apply.ts";
+import type { Report } from "../../../src/report/model.ts";
 
 const ROOT = "/project";
 
@@ -272,7 +272,7 @@ describe("adopting the ratchet from the command line", () => {
     await runIn(["--update-baseline"]);
     writeFileSync(
       join(PROJECT, "src/engine/other.ts"),
-      'import { thing } from "../domain/thing.js";\n\nexport const other = (): number => thing.length;\n',
+      'import { thing } from "../../domain/thing.js";\n\nexport const other = (): number => thing.length;\n',
     );
 
     const { output } = await runIn(["--update-baseline"]);
