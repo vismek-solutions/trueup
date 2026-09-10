@@ -3,7 +3,7 @@ import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
 const GUIDANCE =
-  "The same declaration was written more than once, in files that could have shared it. This is what an agent does when it cannot find what already exists: every copy is individually correct, and the codebase grows a second answer to a question it had already answered. Keep one, put it where every caller may reach it, and delete the rest. If the copies have drifted apart, they were two ideas wearing one shape — rename them so the next reader is not misled.";
+  "The same declaration was written more than once, in files that could have shared it. This is what an agent does when it cannot find what already exists: every copy is individually correct, and the codebase grows a second answer to a question it had already answered. Keep one, put it where every caller may reach it, and delete the rest. Under the write-time guard, empty the existing copies before creating the shared file: a new file holding a declaration that still stands elsewhere is refused as one more copy. If the copies have drifted apart, they were two ideas wearing one shape. Rename them so the next reader is not misled.";
 
 interface Copy {
   readonly file: string;
