@@ -36,7 +36,7 @@ const list = (values: readonly string[]): string => values.map((value) => `"${va
 
 const file = (imported: readonly string[], body: readonly string[], define: string): string =>
   [
-    `import { ${imported.join(", ")} } from "trueup";`,
+    `import { ${imported.join(", ")} } from "@vismek-solutions/trueup";`,
     "",
     `export default ${define}({`,
     ...body,

@@ -17,7 +17,7 @@ Because the file is TypeScript, it can read the environment. That is useful for 
 
 ```ts
 // trueup.config.ts
-import { defineConfig, oxlintRunner } from "trueup";
+import { defineConfig, oxlintRunner } from "@vismek-solutions/trueup";
 
 export default defineConfig({
   zones: [
@@ -130,7 +130,7 @@ A member is one package inside a workspace that keeps its own rules.
 
 ```ts
 // packages/lib/trueup.config.ts
-import { defineMember } from "trueup";
+import { defineMember } from "@vismek-solutions/trueup";
 
 export default defineMember({
   zones, allow?, boundaries?, seams?, isolate?, rules?, maxFilesPerDirectory?, doorsFromExports?

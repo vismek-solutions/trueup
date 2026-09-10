@@ -17,7 +17,7 @@ You describe the shape once. Every run after that answers a single question: is 
 You need Node 22.18 or newer.
 
 ```sh
-npm install --save-dev trueup
+npm install --save-dev @vismek-solutions/trueup
 ```
 
 Let it write a first draft of the rules by reading your folders:
@@ -30,7 +30,7 @@ That draft gives you zones, which are names for groups of files. What it will no
 
 ```ts
 // trueup.config.ts
-import { defineConfig } from "trueup";
+import { defineConfig } from "@vismek-solutions/trueup";
 
 export default defineConfig({
   zones: [

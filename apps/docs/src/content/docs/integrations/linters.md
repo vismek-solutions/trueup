@@ -10,7 +10,7 @@ The rules on this site cover the things a linter has no way to say, such as whic
 The piece of setup that hands a job to another tool is called a runner. You add one to your config:
 
 ```ts
-import { eslintRunner } from "trueup";
+import { eslintRunner } from "@vismek-solutions/trueup";
 
 runners: [eslintRunner()]
 ```
@@ -18,7 +18,7 @@ runners: [eslintRunner()]
 Four of them exist, one per tool:
 
 ```ts
-import { biomeRunner, eslintRunner, fallowRunner, oxlintRunner } from "trueup";
+import { biomeRunner, eslintRunner, fallowRunner, oxlintRunner } from "@vismek-solutions/trueup";
 ```
 
 Add only the ones your project already installs. A runner whose binary is missing fails the run rather than reporting nothing.
@@ -81,7 +81,7 @@ private-type-leaks is worth turning on. Do it in fallow's own config:
 Then ask for the whole set:
 
 ```ts
-import { FALLOW_CATEGORIES, fallowRunner } from "trueup";
+import { FALLOW_CATEGORIES, fallowRunner } from "@vismek-solutions/trueup";
 
 fallowRunner({ categories: [...FALLOW_CATEGORIES] })
 ```

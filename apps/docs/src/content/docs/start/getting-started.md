@@ -8,7 +8,7 @@ This takes about ten minutes on an ordinary project. You need Node 22.18 or newe
 Install it as a development dependency:
 
 ```sh
-npm install --save-dev trueup
+npm install --save-dev @vismek-solutions/trueup
 ```
 
 Then let it write a first draft of your rules for you:
@@ -42,7 +42,7 @@ The rest of this page uses a config with those filled in:
 
 ```ts
 // trueup.config.ts
-import { defineConfig } from "trueup";
+import { defineConfig } from "@vismek-solutions/trueup";
 
 export default defineConfig({
   zones: [

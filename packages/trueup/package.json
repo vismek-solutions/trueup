@@ -1,5 +1,5 @@
 {
-  "name": "trueup",
+  "name": "@vismek-solutions/trueup",
   "version": "0.0.0",
   "private": true,
   "description": "Checks that a TypeScript codebase still has the shape you meant it to have, and blocks an edit that would change it",

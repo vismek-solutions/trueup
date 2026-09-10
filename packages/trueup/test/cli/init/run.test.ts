@@ -115,7 +115,7 @@ describe("what it writes, to the character", () => {
 
     expect(configAt(directory, CONFIG)).toBe(
       [
-        'import { defineConfig, biomeRunner, eslintRunner } from "trueup";',
+        'import { defineConfig, biomeRunner, eslintRunner } from "@vismek-solutions/trueup";',
         "",
         "export default defineConfig({",
         "  zones: [",
@@ -140,7 +140,7 @@ describe("what it writes, to the character", () => {
 
     expect(configAt(directory, CONFIG)).toBe(
       [
-        'import { defineConfig, biomeRunner } from "trueup";',
+        'import { defineConfig, biomeRunner } from "@vismek-solutions/trueup";',
         "",
         "export default defineConfig({",
         "  zones: [",
@@ -175,7 +175,7 @@ describe("what it writes, to the character", () => {
 
     expect(configAt(directory, CONFIG)).toBe(
       [
-        'import { defineConfig, fallowRunner, oxlintRunner } from "trueup";',
+        'import { defineConfig, fallowRunner, oxlintRunner } from "@vismek-solutions/trueup";',
         "",
         "export default defineConfig({",
         '  members: ["packages/*", "apps/*"],',
@@ -195,7 +195,7 @@ describe("what it writes, to the character", () => {
 
     expect(configAt(directory, "apps", "web", CONFIG)).toBe(
       [
-        'import { defineMember } from "trueup";',
+        'import { defineMember } from "@vismek-solutions/trueup";',
         "",
         "export default defineMember({",
         '  allow: ["lib", "ui"],',
@@ -216,7 +216,7 @@ describe("what it writes, to the character", () => {
 
     expect(configAt(directory, "packages", "lib", CONFIG)).toBe(
       [
-        'import { defineMember } from "trueup";',
+        'import { defineMember } from "@vismek-solutions/trueup";',
         "",
         "export default defineMember({",
         "  zones: [",
