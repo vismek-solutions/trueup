@@ -57,7 +57,7 @@ When the guard cannot make sense of the situation, it stands aside and lets the 
 
 Your rulebook is the file your rules are read from, either at the root of the project or inside one package. Any rule on this site can be switched off by editing it.
 
-This is the part people find surprising, so here it is slowly. An edit to the rulebook is the one edit the guard will not settle by itself. It stops that edit, and hands the decision to you.
+An edit to the rulebook is the one edit the guard will not settle by itself. It stops that edit, and hands the decision to you.
 
 Two files are covered with no configuration at all: the rulebook the rules were read from, and the baseline. Those are the two ways to make a failing check pass without touching any code. You can widen the boundary that objected, or you can record the violation as already known.
 
@@ -107,11 +107,9 @@ The opposite is available too. It is the answer if the prompt is friction you do
 protect: { decision: "allow" }
 ```
 
-An agent may then edit the rulebook and the baseline freely, in every permission mode.
+An agent may then edit the rulebook and the baseline freely, in every permission mode. Every rule on this site becomes optional to the thing it is meant to constrain. An agent told to get the build green can widen the boundary it broke a moment ago, or record the violation as already known, and both are one edit away.
 
-There is a cost to that, and you should hear it plainly. Every rule on this site becomes optional to the thing it is meant to constrain. An agent told to get the build green can widen the boundary it broke a moment ago, or record the violation as already known, and both are one edit away. The refusal exists because "fix the code, not the rule" was in every message here and enforced by nothing.
-
-So the report says it out loud, on every run.
+So the report says so, on every run.
 
 ```
 coverage  1 files · 0 edges · 0 symbol · 0 external · 0 builtin · 0 unresolved
@@ -119,9 +117,7 @@ zones     all 1 · 0 unclassified
 notice    the rulebook is unguarded: an agent may edit this config and the baseline
 ```
 
-A check that can be switched off silently is the failure this tool was built against, so it will not be switched off silently here either.
-
-If what you actually want is for setup not to block overnight, ask is the setting for that, and it costs one keystroke. Choose allow when you have decided that a later review is your gate.
+Choose allow when you have decided that a later review is your gate. If what you want is only for setup not to block overnight, ask is the setting for that.
 
 ## Files the analysis never reads
 

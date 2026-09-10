@@ -112,7 +112,7 @@ no-declaration-is-written-twice  3 errors
     The same declaration was written more than once, in files that could have shared it. …
 ```
 
-This is the part people find surprising, so here it is slowly. A problem is not the same as a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.
+A problem is not the same as a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.
 
 Problems arrive in the order the claims run, so the checks about the analysis itself come first. While an import fails to resolve, every other answer is drawn from a graph with a hole in it.
 

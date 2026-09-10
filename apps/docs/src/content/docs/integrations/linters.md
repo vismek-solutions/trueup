@@ -61,7 +61,7 @@ What you get: dead code, dependency and catalog hygiene, cycles, leaked private 
 
 What you do not: health, security, feature flags and semantic similarity are separate fallow commands, and this runner does not call them.
 
-Some of fallow's rules ship switched **off**. The category still appears in fallow's output, empty, so nothing about the run would look wrong. This is the part people find surprising, so here it is slowly. An empty category prints the same way as a clean one, and a category whose rule is off can never be anything but empty. So the fallow runner reads fallow's own resolved config, and fails when a category it consumes rests on a rule that is off:
+Some of fallow's rules ship switched **off**. A category resting on one of those still appears in fallow's output, empty, and an empty category prints the same way as a clean one. So the fallow runner reads fallow's own resolved config, and fails when a category it consumes rests on a rule that is off:
 
 ```
 every-delegated-tool-ran                    1 error
@@ -70,7 +70,7 @@ every-delegated-tool-ran                    1 error
     the runner.
 ```
 
-The default set leaves out any category resting on a rule fallow ships off, so this does not fire on a fresh project. The one it drops is private-type-leaks. You reach that failure only by naming that category yourself, which is a demand you made rather than one the default made for you.
+The default set leaves out any category resting on a rule fallow ships off, so this does not fire on a fresh project. The one it drops is private-type-leaks, and you reach that failure only by naming that category yourself.
 
 private-type-leaks is worth turning on. Do it in fallow's own config:
 
@@ -96,7 +96,7 @@ fallowRunner({ duplication: { mode: "weak", minLines: 5, minTokens: 30 } })
 
 It is off unless you ask for it. The clone detector and the rule here answer different questions.
 
-There is a tempting shortcut here that we would ask you to avoid, which is lowering these numbers until the detector finds what the [declaration rule](/checks/duplication/) finds. On trueup's own repository, a setting that low reports 886 clone groups, which is 90% of the codebase. Every quieter setting misses a real renamed copy. Run both, each at its own threshold.
+Please do not lower these numbers until the detector finds what the [declaration rule](/checks/duplication/) finds. On trueup's own repository, a setting that low reports 886 clone groups, which is 90% of the codebase. Every quieter setting misses a real renamed copy. Run both, each at its own threshold.
 
 Each clone group arrives as one finding per instance, and the findings share a group, so the run that shows you one problem at a time shows the whole group as that one problem:
 

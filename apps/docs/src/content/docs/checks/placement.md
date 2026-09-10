@@ -97,17 +97,15 @@ Two exports that merely reach the same private third thing do not join. Sharing 
 
 A module holding one private object that every export goes through: a context, a client, a connection, a table. Each export is built from that object, so each is joined to it. None of them is joined to any other, because the object is private, and a private declaration is not one of the groups being sorted.
 
-Files like that are reported whenever their exports serve separate audiences, which is often. Measured on a real tree, five of seven findings in one application were this shape, and three of the five were confirmed by the colocation check naming the same export.
-
-What the check sees is true, because the audiences really do differ. What it cannot see is which side should move. For this shape the answer is usually to move out the one export that has its own audience, rather than to cut the file in two.
+Files like that are reported whenever their exports serve separate audiences, which is often. What the check sees is true, because the audiences really do differ. What it cannot see is which side should move, and for this shape the answer is usually to move out the one export that has its own audience rather than to cut the file in two.
 
 ### What is left out of the count
 
 Readers in a zone with a role do not count, for the reverse of the reason they are not counted as a lone customer. A composition root wires both halves, so counting it would join every group it touches and hide the split. A file in a zone with a role is not reported either, because a barrel answers to readers this analysis cannot see. An export nothing reads at all is left out rather than forming a group of its own.
 
-Readers are grouped by directory. Grouping by zone is too coarse to see a split inside one zone. Grouping by file is too loud, because two exports imported by two different files describes most files rather than a defect. Measured on a tree with 70 files carrying two or more exports that something reads: by zone 3 findings, by directory 5, by file 21.
+Readers are grouped by directory. Grouping by zone would be too coarse to see a split inside one zone, and grouping by file too loud, because two exports imported by two different files describes most files rather than a defect.
 
-A reader is a file that imports the export, not a file that could arrive at it by importing something else. That choice runs the opposite way to how it sounds. Following the chain further makes the check quieter, because each step widens the set of things a file is counted as reading, wider sets overlap more, and overlapping sets join. On the tree above, following the chain took the count from 5 down to 2.
+A reader is a file that imports the export, not a file that could arrive at it by importing something else. Following the chain further would make the check quieter rather than stricter, because each step widens the set of things a file counts as reading, and wider sets overlap into one group.
 
 ## Tests that reach an internal
 
@@ -122,7 +120,7 @@ no-test-reaches-an-internal                 1 error
     test/checkout.test.ts  reaches priceWithTax, an internal of src/checkout/tax.ts that only src/checkout/total.ts calls
 ```
 
-This is the part people find surprising, so here it is slowly. priceWithTax exists because orderTotal needed it. Fold it back into total.ts and nothing about the checkout behaves any differently. The test, though, breaks. That is what it means for a test to be pinned to a decomposition rather than to behaviour. An agent is a coding assistant that writes code in your project, and one that refactors the checkout later reads the red suite as a regression.
+priceWithTax exists because orderTotal needed it. Fold it back into total.ts and nothing about the checkout behaves any differently. The test, though, breaks. That is what it means for a test to be pinned to a decomposition rather than to behaviour. An agent is a coding assistant that writes code in your project, and one that refactors the checkout later reads the red suite as a regression.
 
 The fix is to drive the same cases through orderTotal, which is what production calls. When that is genuinely too expensive, the symbol is asking to become a module with a caller of its own, rather than a wider surface on the one it sits in.
 

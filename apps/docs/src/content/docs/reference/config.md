@@ -122,7 +122,7 @@ A review budget is the largest change you believe a person can actually read.
 { additions: number, deletions: number, severity?, nearing?, base?, except? }
 ```
 
-The two required numbers are the most added lines and the most removed lines a single change may carry. Going over prints a warning by default, and severity set to error fails the run instead. The nearing option is a share of the budget, so a value of 0.8 warns once the change has used four fifths of it. The base option is the branch the change is measured against, and it is main unless you say otherwise. The except option holds globs for files that should not be counted, which is where a lock file or generated output belongs. [What the check does with all that](/checks/#how-big-a-change-can-be-reviewed).
+The two required numbers are the most added lines and the most removed lines a single change may carry. Going over prints a warning unless severity is set to error. [What the other options do](/checks/#how-big-a-change-can-be-reviewed).
 
 ## Members
 

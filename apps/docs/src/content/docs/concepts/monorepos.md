@@ -56,7 +56,7 @@ export default defineMember({
 
 The allow list is seeded from the workspace dependencies the package already declares, so your first run does not open with one error per cross-package import. It is a starting point rather than a derivation. The line sits in your rulebook, a diff shows it changing, and the guard protects it. The guard is the part of trueup that looks at an edit before it is saved and can refuse it. [every-grant-has-a-dependency](#a-grant-with-no-dependency) is what keeps the list honest afterwards.
 
-Most packages have a barrel: a file that re-exports its neighbours so everything can be imported from one place. A package whose package.json names its barrel in exports gets that barrel as an api zone, so a grant opens the front door rather than the whole package.
+Most packages have a barrel: a file that re-exports its neighbours so everything can be imported from one place. A package whose package.json names its barrel in exports gets that barrel as an api zone. That zone is the package's door, so a grant opens it rather than the whole package.
 
 ```ts
 // packages/lib/trueup.config.ts
@@ -73,9 +73,9 @@ A subpath pointing at build output is skipped, because init only writes a door o
 
 ## The workspace file is read once
 
-After that, the workspace file is never read again. The members list is not derived from it when a check runs, because the two lists are allowed to disagree. A docs app can be a workspace package and still be governed by a zone in the root config instead of being a member. Nothing is lost by that: with include left out, a package no member claims still fails as unclassified. What init writes is a draft, and it is yours.
+After that, the workspace file is never read again. The members list is not derived from it when a check runs, because the two lists are allowed to disagree. A docs app can be a workspace package and still be governed by a zone in the root config instead of being a member. What init writes is a draft, and it is yours.
 
-So please leave include out. The whole repository is then analysed, and a directory no member claims fails as unclassified instead of going quietly unchecked. Narrowing include is how you *stop* seeing something.
+So please leave include out. The whole repository is then analysed, and a package no member claims fails as unclassified instead of going quietly unchecked. Narrowing include is how you *stop* seeing something.
 
 ## A member only constrains itself
 
@@ -93,11 +93,11 @@ export default defineMember({
 
 A member's patterns are relative to the member. Its zone names are qualified with it, so lib/domain and ui/domain are two different zones even though both packages called theirs domain.
 
-Everything a member names is its own, and that cuts both ways. This is the part people find surprising, so here it is slowly. An internal boundary judges only the edges that land inside the package, where an edge is one name imported by one file. The empty allow list above says that domain reaches nothing else in this package. It does not say that domain reaches nothing at all, and it can never revoke a door another member opened. What the package may reach outside itself is the business of its own allow list, one level up.
+An internal boundary judges only the edges that land inside the package, where an edge is one name imported by one file. The empty allow list above says that domain reaches nothing else in this package. It says nothing about what domain reaches outside the package, and it cannot close a door another member opened. That is the job of the member's own allow list, one level up.
 
-It has to work that way rather than by listing the doors in the rule. An internal rule is anchored on the declaring file, which is the file where a thing is actually written, after following every re-export. Piercing barrels inside the package is the whole point. A door is a re-exporter, so a declaring-file anchor resolves straight past it to the file behind, and a rule that named the door could never match one.
+Inside a package the rule is anchored on the declaring file, so it reaches through the barrels instead of stopping at them.
 
-Run trueup explain and you get that same silence back. A zone the internal rule says nothing about stays under may reach, as long as another rule allows it. So a coding assistant that runs explain before writing a file is told the same thing the check will say afterwards.
+Run trueup explain and you get the same silence back. A zone the internal rule says nothing about stays under may reach, as long as another rule allows it. So a coding assistant that runs explain before writing a file is told the same thing the check will say afterwards.
 
 ## What a member may reach
 

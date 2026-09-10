@@ -75,6 +75,6 @@ In a workspace, one package can keep its own rulebook, which is the config file 
 
 The except list is for the directory the group is meant to share. Use it for something like _shared and little else.
 
-There is a tempting shortcut here that we would ask you to avoid. When a run says one route reached into another, adding the reached-into route to the except list makes the finding go away and leaves the tangle where it was. The shared directory is usually the answer to a finding rather than an exception to it, so move the shared code there instead.
+When a run says one route reached into another, please do not add the reached-into route to the except list. The finding goes away and the tangle stays where it was. The shared directory is usually the answer to a finding rather than an exception to it, so move the shared code there instead.
 
 The wiring list is the same bargain in the other direction. It is for a file that assembles the group, not for one you have not found a home for yet.

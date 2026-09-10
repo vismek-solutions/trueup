@@ -47,7 +47,7 @@ The order below only matters once you have installed [the write-time guard](/age
 A shared helper needs a zone every caller may reach. A zone is a name you give to a group of files, chosen by where the files sit. Make that one a leaf: named for what it holds, never for being miscellaneous, and forbidden from reaching anything. A general util zone is the drawer that the [directory-size rule](/checks/placement/#directory-size) exists to prevent.
 
 :::caution
-There is a tempting shortcut here that we would ask you to avoid: writing the shared copy in a different shape on purpose, so the rule stops matching it. The guidance printed with the finding asks for the opposite. Keep one copy, put it where every caller may reach it, and delete the rest.
+One fix here we would ask you to avoid: writing the shared copy in a different shape on purpose, so the rule stops matching it. The guidance printed with the finding asks for the opposite. Keep one copy, put it where every caller may reach it, and delete the rest.
 :::
 
 ## This is not a copy-paste detector

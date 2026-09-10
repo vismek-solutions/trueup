@@ -32,7 +32,9 @@ That draft comes from your folders, not from your intentions. You get one zone f
 
 Every pattern it writes matches at least one real file. A pattern that matches nothing is a rule you believe you have and do not, so it will not write one.
 
-It also wires up the linters your project already installs, so their findings come back inside the same report. Each one is pointed at the directories your zones cover. That part matters more than it looks: told to check the whole current folder, oxlint and biome would happily lint everything inside node_modules too. If a config file is already sitting there, nothing is overwritten, and in a workspace every package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
+It also wires up the linters your project already installs, so their findings come back inside the same report. Each one is pointed at the directories your zones cover, because told to check the whole current folder, oxlint and biome would lint everything inside node_modules too.
+
+Nothing is overwritten if a config file is already sitting there, and in a workspace every package gets [a rulebook of its own](/concepts/monorepos/#starting-from-the-workspace).
 
 There is one thing it will not guess, and that is the boundaries. A folder layout cannot tell anybody which direction the dependencies are meant to run. That part is yours to write, and it is the part worth thinking about.
 

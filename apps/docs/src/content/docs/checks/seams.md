@@ -22,7 +22,7 @@ export const StatusBadge = ({ status }: { status: string }): string =>
   status === "awaiting_payment" ? "amber" : "grey";
 ```
 
-This is the part people find surprising, so here it is slowly. Nothing links these two files. There is no import between them and no shared type, so a boundary has nothing to object to. The day awaiting_payment is renamed, the badge still compiles and it is wrong.
+Nothing links these two files. There is no import between them and no shared type, so a boundary has nothing to object to. The day awaiting_payment is renamed, the badge still compiles and it is wrong.
 
 A seam rule is what catches it. You name the group of files that is meant to be generic, and the groups whose words it may not borrow. Those groups are zones, and a zone is a name you give to a group of files, chosen by where the files sit.
 
@@ -58,7 +58,7 @@ vocabulary  domain owns names this file may not use:
 
 ## Fixing one
 
-There is a tempting shortcut here that we would ask you to avoid. Renaming the local status variable hides the leak, and the two files stay exactly as coupled as they were.
+Please do not rename the local status variable. That hides the leak, and the two files stay exactly as coupled as they were.
 
 Have the badge component take a tone instead, warning or neutral, and let the domain side of the call decide which one to pass. The component then knows about badges and the domain keeps its states, which is what splitting the two zones was for.
 
