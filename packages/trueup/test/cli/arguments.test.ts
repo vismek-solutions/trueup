@@ -1,11 +1,9 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { EXIT_BAD_USAGE, EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG } from "../../src/cli/command.ts";
 import { runCli } from "../../src/cli/main.ts";
 import type { Report } from "../../src/report/model.ts";
-import { fixtureAt } from "../support/fixtures.ts";
+import { fixtureAt, nowhere } from "../support/fixtures.ts";
 
 const VIOLATING = fixtureAt("violating");
 
@@ -17,15 +15,6 @@ const spoken = async (cwd: string, ...argv: readonly string[]): Promise<readonly
 
 const codeFor = async (cwd: string, ...argv: readonly string[]): Promise<number> =>
   runCli({ cwd, argv, write: () => undefined });
-
-const nowhere = async <T>(run: (cwd: string) => Promise<T>): Promise<T> => {
-  const empty = mkdtempSync(join(tmpdir(), "trueup-"));
-  try {
-    return await run(empty);
-  } finally {
-    rmSync(empty, { recursive: true });
-  }
-};
 
 describe("handing the whole report to another program", () => {
   const parsed = async (): Promise<Report> => JSON.parse((await spoken(VIOLATING, "--json")).join("\n"));

@@ -45,16 +45,22 @@ export const closesACycle = ({ needs, readers, ...rules }: HomesInput): boolean 
   return readers.some((reader) => reached.has(reader));
 };
 
-const shallowest = (files: readonly string[]): string | undefined =>
-  [...files].sort((left, right) => dirname(left).length - dirname(right).length)[0];
+const shallowest = (files: readonly string[]): string | undefined => {
+  let nearest: string | undefined;
+
+  for (const file of files) {
+    if (nearest === undefined || dirname(file).length < dirname(nearest).length) nearest = file;
+  }
+
+  return nearest;
+};
 
 export const probeFor = (files: readonly string[]): string | null => {
   const file = shallowest(files);
   if (file === undefined) return null;
 
   const name = basename(file);
-  const dot = name.indexOf(".");
-  return join(dirname(file), dot === -1 ? "probe" : `probe${name.slice(dot)}`);
+  return join(dirname(file), `probe${name.slice(name.indexOf("."))}`);
 };
 
 const WIDTH = 12;

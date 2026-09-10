@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { EXIT_BAD_USAGE } from "../../../src/cli/command.ts";
+import { EXIT_BAD_USAGE, EXIT_NO_CONFIG } from "../../../src/cli/command.ts";
 import { explainIn } from "../../support/explain.ts";
-import { fixtureAt } from "../../support/fixtures.ts";
+import { fixtureAt, nowhere } from "../../support/fixtures.ts";
 
 const HOMES = fixtureAt("homes");
 
@@ -36,12 +36,25 @@ describe("placing a file that does not exist yet", () => {
         "reaches     domain",
         "read by     nothing yet",
         "",
-        "may live    api     src/api",
+        "may live    entry",
+        "            api     src/api",
         "            store   src/store",
         "            domain  src/domain",
+        "            mail",
         "",
       ].join("\n"),
     );
+  });
+
+  it("names a zone with no directory beside it rather than inventing one it cannot verify", async () => {
+    const { output } = await explain(DOMAIN);
+
+    expect(output).toContain("may live    entry\n");
+    expect(output).toContain("            mail\n");
+  });
+
+  it("picks the shallowest directory a zone holds, not the first one discovery returns", async () => {
+    expect((await explain(DOMAIN)).output).toContain("store   src/store\n");
   });
 
   it("exits clean, since a question about a file is not a finding", async () => {
@@ -56,8 +69,8 @@ describe("placing a file that does not exist yet", () => {
     const { output } = await explain("--read-by=src/ui/screen.ts");
 
     expect(output).toContain("reaches     none");
-    expect(output).toContain("may live    ui");
-    expect(output).toContain("api");
+    expect(output).toContain("may live    ui   src/ui\n");
+    expect(output).toContain("            api  src/api\n");
   });
 });
 
@@ -106,6 +119,7 @@ describe("arguments the placement question cannot use", () => {
 
     expect(code).toBe(EXIT_BAD_USAGE);
     expect(output).toContain("no zone covers src/nowhere/loose.ts");
+    expect(output).toContain("Name a file this analysis reads");
   });
 
   it("refuses a path beside the flags, since the two ask different questions", async () => {
@@ -117,5 +131,12 @@ describe("arguments the placement question cannot use", () => {
 
   it("still refuses a flag it does not know", async () => {
     expect((await explain("--needs-everything=x")).code).toBe(EXIT_BAD_USAGE);
+  });
+
+  it("says there is no rulebook instead of answering from nothing", async () => {
+    const { code, output } = await nowhere((cwd) => explainIn(cwd, [DOMAIN]));
+
+    expect(code).toBe(EXIT_NO_CONFIG);
+    expect(output).toContain("no trueup.config.ts found");
   });
 });
