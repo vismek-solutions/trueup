@@ -29,6 +29,10 @@ const ADVICE = [
   "Fix the code, not the rule. Widening a boundary, adding a word to an allow list, or recording a",
   "violation in the baseline to make a check pass defeats the check. If a rule looks wrong, say so",
   "and leave it failing rather than editing it to be quiet.",
+  "",
+  "A correct fix often makes the count go up, because removing one violation exposes the ones",
+  "standing behind it. Those problems were already there. Read the new findings and work through",
+  "them rather than reverting a change that was right.",
 ];
 
 const ZONE_HEADING =

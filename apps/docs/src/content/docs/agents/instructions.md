@@ -32,6 +32,10 @@ explanation before changing anything.
 Fix the code, not the rule. Widening a boundary, adding a word to an allow list, or recording a
 violation in the baseline to make a check pass defeats the check. If a rule looks wrong, say so
 and leave it failing rather than editing it to be quiet.
+
+A correct fix often makes the count go up, because removing one violation exposes the ones
+standing behind it. Those problems were already there. Read the new findings and work through
+them rather than reverting a change that was right.
 ```
 
 A zone is a name you give to a group of files, chosen by where the files sit. The zone list here comes from your own config, and the command name from the [command setting](/reference/config/), so the block names the way your project runs trueup.
@@ -91,3 +95,5 @@ An agent under pressure to make the output green has two ways to get there. One 
 The second is faster, looks like progress, and leaves no trace that a check ever failed. It is an easy road to take, and not only for an agent.
 
 So every message this tool prints says which of the two is meant. The guidance on every claim names the fix that would make things worse. And the rulebook itself is [protected from agent edits](/agents/guard/#the-rulebook-goes-through-you).
+
+There is a third road, and it looks more responsible than it is. A real cleanup often makes the count go up, because the violation it removed was hiding the others, and an agent reading that as damage will revert its own correct work. So the block above says plainly that a longer report after a fix is progress.
