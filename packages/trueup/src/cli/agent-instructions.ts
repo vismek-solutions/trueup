@@ -12,6 +12,8 @@ export const adviceLines = (command: string): readonly string[] => [
   `- \`${command} --dots\` — check the whole project. Run it before calling a change done. It prints`,
   "  one character per claim and explains only what failed.",
   `- \`${command} --next\` — the first problem to fix, with its remedy. \`--next=<claim>\` picks the claim.`,
+  `- \`${command} docs <topic>\` — the guide behind a claim, when its printed remedy is not enough.`,
+  "  Run it with no topic to list the pages; a claim name works as a topic.",
   "",
   "Every finding is printed with an explanation of what it means and how to resolve it. Read that",
   "explanation before changing anything.",
