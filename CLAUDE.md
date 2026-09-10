@@ -14,6 +14,8 @@ Paths below are relative to `apps/docs/src/content/docs`.
 | what you changed | what must change with it |
 |---|---|
 | a command or a flag in `src/cli/help.ts` | the "Command line" table in `reference/config.md` |
+| a command an agent should reach for | a line in the advice block, `src/cli/agent-instructions.ts` |
+| the advice block | its captured copy in `agents/instructions.md` |
 | an exit code | the "Exit codes" table in `start/reports.md` |
 | a root config key in `src/config/keys.ts` | the "Root config" table in `reference/config.md` |
 | a member config key in `src/config/keys.ts` | the "Members" section in `reference/config.md` |
