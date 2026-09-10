@@ -15,3 +15,10 @@ Run it on this repo:
 ```
 pnpm run check
 ```
+
+Read the guides from the terminal, listed or one at a time:
+
+```
+pnpm run docs
+pnpm run docs concepts/zones
+```

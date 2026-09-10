@@ -121,7 +121,19 @@ A new violation fails the build after that. A recorded one prints as a warning, 
 
 ## Full documentation
 
-The guides live in [apps/docs](../../apps/docs/src/content/docs), and cover the parts this page only mentions.
+The guides ship with the package, so you can read them without leaving the terminal and without a browser:
+
+```sh
+npx trueup docs
+```
+
+That lists every page with a line about each. Name one and it prints in full, and a claim name from a failing run works in the same place:
+
+```sh
+npx trueup docs seams
+```
+
+The same guides live in [apps/docs](../../apps/docs/src/content/docs), and cover the parts this page only mentions.
 
 - [Getting started](../../apps/docs/src/content/docs/start/getting-started.md), the same ten minutes in more detail
 - [Zones](../../apps/docs/src/content/docs/concepts/zones.md), the one idea everything else is built on
