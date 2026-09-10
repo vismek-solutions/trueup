@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { check, nameIn, placementOf, ungovernedIn } from "../../compose.ts";
+import { check, nameIn, placementOf, siblingsIn, ungovernedIn } from "../../compose.ts";
 import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
@@ -8,6 +8,7 @@ import { openedIn, unanalysed, type Opened } from "../preamble.ts";
 import { closesACycle, homeLines, homesFor, probeFor, type Home } from "./homes.ts";
 import { list } from "./lines.ts";
 import { nameLines } from "./name.ts";
+import { siblingLines } from "./siblings.ts";
 import { ungovernedLines } from "./ungoverned.ts";
 
 const UNGOVERNED = "--ungoverned";
@@ -176,6 +177,12 @@ const pathFor = async (cwd: string, target: string, write: (line: string) => voi
   write(`zone        ${zone}`);
   write(`may reach   ${list(placement.mayReach)}`);
   write(`may not     ${list(placement.mayNotReach)}`);
+
+  const siblings = siblingLines(siblingsIn({ rules: config.isolate ?? [], root, project, path }));
+  if (siblings.length > 0) {
+    write("");
+    for (const line of siblings) write(line);
+  }
 
   for (const seam of config.seams.filter((rule) => rule.generic === zone)) {
     const vocabulary = project.vocabularyOf(seam.domain);

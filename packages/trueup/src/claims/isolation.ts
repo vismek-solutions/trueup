@@ -62,11 +62,35 @@ const breachOf = (edge: ResolvedImport, { groupOf, shared, project }: Grouping):
   };
 };
 
-const findingsFor = (rule: IsolationRule, root: string, project: Project): readonly Finding[] => {
-  const groupOf = groupReader(root, rule.siblings);
-  const groups = new Set(project.files.map(groupOf).filter((group) => group !== null));
+interface Groups {
+  readonly groupOf: GroupOf;
+  readonly names: readonly string[];
+}
 
-  if (groups.size === 0) {
+const groupsFor = (rule: IsolationRule, root: string, project: Project): Groups => {
+  const groupOf = groupReader(root, rule.siblings);
+  const names = [...new Set(project.files.map(groupOf).filter((group) => group !== null))].sort();
+  return { groupOf, names };
+};
+
+const looseFinder = (rule: IsolationRule, root: string, project: Project): ((path: string) => boolean) => {
+  const atParent = picomatch(rule.siblings, { dot: true });
+  const groupOf = groupReader(root, rule.siblings);
+  const grouped = project.files
+    .filter((file) => groupOf(file) !== null)
+    .map((file) => toPosix(relative(root, file)));
+
+  return (path) => {
+    if (!atParent(path)) return false;
+    const parent = path.slice(0, path.lastIndexOf("/") + 1);
+    return grouped.some((file) => file.startsWith(parent));
+  };
+};
+
+const findingsFor = (rule: IsolationRule, root: string, project: Project): readonly Finding[] => {
+  const { groupOf, names: groups } = groupsFor(rule, root, project);
+
+  if (groups.length === 0) {
     return [
       {
         severity: "error",
@@ -77,11 +101,11 @@ const findingsFor = (rule: IsolationRule, root: string, project: Project): reado
     ];
   }
 
-  if (groups.size === 1) {
+  if (groups.length === 1) {
     return [
       {
         severity: "warning",
-        message: `\`${rule.siblings}\` matches only ${[...groups].join("")}, so it is keeping nothing apart yet`,
+        message: `\`${rule.siblings}\` matches only ${groups.join("")}, so it is keeping nothing apart yet`,
         file: null,
         start: null,
       },
@@ -98,28 +122,72 @@ const findingsFor = (rule: IsolationRule, root: string, project: Project): reado
 const looseIn = (rule: IsolationRule, root: string, project: Project): readonly Finding[] => {
   if (rule.wiring === undefined) return [];
 
-  const atParent = picomatch(rule.siblings, { dot: true });
   const assembles = picomatch([...rule.wiring], { dot: true });
-  const groupOf = groupReader(root, rule.siblings);
-
-  const grouped = project.files
-    .filter((file) => groupOf(file) !== null)
-    .map((file) => toPosix(relative(root, file)));
-
-  const besideAGroup = (path: string): boolean => {
-    const parent = path.slice(0, path.lastIndexOf("/") + 1);
-    return grouped.some((file) => file.startsWith(parent));
-  };
+  const loose = looseFinder(rule, root, project);
 
   return project.files
     .map((file) => ({ file, path: toPosix(relative(root, file)) }))
-    .filter(({ path }) => atParent(path) && !assembles(path) && besideAGroup(path))
+    .filter(({ path }) => loose(path) && !assembles(path))
     .map(({ file }) => ({
       severity: "error" as const,
       message: `sits beside the siblings \`${rule.siblings}\` rather than in one of them`,
       file,
       start: null,
     }));
+};
+
+export interface SiblingsInput {
+  readonly rules: readonly IsolationRule[];
+  readonly root: string;
+  readonly project: Project;
+  readonly path: string;
+}
+
+export interface SiblingPlacement {
+  readonly siblings: string;
+  readonly group: string | null;
+  readonly apart: readonly string[];
+  readonly shared: readonly string[];
+  readonly assembles: boolean;
+}
+
+const insideGroup = (rule: IsolationRule, names: readonly string[], group: string): SiblingPlacement => {
+  const shares = sharedBy(rule.except);
+  const others = names.filter((name) => name !== group);
+
+  return {
+    siblings: rule.siblings,
+    group,
+    apart: others.filter((name) => !shares(name)),
+    shared: others.filter((name) => shares(name)),
+    assembles: false,
+  };
+};
+
+const besideGroup = (rule: IsolationRule, names: readonly string[], here: string): SiblingPlacement | null =>
+  rule.wiring === undefined
+    ? null
+    : {
+        siblings: rule.siblings,
+        group: null,
+        apart: names,
+        shared: [],
+        assembles: picomatch([...rule.wiring], { dot: true })(here),
+      };
+
+export const siblingsFor = ({ rules, root, project, path }: SiblingsInput): readonly SiblingPlacement[] => {
+  const here = toPosix(relative(root, path));
+
+  return rules.flatMap((rule) => {
+    const { groupOf, names } = groupsFor(rule, root, project);
+    if (names.length < 2) return [];
+
+    const group = groupOf(path);
+    if (group !== null) return [insideGroup(rule, names, group)];
+
+    const beside = looseFinder(rule, root, project)(here) ? besideGroup(rule, names, here) : null;
+    return beside === null ? [] : [beside];
+  });
 };
 
 export function loosePlacementClaim(rules: readonly IsolationRule[]): Claim {

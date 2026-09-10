@@ -71,6 +71,35 @@ Leave wiring out and nothing is reported. The claim is not made at all, so addin
 
 In a workspace, one package can keep its own rulebook, which is the config file holding that package's rules. There, the wiring pattern is read against the package's own directory, the same way the siblings pattern is.
 
+## Asking one file where it stands
+
+A run reports the imports that already exist. To ask before writing one, name the file:
+
+```sh
+npx trueup explain src/routes/account/orders/history.ts
+```
+
+```
+zone        app
+may reach   app
+may not     none
+
+siblings    account, which `src/routes/*` keeps apart from catalog · checkout
+            it may still reach _shared, which the group shares
+```
+
+The zone answer and the siblings answer are separate questions, and both bind. Every route here sits in the same zone, so the zone lines on their own would have said this file may reach anything it can see.
+
+A file beside the group gets one line instead, and which line depends on whether the wiring list covers it.
+
+```
+siblings    sits beside `src/routes/*` rather than in one of its parts
+```
+
+```
+siblings    assembles `src/routes/*`, so it may reach every part of it
+```
+
 ## When to add an exception
 
 The except list is for the directory the group is meant to share. Use it for something like _shared and little else.

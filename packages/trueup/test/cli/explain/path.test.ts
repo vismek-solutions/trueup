@@ -2,10 +2,42 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { EXIT_BAD_USAGE } from "../../../src/cli/command.ts";
 import { runExplain } from "../../../src/cli/explain/run.ts";
-import { EXPLAINED, explainIn, saidBy } from "../../support/explain.ts";
+import { EXPLAINED, explainIn, ISOLATED, saidBy } from "../../support/explain.ts";
 import { fixtureAt } from "../../support/fixtures.ts";
 
 const explain = (...argv: string[]) => explainIn(EXPLAINED, argv);
+
+const isolated = async (path: string): Promise<string> => (await explainIn(ISOLATED, [path])).output;
+
+describe("explaining a path a rule keeps apart from its siblings", () => {
+  it("names the part it belongs to and the siblings it may not reach", async () => {
+    expect(await isolated("apps/web/src/routes/a/page.ts")).toContain(
+      "siblings    a, which `apps/web/src/routes/*` keeps apart from b",
+    );
+  });
+
+  it("names the parts the group shares, since those it may still reach", async () => {
+    expect(await isolated("apps/web/src/routes/a/page.ts")).toContain(
+      "it may still reach shared, which the group shares",
+    );
+  });
+
+  it("says a file at the parent sits beside the group rather than in one of its parts", async () => {
+    expect(await isolated("apps/web/src/routes/stray.ts")).toContain(
+      "siblings    sits beside `apps/web/src/routes/*` rather than in one of its parts",
+    );
+  });
+
+  it("says a file wiring covers assembles the group, so it reaches every part", async () => {
+    expect(await isolated("apps/web/src/routes/index.ts")).toContain(
+      "siblings    assembles `apps/web/src/routes/*`, so it may reach every part of it",
+    );
+  });
+
+  it("stays silent about siblings for a path no isolation rule reaches", async () => {
+    expect(await isolated("libs/kit/src/button.ts")).not.toContain("siblings");
+  });
+});
 
 describe("explaining a path before writing it", () => {
   it("names the zone a file that does not exist yet would fall into", async () => {

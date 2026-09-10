@@ -14,7 +14,14 @@ import { directoryClaim, type DirectoryLimit } from "./claims/placement/director
 import { duplicationClaim } from "./claims/placement/duplication.ts";
 import { readershipClaim } from "./claims/placement/readership.ts";
 import { reviewClaim, sizeOf, type ChangeSize, type ReviewBudget } from "./claims/review/budget.ts";
-import { isolationClaim, loosePlacementClaim, type IsolationRule } from "./claims/isolation.ts";
+import {
+  isolationClaim,
+  loosePlacementClaim,
+  siblingsFor,
+  type IsolationRule,
+  type SiblingPlacement,
+  type SiblingsInput,
+} from "./claims/isolation.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
@@ -92,6 +99,8 @@ export const ungovernedIn = (project: Project, boundaries: readonly BoundaryRule
 
 export const nameIn = (project: Project, file: string, name: string): NameReport =>
   aboutName(project, file, name);
+
+export const siblingsIn = (input: SiblingsInput): readonly SiblingPlacement[] => siblingsFor(input);
 
 export const changeSizeIn = (changed: readonly FileChange[], budget: ReviewBudget): ChangeSize =>
   sizeOf(changed, budget);
