@@ -2,6 +2,7 @@ import type { EdgeTarget } from "../graph/model.ts";
 import type { Vocabulary } from "../lexicon/model.ts";
 import type { BindingKind, Declaration, Mention } from "../ports/module-record.ts";
 import type { Severity } from "../report/model.ts";
+import type { ZoneRole } from "../zones/model.ts";
 
 export interface ResolvedImport {
   readonly from: string;
@@ -37,6 +38,7 @@ export interface Project {
   readonly files: readonly string[];
   readonly zoneNames: readonly string[];
   readonly zoneOf: (file: string) => string | null;
+  readonly roleOf: (zone: string) => ZoneRole | null;
   readonly filesIn: (zone: string) => readonly string[];
   readonly imports: (query?: ImportQuery) => readonly ResolvedImport[];
   readonly exportsOf: (file: string) => readonly string[];

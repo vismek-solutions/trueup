@@ -93,7 +93,9 @@ Add a name to the path and the question changes. Instead of where this file may 
 npx trueup explain src/engine/table.ts#rowKey
 ```
 
-The answer names the files and directories that read it, whether enough of them are far enough away for a move to have somewhere to land, how many declarations would have to travel with it, and which of the ones staying behind would need to import it back. That last number is the honest price of the move.
+The answer names the files and directories that read it, the zones those readers sit in with any role they carry, whether enough of them are far enough away for a move to have somewhere to land, how many declarations would have to travel with it, and which of the ones staying behind would need to import it back. That last number is the honest price of the move.
+
+The roles are worth reading closely there. A reader in a zone with a role is a real reader, and it is still not what the colocation check counts, so a name with three reader zones can honestly be reported as having one consumer.
 
 ## Asking where a new file may live
 

@@ -13,6 +13,7 @@ export interface DeadPattern {
 
 export interface ZoneAssignment {
   readonly zoneOf: (path: string) => string | null;
+  readonly roleOf: (zone: string) => ZoneRole | null;
   readonly declaredNames: readonly string[];
   readonly filesIn: (zone: string) => readonly string[];
   readonly unclassified: readonly string[];

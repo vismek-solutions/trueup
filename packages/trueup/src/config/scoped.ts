@@ -32,6 +32,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
       .filter((zone) => zone.startsWith(prefix))
       .map((zone) => zone.slice(prefix.length)),
     zoneOf: (file) => (inside(directory, file) ? stripped(prefix, project.zoneOf(file)) : null),
+    roleOf: (zone) => project.roleOf(qualify(zone)),
     filesIn: (zone) => project.filesIn(qualify(zone)),
     imports: (query?: ImportQuery) =>
       project

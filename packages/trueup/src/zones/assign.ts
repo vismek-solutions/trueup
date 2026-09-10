@@ -47,8 +47,11 @@ export function assignZones({ root, files, zones }: AssignZonesInput): ZoneAssig
     }
   }
 
+  const roles = new Map(zones.map((zone) => [zone.name, zone.role ?? null]));
+
   return {
     zoneOf: (path) => assigned.get(path) ?? null,
+    roleOf: (zone) => roles.get(zone) ?? null,
     declaredNames: zones.map((zone) => zone.name),
     filesIn: (zone) => filesByZone.get(zone) ?? [],
     unclassified,

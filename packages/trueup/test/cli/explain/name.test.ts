@@ -19,6 +19,23 @@ describe("who reads one export", () => {
     expect(await about("src/tools/three.ts#hammer")).toContain("zones: core · web");
   });
 
+  it("marks a reader zone the claim does not count, beside the claim still naming one consumer", async () => {
+    const said = await saidBy(CLAIMED, "lib/one.ts#label");
+
+    expect(said).toContain("zones: app · spec (tests)");
+    expect(said).toContain("declares label, used only by app/reader.ts");
+  });
+
+  it("points at the guide when a role is in play, since the word alone does not say what it changes", async () => {
+    expect(await saidBy(CLAIMED, "lib/one.ts#label")).toContain(
+      "a role changes what a claim expects of a zone: trueup docs zones",
+    );
+  });
+
+  it("stays quiet about roles when no reader zone carries one", async () => {
+    expect(await about("src/tools/three.ts#hammer")).not.toContain("a role changes what a claim expects");
+  });
+
   it("says whether the readers are spread, since that is what decides if a split has a home", async () => {
     expect(await about("src/tools/three.ts#hammer")).toContain(
       "2 directories beyond its own read it, so a split has somewhere to land",
@@ -222,10 +239,11 @@ describe("what already stands against one export", () => {
         "",
         "label",
         "",
-        "read by     app/reader.ts",
-        "            zones: app",
-        "            directories: app",
-        "            every reader outside that directory sits in one, so a move has one target",
+        "read by     app/reader.ts · spec/reads.ts",
+        "            zones: app · spec (tests)",
+        "            a role changes what a claim expects of a zone: trueup docs zones",
+        "            directories: app · spec",
+        "            2 directories beyond its own read it, so a split has somewhere to land",
         "",
         "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 0 here would import it back",
         "travels     none",

@@ -23,12 +23,23 @@ const meeting = (readers: About["readers"]): string => {
   return `            ${readers.elsewhere.length} directories beyond its own read it, so a split has somewhere to land`;
 };
 
-const readerLines = (readers: About["readers"]): string[] =>
+type ReaderZones = About["readers"]["zones"];
+
+const named = (zones: ReaderZones): readonly string[] =>
+  zones.map((zone) => (zone.role === null ? zone.name : `${zone.name} (${zone.role})`));
+
+const roleLines = (zones: ReaderZones, command: string): string[] =>
+  zones.some((zone) => zone.role !== null)
+    ? [`            a role changes what a claim expects of a zone: ${command} docs zones`]
+    : [];
+
+const readerLines = (readers: About["readers"], command: string): string[] =>
   readers.files.length === 0
     ? ["read by     nothing in this project"]
     : [
         `read by     ${list(readers.files)}`,
-        `            zones: ${list(readers.zones)}`,
+        `            zones: ${list(named(readers.zones))}`,
+        ...roleLines(readers.zones, command),
         `            directories: ${list(readers.directories)}`,
         meeting(readers),
       ];
@@ -50,9 +61,10 @@ const cutLines = (cut: Priced): string[] => [
 export interface NameLinesInput {
   readonly about: ReturnType<typeof nameIn>;
   readonly against: readonly string[];
+  readonly command: string;
 }
 
-export const nameLines = ({ about, against }: NameLinesInput): string[] => {
+export const nameLines = ({ about, against, command }: NameLinesInput): string[] => {
   const { name, declared, exported, readers, cut } = about;
 
   if (!declared && !exported) {
@@ -62,7 +74,7 @@ export const nameLines = ({ about, against }: NameLinesInput): string[] => {
   return [
     `${name}${declared ? "" : "  (exported here, declared elsewhere)"}`,
     "",
-    ...readerLines(readers),
+    ...readerLines(readers, command),
     "",
     ...(cut === null
       ? ["cut cost    not priced here, since what would move is declared in another file"]

@@ -4,6 +4,7 @@ export default defineConfig({
   zones: [
     { name: "app", patterns: ["app/**"] },
     { name: "lib", patterns: ["lib/**"] },
+    { name: "spec", patterns: ["spec/**"], role: "tests" },
   ],
   boundaries: [{ from: "app", allow: [] }],
   duplication: 40,

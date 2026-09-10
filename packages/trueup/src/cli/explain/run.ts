@@ -67,7 +67,7 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
 
   write(`${relative(root, path)}#${name}`);
   write("");
-  for (const line of nameLines({ about, against })) write(line);
+  for (const line of nameLines({ about, against, command: config.command ?? DEFAULT_COMMAND })) write(line);
   return 0;
 };
 

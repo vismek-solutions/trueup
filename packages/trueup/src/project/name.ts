@@ -1,12 +1,13 @@
 import { dirname } from "node:path";
 import type { Declaration } from "../ports/module-record.ts";
+import type { ZoneRole } from "../zones/model.ts";
 import type { Project } from "./model.ts";
 
 export interface NameReaders {
   readonly files: readonly string[];
   readonly directories: readonly string[];
   readonly elsewhere: readonly string[];
-  readonly zones: readonly string[];
+  readonly zones: readonly { readonly name: string; readonly role: ZoneRole | null }[];
 }
 
 export interface NameCut {
@@ -72,7 +73,10 @@ const readersOf = (project: Project, file: string, name: string): NameReaders =>
     files: spelt(edges.map((edge) => project.relative(edge.from))),
     directories,
     elsewhere: directories.filter((directory) => directory !== home),
-    zones: spelt(edges.flatMap((edge) => (edge.fromZone === null ? [] : [edge.fromZone]))),
+    zones: spelt(edges.flatMap((edge) => (edge.fromZone === null ? [] : [edge.fromZone]))).map((zone) => ({
+      name: zone,
+      role: project.roleOf(zone),
+    })),
   };
 };
 

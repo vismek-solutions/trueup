@@ -66,6 +66,7 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     files: [...graph.files],
     zoneNames: zones.declaredNames,
     zoneOf: zones.zoneOf,
+    roleOf: zones.roleOf,
     filesIn: zones.filesIn,
     imports,
     exportsOf: lexicon.exportedNamesIn,
