@@ -1,13 +1,15 @@
 import { defineConfig } from "vitest/config";
 
-// a spawned node process runs the real source, never stryker's instrumented copy, which node's
-// type stripping refuses outright — so the mutation run cannot host these
-const SPAWNED = ["test/**/*.spawned.test.ts"];
+// stryker's sandbox holds the package alone, and node's type stripping refuses its instrumented copy
+const OUTSIDE_THE_SANDBOX = ["test/**/*.spawned.test.ts", "test/**/*.workspace.test.ts"];
 
 export default defineConfig({
   test: {
     include: ["test/**/*.test.ts"],
-    exclude: ["test/fixtures/**", ...(process.env.TRUEUP_MUTATION === undefined ? [] : SPAWNED)],
+    exclude: [
+      "test/fixtures/**",
+      ...(process.env.TRUEUP_MUTATION === undefined ? [] : OUTSIDE_THE_SANDBOX),
+    ],
     testTimeout: 60_000,
   },
 });
