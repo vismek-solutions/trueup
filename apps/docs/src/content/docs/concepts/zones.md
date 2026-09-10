@@ -94,3 +94,63 @@ npx trueup explain src/engine/table.ts#rowKey
 ```
 
 The answer names the files and directories that read it, whether enough of them are far enough away for a move to have somewhere to land, how many declarations would have to travel with it, and which of the ones staying behind would need to import it back. That last number is the honest price of the move.
+
+## Asking where a new file may live
+
+The question above starts from a path. Often you have the opposite: you know what the new file has to import, and the path is the part you are trying to work out.
+
+```sh
+npx trueup explain --needs=src/domain/thing.ts --read-by=src/ui/screen.ts
+```
+
+```
+a new file
+
+reaches     domain
+read by     ui
+
+may live    api  src/api
+```
+
+The first list names the files it must import. The second names the files that will import it. Both take several paths, separated by commas.
+
+The answer is every zone allowed to reach all of the first and reachable from all of the second, with a directory where that zone's files already sit. Leave the second list off and the answer widens, because nothing yet says which zones will reach into the new file.
+
+Sometimes no zone qualifies. That answer is the useful one, because it separates two situations that look the same while you are stuck.
+
+```sh
+npx trueup explain --needs=src/api/client.ts,src/store/db.ts
+```
+
+```
+a new file
+
+reaches     api · store
+read by     nothing yet
+
+may live    nowhere
+            No zone may reach api · store at once, and a zone that may would close no
+            cycle. Declare one, named for what it holds rather than for being shared.
+```
+
+That is a gap in the rules. Nothing yet describes a part of the project allowed to see both of those, and writing one down is ordinary work.
+
+The other situation is not.
+
+```sh
+npx trueup explain --needs=src/ui/screen.ts --read-by=src/domain/thing.ts
+```
+
+```
+a new file
+
+reaches     ui
+read by     domain
+
+may live    nowhere
+            A zone reaching ui and read by domain would close a cycle,
+            because ui already reaches domain. This is two files rather
+            than one: split it along the zones it reaches.
+```
+
+No zone can help here, because any zone that could hold the file would complete a loop. The file is doing two jobs, and you know that before writing a line of it.

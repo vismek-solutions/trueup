@@ -137,6 +137,7 @@ const HELP = [
   "commands",
   "  init                    write a rulebook for this project by reading its shape",
   "  explain <path>[#<name>] the zone a path falls in; with a name, who reads it and what a cut costs",
+  "  explain --needs=<paths> where a file reaching those may live; --read-by=<paths> narrows it",
   "  explain --ungoverned    zone pairs whose traffic no boundary rule refuses, heaviest first",
   "  activate                every zone, boundary and setting in force, for an agent's context",
   "  guard                   rule on a proposed edit, reading a hook payload from stdin",

@@ -1,15 +1,25 @@
-import { isAbsolute, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { check, nameIn, placementOf, ungovernedIn } from "../../compose.ts";
 import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
-import { openedIn, unanalysed } from "../preamble.ts";
+import { openedIn, unanalysed, type Opened } from "../preamble.ts";
+import { closesACycle, homeLines, homesFor, probeFor, type Home } from "./homes.ts";
 import { list } from "./lines.ts";
 import { nameLines } from "./name.ts";
 import { ungovernedLines } from "./ungoverned.ts";
 
 const UNGOVERNED = "--ungoverned";
+
+const NEEDS = "--needs=";
+
+const READ_BY = "--read-by=";
+
+const USAGE = [
+  `usage: ${DEFAULT_COMMAND} explain <path>`,
+  `       ${DEFAULT_COMMAND} explain ${NEEDS}<path>[,<path>] [${READ_BY}<path>[,<path>]]`,
+];
 
 const SAMPLE = 6;
 
@@ -61,24 +71,74 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
   return 0;
 };
 
-export async function runExplain({ cwd, argv, write }: CommandInput): Promise<number> {
-  const flags = argv.filter((entry) => entry.startsWith("-") && entry !== UNGOVERNED);
-  if (flags.length > 0) {
-    write(`unrecognised: ${flags.join(" ")}`);
-    write(`usage: ${DEFAULT_COMMAND} explain <path>`);
+const pathsOf = (argv: readonly string[], flag: string): readonly string[] =>
+  (argv.find((entry) => entry.startsWith(flag))?.slice(flag.length) ?? "")
+    .split(",")
+    .filter((entry) => entry !== "");
+
+const resolved = (cwd: string, entry: string): string => (isAbsolute(entry) ? entry : resolve(cwd, entry));
+
+const zonesFor = (paths: readonly string[], cwd: string, project: Opened["project"]): readonly string[] => [
+  ...new Set(
+    paths.map((entry) => project.zoneOf(resolved(cwd, entry))).filter((zone): zone is string => zone !== null),
+  ),
+];
+
+const unplaced = (paths: readonly string[], cwd: string, project: Opened["project"]): string | undefined =>
+  paths.find((entry) => project.zoneOf(resolved(cwd, entry)) === null);
+
+interface HomesFrom {
+  readonly opened: Opened;
+  readonly cwd: string;
+  readonly argv: readonly string[];
+  readonly write: (line: string) => void;
+}
+
+const homesFrom = ({ opened, cwd, argv, write }: HomesFrom): number => {
+  const { config, root, project } = opened;
+  const asked = [...pathsOf(argv, NEEDS), ...pathsOf(argv, READ_BY)];
+  const unknown = unplaced(asked, cwd, project);
+
+  if (unknown !== undefined) {
+    write(`no zone covers ${unknown}`);
+    write("Name a file this analysis reads, since the zone it sits in is what places the new one.");
     return EXIT_BAD_USAGE;
   }
 
-  if (argv.includes(UNGOVERNED)) return ungovernedFor(cwd, write);
+  const needs = zonesFor(pathsOf(argv, NEEDS), cwd, project);
+  const readers = zonesFor(pathsOf(argv, READ_BY), cwd, project);
+  const rules = { zones: config.zones, boundaries: config.boundaries };
+  const whereIn = (zone: string): string | null => {
+    const probe = probeFor(project.filesIn(zone));
+    if (probe === null) return null;
+    return placementOf({ ...rules, root, path: probe }).zone === zone
+      ? relative(root, dirname(probe)) || "."
+      : null;
+  };
 
-  const target = argv[0];
-  if (target === undefined) {
-    write(`usage: ${DEFAULT_COMMAND} explain <path>`);
-    return 3;
-  }
+  const homes: Home[] = homesFor({ ...rules, needs, readers }).map((zone) => ({ zone, where: whereIn(zone) }));
+  const cycle = closesACycle({ ...rules, needs, readers });
 
-  if (target.includes("#")) return nameFor(cwd, target, write);
+  write("a new file");
+  write("");
+  for (const line of homeLines({ homes, needs, readers, cycle })) write(line);
+  return 0;
+};
 
+const valued = (entry: string): boolean => entry.startsWith(NEEDS) || entry.startsWith(READ_BY);
+
+const refusedIn = (argv: readonly string[], write: (line: string) => void): number | null => {
+  const unknown = argv.filter((entry) => entry.startsWith("-") && entry !== UNGOVERNED && !valued(entry));
+  if (unknown.length > 0) write(`unrecognised: ${unknown.join(" ")}`);
+  else if (argv.some(valued) && !argv.every((entry) => entry.startsWith("-"))) {
+    write("a path and the flags answer different questions, so give one or the other");
+  } else return null;
+
+  for (const line of USAGE) write(line);
+  return EXIT_BAD_USAGE;
+};
+
+const pathFor = async (cwd: string, target: string, write: (line: string) => void): Promise<number> => {
   const path = isAbsolute(target) ? target : resolve(cwd, target);
   const opened = await openedIn(cwd, write, new Map([[path, ""]]));
   if (typeof opened === "number") return opened;
@@ -133,4 +193,24 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
   }
 
   return 0;
+};
+
+export async function runExplain({ cwd, argv, write }: CommandInput): Promise<number> {
+  const refused = refusedIn(argv, write);
+  if (refused !== null) return refused;
+
+  if (argv.includes(UNGOVERNED)) return ungovernedFor(cwd, write);
+
+  if (argv.some(valued)) {
+    const opened = await openedIn(cwd, write);
+    return typeof opened === "number" ? opened : homesFrom({ opened, cwd, argv, write });
+  }
+
+  const target = argv[0];
+  if (target === undefined) {
+    for (const line of USAGE) write(line);
+    return 3;
+  }
+
+  return target.includes("#") ? nameFor(cwd, target, write) : pathFor(cwd, target, write);
 }

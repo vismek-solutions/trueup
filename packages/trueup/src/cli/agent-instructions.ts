@@ -9,6 +9,8 @@ export interface RunAgentInstructionsInput {
 export const adviceLines = (command: string): readonly string[] => [
   `- \`${command} explain <file>\` — run this **before** creating or moving a file. It reports the zone that`,
   "  path falls into, which zones it may and may not reach, and the vocabulary it may not name.",
+  `- \`${command} explain --needs=<file>,<file>\` — where a new file may live, given what it must import.`,
+  "  Add `--read-by=<file>` for what will import it. When no zone can hold it, it says what to split.",
   `- \`${command} --dots\` — check the whole project. Run it before calling a change done. It prints`,
   "  one character per claim and explains only what failed.",
   `- \`${command} --next\` — the first problem to fix, with its remedy. \`--next=<claim>\` picks the claim.`,
