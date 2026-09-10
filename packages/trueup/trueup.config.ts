@@ -4,7 +4,8 @@ const AMBIENT = ["ports", "paths"];
 
 export default defineMember({
   zones: [
-    { name: "spec", patterns: ["test/**"], role: "tests" },
+    { name: "spec", patterns: ["test/**/*.unit.test.ts"], role: "tests" },
+    { name: "flow", patterns: ["test/**"], role: "tests" },
     { name: "ports", patterns: ["src/ports/**"] },
     { name: "paths", patterns: ["src/paths/**"] },
     { name: "graph", patterns: ["src/graph/**"] },
