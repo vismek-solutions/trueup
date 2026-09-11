@@ -38,7 +38,7 @@ describe("keeping a value with its only consumer", () => {
 
   it("tells the reader when a shared package is right even though the finding stands", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
-      "Reach for one anyway when the consumer named must not own the value",
+      "Reach for the shared home anyway when the consumer named must not own the value",
     );
   });
 
