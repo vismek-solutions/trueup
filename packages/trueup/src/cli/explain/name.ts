@@ -1,4 +1,5 @@
 import type { nameIn } from "../../compose.ts";
+import { messageLines } from "../../report/lines.ts";
 import { list } from "./lines.ts";
 
 type About = ReturnType<typeof nameIn>;
@@ -100,7 +101,7 @@ export const nameLines = ({ about, against, command, blocked }: NameLinesInput):
       : cutLines(cut)),
     "",
     `claims      ${against.length === 0 ? "none stand against this name" : `${against.length}`}`,
-    ...against.map((said) => `    ${said}`),
+    ...against.flatMap((said) => messageLines({ message: said, head: "    ", indent: "        " })),
     "            delegated tools are not consulted here; run the check itself for those",
   ];
 };

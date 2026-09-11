@@ -126,6 +126,9 @@ describe("what the shared fixture reports, in full", () => {
       "declares bothAndHome, used outside its zone only by src/web/detail.ts, and inside its zone and by this file as well",
       "declares alsoOnlyServerUses, used only by src/server/handler.ts",
       "declares shapeOnlyServerUses, used only by src/server/handler.ts",
+      `declares shapeReachedTwoWays, used only by server (2 files), and by this file as well:
+- shapeReachedTwoWays in src/server/handler.ts
+- ReachedTwoWays in src/server/route.ts`,
       "declares wrapsAlone, used only by src/server/handler.ts",
       "declares aloneAtHome, used only by src/web/detail.ts, and by this file as well",
       "declares usedInProduction, used only by src/web/detail.ts, while spec reads it too but is tests, so it does not count",
@@ -171,6 +174,18 @@ describe("a value a foreign zone reads only through the type built from it", () 
 
   it("holds off calling the whole file misplaced, since the move would strand that zone's type", () => {
     expect(messagesFor(CLAIM).join()).not.toContain("all used only by src/server/handler.ts");
+  });
+
+  it("names what each reader imports, so a count carrying a type holder can be checked by hand", () => {
+    expect(messagesFor(CLAIM)).toContain(
+      `declares shapeReachedTwoWays, used only by server (2 files), and by this file as well:
+- shapeReachedTwoWays in src/server/handler.ts
+- ReachedTwoWays in src/server/route.ts`,
+    );
+  });
+
+  it("leaves the count bare when every reader imports the value by its own name", () => {
+    expect(messagesFor(CLAIM)).toContain("declares alsoOnlyServerUses, used only by src/server/handler.ts");
   });
 });
 
@@ -232,7 +247,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", () => {
-    expect(next().split("\n")[0]).toContain("problem 1 of 10 · 13 claims · 13 errors");
+    expect(next().split("\n")[0]).toContain("problem 1 of 10 · 13 claims · 14 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", () => {

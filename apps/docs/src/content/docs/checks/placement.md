@@ -77,6 +77,17 @@ The server parses its input with currencySchema, and the web only ever names Cur
 
 This is worth a moment, because it looks like the same evidence being trusted in one place and not the other. What makes a type edge unsafe is that it undercounts, and a count that is too low is what produces a wrong finding here. Evidence that adds a reader can only ever silence one.
 
+A reader counted that way never writes the name, so the number can look wrong to anyone who searches for it. When the count holds one, the finding lists what each reader imports:
+
+```
+no-value-is-declared-away-from-its-only-consumer  2 errors
+    src/domain/money.ts  declares currencySchema, used only by server (2 files), and by this file as well:
+        - currencySchema in src/server/routes.ts
+        - Currency in src/server/checkout.ts
+```
+
+Two files read currencySchema and only one writes that name. The other holds Currency, which is built from it. Where every reader imports the value by its own name the list is left off, because the count can already be checked as it stands.
+
 Measured on a 911-file monorepo: 758 findings with neither exclusion, 47 with both. Ten of the 47 were values in a shared package that only one app used, which is the case that counting files per symbol misses entirely.
 
 ### When no move closes it

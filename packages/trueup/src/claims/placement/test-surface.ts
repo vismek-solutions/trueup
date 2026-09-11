@@ -2,7 +2,7 @@ import { dirname } from "node:path";
 import type { Project } from "../../project/model.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
-import { type SymbolReach, everyConsumer } from "./colocation.ts";
+import { type SymbolReach, everyConsumer } from "./reach.ts";
 import { FOR_TESTS, INTERNALS } from "./remedies.ts";
 
 export interface TestInternalsInput {
