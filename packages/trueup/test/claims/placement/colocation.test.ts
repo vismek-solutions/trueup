@@ -40,12 +40,12 @@ describe("keeping a value with its only consumer", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain("never owns what it uses");
   });
 
-  it("sends the reader to the file before the declaration, since the symbol is only the evidence", () => {
+  it("names the thing to move from the shape of the finding, rather than sending the reader to the file", () => {
     const guidance = claimIn(runWith(), CLAIM)?.guidance ?? "";
 
-    expect(guidance).toContain("not always where the defect is");
-    expect(guidance).toContain("moving the file closes every finding at once");
-    expect(guidance).toContain("Moving the one declaration is the fix only when neither of those holds");
+    expect(guidance).toContain("already decided for you by the shape of the finding");
+    expect(guidance).toContain("A finding that counts the exports");
+    expect(guidance).toContain("A finding that names one declaration");
   });
 });
 
@@ -102,8 +102,7 @@ describe("an export that exists only for its test", () => {
 describe("what the shared fixture reports, in full", () => {
   it("reports exactly these misplacements, ordered by the file that declares them", () => {
     expect(messagesFor(CLAIM)).toEqual([
-      "declares alsoEarly, used only by src/web/detail.ts",
-      "declares earlyName, used only by src/web/detail.ts",
+      "declares 2 exports, all used only by src/web/detail.ts, so the file is in the wrong directory rather than the declarations",
       "declares usedInProduction, used only by src/web/detail.ts",
       "declares forWebOnly, used only by web (2 files)",
     ]);
@@ -137,14 +136,15 @@ describe("what the shared fixture reports, in full", () => {
 describe("showing a misplaced file rather than a scatter of symbols", () => {
   const next = (): string => renderNext(sharedReport(), SHARED);
 
-  it("collects every symbol one file declares into a single problem", () => {
-    expect(next()).toContain("2 errors");
-    expect(next()).toContain("declares alsoEarly, used only by src/web/detail.ts");
-    expect(next()).toContain("declares earlyName, used only by src/web/detail.ts");
+  it("states the move, rather than listing the symbols and leaving the reader to draw it", () => {
+    expect(next()).toContain("no-value-is-declared-away-from-its-only-consumer  1 error");
+    expect(next()).toContain(
+      "declares 2 exports, all used only by src/web/detail.ts, so the file is in the wrong directory",
+    );
   });
 
   it("counts a file as one problem, not one per symbol it declares", () => {
-    expect(next().split("\n")[0]).toContain("problem 1 of 4 · 13 claims · 5 errors");
+    expect(next().split("\n")[0]).toContain("problem 1 of 4 · 13 claims · 4 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", () => {

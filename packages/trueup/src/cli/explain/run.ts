@@ -59,7 +59,7 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
   const readers = new Set(about.readers.files);
   const against = report.claims.flatMap((claim) =>
     claim.findings.flatMap((finding) => {
-      if (finding.symbol !== name || finding.file === null) return [];
+      if (finding.symbols?.includes(name) !== true || finding.file === null) return [];
       const at = project.relative(finding.file);
       const mine = finding.file === path || readers.has(at);
       return mine ? [`${claim.claim}  ${at}  ${finding.message}`] : [];

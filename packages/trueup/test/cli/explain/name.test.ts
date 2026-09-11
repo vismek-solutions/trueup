@@ -213,6 +213,14 @@ describe("what already stands against one export", () => {
     expect((await standing("lib/one.ts#label")).join()).not.toContain("declares badge");
   });
 
+  it("gathers a claim about the whole file against each of the names it covers", async () => {
+    const said = await standing("lib/three.ts#secondThing");
+
+    expect(said).toContain(
+      "    no-value-is-declared-away-from-its-only-consumer  lib/three.ts  declares 2 exports, all used only by app/reader.ts, so the file is in the wrong directory rather than the declarations",
+    );
+  });
+
   it("gathers a sibling breach, since an isolation rule refuses a name and not only a file", async () => {
     expect(await saidBy(ISOLATED, "apps/web/src/routes/b/thing.ts#thing")).toContain(
       "no-sibling-directory-reaches-another  apps/web/src/routes/a/page.ts  is a and may not reach sibling b",

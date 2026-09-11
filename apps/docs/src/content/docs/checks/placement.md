@@ -15,14 +15,18 @@ Say exactly one other zone uses a value. Then that value is not shared code. It 
 colocation: true,
 ```
 
-Turn it on in the shop project from [getting started](/start/getting-started/) and three exports turn out to have exactly one customer each:
+Turn it on in the shop project from [getting started](/start/getting-started/) and three findings come back:
 
 ```
 no-value-is-declared-away-from-its-only-consumer  3 errors
-    src/api/money.ts  declares formatMoney, used only by src/components/CartRow.tsx
+    src/api/money.ts  declares 2 exports, all used only by src/components/CartRow.tsx, so the file is in the wrong directory rather than the declarations
     src/components/CartRow.tsx  declares CartRow, used only by src/hooks/useCart.ts
     src/domain/order.ts  declares isSettled, used only by server/routes.ts
 ```
+
+There are two shapes there, and which one you get decides what to move. A finding that counts the exports means every reported export of that file goes to the same place, so the file is what moves and all of them close together. A finding that names one declaration means the rest of the file has other readers, so the file stays and only that declaration is in question.
+
+That saves you the reading. Working out which case you are in by opening the file is the step that goes wrong most often, and the check already knows the answer.
 
 Take the last one. isSettled sits in the domain zone, where shared business rules go, and the server is the only thing that ever asks for it. Move it into the server. A second customer arriving later is a reason to move it back then, and not a reason to have guessed now.
 
