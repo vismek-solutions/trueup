@@ -23,8 +23,10 @@ describe("explaining a path a rule keeps apart from its siblings", () => {
   });
 
   it("says a file at the parent sits beside the group rather than in one of its parts", async () => {
-    expect(await isolated("apps/web/src/routes/stray.ts")).toContain(
-      "siblings    sits beside `apps/web/src/routes/*` rather than in one of its parts",
+    const said = await isolated("apps/web/src/routes/stray.ts");
+
+    expect(said.endsWith("siblings    sits beside `apps/web/src/routes/*` rather than in one of its parts\n")).toBe(
+      true,
     );
   });
 
@@ -50,18 +52,36 @@ describe("explaining a shared directory that stands in an order", () => {
     expect(said).toContain("it may not reach _ui, though the group shares it");
   });
 
-  it("says only what is held back when it may reach none of them", async () => {
-    const said = await layered("src/routes/_state/store.ts");
-
-    expect(said).toContain("it may not reach _root · _ui, though the group shares them");
-    expect(said).not.toContain("may still reach");
+  it("says only what is held back when it may reach none of them, and nothing more", async () => {
+    expect(await layered("src/routes/_state/store.ts")).toBe(
+      [
+        "src/routes/_state/store.ts",
+        "",
+        "zone        app",
+        "may reach   app",
+        "may not     none",
+        "",
+        "siblings    _state, which `src/routes/*` keeps apart from a · b",
+        "            it may not reach _root · _ui, though the group shares them",
+        "",
+      ].join("\n"),
+    );
   });
 
   it("keeps an island reaching every shared directory, whatever the order among them", async () => {
-    const said = await layered("src/routes/a/page.ts");
-
-    expect(said).toContain("it may still reach _root · _state · _ui, which the group shares");
-    expect(said).not.toContain("may not reach");
+    expect(await layered("src/routes/a/page.ts")).toBe(
+      [
+        "src/routes/a/page.ts",
+        "",
+        "zone        app",
+        "may reach   app",
+        "may not     none",
+        "",
+        "siblings    a, which `src/routes/*` keeps apart from b",
+        "            it may still reach _root · _state · _ui, which the group shares",
+        "",
+      ].join("\n"),
+    );
   });
 });
 

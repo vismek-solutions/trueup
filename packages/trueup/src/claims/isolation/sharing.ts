@@ -9,11 +9,18 @@ export type SiblingException = string | SharedSibling;
 
 export type Matches = (group: string) => boolean;
 
-const matching = (patterns: readonly string[]): Matches =>
-  patterns.length === 0 ? () => false : picomatch([...patterns], { dot: true });
+const matching = (patterns: readonly string[]): Matches => picomatch([...patterns], { dot: true });
 
 const patternOf = (exception: SiblingException): string =>
   typeof exception === "string" ? exception : exception.shared;
+
+interface Reach {
+  readonly allow: readonly string[];
+  readonly permits: Matches;
+}
+
+const reachOf = (exception: SiblingException): Reach | null =>
+  typeof exception === "string" ? null : { allow: exception.allow, permits: matching(exception.allow) };
 
 export interface Sharing {
   readonly shares: Matches;
@@ -21,17 +28,14 @@ export interface Sharing {
 }
 
 export const sharingOf = (exceptions: readonly SiblingException[] | undefined): Sharing => {
-  const entries = (exceptions ?? []).map((exception) => ({
-    matches: matching([patternOf(exception)]),
-    allow: typeof exception === "string" ? null : exception.allow,
-    permits: typeof exception === "string" ? () => true : matching(exception.allow),
-  }));
+  const listed = exceptions ?? [];
+  const entries = listed.map((exception) => ({ matches: matching([patternOf(exception)]), reach: reachOf(exception) }));
 
   return {
-    shares: matching((exceptions ?? []).map(patternOf)),
+    shares: matching(listed.map(patternOf)),
     withheld: (from, to) => {
-      const entry = entries.find(({ matches }) => matches(from));
-      return entry === undefined || entry.allow === null || entry.permits(to) ? null : entry.allow;
+      const reach = entries.find(({ matches }) => matches(from))?.reach ?? null;
+      return reach === null || reach.permits(to) ? null : reach.allow;
     },
   };
 };

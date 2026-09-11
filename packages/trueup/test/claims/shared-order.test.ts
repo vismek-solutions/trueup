@@ -50,6 +50,12 @@ describe("an order among the directories a group shares", () => {
     ]);
   });
 
+  it("lists every pattern the directory was given, spaced apart rather than run together", () => {
+    expect(layered("_ui", "_state", { shared: "_root", allow: ["_state", "_kit"] })).toEqual([
+      "is _root, shared with reach into `_state` · `_kit` only, and may not reach _ui: kit from src/routes/_ui/kit.ts",
+    ]);
+  });
+
   it("takes the first entry that matches, so a wide name after a narrow one does not widen it", () => {
     expect(layered({ shared: "_state", allow: [] }, "_*")).toEqual([STATE_REFUSED]);
     expect(layered("_*", { shared: "_state", allow: [] })).toEqual([]);
