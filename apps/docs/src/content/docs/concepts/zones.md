@@ -97,6 +97,8 @@ The answer names the files and directories that read it, the zones those readers
 
 The roles are worth reading closely there. A reader in a zone with a role is a real reader, and it is still not what the colocation check counts, so a name with three reader zones can honestly be reported as having one consumer.
 
+Where the zone that declares a name also keeps a reader of it, and may not reach the zone the other readers sit in, the answer says that instead of saying a move has somewhere to go. Moving the name would leave that reader reaching across a boundary, so the move is not the free one the other numbers would suggest.
+
 ## Asking where a new file may live
 
 The question above starts from a path. Often you have the opposite: you know what the new file has to import, and the path is the part you are trying to work out.

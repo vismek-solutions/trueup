@@ -6,7 +6,10 @@ export default defineConfig({
     { name: "lib", patterns: ["lib/**"] },
     { name: "spec", patterns: ["spec/**"], role: "tests" },
   ],
-  boundaries: [{ from: "app", allow: [] }],
+  boundaries: [
+    { from: "app", allow: [] },
+    { from: "lib", allow: [] },
+  ],
   duplication: 40,
   colocation: true,
 });

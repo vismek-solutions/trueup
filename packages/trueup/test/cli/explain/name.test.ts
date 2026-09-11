@@ -22,8 +22,15 @@ describe("who reads one export", () => {
   it("marks a reader zone the claim does not count, beside the claim still naming one consumer", async () => {
     const said = await saidBy(CLAIMED, "lib/one.ts#label");
 
-    expect(said).toContain("zones: app · spec (tests)");
+    expect(said).toContain("zones: app · lib · spec (tests)");
     expect(said).toContain("declares label, used only by app/reader.ts");
+  });
+
+  it("names the zone that keeps a reader it may not reach, rather than promising a move", async () => {
+    const said = await saidBy(CLAIMED, "lib/one.ts#label");
+
+    expect(said).toContain("lib keeps a reader of this and may not reach app · spec");
+    expect(said).not.toContain("so a split has somewhere to land");
   });
 
   it("points at the guide when a role is in play, since the word alone does not say what it changes", async () => {
@@ -253,11 +260,11 @@ describe("what already stands against one export", () => {
         "",
         "label",
         "",
-        "read by     app/reader.ts · spec/reads.ts",
-        "            zones: app · spec (tests)",
+        "read by     app/reader.ts · lib/four.ts · spec/reads.ts",
+        "            zones: app · lib · spec (tests)",
         "            a role changes what a claim expects of a zone: trueup docs zones",
-        "            directories: app · spec",
-        "            2 directories beyond its own read it, so a split has somewhere to land",
+        "            directories: app · lib · spec",
+        "            lib keeps a reader of this and may not reach app · spec",
         "",
         "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 0 here would import it back",
         "travels     none",

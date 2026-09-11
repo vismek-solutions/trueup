@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { check, nameIn, placementOf, siblingsIn, ungovernedIn } from "../../compose.ts";
+import { check, nameIn, placementOf, reachOf, siblingsIn, ungovernedIn } from "../../compose.ts";
 import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
@@ -7,7 +7,7 @@ import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
 import { openedIn, unanalysed, type Opened } from "../preamble.ts";
 import { closesACycle, homeLines, homesFor, probeFor, type Home } from "./homes.ts";
 import { list } from "./lines.ts";
-import { nameLines } from "./name.ts";
+import { nameLines, type Blocked } from "./name.ts";
 import { siblingLines } from "./siblings.ts";
 import { ungovernedLines } from "./ungoverned.ts";
 
@@ -39,6 +39,18 @@ const ungovernedFor = async (cwd: string, write: (line: string) => void): Promis
   return 0;
 };
 
+const refusedMove = (opened: Opened, path: string, about: ReturnType<typeof nameIn>): Blocked | null => {
+  const { config, project } = opened;
+  const from = project.zoneOf(path);
+  const zones = about.readers.zones.map((zone) => zone.name);
+  if (from === null || !zones.includes(from)) return null;
+
+  const { mayReach } = reachOf({ zone: from, zones: config.zones, boundaries: config.boundaries });
+  const refused = zones.filter((zone) => zone !== from && !mayReach.includes(zone));
+
+  return refused.length === 0 ? null : { from, zones: refused };
+};
+
 const nameFor = async (cwd: string, target: string, write: (line: string) => void): Promise<number> => {
   const [where = "", name = ""] = target.split("#");
   const path = isAbsolute(where) ? where : resolve(cwd, where);
@@ -68,7 +80,13 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
 
   write(`${relative(root, path)}#${name}`);
   write("");
-  for (const line of nameLines({ about, against, command: config.command ?? DEFAULT_COMMAND })) write(line);
+  const said = nameLines({
+    about,
+    against,
+    command: config.command ?? DEFAULT_COMMAND,
+    blocked: refusedMove(opened, path, about),
+  });
+  for (const line of said) write(line);
   return 0;
 };
 

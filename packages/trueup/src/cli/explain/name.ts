@@ -13,9 +13,17 @@ const priced = (cut: Priced): string =>
     `${cut.importBack.length} here would import it back`,
   ].join(" · ");
 
-const meeting = (readers: About["readers"]): string => {
+export interface Blocked {
+  readonly from: string;
+  readonly zones: readonly string[];
+}
+
+const meeting = (readers: About["readers"], blocked: Blocked | null): string => {
   if (readers.elsewhere.length === 0) {
     return "            every reader sits in the directory it is declared in";
+  }
+  if (blocked !== null) {
+    return `            ${blocked.from} keeps a reader of this and may not reach ${list(blocked.zones)}`;
   }
   if (readers.elsewhere.length === 1) {
     return "            every reader outside that directory sits in one, so a move has one target";
@@ -33,7 +41,7 @@ const roleLines = (zones: ReaderZones, command: string): string[] =>
     ? [`            a role changes what a claim expects of a zone: ${command} docs zones`]
     : [];
 
-const readerLines = (readers: About["readers"], command: string): string[] =>
+const readerLines = (readers: About["readers"], command: string, blocked: Blocked | null): string[] =>
   readers.files.length === 0
     ? ["read by     nothing in this project"]
     : [
@@ -41,7 +49,7 @@ const readerLines = (readers: About["readers"], command: string): string[] =>
         `            zones: ${list(named(readers.zones))}`,
         ...roleLines(readers.zones, command),
         `            directories: ${list(readers.directories)}`,
-        meeting(readers),
+        meeting(readers, blocked),
       ];
 
 const cutLines = (cut: Priced): string[] => [
@@ -62,9 +70,10 @@ export interface NameLinesInput {
   readonly about: ReturnType<typeof nameIn>;
   readonly against: readonly string[];
   readonly command: string;
+  readonly blocked: Blocked | null;
 }
 
-export const nameLines = ({ about, against, command }: NameLinesInput): string[] => {
+export const nameLines = ({ about, against, command, blocked }: NameLinesInput): string[] => {
   const { name, declared, exported, readers, cut } = about;
 
   if (!declared && !exported) {
@@ -74,7 +83,7 @@ export const nameLines = ({ about, against, command }: NameLinesInput): string[]
   return [
     `${name}${declared ? "" : "  (exported here, declared elsewhere)"}`,
     "",
-    ...readerLines(readers, command),
+    ...readerLines(readers, command, blocked),
     "",
     ...(cut === null
       ? ["cut cost    not priced here, since what would move is declared in another file"]
