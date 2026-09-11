@@ -57,13 +57,13 @@ const cutLines = (cut: Priced): string[] => [
   `travels     ${list(cut.travels)}`,
   `promote     ${list(cut.promote)}`,
   cut.promote.length === 0
-    ? "            nothing that stays reads what it reaches, so no one else has to agree"
-    : "            something that stays reads these, so cutting means promoting them first",
+    ? "            nothing else in this file reads what it reaches, so no one else has to agree"
+    : "            something else in this file reads these, so cutting means promoting them first",
   `follows     ${list(cut.follows)}`,
   `import back ${list(cut.importBack)}`,
   cut.importBack.length === 0
-    ? "            nothing that stays reads it, so the file it leaves needs nothing back"
-    : "            these stay and read it, so the cut is not free until they import it back",
+    ? "            nothing else in this file reads it, so the file it leaves needs nothing back"
+    : "            these stay in this file and read it, so the cut is not free until they import it back",
 ];
 
 export interface NameLinesInput {

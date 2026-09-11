@@ -132,7 +132,7 @@ describe("pricing what one export would cost to move", () => {
 
   it("says a bare promote count means nobody else has to agree, not that the move is free", async () => {
     expect(await cutting("lib.ts#bounce")).toContain(
-      "nothing that stays reads what it reaches, so no one else has to agree",
+      "nothing else in this file reads what it reaches, so no one else has to agree",
     );
   });
 
@@ -269,10 +269,10 @@ describe("what already stands against one export", () => {
         "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 0 here would import it back",
         "travels     none",
         "promote     none",
-        "            nothing that stays reads what it reaches, so no one else has to agree",
+        "            nothing else in this file reads what it reaches, so no one else has to agree",
         "follows     none",
         "import back none",
-        "            nothing that stays reads it, so the file it leaves needs nothing back",
+        "            nothing else in this file reads it, so the file it leaves needs nothing back",
         "",
         "claims      3",
         "    every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",
