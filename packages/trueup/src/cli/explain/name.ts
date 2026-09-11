@@ -52,6 +52,16 @@ const readerLines = (readers: About["readers"], command: string, blocked: Blocke
         meeting(readers, blocked),
       ];
 
+const landing = (opening: Priced["opening"]): string => {
+  if (opening === null) {
+    return "            more than one zone reads this, so where it would land is not settled";
+  }
+  if (opening.length === 0) {
+    return "            nothing it imports becomes a finding of its own once it lands";
+  }
+  return `            once it lands these become findings of their own: ${list(opening)}`;
+};
+
 const cutLines = (cut: Priced): string[] => [
   `cut cost    ${priced(cut)}`,
   `travels     ${list(cut.travels)}`,
@@ -60,6 +70,7 @@ const cutLines = (cut: Priced): string[] => [
     ? "            nothing else in this file reads what it reaches, so no one else has to agree"
     : "            something else in this file reads these, so cutting means promoting them first",
   `follows     ${list(cut.follows)}`,
+  ...(cut.follows.length === 0 ? [] : [landing(cut.opening)]),
   `import back ${list(cut.importBack)}`,
   cut.importBack.length === 0
     ? "            nothing else in this file reads it, so the file it leaves needs nothing back"

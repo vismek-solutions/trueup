@@ -1,7 +1,7 @@
 import { dirname } from "node:path";
 import type { Declaration } from "../ports/module-record.ts";
 import type { ZoneRole } from "../zones/model.ts";
-import type { Project } from "./model.ts";
+import type { Project, ResolvedImport } from "./model.ts";
 
 export interface NameReaders {
   readonly files: readonly string[];
@@ -14,6 +14,7 @@ export interface NameCut {
   readonly travels: readonly string[];
   readonly promote: readonly string[];
   readonly follows: readonly string[];
+  readonly opening: readonly string[] | null;
   readonly importBack: readonly string[];
 }
 
@@ -47,20 +48,59 @@ const spelt = (values: Iterable<string>): readonly string[] => [...new Set(value
 const withinAny = (spans: readonly Declaration[], start: number): boolean =>
   spans.some((span) => start >= span.start && start < span.end);
 
-const followedFrom = (project: Project, file: string, moving: ReadonlySet<string>): readonly string[] => {
-  const spans = project.declarationsIn(file).filter((declaration) => moving.has(declaration.name));
-  const mentioned = new Set(
+const mentionedWithin = (
+  project: Project,
+  file: string,
+  spans: readonly Declaration[],
+): ReadonlySet<string> =>
+  new Set(
     project
       .mentionsIn(file)
       .filter((mention) => mention.form === "name" && withinAny(spans, mention.start))
       .map((mention) => mention.text),
   );
 
+const takenFrom = (project: Project, file: string, locals: ReadonlySet<string>): readonly ResolvedImport[] =>
+  project.imports().filter((edge) => edge.from === file && locals.has(edge.local));
+
+const foreignTo = (project: Project, home: string, zones: readonly (string | null)[]): Set<string> =>
+  new Set(
+    zones.filter(
+      (zone): zone is string => zone !== null && zone !== home && project.roleOf(zone) === null,
+    ),
+  );
+
+interface Landing {
+  readonly file: string;
+  readonly from: string | null;
+  readonly to: string;
+  readonly kept: ReadonlySet<string>;
+}
+
+const openedBy = (
+  project: Project,
+  taken: readonly ResolvedImport[],
+  { file, from, to, kept }: Landing,
+): readonly string[] => {
+  const every = project.imports();
+
   return spelt(
-    project
-      .imports()
-      .filter((edge) => edge.from === file && mentioned.has(edge.local))
-      .map((edge) => edge.specifier),
+    taken.flatMap((edge) => {
+      const { symbol, declaredIn, declaredZone } = edge;
+      if (symbol === null || declaredIn === null || declaredZone === null) return [];
+      if (declaredZone === to || declaredIn === file) return [];
+
+      const readers = every.filter((other) => other.declaredIn === declaredIn && other.symbol === symbol);
+      const stays = kept.has(edge.local) ? [from] : [];
+      const before = foreignTo(project, declaredZone, readers.map((other) => other.fromZone));
+      const after = foreignTo(project, declaredZone, [
+        ...readers.filter((other) => other.from !== file).map((other) => other.fromZone),
+        to,
+        ...stays,
+      ]);
+
+      return after.size === 1 && before.size !== 1 ? [symbol] : [];
+    }),
   );
 };
 
@@ -80,7 +120,13 @@ const readersOf = (project: Project, file: string, name: string): NameReaders =>
   };
 };
 
-const cutOf = (project: Project, file: string, name: string): NameCut => {
+interface Moving {
+  readonly file: string;
+  readonly name: string;
+  readonly to: string | null;
+}
+
+const cutOf = (project: Project, { file, name, to }: Moving): NameCut => {
   const uses = project.referencesIn(file);
   const others = project.exportsOf(file).filter((exported) => exported !== name);
   const needs = reachedFrom(uses, [name]);
@@ -89,25 +135,38 @@ const cutOf = (project: Project, file: string, name: string): NameCut => {
 
   const travels = [...needs].filter((other) => !keeps.has(other));
   const leaving = new Set([name, ...travels]);
+  const spans = project.declarationsIn(file);
+  const moved = mentionedWithin(project, file, spans.filter((span) => leaving.has(span.name)));
+  const kept = mentionedWithin(project, file, spans.filter((span) => !leaving.has(span.name)));
+  const taken = takenFrom(project, file, moved);
 
   return {
     travels: spelt(travels),
     promote: spelt([...needs].filter((other) => keeps.has(other))),
-    follows: followedFrom(project, file, leaving),
+    follows: spelt(taken.map((edge) => edge.specifier)),
+    opening: to === null ? null : openedBy(project, taken, { file, from: project.zoneOf(file), to, kept }),
     importBack: spelt(
       [...uses].filter(([other, reads]) => !leaving.has(other) && reads.has(name)).map(([other]) => other),
     ),
   };
 };
 
+const landingFor = (readers: NameReaders, home: string | null): string | null => {
+  const outside = readers.zones.filter((zone) => zone.role === null && zone.name !== home);
+  const only = outside[0];
+
+  return outside.length === 1 && only !== undefined ? only.name : null;
+};
+
 export const aboutName = (project: Project, file: string, name: string): NameReport => {
   const declared = project.declarationsIn(file).some((declaration) => declaration.name === name);
+  const readers = readersOf(project, file, name);
 
   return {
     name,
     declared,
     exported: project.exportsOf(file).includes(name),
-    readers: readersOf(project, file, name),
-    cut: declared ? cutOf(project, file, name) : null,
+    readers,
+    cut: declared ? cutOf(project, { file, name, to: landingFor(readers, project.zoneOf(file)) }) : null,
   };
 };

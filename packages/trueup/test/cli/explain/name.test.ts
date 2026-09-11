@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CLAIMED, CUT, explainIn, ISOLATED, saidBy, UNRULED } from "../../support/explain.ts";
+import { CLAIMED, CUT, explainIn, ISOLATED, LANDING, saidBy, UNRULED } from "../../support/explain.ts";
 
 const about = (target: string) => saidBy(UNRULED, target);
 
 const cutting = (target: string) => saidBy(CUT, target);
+
+const landing = (target: string) => saidBy(LANDING, target);
 
 const standing = async (target: string): Promise<string[]> =>
   (await saidBy(CLAIMED, target)).split("\n").filter((line) => /^ {4}\S/.test(line));
@@ -186,6 +188,33 @@ describe("pricing what one export would cost to move", () => {
     expect(said).toContain("cut cost    not priced here, since what would move is declared in another file");
     expect(said).not.toContain("travels");
     expect(said).not.toContain("promote");
+  });
+});
+
+describe("what the imports that follow a move would cost where it lands", () => {
+  it("names the import that would be left with one foreign reader, since that is a new finding", async () => {
+    expect(await landing("src/lib/cart.ts#cartFor")).toContain(
+      "            once it lands these become findings of their own: sessionFor",
+    );
+  });
+
+  it("says so when an import keeps a reader at home, so the move costs nothing there", async () => {
+    expect(await landing("src/lib/cart.ts#stays")).toContain(
+      "            nothing it imports becomes a finding of its own once it lands",
+    );
+  });
+
+  it("prices nothing where two zones read it, since there is no single destination to price against", async () => {
+    expect(await landing("src/lib/shared.ts#shared")).toContain(
+      "            more than one zone reads this, so where it would land is not settled",
+    );
+  });
+
+  it("stays quiet when nothing follows, rather than pricing an empty list", async () => {
+    const said = await landing("src/store/session.ts#tokenFor");
+
+    expect(said).toContain("follows     none");
+    expect(said).not.toContain("once it lands");
   });
 });
 
