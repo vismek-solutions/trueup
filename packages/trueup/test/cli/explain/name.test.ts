@@ -272,7 +272,7 @@ describe("what already stands against one export", () => {
 
   it("gathers a placement claim, so explain cannot say nothing stands while the check reports it", async () => {
     expect(await standing("lib/one.ts#label")).toContain(
-      "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well",
+      "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well, while spec reads it too but is tests, so it does not count",
     );
   });
 
@@ -337,7 +337,7 @@ describe("what already stands against one export", () => {
         "claims      3",
         "    every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",
         "    no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
-        "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well",
+        "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well, while spec reads it too but is tests, so it does not count",
         "            delegated tools are not consulted here; run the check itself for those",
         "",
       ].join("\n"),

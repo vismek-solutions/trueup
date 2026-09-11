@@ -67,6 +67,21 @@ Counting imports tells the truth about values and lies about types.
 
 Measured on a 911-file monorepo: 758 findings with neither exclusion, 47 with both. Ten of the 47 were values in a shared package that only one app used, which is the case that counting files per symbol misses entirely.
 
+### When no move closes it
+
+A role keeps a reader out of the count, and that changes what you can do about the finding. The check says so when it sees one:
+
+```
+no-value-is-declared-away-from-its-only-consumer  1 error
+    src/domain/vetting.ts  declares judgeVet, used only by server/routes.ts, while app reads it too but is wiring, so it does not count
+```
+
+Two zones read judgeVet. The server is one, the app root is the other, and the app root wears the wiring role so it never counts. That leaves the server as the only counted reader wherever the file sits, so moving judgeVet elsewhere in the same package closes nothing.
+
+Either the value belongs to the consumer named, or the role is wrong for what that reader does. The second is worth checking first. A composition root that owns a loop of its own is doing more than wiring, and the loop is what should move. Give it a home in a zone that counts and it becomes a second reader, with the value staying where it is.
+
+Dropping the role instead closes findings like this one and opens far more, because a root reads nearly everything. The role is usually right, and the logic sitting behind it is what is in the wrong place.
+
 ### Exports that exist only for a test
 
 This second check needs two things: the colocation switch above, and at least one zone carrying the tests role. Once the tool knows which files are tests, it can turn the question around.

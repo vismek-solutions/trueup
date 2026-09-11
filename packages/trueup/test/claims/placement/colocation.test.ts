@@ -36,6 +36,12 @@ describe("keeping a value with its only consumer", () => {
     expect(claimIn(runWith(zones), CLAIM)?.findings).toEqual([]);
   });
 
+  it("tells the reader that a move cannot close a finding a silenced reader stands behind", () => {
+    expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
+      "Moving the declaration anywhere but into the consumer named closes nothing",
+    );
+  });
+
   it("tells the reader when giving a zone a role is honest", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain("never owns what it uses");
   });
@@ -112,7 +118,7 @@ describe("what the shared fixture reports, in full", () => {
       "declares readBothWays, used outside its zone only by src/web/detail.ts, and inside its zone as well",
       "declares pickedApart, used only by src/web/detail.ts, and by this file as well",
       "declares bothAndHome, used outside its zone only by src/web/detail.ts, and inside its zone and by this file as well",
-      "declares usedInProduction, used only by src/web/detail.ts",
+      "declares usedInProduction, used only by src/web/detail.ts, while spec reads it too but is tests, so it does not count",
       "declares forWebOnly, used only by web (2 files)",
     ]);
   });
@@ -173,6 +179,14 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
 
     expect(about).toEqual([
       "declares readBothWays, used outside its zone only by src/web/detail.ts, and inside its zone as well",
+    ]);
+  });
+
+  it("names a reader silenced by its role, since no move elsewhere makes such a reader count", () => {
+    const about = messagesFor(CLAIM).filter((message) => message.includes("usedInProduction"));
+
+    expect(about).toEqual([
+      "declares usedInProduction, used only by src/web/detail.ts, while spec reads it too but is tests, so it does not count",
     ]);
   });
 

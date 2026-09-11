@@ -57,6 +57,7 @@ interface Reported {
   readonly reach: SymbolReach;
   readonly owner: string;
   readonly atHome: boolean;
+  readonly silenced: readonly string[];
 }
 
 const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Reported[] => {
@@ -66,7 +67,9 @@ const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Repo
     const owners = [...reach.zones].filter((zone) => !roles.has(zone));
     const only = owners[0];
     if (owners.length !== 1 || only === undefined) return [];
-    return [{ reach, owner: only, atHome: home.has(`${reach.declaredIn}\0${reach.symbol}`) }];
+
+    const silenced = [...reach.zones].filter((zone) => roles.has(zone)).sort();
+    return [{ reach, owner: only, atHome: home.has(`${reach.declaredIn}\0${reach.symbol}`), silenced }];
   });
 };
 
@@ -133,6 +136,16 @@ const saying = ({ reach, atHome }: Reported, where: string, atFile: boolean): st
   return `declares ${reach.symbol}, ${lead}, and ${alsoBy(atHome, atFile)}`;
 };
 
+const uncounted = (silenced: readonly string[], project: Project): string => {
+  const only = silenced[0];
+  if (only === undefined) return "";
+  if (silenced.length === 1) {
+    return `, while ${only} reads it too but is ${project.roleOf(only)}, so it does not count`;
+  }
+
+  return `, while ${silenced.join(", ")} read it too but wear roles, so they do not count`;
+};
+
 const misplaced = (
   group: readonly Reported[],
   project: Project,
@@ -148,7 +161,7 @@ const misplaced = (
 
     return group.map((entry) => ({
       severity: "error" as const,
-      message: saying(entry, consumerOf([entry], entry.owner, project), kin.has(entry.reach.symbol)),
+      message: `${saying(entry, consumerOf([entry], entry.owner, project), kin.has(entry.reach.symbol))}${uncounted(entry.silenced, project)}`,
       file: entry.reach.declaredIn,
       start: null,
       symbols: [entry.reach.symbol],
@@ -157,10 +170,12 @@ const misplaced = (
   }
 
   const where = consumerOf(group, first.owner, project);
+  const silenced = [...new Set(group.flatMap((entry) => entry.silenced))].sort();
+
   return [
     {
       severity: "error" as const,
-      message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations`,
+      message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations${uncounted(silenced, project)}`,
       file: first.reach.declaredIn,
       start: null,
       symbols: group.map(({ reach }) => reach.symbol).sort(),
