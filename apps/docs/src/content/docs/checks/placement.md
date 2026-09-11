@@ -38,7 +38,7 @@ Moving isSettled into the server would leave its neighbour in the domain zone re
 
 The reader that stays behind for lineFor is closer to home still. Another declaration in the same file uses it, so moving it alone means the file it leaves has to import it straight back. Move that declaration along with it, or leave both where they are.
 
-The two clauses are independent, and a declaration read by a neighbour in its file and by another file in its zone carries both.
+The two clauses are independent, and a declaration read by a neighbour in its file and by another file in its zone carries both. Read that pair closely, because the neighbour is often how the zone reads it. Moving the two together does not help then, since the zone is left reaching across the boundary for the neighbour instead.
 
 That saves you the reading. Working out which case you are in by opening the file is the step that goes wrong most often, and the check already knows the answer.
 

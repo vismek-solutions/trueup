@@ -136,10 +136,12 @@ const zonesReadingEach = (project: Project, roles: ReadonlySet<string>): Map<str
 
 const alsoReadAtHome = (project: Project): ReadonlySet<string> => {
   const keys = new Set<string>();
+  const namesFrom = builtFrom(project);
 
   for (const edge of project.imports()) {
-    if (!usable(edge) || edge.fromZone !== edge.declaredZone || edge.from === edge.declaredIn) continue;
-    keys.add(`${edge.declaredIn}\0${edge.symbol}`);
+    if (!named(edge) || edge.fromZone !== edge.declaredZone || edge.from === edge.declaredIn) continue;
+    if (edge.kind !== "type") keys.add(`${edge.declaredIn}\0${edge.symbol}`);
+    for (const name of namesFrom(edge.declaredIn, edge.symbol)) keys.add(`${edge.declaredIn}\0${name}`);
   }
 
   return keys;
