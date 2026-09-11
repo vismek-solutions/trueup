@@ -9,7 +9,10 @@ export interface DecideInput {
   readonly report: Report;
   readonly path: string | null;
   readonly root: string;
+  readonly arriving?: boolean | undefined;
 }
+
+const RELOCATED = "no-declaration-is-written-twice";
 
 const shortened = (root: string, file: string): string => relative(root, file) || file;
 
@@ -18,10 +21,12 @@ const lineOf = (root: string, scoped: boolean, hit: Finding): string => {
   return `  ${shortened(root, hit.file)}  ${hit.message}`;
 };
 
-export function decideOnProposal({ report, path, root }: DecideInput): Decision {
+export function decideOnProposal({ report, path, root, arriving = false }: DecideInput): Decision {
   const scoped = path !== null;
 
   const reasons = report.claims.flatMap((claim) => {
+    if (arriving && claim.claim === RELOCATED) return [];
+
     const hits = claim.findings.filter(
       (finding) => finding.severity === "error" && (path === null || finding.file === path),
     );

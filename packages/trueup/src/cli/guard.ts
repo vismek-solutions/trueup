@@ -114,6 +114,17 @@ const markingPriorFailures = (report: Report, request: HookRequest, path: string
 const analysed = (site: Analysable, path: string | null): boolean =>
   path === null || unanalysed(site, path) === null;
 
+const arrivingAt = (request: HookRequest, path: string | null): boolean => {
+  if (request.kind !== "propose" || path === null) return false;
+
+  try {
+    readSource(path);
+    return false;
+  } catch {
+    return true;
+  }
+};
+
 export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<number> {
   let payload: unknown;
   try {
@@ -183,7 +194,12 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const { report: effective } = applyBaseline({ report, baseline: recorded, root });
 
   const marked = markingPriorFailures(effective, request, checked);
-  const decision = decideOnProposal({ report: marked, path: checked, root });
+  const decision = decideOnProposal({
+    report: marked,
+    path: checked,
+    root,
+    arriving: arrivingAt(request, checked),
+  });
   const reach = withReach(decision, checked, { root, config });
   const output = answerTo({ request, decision: reach, spread, notes: noticesIn(effective) });
   if (output !== null) write(output);

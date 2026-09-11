@@ -7,7 +7,7 @@ const GUIDANCE = [
   "",
   "Do this:",
   "- Keep one copy, put it where every caller may reach it, and delete the rest.",
-  "- Under the write-time guard, empty the existing copies before creating the shared file. A new file holding a declaration that still stands elsewhere is refused as one more copy.",
+  "- Under the write-time guard, write the shared file first and delete the copies after. A file that does not exist yet is let through holding declarations that still stand elsewhere, because a move looks exactly like a copy until the old one is gone. This claim keeps failing until it is.",
   "- If the copies have drifted apart, they were two ideas wearing one shape. Rename them so the next reader is not misled.",
 ].join("\n");
 

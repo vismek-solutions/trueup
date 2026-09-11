@@ -2,11 +2,11 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { copyOfFixture, discard, fixtureAt } from "../support/fixtures.ts";
-import { guardFor } from "../support/guard.ts";
-import { baselinePathIn, writeBaseline } from "../../src/adapters/baseline-file.ts";
-import { check } from "../../src/compose.ts";
-import { baselineOf } from "../../src/ratchet/apply.ts";
+import { copyOfFixture, discard, fixtureAt } from "../../support/fixtures.ts";
+import { guardFor } from "../../support/guard.ts";
+import { baselinePathIn, writeBaseline } from "../../../src/adapters/baseline-file.ts";
+import { check } from "../../../src/compose.ts";
+import { baselineOf } from "../../../src/ratchet/apply.ts";
 
 let PROJECT = "";
 let BASELINE = "";

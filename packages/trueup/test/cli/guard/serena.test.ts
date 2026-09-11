@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GUARDED_FOR_SERENA, guardFor } from "../support/guard.ts";
-import { fixtureAt } from "../support/fixtures.ts";
+import { GUARDED_FOR_SERENA, guardFor } from "../../support/guard.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
 
 const guard = guardFor(GUARDED_FOR_SERENA);
 const RUNNER = "src/engine/runner.ts";

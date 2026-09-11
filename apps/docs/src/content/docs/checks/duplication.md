@@ -38,11 +38,12 @@ Two kinds of finding are not bugs. Fixture path constants repeated across test f
 
 ## Fixing one
 
-The order below only matters once you have installed [the write-time guard](/agents/guard/). The guard inspects an edit before it is saved and can refuse it. It would refuse a third copy while the originals still stand, and refuse an import of a module that does not exist yet. Running the check on its own, any order works, and only the end state is judged.
+The order below only matters once you have installed [the write-time guard](/agents/guard/). The guard inspects an edit before it is saved and can refuse it, and it would refuse an import of a module that does not exist yet. Running the check on its own, any order works, and only the end state is judged.
 
-1. Delete the copies. References are temporarily undefined, which is a type error but not an architecture one.
-2. Create the shared module.
-3. Add the imports.
+1. Create the shared module. A file that does not exist yet is allowed to hold declarations that still stand elsewhere, because a move looks exactly like a copy until the old one is gone.
+2. In each file that held a copy, replace the declaration with an import of the new module.
+
+The check keeps failing through the middle of that, which is the point. It stops the moment the last copy is gone.
 
 A shared helper needs a zone every caller may reach. A zone is a name you give to a group of files, chosen by where the files sit. Make that one a leaf: named for what it holds, never for being miscellaneous, and forbidden from reaching anything. A general util zone is the drawer that the [directory-size rule](/checks/placement/#directory-size) exists to prevent.
 
