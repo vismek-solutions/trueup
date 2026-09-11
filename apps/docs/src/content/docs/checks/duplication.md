@@ -21,12 +21,12 @@ A declaration's name is not part of the comparison. A copy that was renamed on t
 
 ```
 no-declaration-is-written-twice             3 errors
-    src/zones/assign.ts:11:6      declares toPosix, which is written the same way in src/claims/isolation.ts, src/guard/protected.ts
-    src/claims/isolation.ts:17:6  declares posix, which is written the same way in src/guard/protected.ts, src/zones/assign.ts
-    src/guard/protected.ts:26:6   declares posix, which is written the same way in src/claims/isolation.ts, src/zones/assign.ts
+    src/app/assign.ts:3:14  declares toPosix, which is written the same way in src/store/protected.ts, src/web/isolation.ts, and a shared copy may live in paths or store
+    src/store/protected.ts:3:14  declares posix, which is written the same way in src/app/assign.ts, src/web/isolation.ts, and a shared copy may live in paths or store
+    src/web/isolation.ts:3:14  declares posix, which is written the same way in src/app/assign.ts, src/store/protected.ts, and a shared copy may live in paths or store
 ```
 
-Those three are real, and they come from this tool's own repository.
+One of those three was renamed on the way, and the check found it anyway. That is the shape of the real thing: this tool's own repository carried the same pair for a while, under two names in three zones.
 
 ## Picking the number
 
@@ -35,6 +35,22 @@ Start around 60 and read what comes back. A lower number finds more real duplica
 On that repository, 60 reports 28 and 100 reports 4. There is no default, because the right number depends on how much of your test setup you consider worth sharing.
 
 Two kinds of finding are not bugs. Fixture path constants repeated across test files genuinely are the same declaration, and you may decide that is fine. And two types can be structurally identical while meaning different things. When that happens they were two ideas wearing one shape, and the fix is to name them apart rather than to merge them.
+
+## Where a shared copy may live
+
+When the copies sit in more than one zone, the finding names the zones that could hold the one you keep. A zone qualifies when every copy may reach it and it may reach whatever the declaration itself imports. A zone that holds a copy can still be the answer, so long as every other copy may reach it. What rules a zone out is one copy that could not.
+
+Copies inside a single zone get no such list. That zone is the answer already, and printing it would be noise.
+
+Sometimes nothing qualifies.
+
+```
+no-declaration-is-written-twice  2 errors
+    src/app/one.ts:1:14  declares total, which is written the same way in src/web/two.ts, and no zone may hold a copy all of them could reach
+    src/web/two.ts:1:14  declares total, which is written the same way in src/app/one.ts, and no zone may hold a copy all of them could reach
+```
+
+That is a missing zone rather than a dead end. Declare one that every copy may reach, and the next run will name it.
 
 ## Fixing one
 

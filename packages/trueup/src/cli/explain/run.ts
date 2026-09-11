@@ -1,11 +1,11 @@
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { check, nameIn, placementOf, reachOf, siblingsIn, ungovernedIn } from "../../compose.ts";
+import { check, homesFor, nameIn, placementOf, reachOf, siblingsIn, ungovernedIn } from "../../compose.ts";
 import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
 import { openedIn, unanalysed, type Opened } from "../preamble.ts";
-import { closesACycle, homeLines, homesFor, probeFor, type Home } from "./homes.ts";
+import { closesACycle, homeLines, probeFor, type Home } from "./homes.ts";
 import { list } from "./lines.ts";
 import { nameLines, type Blocked } from "./name.ts";
 import { siblingLines } from "./siblings.ts";

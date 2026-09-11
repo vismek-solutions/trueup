@@ -1,5 +1,4 @@
 import { dirname } from "node:path";
-import type { Declaration } from "../ports/module-record.ts";
 import type { ZoneRole } from "../zones/model.ts";
 import type { Project, ResolvedImport } from "./model.ts";
 
@@ -45,25 +44,7 @@ export const reachedFrom = (
 
 const spelt = (values: Iterable<string>): readonly string[] => [...new Set(values)].sort();
 
-const withinAny = (spans: readonly Declaration[], start: number): boolean =>
-  spans.some((span) => start >= span.start && start < span.end);
-
-const mentionedWithin = (
-  project: Project,
-  file: string,
-  spans: readonly Declaration[],
-): ReadonlySet<string> =>
-  new Set(
-    project
-      .mentionsIn(file)
-      .filter((mention) => mention.form === "name" && withinAny(spans, mention.start))
-      .map((mention) => mention.text),
-  );
-
-const takenFrom = (project: Project, file: string, locals: ReadonlySet<string>): readonly ResolvedImport[] =>
-  project.imports().filter((edge) => edge.from === file && locals.has(edge.local));
-
-const foreignTo = (project: Project, home: string, zones: readonly (string | null)[]): Set<string> =>
+const foreignTo =(project: Project, home: string, zones: readonly (string | null)[]): Set<string> =>
   new Set(
     zones.filter(
       (zone): zone is string => zone !== null && zone !== home && project.roleOf(zone) === null,
@@ -135,10 +116,9 @@ const cutOf = (project: Project, { file, name, to }: Moving): NameCut => {
 
   const travels = [...needs].filter((other) => !keeps.has(other));
   const leaving = new Set([name, ...travels]);
-  const spans = project.declarationsIn(file);
-  const moved = mentionedWithin(project, file, spans.filter((span) => leaving.has(span.name)));
-  const kept = mentionedWithin(project, file, spans.filter((span) => !leaving.has(span.name)));
-  const taken = takenFrom(project, file, moved);
+  const staying = project.declarationsIn(file).flatMap((span) => (leaving.has(span.name) ? [] : [span.name]));
+  const taken = project.importsWithin(file, [...leaving]);
+  const kept = new Set(project.importsWithin(file, staying).map((edge) => edge.local));
 
   return {
     travels: spelt(travels),

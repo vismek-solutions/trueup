@@ -3,7 +3,13 @@ import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters
 import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { apiSurfaceClaim, type ApiSurface } from "./claims/members/api-surface.ts";
-import { boundaryClaim, boundaryZoneReferences, judges, type BoundaryRule } from "./claims/boundary.ts";
+import {
+  boundaryClaim,
+  boundaryZoneReferences,
+  reachedBy,
+  sharedHomes,
+  type BoundaryRule,
+} from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { colocationClaim } from "./claims/placement/colocation.ts";
 import { testInternalsClaim, testOnlyExportClaim } from "./claims/placement/test-surface.ts";
@@ -129,14 +135,21 @@ export interface ReachInput {
 }
 
 export function reachOf({ zone, zones, boundaries }: ReachInput): Reach {
-  const rules = boundaries.filter((rule) => rule.from === zone);
   const names = zones.map((entry) => entry.name);
-  const permits = (rule: BoundaryRule, name: string): boolean =>
-    !judges(rule, name) || rule.allow.includes(name);
-  const mayReach = names.filter((name) => name === zone || rules.every((rule) => permits(rule, name)));
+  const mayReach = reachedBy(zone, { names, rules: boundaries });
 
   return { mayReach, mayNotReach: names.filter((name) => !mayReach.includes(name)) };
 }
+
+export type Rulebook = Omit<ReachInput, "zone">;
+
+export interface HomesInput extends Rulebook {
+  readonly needs: readonly string[];
+  readonly readers: readonly string[];
+}
+
+export const homesFor = ({ needs, readers, zones, boundaries }: HomesInput): readonly string[] =>
+  sharedHomes({ needs, readers, names: zones.map((entry) => entry.name), rules: boundaries });
 
 export function placementOf({ root, path, zones, boundaries }: PlacementInput): Placement {
   const zone = assignZones({ root, files: [path], zones }).zoneOf(path);
@@ -203,7 +216,7 @@ const claimsFor = (options: CheckOptions): Claim[] => {
     ...(maxFilesPerDirectory === undefined && directoryLimits.length === 0
       ? []
       : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits)]),
-    ...(duplication === undefined ? [] : [duplicationClaim(duplication)]),
+    ...(duplication === undefined ? [] : [duplicationClaim({ minSize: duplication, boundaries })]),
     ...(reviewable === undefined ? [] : [reviewClaim(reviewable, changes)]),
     ...(colocation ? placementClaims(zones) : []),
     ...(readerships ? [readershipClaim(roleZonesIn(zones))] : []),

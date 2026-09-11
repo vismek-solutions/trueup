@@ -59,6 +59,21 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     return [...reached].sort();
   };
 
+  const importsWithin = (file: string, names: readonly string[]): readonly ResolvedImport[] => {
+    const wanted = new Set(names);
+    const spans = lexicon.declarationsIn(file).filter((span) => wanted.has(span.name));
+    const held = (start: number): boolean =>
+      spans.some((span) => start >= span.start && start < span.end);
+    const locals = new Set(
+      lexicon
+        .mentionsIn(file)
+        .filter((mention) => mention.form === "name" && held(mention.start))
+        .map((mention) => mention.text),
+    );
+
+    return resolved.filter((edge) => edge.from === file && locals.has(edge.local));
+  };
+
   const imports = (query?: ImportQuery): readonly ResolvedImport[] =>
     query === undefined
       ? resolved
@@ -82,6 +97,7 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
     referencesIn,
+    importsWithin,
     reachedWithin,
     vocabularyOf: (names) => lexicon.vocabularyOf(names.flatMap((name) => zones.filesIn(name))),
     relative: (file) => relative(root, file),

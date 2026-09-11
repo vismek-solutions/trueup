@@ -46,6 +46,7 @@ export interface Project {
   readonly mentionsIn: (file: string) => readonly Mention[];
   readonly declarationsIn: (file: string) => readonly Declaration[];
   readonly referencesIn: (file: string) => ReadonlyMap<string, ReadonlySet<string>>;
+  readonly importsWithin: (file: string, names: readonly string[]) => readonly ResolvedImport[];
   readonly reachedWithin: (file: string, names: readonly string[]) => readonly string[];
   readonly vocabularyOf: (zones: readonly string[]) => Vocabulary;
   readonly relative: (file: string) => string;

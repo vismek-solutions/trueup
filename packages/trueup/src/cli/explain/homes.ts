@@ -1,13 +1,6 @@
 import { basename, dirname, join } from "node:path";
-import { reachOf, type ReachInput } from "../../compose.ts";
+import { reachOf, type HomesInput, type Rulebook } from "../../compose.ts";
 import { list } from "./lines.ts";
-
-export type Rulebook = Omit<ReachInput, "zone">;
-
-export interface HomesInput extends Rulebook {
-  readonly needs: readonly string[];
-  readonly readers: readonly string[];
-}
 
 export interface Home {
   readonly zone: string;
@@ -15,12 +8,6 @@ export interface Home {
 }
 
 const reachedBy = (rules: Rulebook, zone: string): readonly string[] => reachOf({ ...rules, zone }).mayReach;
-
-export const homesFor = ({ needs, readers, ...rules }: HomesInput): readonly string[] =>
-  rules.zones
-    .map((zone) => zone.name)
-    .filter((name) => needs.every((need) => reachedBy(rules, name).includes(need)))
-    .filter((name) => readers.every((reader) => reachedBy(rules, reader).includes(name)));
 
 const closureOf = (rules: Rulebook, from: readonly string[]): ReadonlySet<string> => {
   const seen = new Set(from);

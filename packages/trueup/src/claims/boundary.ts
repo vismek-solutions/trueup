@@ -18,6 +18,29 @@ export interface BoundaryRule {
 export const judges = (rule: BoundaryRule, zone: string): boolean =>
   rule.governs === undefined || rule.governs.includes(zone);
 
+export interface ZoneReach {
+  readonly names: readonly string[];
+  readonly rules: readonly BoundaryRule[];
+}
+
+export const reachedBy = (zone: string, { names, rules }: ZoneReach): readonly string[] => {
+  const governing = rules.filter((rule) => rule.from === zone);
+  const permits = (rule: BoundaryRule, name: string): boolean =>
+    !judges(rule, name) || rule.allow.includes(name);
+
+  return names.filter((name) => name === zone || governing.every((rule) => permits(rule, name)));
+};
+
+export interface SharedHomes extends ZoneReach {
+  readonly needs: readonly string[];
+  readonly readers: readonly string[];
+}
+
+export const sharedHomes = ({ needs, readers, ...zones }: SharedHomes): readonly string[] =>
+  zones.names
+    .filter((name) => needs.every((need) => reachedBy(name, zones).includes(need)))
+    .filter((name) => readers.every((reader) => reachedBy(reader, zones).includes(name)));
+
 interface BreachInput {
   readonly root: string;
   readonly zoneOf: (path: string) => string | null;
