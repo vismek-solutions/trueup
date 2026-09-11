@@ -53,6 +53,10 @@ Only findings on the file being written can block it. A violation somewhere else
 
 Anything already in your baseline does not block either. A baseline is the recorded list of problems you have agreed to live with for now.
 
+A recorded finding that comes back under different words does not block either, and that matters for a fix landing in stages. The edit closes part of what a check was saying, the check then says something different about the same file, and the new wording is in no baseline. Refusing it would make the improving edit the one edit you cannot make.
+
+So when a claim retires one of its own baseline entries on that file in the same run, the finding left standing counts as the recorded one under new words. A claim that retired nothing is forgiven nothing, and a full run still fails until the baseline catches up.
+
 One rule stands down for a file that does not exist yet. A new file holding a declaration that still stands somewhere else is a move half done, and it is impossible to tell from a copy until the old one is deleted. Blocking it had a worse effect than letting it through: it taught agents to reword the body until it stopped matching, which leaves two copies and no finding. So the write lands, and [the duplication check](/checks/duplication/) keeps failing until the old copy is gone. Every other rule still applies to that file, and a copy landing in a file that already exists is still refused.
 
 When the guard cannot make sense of the situation, it stands aside and lets the write happen. An edit it cannot read, a missing config, a file type you do not analyse: each of those allows the write. A guard that fell over on surprises would block every edit rather than the wrong ones.

@@ -48,6 +48,8 @@ If you fix a violation that was in the baseline, the run exits with code 2 and t
 
 Sometimes an entry stops matching and nothing was fixed. Upgrading the tool can change how a claim words a finding, and the message is part of what an entry remembers, so the old entry falls away while the same violation comes back under new words. The run tells the two apart for you. An entry saying the claim no longer reports on that file is a fix. One saying the claim still reports on that file in other words is not, and updating the baseline records the new wording rather than dropping anything.
 
+The [write time guard](/agents/guard/) reads the same signal, so it lets through the edit that did the re-wording. Otherwise a fix that only gets halfway would be refused for the wording it leaves behind.
+
 Without that, a baseline slowly turns into a list of permanent exemptions nobody dares delete.
 
 ## What an entry remembers

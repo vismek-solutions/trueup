@@ -11,7 +11,7 @@ import type { Protection } from "../ports/protection.ts";
 import type { Decision, HookRequest } from "../ports/proposal.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
-import type { Report } from "../report/model.ts";
+import type { Finding, Report } from "../report/model.ts";
 import { type Analysable, rulebookAt, unanalysed } from "./preamble.ts";
 
 export interface RunGuardInput {
@@ -111,6 +111,18 @@ const markingPriorFailures = (report: Report, request: HookRequest, path: string
   };
 };
 
+const forgivingReWordings = (report: Report, request: HookRequest): Report => {
+  if (request.kind !== "propose") return report;
+
+  const kept = (finding: Finding): Finding =>
+    finding.reworded === true ? { ...finding, severity: "warning" } : finding;
+
+  return {
+    ...report,
+    claims: report.claims.map((claim) => ({ ...claim, findings: claim.findings.map(kept) })),
+  };
+};
+
 const analysed = (site: Analysable, path: string | null): boolean =>
   path === null || unanalysed(site, path) === null;
 
@@ -193,7 +205,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const recorded = readBaseline(baseline);
   const { report: effective } = applyBaseline({ report, baseline: recorded, root });
 
-  const marked = markingPriorFailures(effective, request, checked);
+  const marked = markingPriorFailures(forgivingReWordings(effective, request), request, checked);
   const decision = decideOnProposal({
     report: marked,
     path: checked,

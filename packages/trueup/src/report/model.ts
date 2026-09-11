@@ -9,6 +9,7 @@ export interface Finding {
   readonly start: number | null;
   readonly group?: string | undefined;
   readonly accepted?: boolean | undefined;
+  readonly reworded?: boolean | undefined;
   readonly symbols?: readonly string[] | undefined;
   readonly specifier?: string | undefined;
 }

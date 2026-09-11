@@ -68,6 +68,30 @@ const stillReporting = (claims: readonly ClaimResult[], root: string): ReadonlyS
   return open;
 };
 
+const retiredIn = (stale: readonly BaselineEntry[]): ReadonlySet<string> =>
+  new Set(
+    stale.flatMap((entry) => (entry.file === null ? [] : [`${entry.claim}\0${entry.file}`])),
+  );
+
+const standingIn = (
+  claims: readonly ClaimResult[],
+  retired: ReadonlySet<string>,
+  root: string,
+): ClaimResult[] =>
+  claims.map((claim) => {
+    const replaces = (finding: Finding): boolean =>
+      finding.accepted !== true &&
+      finding.file !== null &&
+      retired.has(`${claim.claim}\0${relative(root, finding.file)}`);
+
+    return {
+      ...claim,
+      findings: claim.findings.map((finding) =>
+        replaces(finding) ? { ...finding, reworded: true } : finding,
+      ),
+    };
+  });
+
 const saidOf = (entry: BaselineEntry, reworded: ReadonlySet<string>): string => {
   if (entry.file !== null && reworded.has(`${entry.claim}\0${entry.file}`)) {
     return `${entry.claim} still reports on this file in other words: ${entry.message}`;
@@ -105,8 +129,9 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
 
   const stale = baseline.entries.filter((entry) => !matched.has(keyOf(entry)));
   const reworded = stillReporting(claims, root);
+  const settled = standingIn(claims, retiredIn(stale), root);
 
-  claims.push({
+  settled.push({
     claim: STALE_CLAIM,
     guidance: [
       "These baseline entries match nothing any more.",
@@ -126,5 +151,5 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
     })),
   });
 
-  return { report: { ...report, claims }, known: downgraded, stale: stale.length };
+  return { report: { ...report, claims: settled }, known: downgraded, stale: stale.length };
 }
