@@ -98,7 +98,7 @@ const splitIn = (project: Project, file: string, readers: Readers): Finding | nu
   const shown = parts
     .map((part) => readershipOf(project, part, readers))
     .sort()
-    .join("; ");
+    .map((part) => `- ${part}`);
 
   const free = freePart(project, file, parts);
   const direction =
@@ -108,7 +108,7 @@ const splitIn = (project: Project, file: string, readers: Readers): Finding | nu
 
   return {
     severity: "error",
-    message: `serves ${parts.length} readerships that never meet${direction}: ${shown}`,
+    message: [`serves ${parts.length} readerships that never meet${direction}:`, ...shown].join("\n"),
     file,
     start: null,
   };

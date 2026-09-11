@@ -1,5 +1,6 @@
 import type { BaselineEntry } from "../ports/baseline.ts";
 import type { Acceptance } from "../ratchet/model.ts";
+import { messageLines } from "../report/lines.ts";
 import { plural } from "./render.ts";
 
 export interface AcceptanceInput extends Acceptance {
@@ -7,8 +8,12 @@ export interface AcceptanceInput extends Acceptance {
   readonly path: string;
 }
 
-const entryLine = (entry: BaselineEntry): string =>
-  entry.file === null ? `    ${entry.message}` : `    ${entry.file}  ${entry.message}`;
+const entryLines = (entry: BaselineEntry): string[] =>
+  messageLines({
+    message: entry.message,
+    head: entry.file === null ? "    " : `    ${entry.file}  `,
+    indent: "        ",
+  });
 
 const byClaim = (entries: readonly BaselineEntry[]): Map<string, BaselineEntry[]> => {
   const groups = new Map<string, BaselineEntry[]>();
@@ -28,7 +33,7 @@ export function renderAcceptance({ total, path, added, first }: AcceptanceInput)
     "",
     ...[...groups].flatMap(([claim, entries]) => [
       `${claim.padEnd(width)}${entries.length} new`,
-      ...(first ? [] : entries.map(entryLine)),
+      ...(first ? [] : entries.flatMap(entryLines)),
     ]),
   ].join("\n");
 }

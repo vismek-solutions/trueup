@@ -59,6 +59,39 @@ describe("a claim whose name outgrows the column", () => {
   });
 });
 
+describe("a finding whose message runs to several lines", () => {
+  const LISTED = reportOf([
+    {
+      claim: "a-claim",
+      guidance: "g",
+      findings: [
+        error("serves 2 readerships:\n- alpha from src/one\n- beta from src/two", "/p/a.ts"),
+        error("holds two of them:\n- gamma\n- delta", null),
+      ],
+    },
+  ]);
+
+  it("indents every line after the first past the location, so one finding reads as one block", () => {
+    expect(render(LISTED, "/p")).toContain(
+      [
+        "    a.ts  serves 2 readerships:",
+        "        - alpha from src/one",
+        "        - beta from src/two",
+      ].join("\n"),
+    );
+  });
+
+  it("indents the same way where the finding names no file, so the two line up", () => {
+    expect(render(LISTED, "/p")).toContain(
+      ["    holds two of them:", "        - gamma", "        - delta"].join("\n"),
+    );
+  });
+
+  it("indents in the dots report too, which lists findings by a path of its own", () => {
+    expect(renderDots(LISTED, "/p")).toContain("    a.ts  serves 2 readerships:\n        - alpha from src/one");
+  });
+});
+
 describe("the full report, to the character", () => {
   it("writes exactly this, so a dropped column or blank line is a failure", () => {
     expect(render(MIXED, "/p")).toBe(

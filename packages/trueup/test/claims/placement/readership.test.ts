@@ -8,15 +8,20 @@ import type { Report } from "../../../src/report/model.ts";
 const ROOT = fixtureAt("readerships");
 const CLAIM = "no-file-serves-two-readerships";
 
-const PAIR = "serves 2 readerships that never meet: first from src/reader; second from src/writer";
-const THREE = "serves 2 readerships that never meet: alpha, omega from src/reader; middle from src/writer";
-const JOBS =
-  "serves 2 readerships that never meet: parse from ., src/both, src/reader, src/reader-web;" +
-  " render from src/writer";
-const FOUND_BACKWARDS = "serves 2 readerships that never meet: ant from src/writer; zebra from src/reader";
-const ANCHORED =
-  "serves 2 readerships that never meet, and only label can leave without taking anything else" +
-  " with it: label from src/writer; lookUp from src/reader";
+const listing = (head: string, ...parts: readonly string[]): string =>
+  [head, ...parts.map((part) => `- ${part}`)].join("\n");
+
+const TWO = "serves 2 readerships that never meet:";
+
+const PAIR = listing(TWO, "first from src/reader", "second from src/writer");
+const THREE = listing(TWO, "alpha, omega from src/reader", "middle from src/writer");
+const JOBS = listing(TWO, "parse from ., src/both, src/reader, src/reader-web", "render from src/writer");
+const FOUND_BACKWARDS = listing(TWO, "ant from src/writer", "zebra from src/reader");
+const ANCHORED = listing(
+  "serves 2 readerships that never meet, and only label can leave without taking anything else with it:",
+  "label from src/writer",
+  "lookUp from src/reader",
+);
 
 const ZONES: readonly ZoneDefinition[] = [
   { name: "shared", patterns: ["src/shared/**"] },

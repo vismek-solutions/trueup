@@ -100,7 +100,9 @@ Off by default, and a separate switch again. It sorts a file's exports by who re
 
 ```
 no-file-serves-two-readerships              1 error
-    src/shared/format.ts  serves 2 readerships that never meet, and only renderBadge can leave without taking anything else with it: parseAmount from src/billing; renderBadge from src/inbox
+    src/shared/format.ts  serves 2 readerships that never meet, and only renderBadge can leave without taking anything else with it:
+        - parseAmount from src/billing
+        - renderBadge from src/inbox
 ```
 
 The clause after the count is the direction, and it appears when exactly one group reaches nothing else in the file. That group is the one that lifts out on its own. Here parseAmount goes through a private rate table while renderBadge goes through nothing, so renderBadge is the half that leaves and the table stays where it is.

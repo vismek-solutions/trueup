@@ -17,8 +17,10 @@ const RELOCATED = "no-declaration-is-written-twice";
 const shortened = (root: string, file: string): string => relative(root, file) || file;
 
 const lineOf = (root: string, scoped: boolean, hit: Finding): string => {
-  if (scoped || hit.file === null) return `  ${hit.message}`;
-  return `  ${shortened(root, hit.file)}  ${hit.message}`;
+  const where = scoped || hit.file === null ? "" : `${shortened(root, hit.file)}  `;
+  const [first = "", ...rest] = hit.message.split("\n");
+
+  return nested([`${where}${first}`, ...rest.map((line) => `  ${line}`)].join("\n"));
 };
 
 export function decideOnProposal({ report, path, root, arriving = false }: DecideInput): Decision {

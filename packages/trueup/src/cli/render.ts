@@ -1,5 +1,6 @@
 import { relative } from "node:path";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
+import { messageLines, wrapped } from "../report/lines.ts";
 import type { Finding, Report } from "../report/model.ts";
 import { locator, type Locate } from "./position.ts";
 
@@ -10,34 +11,25 @@ const locate = (root: string, finding: Finding, at: Locate): string => {
   return `${relative(root, finding.file)}${shown}`;
 };
 
+const INDENT = "    ";
+const UNDER = "        ";
+
 const listed = (findings: readonly Finding[], root: string, at: Locate): readonly string[] =>
-  findings.map((finding) => {
+  findings.flatMap((finding) => {
     const where = locate(root, finding, at);
-    return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
+
+    return messageLines({
+      message: finding.message,
+      head: where === "" ? INDENT : `${INDENT}${where}  `,
+      indent: UNDER,
+    });
   });
-
-const flowed = (line: string, width: number): string[] => {
-  const hang = line.startsWith("- ") ? "  " : "";
-  const lines: string[] = [];
-
-  for (const word of line.split(" ")) {
-    const last = lines[lines.length - 1];
-    if (last === undefined) lines.push(word);
-    else if (`${last} ${word}`.length > width) lines.push(`${hang}${word}`);
-    else lines[lines.length - 1] = `${last} ${word}`;
-  }
-
-  return lines;
-};
-
-const wrap = (text: string, width: number): string[] =>
-  text.split("\n").flatMap((line) => (line === "" ? [""] : flowed(line, width)));
 
 const RULE = "    ────────";
 
 const said = (guidance: string): string[] => [
   RULE,
-  ...wrap(guidance, 96).map((line) => (line === "" ? "" : `    ${line}`)),
+  ...wrapped(guidance, 96).map((line) => (line === "" ? "" : `    ${line}`)),
 ];
 
 export interface RatchetSummary {
@@ -83,12 +75,10 @@ interface ClaimLinesInput {
 }
 
 const claimLines = (claim: Report["claims"][number], { root, width, at }: ClaimLinesInput): string[] => {
-  const lines = [`${claim.claim.padEnd(width)}${tallyOf(claim.findings)}`];
-
-  for (const finding of claim.findings) {
-    const where = locate(root, finding, at);
-    lines.push(where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`);
-  }
+  const lines = [
+    `${claim.claim.padEnd(width)}${tallyOf(claim.findings)}`,
+    ...listed(claim.findings, root, at),
+  ];
 
   if (claim.findings.length === 0) return lines;
 
