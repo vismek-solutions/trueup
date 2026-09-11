@@ -114,10 +114,24 @@ const consumerOf = (group: readonly Reported[], owner: string, project: Project)
   return files.length === 1 && only !== undefined ? project.relative(only) : `${owner} (${files.length} files)`;
 };
 
-const saying = ({ reach, atHome }: Reported, where: string): string =>
-  atHome
-    ? `declares ${reach.symbol}, used outside its zone only by ${where}, and inside its zone as well`
-    : `declares ${reach.symbol}, used only by ${where}`;
+const readWithin = (project: Project, file: string): ReadonlySet<string> => {
+  const names = new Set<string>();
+  for (const used of project.referencesIn(file).values()) for (const name of used) names.add(name);
+
+  return names;
+};
+
+const alsoBy = (atZone: boolean, atFile: boolean): string => {
+  if (atZone && atFile) return "inside its zone and by this file as well";
+  return atZone ? "inside its zone as well" : "by this file as well";
+};
+
+const saying = ({ reach, atHome }: Reported, where: string, atFile: boolean): string => {
+  if (!atHome && !atFile) return `declares ${reach.symbol}, used only by ${where}`;
+
+  const lead = atHome ? `used outside its zone only by ${where}` : `used only by ${where}`;
+  return `declares ${reach.symbol}, ${lead}, and ${alsoBy(atHome, atFile)}`;
+};
 
 const misplaced = (
   group: readonly Reported[],
@@ -130,9 +144,11 @@ const misplaced = (
   const owners = new Set(group.map(({ owner }) => owner));
   const wholeFile = owners.size === 1 && readBy.size === 1 && readBy.has(first.owner);
   if (group.length === 1 || !wholeFile) {
+    const kin = readWithin(project, first.reach.declaredIn);
+
     return group.map((entry) => ({
       severity: "error" as const,
-      message: saying(entry, consumerOf([entry], entry.owner, project)),
+      message: saying(entry, consumerOf([entry], entry.owner, project), kin.has(entry.reach.symbol)),
       file: entry.reach.declaredIn,
       start: null,
       symbols: [entry.reach.symbol],

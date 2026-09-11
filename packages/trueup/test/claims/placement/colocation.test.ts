@@ -47,6 +47,7 @@ describe("keeping a value with its only consumer", () => {
     expect(guidance).toContain("`declares N exports, all used only by ...`");
     expect(guidance).toContain("`declares <name>, used only by ...`");
     expect(guidance).toContain("`declares <name>, used outside its zone only by ...`");
+    expect(guidance).toContain("`... and by this file as well`");
   });
 });
 
@@ -109,6 +110,8 @@ describe("what the shared fixture reports, in full", () => {
       "declares alsoForDetail, used only by src/web/detail.ts",
       "declares forDetail, used only by src/web/detail.ts",
       "declares readBothWays, used outside its zone only by src/web/detail.ts, and inside its zone as well",
+      "declares pickedApart, used only by src/web/detail.ts, and by this file as well",
+      "declares bothAndHome, used outside its zone only by src/web/detail.ts, and inside its zone and by this file as well",
       "declares usedInProduction, used only by src/web/detail.ts",
       "declares forWebOnly, used only by web (2 files)",
     ]);
@@ -151,6 +154,20 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
     ]);
   });
 
+  it("says a declaration its own file reads is no free move, since that file would import it back", () => {
+    const about = messagesFor(CLAIM).filter((message) => message.includes("pickedApart"));
+
+    expect(about).toEqual(["declares pickedApart, used only by src/web/detail.ts, and by this file as well"]);
+  });
+
+  it("carries both home readers where both are real, rather than naming the stronger one alone", () => {
+    const about = messagesFor(CLAIM).filter((message) => message.includes("bothAndHome"));
+
+    expect(about).toEqual([
+      "declares bothAndHome, used outside its zone only by src/web/detail.ts, and inside its zone and by this file as well",
+    ]);
+  });
+
   it("says a declaration its own zone reads is no free move, rather than naming one consumer", () => {
     const about = messagesFor(CLAIM).filter((message) => message.includes("readBothWays"));
 
@@ -167,7 +184,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", () => {
-    expect(next().split("\n")[0]).toContain("problem 1 of 6 · 13 claims · 7 errors");
+    expect(next().split("\n")[0]).toContain("problem 1 of 8 · 13 claims · 9 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", () => {

@@ -12,7 +12,7 @@ const GUIDANCE = [
   "",
   "Do this:",
   "- When a group is a single export, dissolve it rather than rehousing it. A value one caller derives from what it already holds belongs inside that caller, and then there is no second file to place.",
-  "- When every export reaches one private thing this file holds, a context or a client or a table, move the export that has its own audience out rather than cutting the file in two. The private thing would have to be promoted to survive a cut.",
+  "- When every export reaches one private thing this file holds, a context or a client or a table, no export can leave without promoting it, so decide about that private thing first. If it is a real module, something you would be content to name and let another file import, promote it and let each readership become a file that reads it. If it is not, these exports are one unit and this finding is one to accept rather than act on.",
   "",
   "Not the fix: reaching for a new home before asking whether a group of one can dissolve. That is the mistake this check sees most often.",
   "",

@@ -26,14 +26,19 @@ no-value-is-declared-away-from-its-only-consumer  3 errors
 
 There are three shapes this check prints, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included, so the file is what moves and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
 
-The third shape is the one worth slowing down for. It says the declaring zone reads the value as well:
+The third shape is the one worth slowing down for. Both lines below name a reader that stays behind:
 
 ```
-no-value-is-declared-away-from-its-only-consumer  1 error
+no-value-is-declared-away-from-its-only-consumer  2 errors
     src/domain/order.ts  declares isSettled, used outside its zone only by server/routes.ts, and inside its zone as well
+    src/domain/receipt.ts  declares lineFor, used only by server/routes.ts, and by this file as well
 ```
 
-Moving that declaration into the server would leave its neighbour in the domain zone reaching across a boundary, which is a second finding rather than a fix. Check what the declaring zone is allowed to reach before moving anything. Often the better answer is to dissolve the value into its one outside consumer, and then there is nothing left to place.
+Moving isSettled into the server would leave its neighbour in the domain zone reaching across a boundary, which is a second finding rather than a fix. Check what the declaring zone is allowed to reach before moving anything. Often the better answer is to dissolve the value into its one outside consumer, and then there is nothing left to place.
+
+The reader that stays behind for lineFor is closer to home still. Another declaration in the same file uses it, so moving it alone means the file it leaves has to import it straight back. Move that declaration along with it, or leave both where they are.
+
+The two clauses are independent, and a declaration read by a neighbour in its file and by another file in its zone carries both.
 
 That saves you the reading. Working out which case you are in by opening the file is the step that goes wrong most often, and the check already knows the answer.
 
@@ -116,7 +121,9 @@ Two exports that merely reach the same private third thing do not join. Sharing 
 
 A module holding one private object that every export goes through: a context, a client, a connection, a table. Each export is built from that object, so each is joined to it. None of them is joined to any other, because the object is private, and a private declaration is not one of the groups being sorted.
 
-Files like that are reported whenever their exports serve separate audiences, which is often. What the check sees is true, because the audiences really do differ. For this shape it names no direction, because every export reaches that private object and any cut would have to promote it. The answer is usually to move out the one export that has its own audience rather than to cut the file in two.
+Files like that are reported whenever their exports serve separate audiences, which is often. What the check sees is true, because the audiences really do differ. For this shape it names no direction, because every export reaches that private object and any cut would have to promote it.
+
+So the question here is about the private object rather than about the exports. If it is a real module, something you would be content to name and let another file import, promote it on purpose and let each audience become a file that reads it. If it is not, these exports are one unit and this is a finding to accept rather than act on.
 
 ### What is left out of the count
 
