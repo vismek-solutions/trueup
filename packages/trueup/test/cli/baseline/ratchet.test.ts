@@ -2,6 +2,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { copyOfFixture, discard, fixtureAt } from "../../support/fixtures.ts";
+import { reportOf } from "../../support/sample-report.ts";
 import { baselinePathIn, readBaseline, writeBaseline } from "../../../src/adapters/baseline-file.ts";
 import { EXIT_CLEAN, EXIT_ERRORS, EXIT_STALE_BASELINE } from "../../../src/cli/command.ts";
 import { runCli } from "../../../src/cli/main.ts";
@@ -10,21 +11,6 @@ import { acceptanceOf, applyBaseline, baselineOf, STALE_CLAIM } from "../../../s
 import type { Report } from "../../../src/report/model.ts";
 
 const ROOT = "/project";
-
-const reportOf = (claims: Report["claims"]): Report => ({
-  claims,
-  coverage: {
-    files: 1,
-    edges: 0,
-    symbolEdges: 0,
-    externalEdges: 0,
-    builtinEdges: 0,
-    namespaceEdges: 0,
-    unresolvedImports: 0,
-    filesByZone: {},
-    unclassifiedFiles: 0,
-  },
-});
 
 const violation = (message: string, start: number) => ({
   severity: "error" as const,
@@ -206,6 +192,24 @@ describe("an accepted finding whose wording moves while the violation stays", ()
   it("reads as new where the claim can put several findings on one file", () => {
     expect(severitiesOf(ruledOn(false))).toEqual(["error"]);
     expect(staleOf(ruledOn(false))).toHaveLength(1);
+  });
+
+  it("tells the reader that entry is a re-wording, not a violation anybody fixed", () => {
+    expect(staleOf(ruledOn(false))).toEqual([
+      `no-file-serves-two-readerships still reports on this file in other words: ${THREE}`,
+    ]);
+  });
+
+  it("still calls a fix a fix, where the claim says nothing about the file any more", () => {
+    const gone = applyBaseline({
+      report: reportOf([{ claim: "no-file-serves-two-readerships", guidance: "", findings: [] }]),
+      baseline: baselineOf(serving(THREE, false), ROOT),
+      root: ROOT,
+    }).report;
+
+    expect(staleOf(gone)).toEqual([
+      `no-file-serves-two-readerships no longer reports this: ${THREE}`,
+    ]);
   });
 });
 

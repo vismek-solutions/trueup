@@ -55,6 +55,27 @@ export function acceptanceOf({ next, previous, report }: ComparedBaselines): Acc
   return { added: next.entries.filter((entry) => !had.has(key(entry))), first: had.size === 0 };
 }
 
+const stillReporting = (claims: readonly ClaimResult[], root: string): ReadonlySet<string> => {
+  const open = new Set<string>();
+
+  for (const claim of claims) {
+    for (const finding of claim.findings) {
+      if (finding.accepted === true || finding.file === null) continue;
+      open.add(`${claim.claim}\0${relative(root, finding.file)}`);
+    }
+  }
+
+  return open;
+};
+
+const saidOf = (entry: BaselineEntry, reworded: ReadonlySet<string>): string => {
+  if (entry.file !== null && reworded.has(`${entry.claim}\0${entry.file}`)) {
+    return `${entry.claim} still reports on this file in other words: ${entry.message}`;
+  }
+
+  return `${entry.claim} no longer reports this: ${entry.message}`;
+};
+
 export interface ApplyBaselineInput {
   readonly report: Report;
   readonly baseline: Baseline;
@@ -71,8 +92,7 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
     if (NEVER_BASELINED.has(claim.claim)) return claim;
 
     return {
-      claim: claim.claim,
-      guidance: claim.guidance,
+      ...claim,
       findings: claim.findings.map((finding) => {
         const key = keyOf(entryOf(claim.claim, finding, root));
         if (!known.has(key)) return finding;
@@ -84,20 +104,23 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
   });
 
   const stale = baseline.entries.filter((entry) => !matched.has(keyOf(entry)));
+  const reworded = stillReporting(claims, root);
 
   claims.push({
     claim: STALE_CLAIM,
     guidance: [
-      "These baseline entries match nothing any more, so the violations they recorded are fixed.",
+      "These baseline entries match nothing any more.",
       "",
       "Do this:",
       "- Run `{trueup} --update-baseline` to drop them.",
+      "",
+      "An entry saying the claim still reports on that file is not a fix. The same problem is standing under different words, it is failing now, and updating the baseline records the new wording rather than dropping anything.",
       "",
       "Left in place they become permanent exemptions nobody audits.",
     ].join("\n"),
     findings: stale.map((entry) => ({
       severity: "warning" as const,
-      message: `${entry.claim} no longer reports this: ${entry.message}`,
+      message: saidOf(entry, reworded),
       file: entry.file === null ? null : join(root, entry.file),
       start: null,
     })),
