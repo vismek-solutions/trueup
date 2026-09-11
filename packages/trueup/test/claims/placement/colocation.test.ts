@@ -46,6 +46,7 @@ describe("keeping a value with its only consumer", () => {
     expect(guidance).toContain("The shape of the finding decides what moves");
     expect(guidance).toContain("`declares N exports, all used only by ...`");
     expect(guidance).toContain("`declares <name>, used only by ...`");
+    expect(guidance).toContain("`declares <name>, used outside its zone only by ...`");
   });
 });
 
@@ -107,6 +108,7 @@ describe("what the shared fixture reports, in full", () => {
       "declares 2 exports, all used only by src/web/detail.ts, so the file is in the wrong directory rather than the declarations",
       "declares alsoForDetail, used only by src/web/detail.ts",
       "declares forDetail, used only by src/web/detail.ts",
+      "declares readBothWays, used outside its zone only by src/web/detail.ts, and inside its zone as well",
       "declares usedInProduction, used only by src/web/detail.ts",
       "declares forWebOnly, used only by web (2 files)",
     ]);
@@ -149,6 +151,14 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
     ]);
   });
 
+  it("says a declaration its own zone reads is no free move, rather than naming one consumer", () => {
+    const about = messagesFor(CLAIM).filter((message) => message.includes("readBothWays"));
+
+    expect(about).toEqual([
+      "declares readBothWays, used outside its zone only by src/web/detail.ts, and inside its zone as well",
+    ]);
+  });
+
   it("states the move, rather than listing the symbols and leaving the reader to draw it", () => {
     expect(next()).toContain("no-value-is-declared-away-from-its-only-consumer  1 error");
     expect(next()).toContain(
@@ -157,7 +167,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", () => {
-    expect(next().split("\n")[0]).toContain("problem 1 of 5 · 13 claims · 6 errors");
+    expect(next().split("\n")[0]).toContain("problem 1 of 6 · 13 claims · 7 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", () => {

@@ -1,8 +1,9 @@
 import { forNeighbour } from "./badger.js";
+import { readBothWays } from "./coyote.js";
 import { usedBySibling } from "./internals.js";
 
 export const forWebOnly = (): string => "web";
 
 export const forBoth = (): string => "both";
 
-export const nearby = (): string => `${usedBySibling()}${forNeighbour()}`;
+export const nearby = (): string => `${usedBySibling()}${forNeighbour()}${readBothWays()}`;

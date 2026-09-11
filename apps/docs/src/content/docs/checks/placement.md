@@ -24,7 +24,16 @@ no-value-is-declared-away-from-its-only-consumer  3 errors
     src/domain/order.ts  declares isSettled, used only by server/routes.ts
 ```
 
-There are two shapes there, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included, so the file is what moves and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
+There are three shapes this check prints, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included, so the file is what moves and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
+
+The third shape is the one worth slowing down for. It says the declaring zone reads the value as well:
+
+```
+no-value-is-declared-away-from-its-only-consumer  1 error
+    src/domain/order.ts  declares isSettled, used outside its zone only by server/routes.ts, and inside its zone as well
+```
+
+Moving that declaration into the server would leave its neighbour in the domain zone reaching across a boundary, which is a second finding rather than a fix. Check what the declaring zone is allowed to reach before moving anything. Often the better answer is to dissolve the value into its one outside consumer, and then there is nothing left to place.
 
 That saves you the reading. Working out which case you are in by opening the file is the step that goes wrong most often, and the check already knows the answer.
 

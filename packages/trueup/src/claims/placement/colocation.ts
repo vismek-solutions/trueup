@@ -1,8 +1,7 @@
-import { dirname } from "node:path";
 import type { Project, ResolvedImport } from "../../project/model.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
-import { FOR_TESTS, INTERNALS, PLACEMENT } from "./remedies.ts";
+import { PLACEMENT } from "./remedies.ts";
 
 type Crossing = ResolvedImport & {
   readonly symbol: string;
@@ -11,7 +10,7 @@ type Crossing = ResolvedImport & {
   readonly declaredZone: string;
 };
 
-interface Reach {
+export interface SymbolReach {
   readonly declaredIn: string;
   readonly declaredZone: string;
   readonly symbol: string;
@@ -24,8 +23,8 @@ const usable = (edge: ResolvedImport): edge is Crossing => {
   return edge.fromZone !== null && edge.declaredZone !== null;
 };
 
-const gather = (imports: readonly ResolvedImport[], keepSameZone: boolean): Reach[] => {
-  const seen = new Map<string, Reach>();
+const gather = (imports: readonly ResolvedImport[], keepSameZone: boolean): SymbolReach[] => {
+  const seen = new Map<string, SymbolReach>();
 
   for (const edge of imports) {
     if (!usable(edge)) continue;
@@ -50,21 +49,26 @@ const gather = (imports: readonly ResolvedImport[], keepSameZone: boolean): Reac
   return [...seen.values()].sort((left, right) => (left.declaredIn < right.declaredIn ? -1 : 1));
 };
 
-const acrossZones = (imports: readonly ResolvedImport[]): Reach[] => gather(imports, false);
+const acrossZones = (imports: readonly ResolvedImport[]): SymbolReach[] => gather(imports, false);
 
-const everyConsumer = (imports: readonly ResolvedImport[]): Reach[] => gather(imports, true);
+export const everyConsumer = (imports: readonly ResolvedImport[]): SymbolReach[] => gather(imports, true);
 
 interface Reported {
-  readonly reach: Reach;
+  readonly reach: SymbolReach;
   readonly owner: string;
+  readonly atHome: boolean;
 }
 
-const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Reported[] =>
-  acrossZones(project.imports()).flatMap((reach) => {
+const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Reported[] => {
+  const home = alsoReadAtHome(project);
+
+  return acrossZones(project.imports()).flatMap((reach) => {
     const owners = [...reach.zones].filter((zone) => !roles.has(zone));
     const only = owners[0];
-    return owners.length === 1 && only !== undefined ? [{ reach, owner: only }] : [];
+    if (owners.length !== 1 || only === undefined) return [];
+    return [{ reach, owner: only, atHome: home.has(`${reach.declaredIn}\0${reach.symbol}`) }];
   });
+};
 
 const byFile = (reported: readonly Reported[]): [string, Reported[]][] => {
   const groups = new Map<string, Reported[]>();
@@ -90,6 +94,17 @@ const zonesReadingEach = (project: Project, roles: ReadonlySet<string>): Map<str
   return readers;
 };
 
+const alsoReadAtHome = (project: Project): ReadonlySet<string> => {
+  const keys = new Set<string>();
+
+  for (const edge of project.imports()) {
+    if (!usable(edge) || edge.fromZone !== edge.declaredZone || edge.from === edge.declaredIn) continue;
+    keys.add(`${edge.declaredIn}\0${edge.symbol}`);
+  }
+
+  return keys;
+};
+
 const consumerOf = (group: readonly Reported[], owner: string, project: Project): string => {
   const files = [
     ...new Set(group.flatMap(({ reach }) => [...reach.files])),
@@ -98,6 +113,11 @@ const consumerOf = (group: readonly Reported[], owner: string, project: Project)
 
   return files.length === 1 && only !== undefined ? project.relative(only) : `${owner} (${files.length} files)`;
 };
+
+const saying = ({ reach, atHome }: Reported, where: string): string =>
+  atHome
+    ? `declares ${reach.symbol}, used outside its zone only by ${where}, and inside its zone as well`
+    : `declares ${reach.symbol}, used only by ${where}`;
 
 const misplaced = (
   group: readonly Reported[],
@@ -110,13 +130,13 @@ const misplaced = (
   const owners = new Set(group.map(({ owner }) => owner));
   const wholeFile = owners.size === 1 && readBy.size === 1 && readBy.has(first.owner);
   if (group.length === 1 || !wholeFile) {
-    return group.map(({ reach, owner }) => ({
+    return group.map((entry) => ({
       severity: "error" as const,
-      message: `declares ${reach.symbol}, used only by ${consumerOf([{ reach, owner }], owner, project)}`,
-      file: reach.declaredIn,
+      message: saying(entry, consumerOf([entry], entry.owner, project)),
+      file: entry.reach.declaredIn,
       start: null,
-      symbols: [reach.symbol],
-      group: reach.declaredIn,
+      symbols: [entry.reach.symbol],
+      group: entry.reach.declaredIn,
     }));
   }
 
@@ -145,93 +165,6 @@ export function colocationClaim(roleZones: readonly string[]): Claim {
       return byFile(reportedIn(project, roles)).flatMap(([file, group]) =>
         misplaced(group, project, readBy.get(file) ?? new Set()),
       );
-    },
-  };
-}
-
-export interface TestInternalsInput {
-  readonly testZones: readonly string[];
-  readonly apiZones: readonly string[];
-  readonly wiringZones: readonly string[];
-}
-
-const NO_TEST_ZONE: Finding = {
-  severity: "warning",
-  message: "no zone has the tests role, so there are no tests to hold to a surface",
-  file: null,
-  start: null,
-};
-
-const reachingInternal = (reach: Reach, project: Project, tests: ReadonlySet<string>): readonly Finding[] => {
-  const consumers = [...reach.files].filter((file) => file !== reach.declaredIn);
-  const inTests = consumers.filter((file) => tests.has(project.zoneOf(file) ?? ""));
-  const inside = consumers.filter((file) => !tests.has(project.zoneOf(file) ?? ""));
-  if (inTests.length === 0 || inside.length === 0) return [];
-
-  const unit = dirname(reach.declaredIn);
-  if (inside.some((file) => dirname(file) !== unit)) return [];
-
-  const calls = inside
-    .map((file) => project.relative(file))
-    .sort()
-    .join(", ");
-  const where = project.relative(reach.declaredIn);
-
-  return inTests.sort().map((file) => ({
-    severity: "error" as const,
-    message: `reaches ${reach.symbol}, an internal of ${where} that only ${calls} calls`,
-    file,
-    start: null,
-    symbols: [reach.symbol],
-    group: file,
-  }));
-};
-
-const publishedBy = (project: Project, apiZones: readonly string[]): ReadonlySet<string> =>
-  new Set(apiZones.flatMap((zone) => project.filesIn(zone)).flatMap((file) => project.exportsOf(file)));
-
-export function testInternalsClaim({ testZones, apiZones, wiringZones }: TestInternalsInput): Claim {
-  const tests = new Set(testZones);
-  const opaque = new Set([...testZones, ...wiringZones]);
-
-  return {
-    name: "no-test-reaches-an-internal",
-    guidance: INTERNALS,
-    check: ({ project }): readonly Finding[] => {
-      if (tests.size === 0) return [NO_TEST_ZONE];
-      const published = publishedBy(project, apiZones);
-
-      return everyConsumer(project.imports())
-        .filter((reach) => !opaque.has(reach.declaredZone) && !published.has(reach.symbol))
-        .flatMap((reach) => reachingInternal(reach, project, tests));
-    },
-  };
-}
-
-export interface TestOnlyExportInput {
-  readonly testZones: readonly string[];
-  readonly apiZones: readonly string[];
-}
-
-export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput): Claim {
-  const tests = new Set(testZones);
-
-  return {
-    name: "no-export-exists-only-for-a-test",
-    guidance: FOR_TESTS,
-    check: ({ project }): readonly Finding[] => {
-      const published = publishedBy(project, apiZones);
-
-      return everyConsumer(project.imports())
-        .filter((reach) => !tests.has(reach.declaredZone) && !published.has(reach.symbol))
-        .filter((reach) => [...reach.zones].every((zone) => tests.has(zone)))
-        .map((reach) => ({
-          severity: "error" as const,
-          message: `exports ${reach.symbol}, which only tests use`,
-          file: reach.declaredIn,
-          start: null,
-          symbols: [reach.symbol],
-        }));
     },
   };
 }

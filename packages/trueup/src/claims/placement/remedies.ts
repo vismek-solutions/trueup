@@ -4,6 +4,7 @@ export const PLACEMENT = [
   "The shape of the finding decides what moves, so do not work it out again from the file:",
   "- `declares N exports, all used only by ...` means nothing outside that one consumer reads the file at all, its own zone included. Move the file into that consumer and every finding on it closes at once.",
   "- `declares <name>, used only by ...` means the rest of the file has other readers, so the file stays and only that declaration is in question.",
+  "- `declares <name>, used outside its zone only by ...` means the declaring zone reads it too. Moving it leaves that reader crossing a boundary, so check what the declaring zone may reach before you move anything, and prefer dissolving the value into its one outside consumer.",
   "",
   "Before moving a single declaration, ask whether the seam should carry it at all. A value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not.",
   "",
