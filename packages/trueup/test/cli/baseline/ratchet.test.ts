@@ -177,36 +177,69 @@ describe("a baseline", () => {
   });
 });
 
-describe("comparing a baseline with the one before it", () => {
-  const previous = baselineOf(claimOf("engine reaches domain"), ROOT);
-
-  const grown = baselineOf(
+describe("an accepted finding whose wording moves while the violation stays", () => {
+  const serving = (message: string, onePerFile: boolean): Report =>
     reportOf([
       {
-        claim: "every-import-respects-its-zone-boundary",
+        claim: "no-file-serves-two-readerships",
         guidance: "",
-        findings: [violation("engine reaches domain", 1), violation("engine reaches persistence", 2)],
+        onePerFile,
+        findings: [violation(message, 0)],
       },
-    ]),
-    ROOT,
-  );
+    ]);
+
+  const THREE = "serves 2 readerships that never meet: a, b from x; c from y";
+  const TWO = "serves 2 readerships that never meet: a from x; c from y";
+
+  const ruledOn = (onePerFile: boolean): Report =>
+    applyBaseline({
+      report: serving(TWO, onePerFile),
+      baseline: baselineOf(serving(THREE, onePerFile), ROOT),
+      root: ROOT,
+    }).report;
+
+  it("keeps the acceptance, since the file is what the entry was recorded against", () => {
+    expect(severitiesOf(ruledOn(true))).toEqual(["warning"]);
+    expect(staleOf(ruledOn(true))).toEqual([]);
+  });
+
+  it("reads as new where the claim can put several findings on one file", () => {
+    expect(severitiesOf(ruledOn(false))).toEqual(["error"]);
+    expect(staleOf(ruledOn(false))).toHaveLength(1);
+  });
+});
+
+describe("comparing a baseline with the one before it", () => {
+  const wider = reportOf([
+    {
+      claim: "every-import-respects-its-zone-boundary",
+      guidance: "",
+      findings: [violation("engine reaches domain", 1), violation("engine reaches persistence", 2)],
+    },
+  ]);
+
+  const previous = baselineOf(claimOf("engine reaches domain"), ROOT);
+  const grown = baselineOf(wider, ROOT);
+
+  const comparing = (next: Baseline, before: Baseline) =>
+    acceptanceOf({ next, previous: before, report: wider });
 
   it("names only what the previous one never held, so a total cannot hide a new entry", () => {
-    expect(acceptanceOf(grown, previous).added.map((entry) => entry.message)).toEqual([
+    expect(comparing(grown, previous).added.map((entry) => entry.message)).toEqual([
       "engine reaches persistence",
     ]);
   });
 
   it("names nothing when the list has not moved", () => {
-    expect(acceptanceOf(previous, previous).added).toEqual([]);
+    expect(comparing(previous, previous).added).toEqual([]);
   });
 
   it("marks a run with no baseline behind it, since none of that list is growth", () => {
-    expect(acceptanceOf(grown, { entries: [] }).first).toBe(true);
+    expect(comparing(grown, { entries: [] }).first).toBe(true);
   });
 
   it("marks a run that had one, even where every entry it held is now gone", () => {
-    expect(acceptanceOf({ entries: [] }, previous).first).toBe(false);
+    expect(comparing({ entries: [] }, previous).first).toBe(false);
   });
 });
 

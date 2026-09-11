@@ -120,6 +120,7 @@ export function readershipClaim(roleZones: readonly string[]): Claim {
   return {
     name: "no-file-serves-two-readerships",
     guidance: GUIDANCE,
+    onePerFile: true,
     check: ({ project }): readonly Finding[] => {
       const byFile = readersByFile(project, roles);
 

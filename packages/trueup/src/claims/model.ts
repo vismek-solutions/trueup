@@ -15,5 +15,6 @@ export interface CheckContext {
 export interface Claim {
   readonly name: string;
   readonly guidance: string;
+  readonly onePerFile?: boolean | undefined;
   readonly check: (context: CheckContext) => readonly Finding[];
 }

@@ -29,6 +29,7 @@ export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit
   return {
     name: "no-directory-holds-too-many-files",
     guidance: GUIDANCE,
+    onePerFile: true,
     check: ({ zones }): readonly Finding[] => {
       const counts = new Map<string, number>();
       const analysed = [...zones.declaredNames.flatMap((zone) => zones.filesIn(zone)), ...zones.unclassified];

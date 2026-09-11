@@ -56,6 +56,8 @@ A line number is never part of the key, so moving code around does not churn the
 
 A message that changes wording no longer matches. If a claim now says something different about a finding, that is a new fact and deserves a fresh look.
 
+A few claims are the exception, and they are the ones that report at most one thing about a file. A file serving two readerships, or a directory holding too many files, gets one finding and the message spells out the current detail: which exports, how many files. That detail moves while the problem stands, so for those claims the file alone is the key. Half fixing one of them stops reading as a brand new violation, and the entry stays accepted until the finding is gone.
+
 Some claims are never baselined at all. The one asserting the analysis reached files, and the one asserting every delegated tool ran, are both left out. A run where nothing was analysed can never be recorded, so a broken config cannot silently baseline your whole project.
 
 ## Why there are no suppression comments

@@ -117,7 +117,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     writeBaseline(baselinePath, baseline);
     write(
       renderAcceptance({
-        ...acceptanceOf(baseline, previous),
+        ...acceptanceOf({ next: baseline, previous, report }),
         total: baseline.entries.length,
         path: relative(cwd, baselinePath) || baselinePath,
       }),

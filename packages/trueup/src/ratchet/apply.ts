@@ -11,7 +11,17 @@ const NEVER_BASELINED = new Set([
   "no-change-outgrows-its-review",
 ]);
 
-const keyOf = (entry: BaselineEntry): string => `${entry.claim}\0${entry.file ?? ""}\0${entry.message}`;
+type Key = (entry: BaselineEntry) => string;
+
+const onePerFileIn = (report: Report): ReadonlySet<string> =>
+  new Set(report.claims.filter((claim) => claim.onePerFile === true).map((claim) => claim.claim));
+
+const keying =
+  (onePerFile: ReadonlySet<string>): Key =>
+  (entry) =>
+    onePerFile.has(entry.claim) && entry.file !== null
+      ? `${entry.claim}\0${entry.file}`
+      : `${entry.claim}\0${entry.file ?? ""}\0${entry.message}`;
 
 const entryOf = (claim: string, finding: Finding, root: string): BaselineEntry => ({
   claim,
@@ -19,20 +29,30 @@ const entryOf = (claim: string, finding: Finding, root: string): BaselineEntry =
   message: finding.message,
 });
 
-const byEntry = (left: BaselineEntry, right: BaselineEntry): number => (keyOf(left) < keyOf(right) ? -1 : 1);
+const byEntry = (key: Key) => (left: BaselineEntry, right: BaselineEntry) =>
+  key(left) < key(right) ? -1 : 1;
 
 export function baselineOf(report: Report, root: string): Baseline {
+  const key = keying(onePerFileIn(report));
   const entries = report.claims
     .filter((claim) => !NEVER_BASELINED.has(claim.claim))
     .flatMap((claim) => claim.findings.map((finding) => entryOf(claim.claim, finding, root)));
 
-  const unique = new Map(entries.map((entry) => [keyOf(entry), entry]));
-  return { entries: [...unique.values()].sort(byEntry) };
+  const unique = new Map(entries.map((entry) => [key(entry), entry]));
+  return { entries: [...unique.values()].sort(byEntry(key)) };
 }
 
-export function acceptanceOf(next: Baseline, previous: Baseline): Acceptance {
-  const had = new Set(previous.entries.map(keyOf));
-  return { added: next.entries.filter((entry) => !had.has(keyOf(entry))), first: had.size === 0 };
+export interface ComparedBaselines {
+  readonly next: Baseline;
+  readonly previous: Baseline;
+  readonly report: Report;
+}
+
+export function acceptanceOf({ next, previous, report }: ComparedBaselines): Acceptance {
+  const key = keying(onePerFileIn(report));
+  const had = new Set(previous.entries.map(key));
+
+  return { added: next.entries.filter((entry) => !had.has(key(entry))), first: had.size === 0 };
 }
 
 export interface ApplyBaselineInput {
@@ -42,6 +62,7 @@ export interface ApplyBaselineInput {
 }
 
 export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): RatchetResult {
+  const keyOf = keying(onePerFileIn(report));
   const known = new Set(baseline.entries.map(keyOf));
   const matched = new Set<string>();
   let downgraded = 0;
