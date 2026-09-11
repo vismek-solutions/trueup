@@ -99,7 +99,7 @@ describe("who reads one export", () => {
 describe("pricing what one export would cost to move", () => {
   it("counts nothing as travelling when the export reaches nothing else in its file", async () => {
     expect(await about("src/tools/three.ts#hammer")).toContain(
-      "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow",
+      "cut cost    travels 0 · promote 0 · follows 0 · import back 0",
     );
   });
 
@@ -116,7 +116,7 @@ describe("pricing what one export would cost to move", () => {
 
   it("prices the whole cut in one line, with the numbers agreeing with the lists", async () => {
     expect(await cutting("lib.ts#label")).toContain(
-      "cut cost    2 declarations would travel with it · 1 would have to be promoted first · 1 import would follow",
+      "cut cost    travels 2 · promote 1 · follows 1 · import back 0",
     );
   });
 
@@ -147,7 +147,7 @@ describe("pricing what one export would cost to move", () => {
 
   it("counts a reader that stays in the price, so three zeroes cannot read as free", async () => {
     expect(await cutting("lib.ts#seed")).toContain(
-      "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 1 here would import it back",
+      "cut cost    travels 0 · promote 0 · follows 0 · import back 1",
     );
   });
 
@@ -177,7 +177,7 @@ describe("pricing what one export would cost to move", () => {
   it("names the import that would follow the export out of the file", async () => {
     const said = await about("src/core/two.ts#engine");
 
-    expect(said).toContain("1 import would follow");
+    expect(said).toContain("follows 1");
     expect(said).toContain("follows     ../tools/three.js");
   });
 
@@ -295,7 +295,7 @@ describe("what already stands against one export", () => {
         "            directories: app · lib · spec",
         "            lib keeps a reader of this and may not reach app · spec",
         "",
-        "cut cost    0 declarations would travel with it · 0 would have to be promoted first · 0 imports would follow · 0 here would import it back",
+        "cut cost    travels 0 · promote 0 · follows 0 · import back 0",
         "travels     none",
         "promote     none",
         "            nothing else in this file reads what it reaches, so no one else has to agree",

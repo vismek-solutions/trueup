@@ -1,5 +1,4 @@
 import type { nameIn } from "../../compose.ts";
-import { plural } from "../render.ts";
 import { list } from "./lines.ts";
 
 type About = ReturnType<typeof nameIn>;
@@ -7,10 +6,10 @@ type Priced = NonNullable<About["cut"]>;
 
 const priced = (cut: Priced): string =>
   [
-    `${plural(cut.travels.length, "declaration")} would travel with it`,
-    `${cut.promote.length} would have to be promoted first`,
-    `${plural(cut.follows.length, "import")} would follow`,
-    `${cut.importBack.length} here would import it back`,
+    `travels ${cut.travels.length}`,
+    `promote ${cut.promote.length}`,
+    `follows ${cut.follows.length}`,
+    `import back ${cut.importBack.length}`,
   ].join(" · ");
 
 export interface Blocked {
