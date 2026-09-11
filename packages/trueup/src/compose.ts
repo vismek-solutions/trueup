@@ -28,7 +28,7 @@ import {
   type IsolationRule,
   type SiblingPlacement,
   type SiblingsInput,
-} from "./claims/isolation.ts";
+} from "./claims/isolation/siblings.ts";
 import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";

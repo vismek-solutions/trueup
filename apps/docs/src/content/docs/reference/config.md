@@ -103,7 +103,7 @@ The minimum literal length defaults to four.
 Isolation keeps a group of sibling directories from reaching into each other, without you naming any of them.
 
 ```ts
-{ siblings: string, except?: string[], wiring?: string[] }
+{ siblings: string, except?: (string | { shared: string, allow: string[] })[], wiring?: string[] }
 ```
 
 The siblings pattern is a glob, and each star in it names a group of directories to keep apart. The list of exceptions holds those names, meaning the directory names the star matched rather than whole paths. So this pair exempts src/routes/_shared:
@@ -111,6 +111,8 @@ The siblings pattern is a glob, and each star in it names a group of directories
 ```ts
 { siblings: "src/routes/*", except: ["_shared"] }
 ```
+
+An exception written as an object is shared the same way, and its allow list says which of the other shared directories it may reach. A bare name reaches all of them. [How the order is read](/checks/isolation/#an-order-among-the-shared-directories).
 
 The wiring list names the files allowed to sit in the parent directory rather than inside one of the groups. Leave it out and that question is never asked. [What it reports](/checks/isolation/#files-that-sit-beside-the-group).
 

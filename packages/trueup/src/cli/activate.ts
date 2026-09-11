@@ -55,13 +55,22 @@ const seamLines = (config: ResolvedConfig): readonly string[] =>
     return `  ${rule.generic} may not name what ${rule.domain.join(" · ")} owns${spared}${shortest}`;
   });
 
+type Exception = NonNullable<ResolvedConfig["isolate"][number]["except"]>[number];
+
+const orderedLines = (except: readonly Exception[]): readonly string[] => {
+  const ordered = except.filter((exception) => typeof exception !== "string");
+  const width = Math.max(0, ...ordered.map((entry) => entry.shared.length));
+  return ordered.map((entry) => `    ${entry.shared.padEnd(width)} → ${reachedBy(entry.allow, 0)}`);
+};
+
 const isolateLines = (config: ResolvedConfig): readonly string[] =>
-  config.isolate.map((rule) => {
-    const spared = rule.except === undefined ? "" : `, except ${rule.except.join(" · ")}`;
+  config.isolate.flatMap((rule) => {
+    const names = (rule.except ?? []).map((one) => (typeof one === "string" ? one : one.shared));
+    const spared = rule.except === undefined ? "" : `, except ${names.join(" · ")}`;
     const beside =
       rule.wiring === undefined ? "" : `, and only ${rule.wiring.join(" · ")} may sit beside them`;
     const loose = rule.wiring?.length === 0 ? ", and nothing may sit beside them" : beside;
-    return `  ${rule.siblings}${spared}${loose}`;
+    return [`  ${rule.siblings}${spared}${loose}`, ...orderedLines(rule.except ?? [])];
   });
 
 const limitLines = (config: ResolvedConfig, root: string): readonly string[] =>

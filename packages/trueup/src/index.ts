@@ -2,7 +2,8 @@ export { defineConfig, defineMember, type ArchitectureConfig, type MemberConfig 
 export { defineRule, type Rule } from "./claims/custom.ts";
 export type { BoundaryRule, EdgeAnchor } from "./claims/boundary.ts";
 export type { SeamRule } from "./claims/seam.ts";
-export type { IsolationRule } from "./claims/isolation.ts";
+export type { IsolationRule } from "./claims/isolation/siblings.ts";
+export type { SharedSibling, SiblingException } from "./claims/isolation/sharing.ts";
 export type { ImportQuery, Issue, Project, ResolvedImport } from "./project/model.ts";
 export type { Vocabulary } from "./lexicon/model.ts";
 export type { Mention, MentionForm, BindingKind } from "./ports/module-record.ts";

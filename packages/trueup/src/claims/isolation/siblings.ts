@@ -1,9 +1,10 @@
 import { relative } from "node:path";
 import picomatch from "picomatch";
-import { toPosix } from "../paths/posix.ts";
-import type { Project, ResolvedImport } from "../project/model.ts";
-import type { Finding } from "../report/model.ts";
-import type { Claim } from "./model.ts";
+import { toPosix } from "../../paths/posix.ts";
+import type { Project, ResolvedImport } from "../../project/model.ts";
+import type { Finding } from "../../report/model.ts";
+import type { Claim } from "../model.ts";
+import { reachWording, type Sharing, type SiblingException, sharingOf } from "./sharing.ts";
 
 const GUIDANCE = [
   "Two directories that were meant to stand alone are reaching into each other. Siblings under the same parent are separate parts, and once one imports another neither can be read, moved or deleted without the other, so the parent stops being a set of parts and becomes one unit.",
@@ -16,6 +17,8 @@ const GUIDANCE = [
   "- Widening the pattern so the two stop being siblings.",
   "",
   "`except` matches a group name as a pattern, so name the convention rather than the instances and every directory following it later is covered too. It exempts a directory as a target only: one that reaches back into a sibling is not being shared by the group, it is depending on one of its members, and that is the thing this rule exists to name.",
+  "",
+  "A shared directory written as `{ shared, allow }` reaches only the shared siblings its `allow` patterns match, and a bare name reaches all of them. That is the order the shared directories stand in. When one reaches against it, move the reaching code down into the directory it reached, or up into one allowed to reach both, rather than adding the reached directory to `allow`.",
   "",
   "A rule matching one directory is a warning rather than an error, because a second sibling may simply not exist yet. If the pattern was meant to reach a level deeper, it is the pattern that is wrong and not the tree.",
 ].join("\n");
@@ -35,7 +38,7 @@ const LOOSE = [
 
 export interface IsolationRule {
   readonly siblings: string;
-  readonly except?: readonly string[] | undefined;
+  readonly except?: readonly SiblingException[] | undefined;
   readonly wiring?: readonly string[] | undefined;
 }
 
@@ -53,31 +56,35 @@ const groupReader = (root: string, pattern: string): GroupOf => {
   };
 };
 
-type SharedGroup = (group: string) => boolean;
-
-const sharedBy = (patterns: readonly string[] | undefined): SharedGroup =>
-  patterns === undefined ? () => false : picomatch([...patterns], { dot: true });
-
 interface Grouping {
   readonly groupOf: GroupOf;
-  readonly shared: SharedGroup;
+  readonly sharing: Sharing;
   readonly project: Project;
 }
 
-const breachOf = (edge: ResolvedImport, { groupOf, shared, project }: Grouping): Finding | null => {
+const refusalOf = (from: string, to: string, sharing: Sharing): string | null => {
+  if (!sharing.shares(to)) {
+    return sharing.shares(from)
+      ? `is ${from}, which the group shares, and may not reach into sibling ${to}`
+      : `is ${from} and may not reach sibling ${to}`;
+  }
+  const withheld = sharing.withheld(from, to);
+  return withheld === null ? null : `is ${from}, ${reachWording(withheld)}, and may not reach ${to}`;
+};
+
+const breachOf = (edge: ResolvedImport, { groupOf, sharing, project }: Grouping): Finding | null => {
   if (edge.declaredIn === null) return null;
 
   const from = groupOf(edge.from);
   const to = groupOf(edge.declaredIn);
   if (from === null || to === null || from === to) return null;
-  if (shared(to)) return null;
 
-  const what = `${edge.imported} from ${project.relative(edge.declaredIn)}`;
+  const refusal = refusalOf(from, to, sharing);
+  if (refusal === null) return null;
+
   return {
     severity: "error",
-    message: shared(from)
-      ? `is ${from}, which the group shares, and may not reach into sibling ${to}: ${what}`
-      : `is ${from} and may not reach sibling ${to}: ${what}`,
+    message: `${refusal}: ${edge.imported} from ${project.relative(edge.declaredIn)}`,
     file: edge.from,
     start: edge.at,
     symbols: [edge.imported],
@@ -134,7 +141,7 @@ const findingsFor = (rule: IsolationRule, root: string, project: Project): reado
     ];
   }
 
-  const grouping: Grouping = { groupOf, shared: sharedBy(rule.except), project };
+  const grouping: Grouping = { groupOf, sharing: sharingOf(rule.except), project };
   return project
     .imports()
     .map((edge) => breachOf(edge, grouping))
@@ -170,18 +177,21 @@ export interface SiblingPlacement {
   readonly group: string | null;
   readonly apart: readonly string[];
   readonly shared: readonly string[];
+  readonly withheld: readonly string[];
   readonly assembles: boolean;
 }
 
 const insideGroup = (rule: IsolationRule, names: readonly string[], group: string): SiblingPlacement => {
-  const shares = sharedBy(rule.except);
+  const sharing = sharingOf(rule.except);
   const others = names.filter((name) => name !== group);
+  const shared = others.filter((name) => sharing.shares(name));
 
   return {
     siblings: rule.siblings,
     group,
-    apart: others.filter((name) => !shares(name)),
-    shared: others.filter((name) => shares(name)),
+    apart: others.filter((name) => !sharing.shares(name)),
+    shared: shared.filter((name) => sharing.withheld(group, name) === null),
+    withheld: shared.filter((name) => sharing.withheld(group, name) !== null),
     assembles: false,
   };
 };
@@ -194,6 +204,7 @@ const besideGroup = (rule: IsolationRule, names: readonly string[], here: string
         group: null,
         apart: names,
         shared: [],
+        withheld: [],
         assembles: picomatch([...rule.wiring], { dot: true })(here),
       };
 

@@ -20,5 +20,16 @@ const alsoShared = (placement: Placement): string[] =>
     ? []
     : [`            it may still reach ${list(placement.shared)}, which the group shares`];
 
+const heldBack = (placement: Placement): string[] =>
+  placement.withheld.length === 0
+    ? []
+    : [
+        `            it may not reach ${list(placement.withheld)}, though the group shares ${placement.withheld.length === 1 ? "it" : "them"}`,
+      ];
+
 export const siblingLines = (placements: ReturnType<typeof siblingsIn>): string[] =>
-  placements.flatMap((placement) => [`siblings    ${said(placement)}`, ...alsoShared(placement)]);
+  placements.flatMap((placement) => [
+    `siblings    ${said(placement)}`,
+    ...alsoShared(placement),
+    ...heldBack(placement),
+  ]);

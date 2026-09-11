@@ -175,6 +175,16 @@ describe("the block an agent reads at the start of a session", () => {
     );
   });
 
+  it("gives each shared directory that stands in an order its reach, under the rule", async () => {
+    expect(await capture(fixtureAt("shared-layers"))).toContain(
+      [
+        "  src/routes/*, except _ui · _state · _root",
+        "    _state → nothing",
+        "    _root  → _state",
+      ].join("\n"),
+    );
+  });
+
   it("says nothing about the branch where no budget was set", async () => {
     expect(await capture(ACTIVATED)).not.toContain("this branch");
   });

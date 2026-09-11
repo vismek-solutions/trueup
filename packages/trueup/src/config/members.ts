@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import picomatch from "picomatch";
 import type { BoundaryRule } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
-import type { IsolationRule } from "../claims/isolation.ts";
+import type { IsolationRule } from "../claims/isolation/siblings.ts";
 import type { ApiSurface } from "../claims/members/api-surface.ts";
 import type { MemberGrants } from "../claims/members/grants.ts";
 import type { DirectoryLimit } from "../claims/placement/directories.ts";

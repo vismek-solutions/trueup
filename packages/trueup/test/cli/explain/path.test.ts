@@ -39,6 +39,32 @@ describe("explaining a path a rule keeps apart from its siblings", () => {
   });
 });
 
+describe("explaining a shared directory that stands in an order", () => {
+  const layered = async (path: string): Promise<string> =>
+    (await explainIn(fixtureAt("shared-layers"), [path])).output;
+
+  it("names the shared siblings it may still reach, and the ones held back from it", async () => {
+    const said = await layered("src/routes/_root/mount.ts");
+
+    expect(said).toContain("it may still reach _state, which the group shares");
+    expect(said).toContain("it may not reach _ui, though the group shares it");
+  });
+
+  it("says only what is held back when it may reach none of them", async () => {
+    const said = await layered("src/routes/_state/store.ts");
+
+    expect(said).toContain("it may not reach _root · _ui, though the group shares them");
+    expect(said).not.toContain("may still reach");
+  });
+
+  it("keeps an island reaching every shared directory, whatever the order among them", async () => {
+    const said = await layered("src/routes/a/page.ts");
+
+    expect(said).toContain("it may still reach _root · _state · _ui, which the group shares");
+    expect(said).not.toContain("may not reach");
+  });
+});
+
 describe("explaining a path before writing it", () => {
   it("names the zone a file that does not exist yet would fall into", async () => {
     const { output } = await explain("src/engine/notYetWritten.ts");

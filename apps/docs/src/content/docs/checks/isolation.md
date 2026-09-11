@@ -43,6 +43,15 @@ One import in that run raised nothing at all. The catalog route reaches into _sh
 
 More than one star is allowed, and each combination is its own island. A pattern like apps/*/src/routes/* keeps ui/catalog apart from ui/checkout and from web/catalog, in every app at once.
 
+A second rule one level down keeps the parts inside each route apart the same way. That pattern also reaches into the shared directory, so its subdirectories would become islands too. A negated group leaves those out. Written this way, the star after it only ever names something inside a route, and the shared directory keeps whatever layout it likes:
+
+```ts
+isolate: [
+  { siblings: "src/routes/*", except: ["_shared"] },
+  { siblings: "src/routes/!(_*)/*", except: ["_shared"] },
+]
+```
+
 :::note
 If the pattern matches no directory at all, that is an error rather than a quiet pass. A rule that guards nothing is the failure this tool exists to prevent.
 :::
@@ -99,6 +108,34 @@ siblings    sits beside `src/routes/*` rather than in one of its parts
 ```
 siblings    assembles `src/routes/*`, so it may reach every part of it
 ```
+
+## An order among the shared directories
+
+A group often shares more than one directory. Routes may all reach _shared for helpers and _state for what they hold between visits. Listed as names, those two may reach each other freely, so _state importing a helper is never reported.
+
+To say which shared directory stands below which, write the entry as an object. Its allow list names the shared siblings it may reach, as patterns, the same way the except list names the shared ones.
+
+```ts
+isolate: [{ siblings: "src/routes/*", except: ["_shared", { shared: "_state", allow: [] }] }]
+```
+
+Now _state reaches no other shared directory, while _shared, still a bare name, reaches every one of them. The routes reach both as before. The list says what a shared directory reaches, never who may reach it.
+
+```
+no-sibling-directory-reaches-another        1 error
+    src/routes/_state/store.ts:1:10  is _state, shared with no reach into what else is shared, and may not reach _shared: money from src/routes/_shared/money.ts
+```
+
+The explain command shows the same order from the file's side.
+
+```
+siblings    _state, which `src/routes/*` keeps apart from account · catalog · checkout
+            it may not reach _shared, though the group shares it
+```
+
+When a directory matches more than one entry, the first one wins, as with zones. Put a narrow object entry before a wide pattern, or the wide pattern quietly gives it the full reach.
+
+A finding here means the code stands against the order you wrote. Move the reaching code down into the directory it reached, or up into one allowed to reach both. Adding the reached directory to the allow list makes the finding go away and leaves the order as it was.
 
 ## When to add an exception
 

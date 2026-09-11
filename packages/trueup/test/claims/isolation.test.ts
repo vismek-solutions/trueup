@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { claimIn, findingsIn, messagesIn, reportForConfig } from "../support/report.ts";
-import type { IsolationRule } from "../../src/claims/isolation.ts";
+import type { IsolationRule } from "../../src/claims/isolation/siblings.ts";
 import { check } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 
@@ -193,6 +193,15 @@ describe("keeping sibling directories apart", () => {
       "is routes/a and may not reach sibling routes/_shared: util from src/routes/_shared/util.ts",
       "is routes/c and may not reach sibling routes/b: thing from src/routes/b/thing.ts",
     ]);
+  });
+
+  it("leaves out the directories a negated group names, and keeps the rest as islands", () => {
+    expect(messagesIn(runWith({ siblings: "src/!(routes)/*" }), CLAIM)).toEqual([
+      "`src/!(routes)/*` matches no directory, so nothing is being kept apart",
+    ]);
+    expect(messagesIn(runWith({ siblings: "src/!(pages)/*" }), CLAIM)).toEqual(
+      messagesIn(runWith({ siblings: "src/*/*" }), CLAIM),
+    );
   });
 
   it("keeps the same route name in two apps apart, and each app's routes from each other", () => {
