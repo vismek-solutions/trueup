@@ -25,7 +25,7 @@ export interface NameReport {
   readonly cut: NameCut | null;
 }
 
-const reachedFrom = (
+export const reachedFrom = (
   uses: ReadonlyMap<string, ReadonlySet<string>>,
   roots: Iterable<string>,
 ): Set<string> => {

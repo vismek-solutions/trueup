@@ -4,6 +4,7 @@ import { targetPathOf } from "../graph/target.ts";
 import type { Lexicon } from "../lexicon/model.ts";
 import type { ZoneAssignment } from "../zones/model.ts";
 import type { ImportQuery, Project, ResolvedImport } from "./model.ts";
+import { reachedFrom } from "./name.ts";
 
 export interface BuildProjectInput {
   readonly root: string;
@@ -51,6 +52,13 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     return uses;
   };
 
+  const reachedWithin = (file: string, names: readonly string[]): readonly string[] => {
+    const reached = reachedFrom(referencesIn(file), names);
+    for (const name of names) reached.delete(name);
+
+    return [...reached].sort();
+  };
+
   const imports = (query?: ImportQuery): readonly ResolvedImport[] =>
     query === undefined
       ? resolved
@@ -74,6 +82,7 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
     referencesIn,
+    reachedWithin,
     vocabularyOf: (names) => lexicon.vocabularyOf(names.flatMap((name) => zones.filesIn(name))),
     relative: (file) => relative(root, file),
   };

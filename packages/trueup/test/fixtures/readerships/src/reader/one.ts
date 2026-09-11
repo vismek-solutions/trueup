@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { lookUp } from "../shared/anchored.ts";
 import { left } from "../api/index.ts";
 import { head, middleLink } from "../shared/chain.ts";
 import { first } from "../shared/pair.ts";
@@ -7,6 +8,6 @@ import { parse } from "../shared/two-jobs.ts";
 import { zebra } from "../shared/unsorted.ts";
 
 export const read = join(
-  `${parse("x")}`,
+  `${parse("x")}${lookUp("one")}`,
   `${left}${alpha}${omega}${first}${head}${middleLink}${zebra}`,
 );

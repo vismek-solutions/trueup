@@ -14,6 +14,9 @@ const JOBS =
   "serves 2 readerships that never meet: parse from ., src/both, src/reader, src/reader-web;" +
   " render from src/writer";
 const FOUND_BACKWARDS = "serves 2 readerships that never meet: ant from src/writer; zebra from src/reader";
+const ANCHORED =
+  "serves 2 readerships that never meet, and only label can leave without taking anything else" +
+  " with it: label from src/writer; lookUp from src/reader";
 
 const ZONES: readonly ZoneDefinition[] = [
   { name: "shared", patterns: ["src/shared/**"] },
@@ -34,7 +37,7 @@ const said = (): readonly string[] => messagesIn(runWith(), CLAIM);
 
 describe("a file serving readerships that never meet", () => {
   it("reports each one, in a settled order, naming every group and where it is read from", () => {
-    expect(said()).toEqual([PAIR, THREE, JOBS, FOUND_BACKWARDS]);
+    expect(said()).toEqual([ANCHORED, PAIR, THREE, JOBS, FOUND_BACKWARDS]);
   });
 
   it("names the groups in one order however they were found, so the message cannot churn", () => {
@@ -94,7 +97,12 @@ describe("who does not count as a reader", () => {
   });
 
   it("does not count a composition root, which would join every group it wires", () => {
-    expect(messagesIn(runWith(stripped("root")), CLAIM)).toEqual([PAIR, THREE, FOUND_BACKWARDS]);
+    expect(messagesIn(runWith(stripped("root")), CLAIM)).toEqual([
+      ANCHORED,
+      PAIR,
+      THREE,
+      FOUND_BACKWARDS,
+    ]);
   });
 
   it("does not count an import of something declared outside the analysis", () => {
@@ -111,7 +119,9 @@ describe("switching it on", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain("dissolving it usually beats rehousing it");
   });
 
-  it("admits it cannot say which side of the split should move", () => {
-    expect(claimIn(runWith(), CLAIM)?.guidance).toContain("it cannot tell you which side should move");
+  it("sends the reader to the named part rather than back to the file", () => {
+    expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
+      "that part is the one to move, and opening the file will not give you a better answer",
+    );
   });
 });

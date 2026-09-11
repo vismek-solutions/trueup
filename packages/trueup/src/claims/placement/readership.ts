@@ -4,7 +4,7 @@ import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
 const GUIDANCE =
-  "The exports of this file fall into groups that no reader takes from across, so one file is serving audiences that never meet. Split it, and each half sits with the readers it has. When a group is a single export, dissolving it usually beats rehousing it: a value one caller derives from what it already holds belongs inside that caller, and then there is no second file to place — reaching for a new home first is the common mistake here. When every export reaches one private thing this file holds — a context, a client, a table — the split is real but cutting the file in two is the wrong half of the answer: move the export that has its own audience out, since the private thing would have to be promoted to survive a cut. This check can see that the audiences differ; it cannot tell you which side should move. A declaration that names another in the same file counts with it, because one is built from the other. Two that merely reach the same private third do not, because sharing a helper is not being one thing — and promoting that helper is precisely the cost the split would carry. An export nothing reads is left out, because unused code is a different finding. A zone with a role is not reported and does not count as a reader: a barrel, a composition root and a test suite each answer to readers this analysis does not own.";
+  "The exports of this file fall into groups that no reader takes from across, so one file is serving audiences that never meet. Split it, and each half sits with the readers it has. When a group is a single export, dissolving it usually beats rehousing it: a value one caller derives from what it already holds belongs inside that caller, and then there is no second file to place — reaching for a new home first is the common mistake here. When every export reaches one private thing this file holds — a context, a client, a table — the split is real but cutting the file in two is the wrong half of the answer: move the export that has its own audience out, since the private thing would have to be promoted to survive a cut. When the finding names a part that can leave without taking anything else with it, that part is the one to move, and opening the file will not give you a better answer than the check already has. When it names none, either every part reaches something private this file holds, which is the case just above, or no part does and either half may go first. A declaration that names another in the same file counts with it, because one is built from the other. Two that merely reach the same private third do not, because sharing a helper is not being one thing — and promoting that helper is precisely the cost the split would carry. An export nothing reads is left out, because unused code is a different finding. A zone with a role is not reported and does not count as a reader: a barrel, a composition root and a test suite each answer to readers this analysis does not own.";
 
 type Readers = Map<string, Set<string>>;
 
@@ -61,6 +61,17 @@ const readershipOf = (project: Project, part: readonly string[], readers: Reader
   return `${names} from ${where}`;
 };
 
+const freePart = (
+  project: Project,
+  file: string,
+  parts: readonly (readonly string[])[],
+): readonly string[] | null => {
+  const free = parts.filter((part) => project.reachedWithin(file, part).length === 0);
+  const only = free[0];
+
+  return free.length === 1 && only !== undefined ? only : null;
+};
+
 const splitIn = (project: Project, file: string, readers: Readers): Finding | null => {
   const symbols = [...readers.keys()];
   const kin = kinIn(project, file);
@@ -76,9 +87,15 @@ const splitIn = (project: Project, file: string, readers: Readers): Finding | nu
     .sort()
     .join("; ");
 
+  const free = freePart(project, file, parts);
+  const direction =
+    free === null
+      ? ""
+      : `, and only ${[...free].sort().join(", ")} can leave without taking anything else with it`;
+
   return {
     severity: "error",
-    message: `serves ${parts.length} readerships that never meet: ${shown}`,
+    message: `serves ${parts.length} readerships that never meet${direction}: ${shown}`,
     file,
     start: null,
   };

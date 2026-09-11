@@ -84,8 +84,12 @@ Off by default, and a separate switch again. It sorts a file's exports by who re
 
 ```
 no-file-serves-two-readerships              1 error
-    src/shared/format.ts  serves 2 readerships that never meet: parseAmount from src/billing; renderBadge from src/inbox
+    src/shared/format.ts  serves 2 readerships that never meet, and only renderBadge can leave without taking anything else with it: parseAmount from src/billing; renderBadge from src/inbox
 ```
+
+The clause after the count is the direction, and it appears when exactly one group reaches nothing else in the file. That group is the one that lifts out on its own. Here parseAmount goes through a private rate table while renderBadge goes through nothing, so renderBadge is the half that leaves and the table stays where it is.
+
+When no group is named, either every group reaches something private the file holds, or none of them does and either half may go first.
 
 This is the companion to colocation, and it asks something colocation cannot. Colocation works one symbol at a time and fires when a symbol has a single customer. A file whose every export is widely used passes that check and is still two files. Split it, and each half goes to live with its own readers.
 
@@ -101,7 +105,7 @@ Two exports that merely reach the same private third thing do not join. Sharing 
 
 A module holding one private object that every export goes through: a context, a client, a connection, a table. Each export is built from that object, so each is joined to it. None of them is joined to any other, because the object is private, and a private declaration is not one of the groups being sorted.
 
-Files like that are reported whenever their exports serve separate audiences, which is often. What the check sees is true, because the audiences really do differ. What it cannot see is which side should move, and for this shape the answer is usually to move out the one export that has its own audience rather than to cut the file in two.
+Files like that are reported whenever their exports serve separate audiences, which is often. What the check sees is true, because the audiences really do differ. For this shape it names no direction, because every export reaches that private object and any cut would have to promote it. The answer is usually to move out the one export that has its own audience rather than to cut the file in two.
 
 ### What is left out of the count
 
