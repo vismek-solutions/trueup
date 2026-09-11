@@ -4,7 +4,7 @@ import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
 const PLACEMENT =
-  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs: a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. Which thing to move is already decided for you by the shape of the finding, so do not work it out again from the file. A finding that counts the exports means every reported export of that file goes to the same consumer: move the file into that consumer, and all of them close at once. A finding that names one declaration means the rest of the file has other readers, so the file stays. Before moving that one declaration, ask whether the seam should carry it at all: a value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Giving a zone a role silences it as a consumer, and is honest only for a zone that never owns what it uses.";
+  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs: a symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place. Which thing to move is already decided for you by the shape of the finding, so do not work it out again from the file. A finding that counts the exports means nothing outside one consumer reads that file at all, its own zone included: move the file into that consumer, and all of them close at once. A finding that names one declaration means the rest of the file has other readers, so the file stays. Before moving that one declaration, ask whether the seam should carry it at all: a value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not. A second consumer arriving later is a reason to move it back then, not a reason to leave it now. Type-only edges are not reported, because a type can be used through a value without ever being imported. Giving a zone a role silences it as a consumer, and is honest only for a zone that never owns what it uses.";
 
 const INTERNALS =
   "A test reaches a symbol that nothing outside its own directory calls, so the test knows a decomposition none of the callers know. Fold that symbol into the neighbour that uses it and the behaviour is unchanged while the test breaks, which is what it means for a test to be bound to an implementation detail rather than to behaviour. Reach the behaviour through the surface the production callers already go through, and the split underneath is free to move. When that is genuinely too expensive — a handful of cases each needing their own fixture to drive from outside — the symbol is asking to become a module with a caller of its own, not a wider surface on the one it sits in. Widening that surface so the direct test becomes legitimate, or adding a production caller to justify it, both leave the codebase worse than the finding did. A zone with the wiring role is not reported, because a composition root has no internals to protect. Something the package publishes belongs in a zone with the api role, and is surface wherever it is declared.";
@@ -74,7 +74,7 @@ const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Repo
     return owners.length === 1 && only !== undefined ? [{ reach, owner: only }] : [];
   });
 
-const byFile = (reported: readonly Reported[]): Reported[][] => {
+const byFile = (reported: readonly Reported[]): [string, Reported[]][] => {
   const groups = new Map<string, Reported[]>();
 
   for (const entry of reported) {
@@ -83,7 +83,19 @@ const byFile = (reported: readonly Reported[]): Reported[][] => {
     else found.push(entry);
   }
 
-  return [...groups.values()];
+  return [...groups];
+};
+
+const zonesReadingEach = (project: Project, roles: ReadonlySet<string>): Map<string, Set<string>> => {
+  const readers = new Map<string, Set<string>>();
+
+  for (const reach of everyConsumer(project.imports())) {
+    const zones = readers.get(reach.declaredIn) ?? new Set<string>();
+    for (const zone of reach.zones) if (!roles.has(zone)) zones.add(zone);
+    readers.set(reach.declaredIn, zones);
+  }
+
+  return readers;
 };
 
 const consumerOf = (group: readonly Reported[], owner: string, project: Project): string => {
@@ -95,12 +107,17 @@ const consumerOf = (group: readonly Reported[], owner: string, project: Project)
   return files.length === 1 && only !== undefined ? project.relative(only) : `${owner} (${files.length} files)`;
 };
 
-const misplaced = (group: readonly Reported[], project: Project): readonly Finding[] => {
+const misplaced = (
+  group: readonly Reported[],
+  project: Project,
+  readBy: ReadonlySet<string>,
+): readonly Finding[] => {
   const first = group[0];
   if (first === undefined) return [];
 
   const owners = new Set(group.map(({ owner }) => owner));
-  if (group.length === 1 || owners.size > 1) {
+  const wholeFile = owners.size === 1 && readBy.size === 1 && readBy.has(first.owner);
+  if (group.length === 1 || !wholeFile) {
     return group.map(({ reach, owner }) => ({
       severity: "error" as const,
       message: `declares ${reach.symbol}, used only by ${consumerOf([{ reach, owner }], owner, project)}`,
@@ -130,8 +147,13 @@ export function colocationClaim(roleZones: readonly string[]): Claim {
   return {
     name: "no-value-is-declared-away-from-its-only-consumer",
     guidance: PLACEMENT,
-    check: ({ project }): readonly Finding[] =>
-      byFile(reportedIn(project, roles)).flatMap((group) => misplaced(group, project)),
+    check: ({ project }): readonly Finding[] => {
+      const readBy = zonesReadingEach(project, roles);
+
+      return byFile(reportedIn(project, roles)).flatMap(([file, group]) =>
+        misplaced(group, project, readBy.get(file) ?? new Set()),
+      );
+    },
   };
 }
 

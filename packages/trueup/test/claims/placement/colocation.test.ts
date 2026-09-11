@@ -103,6 +103,8 @@ describe("what the shared fixture reports, in full", () => {
   it("reports exactly these misplacements, ordered by the file that declares them", () => {
     expect(messagesFor(CLAIM)).toEqual([
       "declares 2 exports, all used only by src/web/detail.ts, so the file is in the wrong directory rather than the declarations",
+      "declares alsoForDetail, used only by src/web/detail.ts",
+      "declares forDetail, used only by src/web/detail.ts",
       "declares usedInProduction, used only by src/web/detail.ts",
       "declares forWebOnly, used only by web (2 files)",
     ]);
@@ -136,6 +138,15 @@ describe("what the shared fixture reports, in full", () => {
 describe("showing a misplaced file rather than a scatter of symbols", () => {
   const next = (): string => renderNext(sharedReport(), SHARED);
 
+  it("holds off calling a file misplaced while its own zone still reads it, since that move breaks", () => {
+    const about = messagesFor(CLAIM).filter((message) => message.toLowerCase().includes("fordetail"));
+
+    expect(about).toEqual([
+      "declares alsoForDetail, used only by src/web/detail.ts",
+      "declares forDetail, used only by src/web/detail.ts",
+    ]);
+  });
+
   it("states the move, rather than listing the symbols and leaving the reader to draw it", () => {
     expect(next()).toContain("no-value-is-declared-away-from-its-only-consumer  1 error");
     expect(next()).toContain(
@@ -144,7 +155,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", () => {
-    expect(next().split("\n")[0]).toContain("problem 1 of 4 · 13 claims · 4 errors");
+    expect(next().split("\n")[0]).toContain("problem 1 of 5 · 13 claims · 6 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", () => {

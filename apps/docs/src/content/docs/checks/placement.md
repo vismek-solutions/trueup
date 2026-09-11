@@ -24,9 +24,11 @@ no-value-is-declared-away-from-its-only-consumer  3 errors
     src/domain/order.ts  declares isSettled, used only by server/routes.ts
 ```
 
-There are two shapes there, and which one you get decides what to move. A finding that counts the exports means every reported export of that file goes to the same place, so the file is what moves and all of them close together. A finding that names one declaration means the rest of the file has other readers, so the file stays and only that declaration is in question.
+There are two shapes there, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included, so the file is what moves and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
 
 That saves you the reading. Working out which case you are in by opening the file is the step that goes wrong most often, and the check already knows the answer.
+
+The words about its own zone are doing real work. A file can have every reported export pointing one way and still be read by a neighbour in the same zone, through an export that was never reported because a reader inside the zone is not a finding. Moving that file would leave the neighbour reaching across a boundary, so the check does not ask you to.
 
 Take the last one. isSettled sits in the domain zone, where shared business rules go, and the server is the only thing that ever asks for it. Move it into the server. A second customer arriving later is a reason to move it back then, and not a reason to have guessed now.
 
