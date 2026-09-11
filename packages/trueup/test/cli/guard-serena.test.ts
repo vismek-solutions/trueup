@@ -20,6 +20,15 @@ describe("guarding a replacement proposed through Serena", () => {
     expect(reason).toContain("may not reach domain");
   });
 
+  it("nests the whole remedy under the claim, so its bullets do not read as a new block", async () => {
+    const { output } = await guard(replacing({ needle: "export const run", repl: "export const start" }));
+    const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
+    const body = reason.split(`every-import-respects-its-zone-boundary  ${RUNNER}\n`)[1] ?? "";
+
+    expect(body).toContain("\n  Do this:");
+    expect(body).toContain("\n  - Move the code to a zone that may reach the target.");
+  });
+
   it("allows a replacement that removes the violation", async () => {
     const { output } = await guard(replacing({ needle: IMPORTS_DOMAIN, repl: "const thing = 1;" }));
     expect(output).toBe("");
@@ -110,9 +119,9 @@ describe("reviewing an edit Serena has already written", () => {
   it("carries only the refusal when the rules were the thing edited, with no note riding along", async () => {
     const said = await afterEditIn(BUDGETED, "trueup.config.ts");
 
-    expect(said).toContain("no-edit-changes-the-rules-themselves");
-    expect(said).not.toContain("no-change-outgrows-its-review");
-    expect(said.split("\n")).toHaveLength(4);
+    const claims = said.split("\n").filter((line) => line.includes("no-"));
+
+    expect(claims).toEqual(["no-edit-changes-the-rules-themselves  trueup.config.ts"]);
   });
 
   it("stays silent where no budget is set and nothing is broken", async () => {

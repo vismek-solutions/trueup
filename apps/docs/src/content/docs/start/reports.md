@@ -22,9 +22,14 @@ every-rule-names-a-declared-zone            ok
 every-import-respects-its-zone-boundary     1 error
     src/engine/table.ts:14:9  is engine and may not reach domain: Warrant from src/domain/warrant.ts through src/shared/index.ts
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
-    declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
-    reach the target, or have the target expose what the caller needs through a zone it may reach.
-    Run `trueup explain <file>` to see what a file may reach. Widening the rule is not the fix.
+    declaring file, so a barrel in between does not excuse it.
+
+    Do this:
+    - Move the code to a zone that may reach the target.
+    - Or have the target expose what the caller needs through a zone the caller may reach.
+    - Run `trueup explain <file>` to see what a file may reach.
+
+    Not the fix: widening the rule so the edge becomes legal.
 
 no-zones-form-a-cycle                       ok
 generic-code-names-no-domain-concept        ok
@@ -131,7 +136,7 @@ The whole report, claims in the order they ran, each with its guidance and its f
   "claims": [
     {
       "claim": "every-imported-name-is-unambiguous",
-      "guidance": "Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from. Export it from one place, or re-export it by name.",
+      "guidance": "Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from.\n\nDo this:\n- Export it from one place.\n- Or re-export it by name rather than through a star.",
       "findings": [
         {
           "severity": "error",
@@ -169,7 +174,7 @@ The same findings in GitLab's Code Quality format, which puts each one on its li
 ```json
 [
   {
-    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it. …",
+    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.\n\nDo this:\n- Move the code to a zone that may reach the target. …",
     "check_name": "every-import-respects-its-zone-boundary",
     "fingerprint": "a6336074136ec154dc9fcaa5bf72dacab993d46e2b1fe6d2ad64dd52a09be576",
     "severity": "major",

@@ -44,7 +44,7 @@ describe("telling an agent which command to reach for", () => {
 
   it("tells the agent not to widen the rule", async () => {
     const output = await capture((write) => runCli({ cwd: VIOLATING, argv: [], write }));
-    expect(output).toContain("Widening the rule is not the fix");
+    expect(output).toContain("Not the fix: widening the rule so the edge becomes legal.");
   });
 });
 

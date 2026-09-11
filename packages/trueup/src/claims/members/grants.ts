@@ -7,8 +7,17 @@ export interface MemberGrants {
   readonly grants: readonly { readonly member: string; readonly dependency: string }[];
 }
 
-const GUIDANCE =
-  "A member grants itself reach into a package its `package.json` does not depend on, so the boundary is open wider than the wiring and an import arriving there would be accepted. Drop the name from `allow`, or declare the dependency if the package really is used. Declaring a dependency nothing imports to quiet this is not the fix, and neither is keeping the grant for an import you plan to write: a grant is checked against reality only here.";
+const GUIDANCE = [
+  "A member grants itself reach into a package its `package.json` does not depend on, so the boundary is open wider than the wiring and an import arriving there would be accepted.",
+  "",
+  "Do this:",
+  "- Drop the name from `allow`.",
+  "- Or declare the dependency, if the package really is used.",
+  "",
+  "Not the fix:",
+  "- Declaring a dependency nothing imports, to quieten this.",
+  "- Keeping the grant for an import you plan to write. A grant is checked against reality only here.",
+].join("\n");
 
 export function grantClaim(surfaces: readonly MemberGrants[]): Claim {
   return {

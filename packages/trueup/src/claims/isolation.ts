@@ -5,11 +5,33 @@ import type { Project, ResolvedImport } from "../project/model.ts";
 import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 
-const GUIDANCE =
-  "A rule matching one directory is a warning rather than an error, because a second sibling may simply not exist yet; if the pattern was meant to reach a level deeper, it is the pattern that is wrong and not the tree. Two directories that were meant to stand alone are reaching into each other. Siblings under the same parent are separate parts, and once one imports another neither can be read, moved or deleted without the other, so the parent stops being a set of parts and becomes one unit. Move what they share up to a directory both may reach, or out of the group entirely, and import it from there. Listing the sibling in `except` is not the fix: that is for a directory everyone is meant to share, not for the one case you would like to allow today. `except` matches a group name as a pattern, so name the convention rather than the instances and every directory following it later is covered too. It exempts a directory as a target only: one that reaches back into a sibling is not being shared by the group, it is depending on one of its members, and that is the thing this rule exists to name.";
+const GUIDANCE = [
+  "Two directories that were meant to stand alone are reaching into each other. Siblings under the same parent are separate parts, and once one imports another neither can be read, moved or deleted without the other, so the parent stops being a set of parts and becomes one unit.",
+  "",
+  "Do this:",
+  "- Move what they share up to a directory both may reach, or out of the group entirely, and import it from there.",
+  "",
+  "Not the fix:",
+  "- Listing the reached-into sibling in `except`. That is for a directory everyone is meant to share, not for the one case you would like to allow today.",
+  "- Widening the pattern so the two stop being siblings.",
+  "",
+  "`except` matches a group name as a pattern, so name the convention rather than the instances and every directory following it later is covered too. It exempts a directory as a target only: one that reaches back into a sibling is not being shared by the group, it is depending on one of its members, and that is the thing this rule exists to name.",
+  "",
+  "A rule matching one directory is a warning rather than an error, because a second sibling may simply not exist yet. If the pattern was meant to reach a level deeper, it is the pattern that is wrong and not the tree.",
+].join("\n");
 
-const LOOSE =
-  "A file sits directly in the directory whose children are being kept apart, so it belongs to no sibling and the isolation rule does not govern it: it may reach into every group and nothing will say so. Move it into the sibling that uses it, or out of the parent entirely if several do. A file whose job is the group itself, an index or a route manifest or the thing that assembles the siblings, is the exception, and `wiring` is where you say so. It matches the path as a pattern, so name the convention rather than the instances and the files added later are covered too. Listing a file there because you have not decided where it belongs is the fix that stops the rule working: `wiring` is for a file that assembles the group, not for the one you would like to allow today. Only the parent of a group is read this way, so a file anywhere else is not reported, because it was never being kept apart. A directory that holds no group of its own is not a parent, however well its own path matches the pattern: with no siblings under it there is nothing for its files to sit beside, and nowhere they could be asked to move.";
+const LOOSE = [
+  "A file sits directly in the directory whose children are being kept apart, so it belongs to no sibling and the isolation rule does not govern it. It may reach into every group and nothing will say so.",
+  "",
+  "Do this:",
+  "- Move it into the sibling that uses it.",
+  "- Move it out of the parent entirely if several siblings use it.",
+  "- If its job is the group itself, an index or a route manifest or the thing that assembles the siblings, name it in `wiring`.",
+  "",
+  "Not the fix: listing a file in `wiring` because you have not decided where it belongs. `wiring` is for a file that assembles the group, not for the one you would like to allow today.",
+  "",
+  "`wiring` matches the path as a pattern, so name the convention rather than the instances and the files added later are covered too. Only the parent of a group is read this way, so a file anywhere else is not reported, because it was never being kept apart. A directory that holds no group of its own is not a parent, however well its own path matches the pattern.",
+].join("\n");
 
 export interface IsolationRule {
   readonly siblings: string;

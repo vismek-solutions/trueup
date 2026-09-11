@@ -138,15 +138,16 @@ describe("a check run", () => {
   it("tells the reader what each silence means and how to end it", () => {
     const report = withAGhostZone();
 
-    expect(claimIn(report, "every-file-belongs-to-a-zone")?.guidance).toBe(
-      "A file matches no zone, so no boundary or seam rule applies to it. Move it under an existing zone, or declare a zone that covers it. Run `{trueup} explain <file>` to see what a location would allow.",
-    );
-    expect(claimIn(report, "every-zone-has-a-file")?.guidance).toBe(
-      "A declared zone matches nothing, which silently disables every rule naming it. Fix its patterns or remove the zone.",
-    );
-    expect(claimIn(report, "every-zone-pattern-matches-a-file")?.guidance).toBe(
-      "A pattern matches nothing, so it is a rule you believe you have and do not. Fix it or delete it. Zones match first-match-wins, so an earlier zone may already have taken these files.",
-    );
+    const unzoned = claimIn(report, "every-file-belongs-to-a-zone")?.guidance ?? "";
+    const empty = claimIn(report, "every-zone-has-a-file")?.guidance ?? "";
+    const dead = claimIn(report, "every-zone-pattern-matches-a-file")?.guidance ?? "";
+
+    expect(unzoned).toContain("A file matches no zone, so no boundary or seam rule applies to it.");
+    expect(unzoned).toContain("- Move it under an existing zone.");
+    expect(empty).toContain("A declared zone matches nothing, which silently disables every rule naming it.");
+    expect(empty).toContain("- Fix its patterns.");
+    expect(dead).toContain("A pattern matches nothing, so it is a rule you believe you have and do not.");
+    expect(dead).toContain("- Fix the pattern, or delete it.");
   });
 
   it("reports a result for every claim, including those that found nothing", () => {

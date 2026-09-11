@@ -116,12 +116,12 @@ describe("switching it on", () => {
   });
 
   it("names dissolving the group as the answer, and rehousing it as the mistake", () => {
-    expect(claimIn(runWith(), CLAIM)?.guidance).toContain("dissolving it usually beats rehousing it");
+    expect(claimIn(runWith(), CLAIM)?.guidance).toContain("dissolve it rather than rehousing it");
   });
 
   it("sends the reader to the named part rather than back to the file", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
-      "that part is the one to move, and opening the file will not give you a better answer",
+      "Move that one, and opening the file will not give you a better answer",
     );
   });
 });

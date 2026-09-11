@@ -70,6 +70,14 @@ describe("deciding whether a file is the agent's to change", () => {
     expect(decide("trueup.config.ts").reasons[0]).toContain("An agent is asking");
     expect(decide("trueup.config.ts", { decision: "deny" }).reasons[0]).toContain("fix the code");
   });
+
+  it("keeps every guidance line under the header, so a structured remedy stays nested", () => {
+    for (const protect of [undefined, { decision: "deny" } as Protection]) {
+      const [, ...body] = (decide("trueup.config.ts", protect).reasons[0] ?? "").split("\n");
+
+      expect(body.filter((line) => line !== "").every((line) => line.startsWith("  "))).toBe(true);
+    }
+  });
 });
 
 describe("telling the report whether the rulebook is guarded", () => {

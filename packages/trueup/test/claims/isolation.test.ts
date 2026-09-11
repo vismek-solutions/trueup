@@ -233,7 +233,7 @@ describe("keeping sibling directories apart", () => {
 
   it("tells the reader that widening the exception is not the fix", () => {
     const claim = runWith({ siblings: "src/routes/*" }).claims.find((entry) => entry.claim === CLAIM);
-    expect(claim?.guidance).toContain("is not the fix");
+    expect(claim?.guidance).toContain("- Listing the reached-into sibling in `except`.");
   });
 });
 

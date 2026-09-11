@@ -159,9 +159,14 @@ no-directory-holds-too-many-files           2 errors
     src/adapters  holds 12 files, more than the 8 allowed
     src/claims  holds 11 files, more than the 8 allowed
     A directory holds more files than the limit, which is how a folder stops being one idea and
-    turns into a drawer. Group the related files into a subdirectory that names what they share, or
-    move out the ones that never belonged. Raising the limit is not the fix: the number exists to
-    force the question of what this directory is for.
+    turns into a drawer.
+
+    Do this:
+    - Group the related files into a subdirectory that names what they share.
+    - Move out the ones that never belonged here.
+
+    Not the fix: raising the limit. The number exists to force the question of what this directory
+    is for.
 ```
 
 The count includes every file the analysis read, unclassified ones included. A directory nothing has claimed is the likeliest dumping ground.

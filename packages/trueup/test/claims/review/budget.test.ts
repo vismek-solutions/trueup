@@ -35,7 +35,7 @@ describe("switching the budget on", () => {
     const guidance = claimIn(reportOf(CAP, measured()), CLAIM)?.guidance ?? "";
 
     expect(guidance).toContain("Find a seam in what you have already done");
-    expect(guidance).toContain("Raising the budget because the work is nearly done is the wrong fix");
+    expect(guidance).toContain("Not the fix: raising the budget because the work is nearly done.");
   });
 });
 

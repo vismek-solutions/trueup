@@ -104,7 +104,7 @@ export function verdictFor(decision: Decision): string | null {
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
       permissionDecision: decision.verdict,
-      permissionDecisionReason: [headline, "", ...decision.reasons].join("\n"),
+      permissionDecisionReason: [headline, ...decision.reasons].join("\n\n"),
     },
   });
 }
@@ -125,8 +125,8 @@ export function contextFor(
   const broke = decision.verdict !== "allow";
   if (!broke && notes.length === 0) return null;
 
-  const said = [headlineFor(broke, spread), "", ...decision.reasons, ...notes];
+  const said = [headlineFor(broke, spread), ...decision.reasons, ...notes];
   return JSON.stringify({
-    hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: said.join("\n") },
+    hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: said.join("\n\n") },
   });
 }

@@ -36,6 +36,6 @@ describe("reporting as dots", () => {
   });
 
   it("keeps the guidance, since a finding without a remedy is half a report", async () => {
-    expect(await dots(VIOLATING)).toContain("Widening the rule is not the fix");
+    expect(await dots(VIOLATING)).toContain("Not the fix: widening the rule so the edge becomes legal.");
   });
 });

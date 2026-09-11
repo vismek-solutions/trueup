@@ -3,8 +3,14 @@ import type { ClaimResult, Finding } from "../report/model.ts";
 
 export const RUNNERS_RAN_CLAIM = "every-delegated-tool-ran";
 
-const RAN_GUIDANCE =
-  "A configured analyzer did not run, so the checks it owns did not happen and their absence is not a pass. Fix the command, install the tool, or remove the runner from the config.";
+const RAN_GUIDANCE = [
+  "A configured analyzer did not run, so the checks it owns did not happen and their absence is not a pass.",
+  "",
+  "Do this:",
+  "- Fix the command.",
+  "- Or install the tool.",
+  "- Or remove the runner from the config, if the project no longer uses it.",
+].join("\n");
 
 const findingGuidance = (runner: string): string =>
   `Reported by ${runner}, which this project delegates to. Consult ${runner} for what the finding means; the rules here did not produce it.`;

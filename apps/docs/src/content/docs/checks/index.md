@@ -59,13 +59,20 @@ A run that hits a missing name and an ambiguous one reports them like this:
 ```
 every-imported-name-is-exported             1 error
     src/checkout/receipt.ts:1:10  src/checkout/receipt.ts imports formatPrice from ../pricing/net.js, which does not export it
-    The module resolved but exports no such name. Either the import is wrong, or a re-export it used
-    to travel through was removed.
+    The module resolved but exports no such name.
+
+    Do this:
+    - Correct the import, if the name is wrong.
+    - Or restore the re-export it used to travel through, if one was removed.
 
 every-imported-name-is-unambiguous          1 error
     src/checkout/total.ts:1:10  src/checkout/total.ts imports price from ../pricing/index.js, which re-exports it from more than one module
     Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule
-    can say where it came from. Export it from one place, or re-export it by name.
+    can say where it came from.
+
+    Do this:
+    - Export it from one place.
+    - Or re-export it by name rather than through a star.
 ```
 
 A file written in CommonJS is the exception. Assigning the whole exports object in one statement declares nothing this analysis can list, so its export list counts as unknown rather than empty. A name imported from a file like that is never reported as missing. To say a name is absent, the tool has to have seen the exports first.

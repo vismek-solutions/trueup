@@ -4,8 +4,18 @@ import type { Severity } from "../../ports/severity.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
-const GUIDANCE =
-  "A change this size is reviewed by skimming, and skimming is not reviewing. Find a seam in what you have already done, a move or a rename or a new module with its tests, and land that on its own before going further. Split at a point where the whole tree is green, not by file at the end: changes carved out afterwards do not each stand up, and a reviewer gains nothing from reading half a refactor. Raising the budget because the work is nearly done is the wrong fix; the number says what a person can hold in their head, and that does not change because this change is inconvenient to stop. If a generated, vendored or lock file is what grew, name it in `except` rather than moving the cap. This claim is never recorded in the baseline, since accepting it once would switch the budget off for good.";
+const GUIDANCE = [
+  "A change this size is reviewed by skimming, and skimming is not reviewing.",
+  "",
+  "Do this:",
+  "- Find a seam in what you have already done, a move or a rename or a new module with its tests, and land that on its own before going further.",
+  "- Split at a point where the whole tree is green, not by file at the end. Changes carved out afterwards do not each stand up, and a reviewer gains nothing from reading half a refactor.",
+  "- If a generated, vendored or lock file is what grew, name it in `except` rather than moving the cap.",
+  "",
+  "Not the fix: raising the budget because the work is nearly done. The number says what a person can hold in their head, and that does not change because this change is inconvenient to stop.",
+  "",
+  "This claim is never recorded in the baseline, since accepting it once would switch the budget off for good.",
+].join("\n");
 
 const REVIEW_CLAIM = "no-change-outgrows-its-review";
 

@@ -8,8 +8,20 @@ export interface ApiSurface {
   readonly complete: boolean;
 }
 
-const GUIDANCE =
-  'A package states its public surface twice, in `package.json` exports and in the zones marked `role: "api"`, and the two have drifted. A subpath no api zone covers refuses imports that resolve perfectly well; an api zone nothing exports opens a door that no consumer outside this workspace can walk through; and a single file in an api zone that `exports` does not name is reachable by every package invited in, while nobody outside can import it at all. Make them agree, or set `doorsFromExports` on the member so the zone is derived and cannot drift. Deleting the api zone to silence this is not the fix: that opens the whole package.';
+const GUIDANCE = [
+  'A package states its public surface twice, in `package.json` exports and in the zones marked `role: "api"`, and the two have drifted.',
+  "",
+  "What each kind of drift costs:",
+  "- A subpath no api zone covers refuses imports that resolve perfectly well.",
+  "- An api zone nothing exports opens a door no consumer outside this workspace can walk through.",
+  "- A file in an api zone that `exports` does not name is reachable by every package invited in, while nobody outside can import it at all.",
+  "",
+  "Do this:",
+  "- Make the two agree.",
+  "- Or set `doorsFromExports` on the member, so the zone is derived and cannot drift.",
+  "",
+  "Not the fix: deleting the api zone to silence this. That opens the whole package.",
+].join("\n");
 
 export function apiSurfaceClaim(surfaces: readonly ApiSurface[]): Claim {
   return {

@@ -44,7 +44,7 @@ describe("holding a directory to a size", () => {
   });
 
   it("tells the reader that raising the limit is not the fix", () => {
-    expect(claimIn(runWith(5), CLAIM)?.guidance).toContain("Raising the limit is not the fix");
+    expect(claimIn(runWith(5), CLAIM)?.guidance).toContain("Not the fix: raising the limit.");
   });
 });
 

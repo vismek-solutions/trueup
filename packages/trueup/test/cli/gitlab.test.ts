@@ -46,7 +46,7 @@ describe("the gitlab code quality report", () => {
     const [issue] = await issues(VIOLATING);
 
     expect(issue?.description).toContain("may not reach domain");
-    expect(issue?.description).toContain("Widening the rule is not the fix");
+    expect(issue?.description).toContain("Not the fix: widening the rule so the edge becomes legal.");
   });
 
   it("maps an error to major so gitlab does not rank it as advice", async () => {

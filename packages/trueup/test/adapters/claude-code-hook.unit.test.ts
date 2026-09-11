@@ -248,7 +248,7 @@ describe("answering the hook before the write", () => {
         hookEventName: "PreToolUse",
         permissionDecision: "deny",
         permissionDecisionReason:
-          "This edit is refused by the project's architecture rules.\n\nfirst\nsecond",
+          "This edit is refused by the project's architecture rules.\n\nfirst\n\nsecond",
       },
     });
   });
@@ -273,7 +273,7 @@ describe("answering the hook after the write", () => {
       hookSpecificOutput: {
         hookEventName: "PostToolUse",
         additionalContext:
-          "That edit broke one of the project's architecture rules. Repair it before moving on.\n\nfirst\nsecond",
+          "That edit broke one of the project's architecture rules. Repair it before moving on.\n\nfirst\n\nsecond",
       },
     });
   });

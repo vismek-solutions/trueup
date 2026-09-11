@@ -62,9 +62,14 @@ Every finding arrives with an explanation of what it means and how to resolve it
 every-import-respects-its-zone-boundary     1 error
     src/hooks/useCart.ts:1:10  is hooks and may not reach components: CartRow from src/components/CartRow.tsx
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
-    declaring file, so a barrel in between does not excuse it. Move the code to a zone that may
-    reach the target, or have the target expose what the caller needs through a zone it may reach.
-    Run `trueup explain <file>` to see what a file may reach. Widening the rule is not the fix.
+    declaring file, so a barrel in between does not excuse it.
+
+    Do this:
+    - Move the code to a zone that may reach the target.
+    - Or have the target expose what the caller needs through a zone the caller may reach.
+    - Run `trueup explain <file>` to see what a file may reach.
+
+    Not the fix: widening the rule so the edge becomes legal.
 ```
 
 It exits with a failure code whenever there is something to fix, so a CI step needs no extra flags.
