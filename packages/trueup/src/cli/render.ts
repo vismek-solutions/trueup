@@ -16,17 +16,25 @@ const listed = (findings: readonly Finding[], root: string, at: Locate): readonl
     return where === "" ? `    ${finding.message}` : `    ${where}  ${finding.message}`;
   });
 
-const wrap = (text: string, width: number): string[] => {
+const flowed = (line: string, width: number): string[] => {
+  const hang = line.startsWith("- ") ? "  " : "";
   const lines: string[] = [];
 
-  for (const word of text.split(" ")) {
+  for (const word of line.split(" ")) {
     const last = lines[lines.length - 1];
-    if (last === undefined || `${last} ${word}`.length > width) lines.push(word);
+    if (last === undefined) lines.push(word);
+    else if (`${last} ${word}`.length > width) lines.push(`${hang}${word}`);
     else lines[lines.length - 1] = `${last} ${word}`;
   }
 
   return lines;
 };
+
+const wrap = (text: string, width: number): string[] =>
+  text.split("\n").flatMap((line) => (line === "" ? [""] : flowed(line, width)));
+
+const said = (guidance: string): string[] =>
+  wrap(guidance, 96).map((line) => (line === "" ? "" : `    ${line}`));
 
 export interface RatchetSummary {
   readonly known: number;
@@ -80,7 +88,7 @@ const claimLines = (claim: Report["claims"][number], { root, width, at }: ClaimL
 
   if (claim.findings.length === 0) return lines;
 
-  return [...lines, ...wrap(claim.guidance, 96).map((line) => `    ${line}`), ""];
+  return [...lines, ...said(claim.guidance), ""];
 };
 
 const markOf = (findings: readonly Finding[]): string => {
@@ -144,7 +152,7 @@ const blockFor = (problem: Problem, { root, tally, after = [] }: BlockInput): st
   "",
   `${problem.claim.claim}  ${tally}`,
   ...listed(problem.findings, root, locator()),
-  ...wrap(problem.claim.guidance, 96).map((line) => `    ${line}`),
+  ...said(problem.claim.guidance),
   ...after,
 ];
 
@@ -208,7 +216,7 @@ export function renderDots(report: Report, root: string, ratchet?: RatchetSummar
       "",
       `${claim.claim.padEnd(width)}${plural(hits.length, "error")}`,
       ...shown,
-      ...wrap(claim.guidance, 96).map((line) => `    ${line}`),
+      ...said(claim.guidance),
     ];
   });
 

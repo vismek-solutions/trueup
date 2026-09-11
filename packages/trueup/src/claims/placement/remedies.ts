@@ -1,0 +1,42 @@
+export const PLACEMENT = [
+  "A zone exports a value that only one other zone uses, so the seam it crosses carries nothing a second caller needs. A symbol in a shared package that one consumer uses is not shared, it is that consumer's code in the wrong place.",
+  "",
+  "The shape of the finding decides what moves, so do not work it out again from the file:",
+  "- `declares N exports, all used only by ...` means nothing outside that one consumer reads the file at all, its own zone included. Move the file into that consumer and every finding on it closes at once.",
+  "- `declares <name>, used only by ...` means the rest of the file has other readers, so the file stays and only that declaration is in question.",
+  "",
+  "Before moving a single declaration, ask whether the seam should carry it at all. A value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not.",
+  "",
+  "Not the fix:",
+  "- Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.",
+  "- Leaving it because a second consumer may arrive later. That is a reason to move it back then, not a reason to leave it now.",
+  "",
+  "Type-only edges are not reported, because a type can be used through a value without ever being imported.",
+].join("\n");
+
+export const INTERNALS = [
+  "A test reaches a symbol that nothing outside its own directory calls, so the test knows a decomposition none of the callers know. Fold that symbol into the neighbour that uses it and the behaviour is unchanged while the test breaks, which is what it means for a test to be bound to an implementation detail rather than to behaviour.",
+  "",
+  "Do this:",
+  "- Reach the behaviour through the surface the production callers already go through, and the split underneath is free to move.",
+  "- When that is genuinely too expensive, because a handful of cases each need their own fixture to drive from outside, let the symbol become a module with a caller of its own.",
+  "",
+  "Not the fix:",
+  "- Widening the surface so the direct test becomes legitimate.",
+  "- Adding a production caller to justify it.",
+  "",
+  "Both leave the codebase worse than the finding did. A zone with the `wiring` role is not reported, because a composition root has no internals to protect, and something the package publishes belongs in a zone with the `api` role.",
+].join("\n");
+
+export const FOR_TESTS = [
+  "Nothing outside the tests uses this export, so it is public only so a test can reach in.",
+  "",
+  "Do this:",
+  "- Reach the behaviour through the surface production actually calls, and the export can go back to being private.",
+  "- If the piece genuinely deserves its own test, let it become its own module with a real caller rather than a widened surface on this one.",
+  "- A helper that exists purely to serve tests belongs in a zone with the `tests` role, not in the source it props up.",
+  "",
+  "Something a package publishes belongs in a zone with the `api` role, whose consumers this analysis cannot see.",
+  "",
+  "Not the fix: adding a production caller so the export has a real consumer. That is the one change that leaves the codebase worse than the finding did.",
+].join("\n");

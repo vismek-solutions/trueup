@@ -92,13 +92,13 @@ describe("holding a test to the surface its subject already has", () => {
   it("names the two fixes that would leave the codebase worse", () => {
     const guidance = claimIn(runWith(), CLAIM)?.guidance ?? "";
 
-    expect(guidance).toContain("Widening that surface");
-    expect(guidance).toContain("adding a production caller to justify it");
+    expect(guidance).toContain("- Widening the surface so the direct test becomes legitimate.");
+    expect(guidance).toContain("- Adding a production caller to justify it.");
   });
 
   it("tells the reader when a direct test is the honest answer", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
-      "asking to become a module with a caller of its own",
+      "let the symbol become a module with a caller of its own",
     );
   });
 });

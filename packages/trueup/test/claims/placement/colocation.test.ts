@@ -43,9 +43,9 @@ describe("keeping a value with its only consumer", () => {
   it("names the thing to move from the shape of the finding, rather than sending the reader to the file", () => {
     const guidance = claimIn(runWith(), CLAIM)?.guidance ?? "";
 
-    expect(guidance).toContain("already decided for you by the shape of the finding");
-    expect(guidance).toContain("A finding that counts the exports");
-    expect(guidance).toContain("A finding that names one declaration");
+    expect(guidance).toContain("The shape of the finding decides what moves");
+    expect(guidance).toContain("`declares N exports, all used only by ...`");
+    expect(guidance).toContain("`declares <name>, used only by ...`");
   });
 });
 
@@ -85,7 +85,9 @@ describe("an export that exists only for its test", () => {
 
   it("names the fix that would make the codebase worse", () => {
     const claim = sharedReport().claims.find((entry) => entry.claim === TEST_ONLY);
-    expect(claim?.guidance).toContain("Adding a production caller to satisfy this check");
+    expect(claim?.guidance).toContain(
+      "Not the fix: adding a production caller so the export has a real consumer",
+    );
   });
 
   it("stays quiet when no zone is declared as tests", () => {
