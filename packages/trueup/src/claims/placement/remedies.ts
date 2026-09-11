@@ -10,6 +10,8 @@ export const PLACEMENT = [
   "",
   "Before moving a single declaration, ask whether the seam should carry it at all. A value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not.",
   "",
+  "A new zone, or a package underneath the ones that read it, closes nothing on its own, because the count is about who reads the value rather than where it sits. Reach for one anyway when the consumer named must not own the value, a test harness or a downstream app for instance. The finding stands after that move, and standing is the right answer: accept it rather than acting on it again.",
+  "",
   "Not the fix:",
   "- Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.",
   "- Leaving it because a second consumer may arrive later. That is a reason to move it back then, not a reason to leave it now.",

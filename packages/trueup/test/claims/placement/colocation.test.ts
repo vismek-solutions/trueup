@@ -36,6 +36,12 @@ describe("keeping a value with its only consumer", () => {
     expect(claimIn(runWith(zones), CLAIM)?.findings).toEqual([]);
   });
 
+  it("tells the reader when a shared package is right even though the finding stands", () => {
+    expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
+      "Reach for one anyway when the consumer named must not own the value",
+    );
+  });
+
   it("tells the reader that a move cannot close a finding a silenced reader stands behind", () => {
     expect(claimIn(runWith(), CLAIM)?.guidance).toContain(
       "Moving the declaration anywhere but into the consumer named closes nothing",

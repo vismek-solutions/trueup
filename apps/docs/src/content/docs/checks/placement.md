@@ -82,6 +82,8 @@ Either the value belongs to the consumer named, or the role is wrong for what th
 
 Dropping the role instead closes findings like this one and opens far more, because a root reads nearly everything. The role is usually right, and the logic sitting behind it is what is in the wrong place.
 
+A new zone, or a package sitting under the ones that read the value, closes nothing by itself. The count asks who reads the value, not where it sits. Reach for one anyway when the consumer named must not own the value, a test harness or a downstream app for instance. The finding stands after that move, and standing is the right answer: [accept it into the baseline](/agents/baseline/) rather than working it a second time.
+
 ### Exports that exist only for a test
 
 This second check needs two things: the colocation switch above, and at least one zone carrying the tests role. Once the tool knows which files are tests, it can turn the question around.
