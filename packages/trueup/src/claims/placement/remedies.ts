@@ -16,7 +16,7 @@ export const PLACEMENT = [
   "- Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.",
   "- Leaving it because a second consumer may arrive later. That is a reason to move it back then, not a reason to leave it now.",
   "",
-  "Type-only edges are not reported, because a type can be used through a value without ever being imported.",
+  "A type is never reported, because a type can be used through a value without ever being imported, so counting its readers would name one consumer where there are several. A zone that imports a type does count as a consumer of the values that type is built from, because the type cannot be declared anywhere those values are not, so that zone pins them where they are.",
 ].join("\n");
 
 export const INTERNALS = [

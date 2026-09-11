@@ -124,6 +124,8 @@ describe("what the shared fixture reports, in full", () => {
       "declares readBothWays, used outside its zone only by src/web/detail.ts, and inside its zone as well",
       "declares pickedApart, used only by src/web/detail.ts, and by this file as well",
       "declares bothAndHome, used outside its zone only by src/web/detail.ts, and inside its zone and by this file as well",
+      "declares alsoOnlyServerUses, used only by src/server/handler.ts",
+      "declares shapeOnlyServerUses, used only by src/server/handler.ts",
       "declares usedInProduction, used only by src/web/detail.ts, while spec reads it too but is tests, so it does not count",
       "declares forWebOnly, used only by web (2 files)",
     ]);
@@ -151,6 +153,22 @@ describe("what the shared fixture reports, in full", () => {
 
   it("says nothing about a published export, whose consumers it cannot see", () => {
     expect(messagesFor(TEST_ONLY).join()).not.toContain("publishedThing");
+  });
+});
+
+describe("a value a foreign zone reads only through the type built from it", () => {
+  it("counts that zone as a consumer, since the type cannot be declared where the value is not", () => {
+    expect(messagesFor(CLAIM).join()).not.toContain("shapeTheWebNames");
+  });
+
+  it("still reports a sibling that type does not name, so the count reaches only what it is built from", () => {
+    expect(messagesFor(CLAIM)).toContain(
+      "declares shapeOnlyServerUses, used only by src/server/handler.ts",
+    );
+  });
+
+  it("holds off calling the whole file misplaced, since the move would strand that zone's type", () => {
+    expect(messagesFor(CLAIM).join()).not.toContain("all used only by src/server/handler.ts");
   });
 });
 
@@ -204,7 +222,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", () => {
-    expect(next().split("\n")[0]).toContain("problem 1 of 8 · 13 claims · 9 errors");
+    expect(next().split("\n")[0]).toContain("problem 1 of 9 · 13 claims · 11 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", () => {

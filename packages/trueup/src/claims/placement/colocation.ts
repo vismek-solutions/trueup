@@ -18,10 +18,12 @@ export interface SymbolReach {
   readonly files: Set<string>;
 }
 
-const usable = (edge: ResolvedImport): edge is Crossing => {
-  if (edge.kind === "type" || edge.symbol === null || edge.declaredIn === null) return false;
+const named = (edge: ResolvedImport): edge is Crossing => {
+  if (edge.symbol === null || edge.declaredIn === null) return false;
   return edge.fromZone !== null && edge.declaredZone !== null;
 };
+
+const usable = (edge: ResolvedImport): edge is Crossing => edge.kind !== "type" && named(edge);
 
 const gather = (imports: readonly ResolvedImport[], keepSameZone: boolean): SymbolReach[] => {
   const seen = new Map<string, SymbolReach>();
@@ -49,7 +51,40 @@ const gather = (imports: readonly ResolvedImport[], keepSameZone: boolean): Symb
   return [...seen.values()].sort((left, right) => (left.declaredIn < right.declaredIn ? -1 : 1));
 };
 
-const acrossZones = (imports: readonly ResolvedImport[]): SymbolReach[] => gather(imports, false);
+const builtFrom = (project: Project): ((file: string, name: string) => readonly string[]) => {
+  const cached = new Map<string, readonly string[]>();
+
+  return (file, name) => {
+    const key = `${file}\0${name}`;
+    const found = cached.get(key);
+    if (found !== undefined) return found;
+
+    const reached = project.reachedWithin(file, [name]);
+    cached.set(key, reached);
+
+    return reached;
+  };
+};
+
+const alsoThroughTypes = (project: Project, reaches: readonly SymbolReach[]): readonly SymbolReach[] => {
+  const standing = new Map(reaches.map((reach) => [`${reach.declaredIn}\0${reach.symbol}`, reach]));
+  const namesFrom = builtFrom(project);
+
+  for (const edge of project.imports()) {
+    if (edge.kind !== "type" || !named(edge) || edge.fromZone === edge.declaredZone) continue;
+
+    for (const name of namesFrom(edge.declaredIn, edge.symbol)) {
+      const reach = standing.get(`${edge.declaredIn}\0${name}`);
+      reach?.zones.add(edge.fromZone);
+      reach?.files.add(edge.from);
+    }
+  }
+
+  return reaches;
+};
+
+const acrossZones = (project: Project): readonly SymbolReach[] =>
+  alsoThroughTypes(project, gather(project.imports(), false));
 
 export const everyConsumer = (imports: readonly ResolvedImport[]): SymbolReach[] => gather(imports, true);
 
@@ -63,7 +98,7 @@ interface Reported {
 const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Reported[] => {
   const home = alsoReadAtHome(project);
 
-  return acrossZones(project.imports()).flatMap((reach) => {
+  return acrossZones(project).flatMap((reach) => {
     const owners = [...reach.zones].filter((zone) => !roles.has(zone));
     const only = owners[0];
     if (owners.length !== 1 || only === undefined) return [];
@@ -88,10 +123,12 @@ const byFile = (reported: readonly Reported[]): [string, Reported[]][] => {
 const zonesReadingEach = (project: Project, roles: ReadonlySet<string>): Map<string, Set<string>> => {
   const readers = new Map<string, Set<string>>();
 
-  for (const reach of everyConsumer(project.imports())) {
-    const zones = readers.get(reach.declaredIn) ?? new Set<string>();
-    for (const zone of reach.zones) if (!roles.has(zone)) zones.add(zone);
-    readers.set(reach.declaredIn, zones);
+  for (const edge of project.imports()) {
+    if (!named(edge) || roles.has(edge.fromZone)) continue;
+
+    const zones = readers.get(edge.declaredIn) ?? new Set<string>();
+    zones.add(edge.fromZone);
+    readers.set(edge.declaredIn, zones);
   }
 
   return readers;

@@ -57,13 +57,25 @@ A zone with a role is never counted as the only customer. Composition roots and 
 
 Those two lines are what keeps the badge component and the cart hook off the list above. src/main.ts imports each of them exactly once, and wiring is all it does.
 
-Type-only edges are left out as well. A type can be used constantly without ever being imported, because reading a field off a value uses that field's type and names nothing:
+A type's own readers are left out as well. A type can be used constantly without ever being imported, because reading a field off a value uses that field's type and names nothing:
 
 ```ts
 record.exports[0].form
 ```
 
-Counting imports tells the truth about values and lies about types.
+Counting imports tells the truth about values and lies about types, so counting a type's readers would name one customer where there are several.
+
+A type import does count in the other direction, as a reader of the value the type is built from:
+
+```ts
+export const currencySchema = z.enum(["eur", "usd"]);
+
+export type Currency = z.infer<typeof currencySchema>;
+```
+
+The server parses its input with currencySchema, and the web only ever names Currency. Counting that type import is what keeps the check from calling the server the schema's only customer and asking you to move a file the web depends on. Currency cannot be declared anywhere currencySchema is not, so the web pins the schema where it sits.
+
+This is worth a moment, because it looks like the same evidence being trusted in one place and not the other. What makes a type edge unsafe is that it undercounts, and a count that is too low is what produces a wrong finding here. Evidence that adds a reader can only ever silence one.
 
 Measured on a 911-file monorepo: 758 findings with neither exclusion, 47 with both. Ten of the 47 were values in a shared package that only one app used, which is the case that counting files per symbol misses entirely.
 
