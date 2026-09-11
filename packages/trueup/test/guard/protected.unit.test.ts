@@ -75,7 +75,8 @@ describe("deciding whether a file is the agent's to change", () => {
     for (const protect of [undefined, { decision: "deny" } as Protection]) {
       const [, ...body] = (decide("trueup.config.ts", protect).reasons[0] ?? "").split("\n");
 
-      expect(body.filter((line) => line !== "").every((line) => line.startsWith("  "))).toBe(true);
+      expect(body.every((line) => line === "" || line.startsWith("  "))).toBe(true);
+      expect(body).toContain("");
     }
   });
 });
