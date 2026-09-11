@@ -109,20 +109,21 @@ interface Moving {
 
 const cutOf = (project: Project, { file, name, to }: Moving): NameCut => {
   const uses = project.referencesIn(file);
-  const others = project.exportsOf(file).filter((exported) => exported !== name);
+  const exported = new Set(project.exportsOf(file));
   const needs = reachedFrom(uses, [name]);
   needs.delete(name);
-  const keeps = reachedFrom(uses, others);
+  const keeps = reachedFrom(uses, [...exported].filter((other) => other !== name));
 
   const travels = [...needs].filter((other) => !keeps.has(other));
   const leaving = new Set([name, ...travels]);
+  const read = new Set([...leaving].flatMap((other) => [...(uses.get(other) ?? [])]));
   const staying = project.declarationsIn(file).flatMap((span) => (leaving.has(span.name) ? [] : [span.name]));
   const taken = project.importsWithin(file, [...leaving]);
   const kept = new Set(project.importsWithin(file, staying).map((edge) => edge.local));
 
   return {
     travels: spelt(travels),
-    promote: spelt([...needs].filter((other) => keeps.has(other))),
+    promote: spelt([...read].filter((other) => !leaving.has(other) && !exported.has(other))),
     follows: spelt(taken.map((edge) => edge.specifier)),
     opening: to === null ? null : openedBy(project, taken, { file, from: project.zoneOf(file), to, kept }),
     importBack: spelt(

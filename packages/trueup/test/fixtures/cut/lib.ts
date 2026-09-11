@@ -26,3 +26,5 @@ const decorate = (value: string): string => `${seed}${value}${EOL}`;
 export const grown = (value: string): string => decorate(value);
 
 export const beside = "[beside]";
+
+export const framed = (value: string): string => `<${other(value)}>`;

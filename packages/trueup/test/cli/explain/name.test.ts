@@ -132,6 +132,16 @@ describe("pricing what one export would cost to move", () => {
     expect(said).not.toContain("cutting means promoting them first");
   });
 
+  it("leaves out a name the file already exports, since a mover can import it as it stands", async () => {
+    expect(await cutting("lib.ts#grown")).toContain("promote     none");
+  });
+
+  it("leaves out what is reached only through a name it does not have to promote", async () => {
+    expect(await cutting("lib.ts#framed")).toContain(
+      "cut cost    travels 0 · promote 0 · follows 0 · import back 0",
+    );
+  });
+
   it("says a bare promote count means nobody else has to agree, not that the move is free", async () => {
     expect(await cutting("lib.ts#bounce")).toContain(
       "nothing else in this file reads what it reaches, so no one else has to agree",
