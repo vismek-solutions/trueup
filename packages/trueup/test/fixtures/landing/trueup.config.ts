@@ -6,8 +6,10 @@ export default defineConfig({
     { name: "lib", patterns: ["src/lib/**"] },
     { name: "app", patterns: ["src/app/**"] },
     { name: "web", patterns: ["src/web/**"] },
+    { name: "wiring", patterns: ["src/wiring/**"], role: "wiring" },
   ],
   boundaries: [
+    { from: "wiring", allow: ["lib", "store", "app", "web"] },
     { from: "web", allow: ["lib", "store"] },
     { from: "app", allow: ["lib", "store"] },
     { from: "lib", allow: ["store"] },

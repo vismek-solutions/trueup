@@ -214,6 +214,27 @@ describe("what the imports that follow a move would cost where it lands", () => 
     );
   });
 
+  it("counts neither the zone that declares the import nor a zone with a role, and leaves alone one already read from a single zone", async () => {
+    expect(await landing("src/lib/note.ts#note")).toContain(
+      "            once it lands these become findings of their own: markFor\n",
+    );
+  });
+
+  it("counts the zone it leaves as a reader still, when a declaration staying behind reads the same import", async () => {
+    expect(await landing("src/lib/basket.ts#basketFor")).toContain(
+      "            nothing it imports becomes a finding of its own once it lands",
+    );
+  });
+
+  it("prices nothing for an import that declares no symbol here, a package or a whole module", async () => {
+    const said = await landing("src/lib/stamp.ts#stamp");
+
+    expect(said).toContain("follows     ../store/bag.js · node:os");
+    expect(said).toContain(
+      "            nothing it imports becomes a finding of its own once it lands",
+    );
+  });
+
   it("prices nothing where two zones read it, since there is no single destination to price against", async () => {
     expect(await landing("src/lib/shared.ts#shared")).toContain(
       "            more than one zone reads this, so where it would land is not settled",
