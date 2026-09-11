@@ -24,6 +24,14 @@ describe("deciding whether a file is the agent's to change", () => {
     expect(decide("CLAUDE.md", ["CLAUDE.md"]).verdict).toBe("ask");
   });
 
+  it("reads a rule that names paths and no decision the same as a bare list", () => {
+    const unsaid: Protection = { paths: ["CLAUDE.md"] };
+
+    expect(decide("CLAUDE.md", unsaid).verdict).toBe("ask");
+    expect(decide("CLAUDE.md", unsaid, "acceptEdits").verdict).toBe("deny");
+    expect(decide("src/thing.ts", unsaid).verdict).toBe("allow");
+  });
+
   it("refuses outright when the project says to", () => {
     const strict: Protection = { paths: ["CLAUDE.md"], decision: "deny" };
 
@@ -61,6 +69,13 @@ describe("deciding whether a file is the agent's to change", () => {
     }
   });
 
+  it("escalates an ask the project wrote out, since writing it changes nothing about who answers", () => {
+    const asked: Protection = { decision: "ask" };
+
+    expect(decide("trueup.config.ts", asked, "default").verdict).toBe("ask");
+    expect(decide("trueup.config.ts", asked, "acceptEdits").verdict).toBe("deny");
+  });
+
   it("still asks in the modes where a person is answering", () => {
     expect(decide("trueup.config.ts", undefined, "default").verdict).toBe("ask");
     expect(decide("trueup.config.ts", undefined, "plan").verdict).toBe("ask");
@@ -86,6 +101,7 @@ describe("telling the report whether the rulebook is guarded", () => {
     expect(rulebookGuarded(undefined)).toBe(true);
     expect(rulebookGuarded(["CLAUDE.md"])).toBe(true);
     expect(rulebookGuarded({ decision: "deny" })).toBe(true);
+    expect(rulebookGuarded({ paths: ["CLAUDE.md"] })).toBe(true);
   });
 
   it("counts an allowance as unguarded, so the report can say so", () => {

@@ -167,6 +167,7 @@ A directory that keeps growing has stopped being one idea. An agent adding the t
 no-directory-holds-too-many-files           2 errors
     src/adapters  holds 12 files, more than the 8 allowed
     src/claims  holds 11 files, more than the 8 allowed
+    ────────
     A directory holds more files than the limit, which is how a folder stops being one idea and
     turns into a drawer.
 

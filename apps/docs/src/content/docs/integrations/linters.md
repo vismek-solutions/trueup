@@ -37,6 +37,7 @@ every-delegated-tool-ran                    ok
 oxlint/eslint/no-unused-vars                2 warnings
     src/api/money.ts:1:7  Variable 'CURRENCY' is declared but never used. Unused variables should start with a '_'.
     src/api/money.ts:4:9  Variable 'rate' is declared but never used. Unused variables should start with a '_'.
+    ────────
     Reported by oxlint, which this project delegates to. Consult oxlint for what the finding means;
     the rules here did not produce it.
 

@@ -78,6 +78,7 @@ every-imported-name-is-exported             ok
 every-imported-name-is-unambiguous          ok
 every-file-belongs-to-a-zone                1 error
     scripts/seed.ts  scripts/seed.ts matches no zone
+    ────────
     A file matches no zone, so no boundary or seam rule applies to it.
 
     Do this:
@@ -90,6 +91,7 @@ every-zone-pattern-matches-a-file           ok
 every-rule-names-a-declared-zone            ok
 every-import-respects-its-zone-boundary     1 error
     src/hooks/useCart.ts:1:10  is hooks and may not reach components: CartRow from src/components/CartRow.tsx
+    ────────
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it.
 

@@ -33,8 +33,12 @@ const flowed = (line: string, width: number): string[] => {
 const wrap = (text: string, width: number): string[] =>
   text.split("\n").flatMap((line) => (line === "" ? [""] : flowed(line, width)));
 
-const said = (guidance: string): string[] =>
-  wrap(guidance, 96).map((line) => (line === "" ? "" : `    ${line}`));
+const RULE = "    ────────";
+
+const said = (guidance: string): string[] => [
+  RULE,
+  ...wrap(guidance, 96).map((line) => (line === "" ? "" : `    ${line}`)),
+];
 
 export interface RatchetSummary {
   readonly known: number;

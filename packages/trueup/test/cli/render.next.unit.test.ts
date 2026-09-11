@@ -36,6 +36,7 @@ describe("the next report, to the character", () => {
         "",
         "a-mixed-claim  1 error",
         "    a.ts  an error here",
+        "    ────────",
         "    alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar",
         "    papa quebec romeo",
       ].join("\n"),
@@ -50,6 +51,7 @@ describe("the next report, to the character", () => {
         "",
         "every-import-respects-its-zone-boundary  1 accepted",
         "    d.ts  is app and may not reach domain",
+        "    ────────",
         "    Move the code to a zone that may reach the target.",
         "    Fixing this one also needs `trueup --update-baseline` to drop its entry.",
       ].join("\n"),
@@ -81,6 +83,7 @@ describe("the next report, to the character", () => {
         "",
         "the-analysis-reached-files  1 error",
         "    no files",
+        "    ────────",
         "    g",
       ].join("\n"),
     );
@@ -154,6 +157,7 @@ describe("the next report, to the character", () => {
         "",
         "a-placed-claim  1 error",
         "    src/routes/b/thing.ts:1:8  here",
+        "    ────────",
         "    g",
       ].join("\n"),
     );
@@ -172,6 +176,7 @@ describe("wrapping the guidance", () => {
   it("keeps a line that lands exactly on the width", () => {
     expect(wrapped(`${"a".repeat(50)} ${"b".repeat(45)}`)).toEqual([
       "    a.ts  m",
+      "    ────────",
       `    ${"a".repeat(50)} ${"b".repeat(45)}`,
     ]);
   });
@@ -179,6 +184,7 @@ describe("wrapping the guidance", () => {
   it("breaks the line that would pass the width by one", () => {
     expect(wrapped(`${"a".repeat(50)} ${"b".repeat(46)}`)).toEqual([
       "    a.ts  m",
+      "    ────────",
       `    ${"a".repeat(50)}`,
       `    ${"b".repeat(46)}`,
     ]);

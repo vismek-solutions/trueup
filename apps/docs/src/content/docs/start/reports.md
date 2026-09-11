@@ -21,6 +21,7 @@ every-zone-pattern-matches-a-file           ok
 every-rule-names-a-declared-zone            ok
 every-import-respects-its-zone-boundary     1 error
     src/engine/table.ts:14:9  is engine and may not reach domain: Warrant from src/domain/warrant.ts through src/shared/index.ts
+    ────────
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it.
 
@@ -60,7 +61,7 @@ Each line after the receipt is one claim. It either holds, or it holds everywher
 
 Every claim runs on every pass, and the whole list always prints. Fixing one thing still tells you whether everything else moved.
 
-Under that list sits the guidance for that claim. It says what the violation means and what to do about it. It is written for whoever meets the rule without having read these pages, and most of the time that is an agent, meaning a coding assistant writing code in your project.
+Under that list, past a short rule that marks where the findings end, sits the guidance for that claim. It says what the violation means and what to do about it. It is written for whoever meets the rule without having read these pages, and most of the time that is an agent, meaning a coding assistant writing code in your project.
 
 ## When you only want the failures
 
@@ -90,6 +91,7 @@ baseline  2 known · 0 stale
 
 every-import-respects-its-zone-boundary  1 error
     src/engine/table.ts:14:9  is engine and may not reach domain: Warrant from src/domain/warrant.ts
+    ────────
     Code in one zone reached a symbol declared in a zone it may not reach. …
 
 16 claims · 1 error · 2 warnings
@@ -114,6 +116,7 @@ no-declaration-is-written-twice  3 errors
     src/zones/assign.ts:11:6      declares toPosix, which is written the same way in …
     src/claims/isolation.ts:17:6  declares posix, which is written the same way in …
     src/guard/protected.ts:26:6   declares posix, which is written the same way in …
+    ────────
     The same declaration was written more than once, in files that could have shared it. …
 ```
 

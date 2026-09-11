@@ -59,6 +59,7 @@ A run that hits a missing name and an ambiguous one reports them like this:
 ```
 every-imported-name-is-exported             1 error
     src/checkout/receipt.ts:1:10  src/checkout/receipt.ts imports formatPrice from ../pricing/net.js, which does not export it
+    ────────
     The module resolved but exports no such name.
 
     Do this:
@@ -67,6 +68,7 @@ every-imported-name-is-exported             1 error
 
 every-imported-name-is-unambiguous          1 error
     src/checkout/total.ts:1:10  src/checkout/total.ts imports price from ../pricing/index.js, which re-exports it from more than one module
+    ────────
     Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule
     can say where it came from.
 

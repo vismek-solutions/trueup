@@ -37,6 +37,7 @@ A refusal ends with what the file may reach, not only with what it may not.
 ```
 every-import-respects-its-zone-boundary  src/engine/table.ts
   is engine and may not reach domain: Warrant from src/domain/warrant.ts
+  ────────
   Code in one zone reached a symbol declared in a zone it may not reach. …
 
 engine may reach engine · shared

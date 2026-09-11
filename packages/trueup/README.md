@@ -61,6 +61,7 @@ Every finding arrives with an explanation of what it means and how to resolve it
 ```
 every-import-respects-its-zone-boundary     1 error
     src/hooks/useCart.ts:1:10  is hooks and may not reach components: CartRow from src/components/CartRow.tsx
+    ────────
     Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
     declaring file, so a barrel in between does not excuse it.
 
