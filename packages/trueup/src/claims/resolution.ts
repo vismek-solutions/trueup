@@ -1,4 +1,3 @@
-import { relative } from "node:path";
 import type { EdgeTarget } from "../graph/model.ts";
 import type { Claim } from "./model.ts";
 
@@ -28,10 +27,10 @@ const everyImportResolves: Claim = {
     "",
     "This fails rather than warns, because a rule that cannot see an edge silently passes it.",
   ].join("\n"),
-  check: ({ root, graph }) =>
+  check: ({ graph }) =>
     graph.unresolvedImports.map((entry) => ({
       severity: "error",
-      message: `${relative(root, entry.from)} imports ${entry.specifier}, which does not resolve (${entry.reason})`,
+      message: `imports ${entry.specifier}, which does not resolve (${entry.reason})`,
       file: entry.from,
       start: entry.start,
       specifier: entry.specifier,
@@ -48,12 +47,12 @@ interface EdgeClaim {
 const edgesEndingIn = ({ name, guidance, kind, fault }: EdgeClaim): Claim => ({
   name,
   guidance,
-  check: ({ root, graph }) =>
+  check: ({ graph }) =>
     graph.edges
       .filter((edge) => edge.to.kind === kind)
       .map((edge) => ({
         severity: "error",
-        message: `${relative(root, edge.from)} imports ${edge.imported} from ${edge.specifier}, ${fault}`,
+        message: `imports ${edge.imported} from ${edge.specifier}, ${fault}`,
         file: edge.from,
         start: edge.start,
       })),

@@ -143,7 +143,7 @@ The whole report, claims in the order they ran, each with its guidance and its f
       "findings": [
         {
           "severity": "error",
-          "message": "src/checkout/total.ts imports price from ../pricing/index.js, which re-exports it from more than one module",
+          "message": "imports price from ../pricing/index.js, which re-exports it from more than one module",
           "file": "/home/you/shop/src/checkout/total.ts",
           "start": 9
         }

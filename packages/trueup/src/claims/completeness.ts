@@ -1,4 +1,3 @@
-import { relative } from "node:path";
 import type { Claim } from "./model.ts";
 
 const everyFileBelongsToAZone: Claim = {
@@ -11,10 +10,10 @@ const everyFileBelongsToAZone: Claim = {
     "- Or declare a zone that covers it.",
     "- Run `{trueup} explain <file>` to see what a location would allow.",
   ].join("\n"),
-  check: ({ root, zones }) =>
+  check: ({ zones }) =>
     zones.unclassified.map((file) => ({
       severity: "error",
-      message: `${relative(root, file)} matches no zone`,
+      message: "matches no zone",
       file,
       start: null,
     })),

@@ -116,7 +116,7 @@ describe("a check run", () => {
     expect(findingsIn(withAGhostZone(), "every-file-belongs-to-a-zone")).toEqual([
       {
         severity: "error",
-        message: "stray.ts matches no zone",
+        message: "matches no zone",
         file: join(ZONED, "stray.ts"),
         start: null,
       },

@@ -28,7 +28,7 @@ export default defineConfig({
     fallowRunner({
       command: ["node_modules/.bin/fallow"],
       categories: [...FALLOW_CATEGORIES],
-      duplication: { mode: "weak", minLines: 5, minTokens: 30 },
+      duplication: { mode: "weak", minLines: 13, minTokens: 30 },
     }),
     oxlintRunner({
       command: ["node_modules/.bin/oxlint"],

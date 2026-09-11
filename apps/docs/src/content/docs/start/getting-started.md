@@ -77,7 +77,7 @@ every-import-resolves                       ok
 every-imported-name-is-exported             ok
 every-imported-name-is-unambiguous          ok
 every-file-belongs-to-a-zone                1 error
-    scripts/seed.ts  scripts/seed.ts matches no zone
+    scripts/seed.ts  matches no zone
     ────────
     A file matches no zone, so no boundary or seam rule applies to it.
 

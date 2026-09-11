@@ -14,10 +14,10 @@ const over = (fixture: string): Report =>
   check({ root: fixtureAt(fixture), zones: [{ name: "all", patterns: ["**"] }] });
 
 describe("an import that resolves to no file", () => {
-  it("names the file, the specifier, and what the resolver said about it", () => {
+  it("names the specifier and what the resolver said about it", () => {
     expect(messagesIn(over("unresolved"), RESOLVES)).toEqual([
-      "consumer.ts imports ./nowhere.js, which does not resolve (Cannot find module './nowhere.js')",
-      "consumer.ts imports ./also-nowhere.css, which does not resolve (Cannot find module './also-nowhere.css')",
+      "imports ./nowhere.js, which does not resolve (Cannot find module './nowhere.js')",
+      "imports ./also-nowhere.css, which does not resolve (Cannot find module './also-nowhere.css')",
     ]);
   });
 
@@ -45,10 +45,10 @@ describe("an import that resolves to no file", () => {
 });
 
 describe("an imported name the module does not export", () => {
-  it("names the file, the name, and the module it asked", () => {
+  it("names the imported name and the module it asked", () => {
     expect(messagesIn(over("barrel"), EXPORTED)).toEqual([
-      "consumer.ts imports default from ./index.js, which does not export it",
-      "consumer.ts imports absent from ./index.js, which does not export it",
+      "imports default from ./index.js, which does not export it",
+      "imports absent from ./index.js, which does not export it",
     ]);
   });
 
@@ -68,7 +68,7 @@ describe("an imported name the module does not export", () => {
 describe("a name two star re-exports both supply", () => {
   it("says which module was asked and that more than one answered", () => {
     expect(messagesIn(over("ambiguous"), UNAMBIGUOUS)).toEqual([
-      "consumer.ts imports shared from ./index.js, which re-exports it from more than one module",
+      "imports shared from ./index.js, which re-exports it from more than one module",
     ]);
   });
 
