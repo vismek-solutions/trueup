@@ -36,6 +36,22 @@ describe("explaining a path a rule keeps apart from its siblings", () => {
     );
   });
 
+  it("says every other part is shared when nothing is kept apart from it, rather than listing none", async () => {
+    expect(await saidBy(fixtureAt("shared-only"), "src/routes/a/page.ts")).toBe(
+      [
+        "src/routes/a/page.ts",
+        "",
+        "zone        app",
+        "may reach   app",
+        "may not     none",
+        "",
+        "siblings    a, one part of `src/routes/*`, and every other part is shared",
+        "            it may still reach _state · _ui, which the group shares",
+        "",
+      ].join("\n"),
+    );
+  });
+
   it("stays silent about siblings for a path no isolation rule reaches", async () => {
     expect(await isolated("libs/kit/src/button.ts")).not.toContain("siblings");
   });
