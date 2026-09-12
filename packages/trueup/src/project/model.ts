@@ -36,6 +36,7 @@ export interface Issue {
 export interface Project {
   readonly root: string;
   readonly files: readonly string[];
+  readonly assets: readonly string[];
   readonly zoneNames: readonly string[];
   readonly zoneOf: (file: string) => string | null;
   readonly roleOf: (zone: string) => ZoneRole | null;

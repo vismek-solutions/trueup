@@ -39,6 +39,7 @@ export interface Settings {
   readonly extensions?: readonly string[] | undefined;
   readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
+  readonly assets?: readonly string[] | undefined;
 }
 
 export interface ArchitectureConfig extends Settings {

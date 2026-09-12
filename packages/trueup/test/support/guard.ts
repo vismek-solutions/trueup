@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { runGuard } from "../../src/cli/guard.ts";
 import { fixtureAt } from "./fixtures.ts";
 
@@ -13,4 +14,14 @@ export const guardFor =
       write: (line) => (output += line),
     });
     return { code, output };
+  };
+
+export const verdictFrom =
+  (cwd: string) =>
+  async (file: string, content: string): Promise<string> => {
+    const { output } = await guardFor(cwd)({
+      tool_name: "Write",
+      tool_input: { file_path: join(cwd, file), content },
+    });
+    return output === "" ? "allowed" : JSON.parse(output).hookSpecificOutput.permissionDecision;
   };

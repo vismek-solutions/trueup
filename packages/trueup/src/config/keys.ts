@@ -1,6 +1,7 @@
 import type { ArchitectureConfig, MemberConfig } from "./model.ts";
 
 const ROOT: Record<keyof ArchitectureConfig, true> = {
+  assets: true,
   boundaries: true,
   changes: true,
   colocation: true,

@@ -4,7 +4,7 @@ import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
-import { openedIn, unanalysed, type Opened } from "../preamble.ts";
+import { openedIn, readAsAsset, unanalysed, type Opened } from "../preamble.ts";
 import { closesACycle, homeLines, probeFor, type Home } from "./homes.ts";
 import { list } from "./lines.ts";
 import { nameLines, type Blocked } from "./name.ts";
@@ -175,7 +175,16 @@ const pathFor = async (cwd: string, target: string, write: (line: string) => voi
     return 0;
   }
 
-  const missing = unanalysed({ root, config, roots: resolveInclude(root, config.include) }, path);
+  const site = { root, config, roots: resolveInclude(root, config.include) };
+
+  if (readAsAsset(site, path)) {
+    write("zone        none");
+    write("            this is an asset, so it is read as text and never parsed");
+    write("            no zone, boundary or seam rule reaches it, and a rule may read what it says");
+    return 0;
+  }
+
+  const missing = unanalysed(site, path);
   if (missing !== null) {
     write(`zone        ${zone ?? "none"}`);
     write("            this path is not analysed, so no claim applies to it");

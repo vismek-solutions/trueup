@@ -1,5 +1,5 @@
 import { gitChanges } from "./adapters/git/changes.ts";
-import { discoverFiles, readSource, type DiscoverFilesOptions } from "./adapters/node-files.ts";
+import { readSets, readSources, type DiscoverFilesOptions } from "./adapters/node-files.ts";
 import { parseModule, readDeclarations, readMentions } from "./adapters/oxc-parse.ts";
 import { createResolver } from "./adapters/oxc-resolve.ts";
 import { apiSurfaceClaim, type ApiSurface } from "./claims/members/api-surface.ts";
@@ -50,13 +50,6 @@ import type { ZoneDefinition, ZoneRole } from "./zones/model.ts";
 
 export type Overlay = ReadonlyMap<string, string>;
 
-const NO_OVERLAY: Overlay = new Map();
-
-const readSources = (options: DiscoverFilesOptions, overlay: Overlay = NO_OVERLAY): Map<string, string> =>
-  new Map(
-    discoverFiles(options, overlay.keys()).map((path) => [path, overlay.get(path) ?? readSource(path)]),
-  );
-
 const parseAll = (sources: ReadonlyMap<string, string>, parse: ParseModule): ModuleRecord[] =>
   [...sources].map(([path, text]) => parse(path, text));
 
@@ -79,13 +72,15 @@ export interface InspectOptions {
   readonly externals?: readonly string[] | undefined;
   readonly ignoreDirectories?: readonly string[] | undefined;
   readonly ignoreFiles?: readonly string[] | undefined;
+  readonly assets?: readonly string[] | undefined;
   readonly overlay?: Overlay | undefined;
 }
 
 const analyseProject = (options: InspectOptions) => {
   const { root, roots, zones, extensions, externals, ignoreDirectories, ignoreFiles, overlay } = options;
-  const discovery = { roots: roots ?? [root], extensions, ignoreDirectories, ignoreFiles };
-  const sources = readSources(discovery, overlay);
+  const roughly = { roots: roots ?? [root], extensions, ignoreDirectories, ignoreFiles };
+  // an asset is never parsed, never in the graph and never zoned, so a stylesheet owes no zone
+  const { sources, assets } = readSets({ root, ...roughly, assets: options.assets }, overlay);
   const modules = parseAll(sources, parseModule);
   const graph = buildSymbolGraph({ modules, resolve: createResolver({ externals }) });
   const assignment = assignZones({ root, files: [...graph.files], zones });
@@ -95,7 +90,7 @@ const analyseProject = (options: InspectOptions) => {
     graph,
     zones: assignment,
     lexicon,
-    project: buildProject({ root, graph, zones: assignment, lexicon, sources }),
+    project: buildProject({ root, graph, zones: assignment, lexicon, sources, assets }),
   };
 };
 

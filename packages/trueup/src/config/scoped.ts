@@ -28,6 +28,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
     root: project.root,
     relative: project.relative,
     files: project.files.filter((file) => inside(directory, file)),
+    assets: project.assets.filter((file) => inside(directory, file)),
     zoneNames: project.zoneNames
       .filter((zone) => zone.startsWith(prefix))
       .map((zone) => zone.slice(prefix.length)),

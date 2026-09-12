@@ -12,9 +12,13 @@ export interface BuildProjectInput {
   readonly zones: ZoneAssignment;
   readonly lexicon: Lexicon;
   readonly sources: ReadonlyMap<string, string>;
+  readonly assets?: ReadonlyMap<string, string> | undefined;
 }
 
-export function buildProject({ root, graph, zones, lexicon, sources }: BuildProjectInput): Project {
+const NO_ASSETS: ReadonlyMap<string, string> = new Map();
+
+export function buildProject(input: BuildProjectInput): Project {
+  const { root, graph, zones, lexicon, sources, assets = NO_ASSETS } = input;
   const resolved: readonly ResolvedImport[] = graph.edges.map((edge) => {
     const declaredIn = targetPathOf(edge.to);
     return {
@@ -87,13 +91,14 @@ export function buildProject({ root, graph, zones, lexicon, sources }: BuildProj
   return {
     root,
     files: [...graph.files],
+    assets: [...assets.keys()],
     zoneNames: zones.declaredNames,
     zoneOf: zones.zoneOf,
     roleOf: zones.roleOf,
     filesIn: zones.filesIn,
     imports,
     exportsOf: lexicon.exportedNamesIn,
-    sourceOf: (file) => sources.get(file) ?? null,
+    sourceOf: (file) => sources.get(file) ?? assets.get(file) ?? null,
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
     referencesIn,

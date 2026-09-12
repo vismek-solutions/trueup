@@ -1,21 +1,11 @@
-import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
-import { guardFor } from "../support/guard.ts";
+import { verdictFrom } from "../support/guard.ts";
 
-const PROJECT = fixtureAt("guarded-content");
-const guard = guardFor(PROJECT);
+const verdictOn = verdictFrom(fixtureAt("guarded-content"));
 
 const WORN = 'export const className = "stray-class";\n';
 const PLAIN = 'export const className = "plain";\n';
-
-const verdictOn = async (file: string, content: string): Promise<string> => {
-  const { output } = await guard({
-    tool_name: "Write",
-    tool_input: { file_path: join(PROJECT, file), content },
-  });
-  return output === "" ? "allowed" : JSON.parse(output).hookSpecificOutput.permissionDecision;
-};
 
 describe("a rule that reads the text of a file", () => {
   it("refuses a write that introduces what the rule forbids", async () => {

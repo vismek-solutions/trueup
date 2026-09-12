@@ -55,6 +55,7 @@ Only the zones are required. Everything under them is optional, and a config wit
 | `members` | `string[]` | none | Globs naming [monorepo members](/concepts/monorepos/). |
 | `include` | `string[]` | the whole project | Directories to scan. Narrowing this removes files from every check. |
 | `extensions` | `string[]` | `.ts .tsx .mts .cts .js .jsx .mjs .cjs` | Replaces that list rather than adding to it. |
+| `assets` | `string[]` | none | Globs naming [files a rule may read but nothing parses](/checks/custom-rules/#files-that-are-read-but-never-parsed), such as stylesheets. |
 | `externals` | `string[]` | none | [Specifiers your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies). |
 | `ignoreDirectories` | `string[]` | `.git node_modules dist build out coverage .next .turbo` | Directory basenames never walked into. Replaces the list. |
 | `protect` | `string[]` or `{ paths?, decision? }` | every rulebook and the baseline, always | [Extra paths an agent may not edit](/agents/guard/#the-rulebook-goes-through-you). |

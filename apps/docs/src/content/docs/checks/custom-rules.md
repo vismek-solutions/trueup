@@ -78,6 +78,7 @@ Besides the imports, a project will answer any of these:
 |---|---|
 | `root` | the project root, as an absolute path |
 | `files` | every file the run read |
+| `assets` | every file read as text alone, never parsed, such as a stylesheet |
 | `zoneNames` | every zone name, in the order you declared them |
 | `zoneOf(file)` | the zone that file landed in, or nothing if no zone claimed it |
 | `filesIn(zone)` | the files in one zone |
@@ -92,6 +93,38 @@ Besides the imports, a project will answer any of these:
 One of those deserves a warning. When you need the text of a file, ask sourceOf for it rather than reading the disk yourself.
 
 The guard is the part that inspects an edit before it is saved. At that moment the file on disk still holds the old text, so a rule that reads the disk directly answers the opposite of what it answers in a full run. That is a hard thing to notice and a worse thing to debug.
+
+## Files that are read but never parsed
+
+A rule sometimes needs a file the parser never sees. A stylesheet is the usual case, because the classes in it constrain your components and no import connects the two.
+
+Name those files and the run reads them as text:
+
+```ts
+assets: ["**/*.css"]
+```
+
+They stay apart from the code. Nothing parses them, they carry no imports, they are absent from the list of files, and they owe no zone, so a stylesheet never fails the check that every file belongs to one. A rule asks for them together:
+
+```ts
+defineRule(
+  "no-stylesheet-forces-a-declaration",
+  (project) =>
+    project.assets
+      .filter((sheet) => project.sourceOf(sheet)?.includes("!important") === true)
+      .map((sheet) => ({ message: "forces a declaration", file: sheet })),
+  "A forced declaration wins by weight rather than by position, so the next rule written for that element does nothing. Take the force off, and give the element a class of its own where it genuinely needs to win.",
+)
+```
+
+The run then says so:
+
+```
+no-stylesheet-forces-a-declaration          1 error
+    src/card.css  forces a declaration
+```
+
+The guard rules on a proposed stylesheet the same way, for the reason above: the text comes from the project, so the rule reads the edit rather than the copy still on disk.
 
 ## When to write one instead of asking for a feature
 

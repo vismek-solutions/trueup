@@ -103,6 +103,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     extensions: config.extensions,
     externals: config.externals,
     ignoreDirectories: config.ignoreDirectories,
+    assets: config.assets,
     ignoreFiles: rulebooks,
   });
 

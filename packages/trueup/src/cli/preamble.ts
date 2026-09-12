@@ -1,5 +1,5 @@
 import { extname, relative, sep } from "node:path";
-import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS } from "../adapters/node-files.ts";
+import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS, namedAsset } from "../adapters/node-files.ts";
 import { inspect, type Overlay } from "../compose.ts";
 import { findConfig, loadConfig, messageOf, resolveInclude, type LoadedConfig } from "../config/load.ts";
 import type { ResolvedConfig } from "../config/model.ts";
@@ -18,9 +18,12 @@ const skipsDirectoryOf = (root: string, config: ResolvedConfig, path: string): b
   return segments.some((segment) => skipped.has(segment));
 };
 
+export const readAsAsset = ({ root, config }: Analysable, path: string): boolean =>
+  namedAsset(root, config.assets ?? [])(path);
+
 export const unanalysed = ({ root, config, roots }: Analysable, path: string): string | null => {
   const extensions = config.extensions ?? SOURCE_EXTENSIONS;
-  if (!extensions.includes(extname(path))) {
+  if (!extensions.includes(extname(path)) && !readAsAsset({ root, config, roots }, path)) {
     return `the analysis reads ${extensions.join(" · ")}, and this is not one of them`;
   }
   if (!roots.some((entry) => path === entry || path.startsWith(`${entry}${sep}`))) {
@@ -76,6 +79,7 @@ const projectFor = ({ config, root }: LoadedConfig, rulebooks: readonly string[]
     extensions: config.extensions,
     externals: config.externals,
     ignoreDirectories: config.ignoreDirectories,
+    assets: config.assets,
     ignoreFiles: rulebooks,
     overlay,
   });

@@ -191,3 +191,27 @@ describe("what a rule can ask about the tree itself", () => {
     ]);
   });
 });
+
+describe("a file the analysis reads but never parses", () => {
+  const SHEET = join(ROOT, "src/domain/thing.css");
+
+  const withSheets = (): Project =>
+    inspect({ root: ROOT, zones: [{ name: "all", patterns: ["src/**"] }], assets: ["**/*.css"] });
+
+  it("is listed apart from the files the graph holds", () => {
+    expect(withSheets().assets).toEqual([SHEET]);
+  });
+
+  it("stays out of the files, so nothing asks it for imports or a zone", () => {
+    expect(withSheets().files).not.toContain(SHEET);
+  });
+
+  it("hands its text back through the same reader as a source file", () => {
+    expect(withSheets().sourceOf(SHEET)).toContain("display: grid");
+  });
+
+  it("is absent until a pattern names it, so no project grows a read it did not ask for", () => {
+    expect(projectAt().assets).toEqual([]);
+    expect(projectAt().sourceOf(SHEET)).toBeNull();
+  });
+});
