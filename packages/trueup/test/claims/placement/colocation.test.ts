@@ -42,12 +42,6 @@ describe("keeping a value with its only consumer", () => {
     );
   });
 
-  it("tells the reader that a move cannot close a finding a silenced reader stands behind", async () => {
-    expect(claimIn(await runWith(), CLAIM)?.guidance).toContain(
-      "Moving the declaration anywhere but into the consumer named closes nothing",
-    );
-  });
-
   it("tells the reader when giving a zone a role is honest", async () => {
     expect(claimIn(await runWith(), CLAIM)?.guidance).toContain("never owns what it uses");
   });
@@ -56,10 +50,17 @@ describe("keeping a value with its only consumer", () => {
     const guidance = claimIn(await runWith(), CLAIM)?.guidance ?? "";
 
     expect(guidance).toContain("The shape of the finding decides what moves");
-    expect(guidance).toContain("`declares N exports, all used only by ...`");
     expect(guidance).toContain("`declares <name>, used only by ...`");
-    expect(guidance).toContain("`declares <name>, used outside its zone only by ...`");
-    expect(guidance).toContain("`... and by this file as well`");
+  });
+
+  it("leaves out the branches for shapes it did not report", async () => {
+    const guidance = claimIn(await runWith(), CLAIM)?.guidance ?? "";
+
+    expect(guidance).not.toContain("`declares N exports, all used only by ...`");
+    expect(guidance).not.toContain("`declares <name>, used outside its zone only by ...`");
+    expect(guidance).not.toContain("`... and by this file as well`");
+    expect(guidance).not.toContain("reads it too but is <role>");
+    expect(guidance).not.toContain("A type is never reported");
   });
 });
 
@@ -116,6 +117,18 @@ describe("an export that exists only for its test", () => {
 });
 
 describe("what the shared fixture reports, in full", () => {
+  it("carries a branch for every shape standing in the report", async () => {
+    const guidance = claimIn(await sharedReport(), CLAIM)?.guidance ?? "";
+
+    expect(guidance).toContain("`declares N exports, all used only by ...`");
+    expect(guidance).toContain("`declares <name>, used only by ...`");
+    expect(guidance).toContain("`declares <name>, used outside its zone only by ...`");
+    expect(guidance).toContain("`... and by this file as well`");
+    expect(guidance).toContain("A list under the finding names what each reader imports");
+    expect(guidance).toContain("Moving the declaration anywhere but into the consumer named closes nothing");
+    expect(guidance).toContain("A type is never reported");
+  });
+
   it("reports exactly these misplacements, ordered by the file that declares them", async () => {
     expect(await messagesFor(CLAIM)).toEqual([
       "declares 2 exports, all used only by src/web/detail.ts, so the file is in the wrong directory rather than the declarations",

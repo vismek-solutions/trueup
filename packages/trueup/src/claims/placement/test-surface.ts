@@ -52,14 +52,15 @@ export function testInternalsClaim({ testZones, apiZones, wiringZones }: TestInt
 
   return {
     name: "no-test-reaches-an-internal",
-    guidance: INTERNALS,
-    check: ({ project }): readonly Finding[] => {
-      if (tests.size === 0) return [NO_TEST_ZONE];
+    check: ({ project }) => {
+      if (tests.size === 0) return { findings: [NO_TEST_ZONE], guidance: INTERNALS };
       const published = publishedBy(project, apiZones);
 
-      return everyConsumer(project.imports())
+      const findings: readonly Finding[] = everyConsumer(project.imports())
         .filter((reach) => !opaque.has(reach.declaredZone) && !published.has(reach.symbol))
         .flatMap((reach) => reachingInternal(reach, project, tests));
+
+      return { findings, guidance: INTERNALS };
     },
   };
 }
@@ -74,11 +75,10 @@ export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput
 
   return {
     name: "no-export-exists-only-for-a-test",
-    guidance: FOR_TESTS,
-    check: ({ project }): readonly Finding[] => {
+    check: ({ project }) => {
       const published = publishedBy(project, apiZones);
 
-      return everyConsumer(project.imports())
+      const findings: readonly Finding[] = everyConsumer(project.imports())
         .filter((reach) => !tests.has(reach.declaredZone) && !published.has(reach.symbol))
         .filter((reach) => [...reach.zones].every((zone) => tests.has(zone)))
         .map((reach) => ({
@@ -88,6 +88,8 @@ export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput
           start: null,
           symbols: [reach.symbol],
         }));
+
+      return { findings, guidance: FOR_TESTS };
     },
   };
 }

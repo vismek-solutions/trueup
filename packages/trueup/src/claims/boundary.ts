@@ -87,30 +87,32 @@ const rulesByOrigin = (rules: readonly BoundaryRule[]): ReadonlyMap<string, Boun
 export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
   return {
     name: "every-import-respects-its-zone-boundary",
-    guidance: [
-      "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.",
-      "",
-      "Do this:",
-      "- Move the code to a zone that may reach the target.",
-      "- Or have the target expose what the caller needs through a zone the caller may reach.",
-      "- Run `{trueup} explain <file>` to see what a file may reach.",
-      "",
-      "Not the fix: widening the rule so the edge becomes legal.",
-    ].join("\n"),
     check: ({ root, graph, zones }) => {
       const byOrigin = rulesByOrigin(rules);
       const zoneOf = (path: string): string | null => zones.zoneOf(path);
 
-      return graph.edges.flatMap((edge) => {
-        const fromZone = zoneOf(edge.from);
-        if (fromZone === null) return [];
+      return {
+        findings: graph.edges.flatMap((edge) => {
+          const fromZone = zoneOf(edge.from);
+          if (fromZone === null) return [];
 
-        const breach = (byOrigin.get(fromZone) ?? [])
-          .map((rule) => breachOf(edge, rule, { root, zoneOf, fromZone }))
-          .find((finding): finding is Finding => finding !== null);
+          const breach = (byOrigin.get(fromZone) ?? [])
+            .map((rule) => breachOf(edge, rule, { root, zoneOf, fromZone }))
+            .find((finding): finding is Finding => finding !== null);
 
-        return breach === undefined ? [] : [breach];
-      });
+          return breach === undefined ? [] : [breach];
+        }),
+        guidance: [
+          "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.",
+          "",
+          "Do this:",
+          "- Move the code to a zone that may reach the target.",
+          "- Or have the target expose what the caller needs through a zone the caller may reach.",
+          "- Run `{trueup} explain <file>` to see what a file may reach.",
+          "",
+          "Not the fix: widening the rule so the edge becomes legal.",
+        ].join("\n"),
+      };
     },
   };
 }

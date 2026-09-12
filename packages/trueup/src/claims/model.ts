@@ -12,9 +12,13 @@ export interface CheckContext {
   readonly project: Project;
 }
 
+export interface Verdict {
+  readonly findings: readonly Finding[];
+  readonly guidance: string;
+}
+
 export interface Claim {
   readonly name: string;
-  readonly guidance: string;
   readonly onePerFile?: boolean | undefined;
-  readonly check: (context: CheckContext) => readonly Finding[];
+  readonly check: (context: CheckContext) => Verdict;
 }

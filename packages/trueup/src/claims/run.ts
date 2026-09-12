@@ -31,9 +31,8 @@ export function runClaims(claims: readonly Claim[], context: CheckContext): Repo
   return {
     claims: claims.map((claim) => ({
       claim: claim.name,
-      guidance: claim.guidance,
       onePerFile: claim.onePerFile,
-      findings: claim.check(context),
+      ...claim.check(context),
     })),
     coverage: coverageOf(context),
   };

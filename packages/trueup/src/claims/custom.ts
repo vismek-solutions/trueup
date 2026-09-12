@@ -27,6 +27,8 @@ const toFinding = (issue: Issue): Finding => ({
 export const customClaims = (rules: readonly Rule[]): readonly Claim[] =>
   rules.map((rule) => ({
     name: rule.name,
-    guidance: rule.guidance,
-    check: ({ project }) => rule.check(project).map(toFinding),
+    check: ({ project }) => ({
+      findings: rule.check(project).map(toFinding),
+      guidance: rule.guidance,
+    }),
   }));

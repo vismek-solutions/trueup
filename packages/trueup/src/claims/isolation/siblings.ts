@@ -226,15 +226,19 @@ export const siblingsFor = ({ rules, root, project, path }: SiblingsInput): read
 export function loosePlacementClaim(rules: readonly IsolationRule[]): Claim {
   return {
     name: "no-file-sits-loose-beside-a-group",
-    guidance: LOOSE,
-    check: ({ root, project }) => rules.flatMap((rule) => looseIn(rule, root, project)),
+    check: ({ root, project }) => ({
+      findings: rules.flatMap((rule) => looseIn(rule, root, project)),
+      guidance: LOOSE,
+    }),
   };
 }
 
 export function isolationClaim(rules: readonly IsolationRule[]): Claim {
   return {
     name: "no-sibling-directory-reaches-another",
-    guidance: GUIDANCE,
-    check: ({ root, project }) => rules.flatMap((rule) => findingsFor(rule, root, project)),
+    check: ({ root, project }) => ({
+      findings: rules.flatMap((rule) => findingsFor(rule, root, project)),
+      guidance: GUIDANCE,
+    }),
   };
 }

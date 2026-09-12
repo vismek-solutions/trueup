@@ -2,7 +2,7 @@ import type { Project } from "../../project/model.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 import { type SymbolReach, acrossZones, alsoReadAtHome, zonesReadingEach } from "./reach.ts";
-import { PLACEMENT } from "./remedies.ts";
+import { type PlacementShape, placementGuidance } from "./remedies.ts";
 
 interface Reported {
   readonly reach: SymbolReach;
@@ -88,47 +88,66 @@ const uncounted = (silenced: readonly string[], project: Project): string => {
   return `, while ${silenced.join(", ")} read it too but wear roles, so they do not count`;
 };
 
-const misplaced = (
-  group: readonly Reported[],
-  project: Project,
-  readBy: ReadonlySet<string>,
-): readonly Finding[] => {
+interface Placed {
+  readonly findings: readonly Finding[];
+  readonly shapes: readonly PlacementShape[];
+}
+
+const shapesOf = (entry: Reported, atFile: boolean, typed: boolean): readonly PlacementShape[] => [
+  entry.atHome ? "homeReads" : "oneName",
+  ...(atFile ? (["neighbour"] as const) : []),
+  ...(typed ? (["typeReaders"] as const) : []),
+  ...(entry.silenced.length === 0 ? [] : (["silenced"] as const)),
+];
+
+const eachDeclaration = (group: readonly Reported[], project: Project, declaredIn: string): Placed => {
+  const kin = readWithin(project, declaredIn);
+  const findings: Finding[] = [];
+  const shapes: PlacementShape[] = [];
+
+  for (const entry of group) {
+    const atFile = kin.has(entry.reach.symbol);
+    const said = `${saying(entry, consumerOf([entry], entry.owner, project), atFile)}${uncounted(entry.silenced, project)}`;
+    const lines = listed(entry.reach, entry.owner, project);
+
+    shapes.push(...shapesOf(entry, atFile, lines.length > 0));
+    findings.push({
+      severity: "error" as const,
+      message: lines.length === 0 ? said : [`${said}:`, ...lines].join("\n"),
+      file: entry.reach.declaredIn,
+      start: null,
+      symbols: [entry.reach.symbol],
+      group: entry.reach.declaredIn,
+    });
+  }
+
+  return { findings, shapes };
+};
+
+const misplaced = (group: readonly Reported[], project: Project, readBy: ReadonlySet<string>): Placed => {
   const first = group[0];
-  if (first === undefined) return [];
+  if (first === undefined) return { findings: [], shapes: [] };
 
   const owners = new Set(group.map(({ owner }) => owner));
   const wholeFile = owners.size === 1 && readBy.size === 1 && readBy.has(first.owner);
-  if (group.length === 1 || !wholeFile) {
-    const kin = readWithin(project, first.reach.declaredIn);
-
-    return group.map((entry) => {
-      const said = `${saying(entry, consumerOf([entry], entry.owner, project), kin.has(entry.reach.symbol))}${uncounted(entry.silenced, project)}`;
-      const lines = listed(entry.reach, entry.owner, project);
-
-      return {
-        severity: "error" as const,
-        message: lines.length === 0 ? said : [`${said}:`, ...lines].join("\n"),
-        file: entry.reach.declaredIn,
-        start: null,
-        symbols: [entry.reach.symbol],
-        group: entry.reach.declaredIn,
-      };
-    });
-  }
+  if (group.length === 1 || !wholeFile) return eachDeclaration(group, project, first.reach.declaredIn);
 
   const where = consumerOf(group, first.owner, project);
   const silenced = [...new Set(group.flatMap((entry) => entry.silenced))].sort();
 
-  return [
-    {
-      severity: "error" as const,
-      message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations${uncounted(silenced, project)}`,
-      file: first.reach.declaredIn,
-      start: null,
-      symbols: group.map(({ reach }) => reach.symbol).sort(),
-      group: first.reach.declaredIn,
-    },
-  ];
+  return {
+    findings: [
+      {
+        severity: "error" as const,
+        message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations${uncounted(silenced, project)}`,
+        file: first.reach.declaredIn,
+        start: null,
+        symbols: group.map(({ reach }) => reach.symbol).sort(),
+        group: first.reach.declaredIn,
+      },
+    ],
+    shapes: silenced.length === 0 ? ["wholeFile"] : ["wholeFile", "silenced"],
+  };
 };
 
 export function colocationClaim(roleZones: readonly string[]): Claim {
@@ -136,13 +155,16 @@ export function colocationClaim(roleZones: readonly string[]): Claim {
 
   return {
     name: "no-value-is-declared-away-from-its-only-consumer",
-    guidance: PLACEMENT,
-    check: ({ project }): readonly Finding[] => {
+    check: ({ project }) => {
       const readBy = zonesReadingEach(project, roles);
-
-      return byFile(reportedIn(project, roles)).flatMap(([file, group]) =>
+      const placed = byFile(reportedIn(project, roles)).map(([file, group]) =>
         misplaced(group, project, readBy.get(file) ?? new Set()),
       );
+
+      return {
+        findings: placed.flatMap(({ findings }) => findings),
+        guidance: placementGuidance(new Set(placed.flatMap(({ shapes }) => shapes))),
+      };
     },
   };
 }

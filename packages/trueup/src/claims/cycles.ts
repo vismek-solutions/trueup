@@ -71,12 +71,13 @@ const listed = (zones: readonly string[]): string =>
 
 export const cycleClaim: Claim = {
   name: "no-zones-form-a-cycle",
-  guidance: GUIDANCE,
-  check: ({ project }) =>
-    cyclesIn(reachesOf(project)).map((cycle) => ({
+  check: ({ project }) => ({
+    findings: cyclesIn(reachesOf(project)).map((cycle) => ({
       severity: "error" as const,
       message: `zones ${listed(cycle)} form an import cycle`,
       file: null,
       start: null,
     })),
+    guidance: GUIDANCE,
+  }),
 };

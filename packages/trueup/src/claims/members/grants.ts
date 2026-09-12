@@ -1,4 +1,3 @@
-import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
 export interface MemberGrants {
@@ -22,9 +21,9 @@ const GUIDANCE = [
 export function grantClaim(surfaces: readonly MemberGrants[]): Claim {
   return {
     name: "every-grant-has-a-dependency",
-    guidance: GUIDANCE,
-    check: (): readonly Finding[] =>
-      surfaces.flatMap((surface) => {
+    check: () => ({
+      guidance: GUIDANCE,
+      findings: surfaces.flatMap((surface) => {
         if (surface.dependsOn.length === 0) return [];
         const declared = new Set(surface.dependsOn);
 
@@ -37,5 +36,6 @@ export function grantClaim(surfaces: readonly MemberGrants[]): Claim {
             start: null,
           }));
       }),
+    }),
   };
 }

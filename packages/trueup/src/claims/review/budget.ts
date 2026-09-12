@@ -97,8 +97,9 @@ const budgetFindings = (budget: ReviewBudget, changed: ChangeSet): readonly Find
 export function reviewClaim(budget: ReviewBudget, changes: Changes): Claim {
   return {
     name: REVIEW_CLAIM,
-    guidance: GUIDANCE,
-    check: ({ root }): readonly Finding[] =>
-      budgetFindings(budget, changes.since(root, budget.base ?? DEFAULT_BASE)),
+    check: ({ root }) => ({
+      findings: budgetFindings(budget, changes.since(root, budget.base ?? DEFAULT_BASE)),
+      guidance: GUIDANCE,
+    }),
   };
 }

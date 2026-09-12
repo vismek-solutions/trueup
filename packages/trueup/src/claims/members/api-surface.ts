@@ -26,8 +26,7 @@ const GUIDANCE = [
 export function apiSurfaceClaim(surfaces: readonly ApiSurface[]): Claim {
   return {
     name: "every-api-zone-is-exported",
-    guidance: GUIDANCE,
-    check: ({ zones, project }): readonly Finding[] => {
+    check: ({ zones, project }) => {
       const analysed = new Set([
         ...zones.declaredNames.flatMap((zone) => zones.filesIn(zone)),
         ...zones.unclassified,
@@ -44,7 +43,7 @@ export function apiSurfaceClaim(surfaces: readonly ApiSurface[]): Claim {
           .map((file) => `zone ${door} covers ${project.relative(file)}, which package.json does not export`);
       };
 
-      return surfaces.flatMap((surface) => {
+      const findings: readonly Finding[] = surfaces.flatMap((surface) => {
         const readable = surface.exported.filter((entry) => analysed.has(entry.file));
         const published = new Set(readable.map((entry) => entry.file));
         const behind = new Set(surface.doors.flatMap((door) => zones.filesIn(door)));
@@ -63,6 +62,8 @@ export function apiSurfaceClaim(surfaces: readonly ApiSurface[]): Claim {
           start: null,
         }));
       });
+
+      return { findings, guidance: GUIDANCE };
     },
   };
 }

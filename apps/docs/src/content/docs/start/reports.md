@@ -61,7 +61,7 @@ Each line after the receipt is one claim. It either holds, or it holds everywher
 
 Every claim runs on every pass, and the whole list always prints. Fixing one thing still tells you whether everything else moved.
 
-Under that list, past a short rule that marks where the findings end, sits the guidance for that claim. It says what the violation means and what to do about it. It is written for whoever meets the rule without having read these pages, and most of the time that is an agent, meaning a coding assistant writing code in your project.
+Under that list, past a short rule that marks where the findings end, sits the guidance for that claim. It says what the violation means and what to do about it. Where a claim reports in more than one shape, the guidance carries only the parts that match the findings you have. It is written for whoever meets the rule without having read these pages, and most of the time that is an agent, meaning a coding assistant writing code in your project.
 
 ## When you only want the failures
 

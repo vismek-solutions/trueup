@@ -119,15 +119,16 @@ export function readershipClaim(roleZones: readonly string[]): Claim {
 
   return {
     name: "no-file-serves-two-readerships",
-    guidance: GUIDANCE,
     onePerFile: true,
-    check: ({ project }): readonly Finding[] => {
+    check: ({ project }) => {
       const byFile = readersByFile(project, roles);
 
-      return [...byFile]
+      const findings: readonly Finding[] = [...byFile]
         .filter(([file]) => !roles.has(project.zoneOf(file) ?? ""))
         .sort(([left], [right]) => (left < right ? -1 : 1))
         .flatMap(([file, readers]) => splitIn(project, file, readers) ?? []);
+
+      return { findings, guidance: GUIDANCE };
     },
   };
 }

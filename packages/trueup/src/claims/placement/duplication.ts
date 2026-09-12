@@ -103,12 +103,13 @@ export interface DuplicationInput {
 export function duplicationClaim({ minSize, boundaries }: DuplicationInput): Claim {
   return {
     name: "no-declaration-is-written-twice",
-    guidance: GUIDANCE,
-    check: ({ project }) =>
-      [...copiesIn(project, minSize)]
+    check: ({ project }) => ({
+      findings: [...copiesIn(project, minSize)]
         .sort(([left], [right]) => (left < right ? -1 : 1))
         .flatMap(([body, copies]) =>
           findingsFor(copies, { project, rules: boundaries, group: body }),
         ),
+      guidance: GUIDANCE,
+    }),
   };
 }

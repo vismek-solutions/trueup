@@ -3,38 +3,41 @@ import type { Claim } from "./model.ts";
 
 const theAnalysisReachedFiles: Claim = {
   name: "the-analysis-reached-files",
-  guidance: [
-    "No file matched the configured roots and extensions, so every other claim passed on nothing.",
-    "",
-    "Do this:",
-    "- Fix `include` or `extensions` in the config.",
-    "",
-    "An empty analysis fails rather than warns, so a mis-scoped config cannot report success.",
-  ].join("\n"),
-  check: ({ graph }) =>
-    graph.files.size > 0
-      ? []
-      : [{ severity: "error", message: "no files were analysed", file: null, start: null }],
+  check: ({ graph }) => ({
+    findings:
+      graph.files.size > 0
+        ? []
+        : [{ severity: "error", message: "no files were analysed", file: null, start: null }],
+    guidance: [
+      "No file matched the configured roots and extensions, so every other claim passed on nothing.",
+      "",
+      "Do this:",
+      "- Fix `include` or `extensions` in the config.",
+      "",
+      "An empty analysis fails rather than warns, so a mis-scoped config cannot report success.",
+    ].join("\n"),
+  }),
 };
 
 const everyImportResolves: Claim = {
   name: "every-import-resolves",
-  guidance: [
-    "A specifier did not resolve, so its edges are absent from the graph and no rule could judge them.",
-    "",
-    "Do this:",
-    "- Fix the path, the tsconfig paths, or the package exports.",
-    "",
-    "This fails rather than warns, because a rule that cannot see an edge silently passes it.",
-  ].join("\n"),
-  check: ({ graph }) =>
-    graph.unresolvedImports.map((entry) => ({
+  check: ({ graph }) => ({
+    findings: graph.unresolvedImports.map((entry) => ({
       severity: "error",
       message: `imports ${entry.specifier}, which does not resolve (${entry.reason})`,
       file: entry.from,
       start: entry.start,
       specifier: entry.specifier,
     })),
+    guidance: [
+      "A specifier did not resolve, so its edges are absent from the graph and no rule could judge them.",
+      "",
+      "Do this:",
+      "- Fix the path, the tsconfig paths, or the package exports.",
+      "",
+      "This fails rather than warns, because a rule that cannot see an edge silently passes it.",
+    ].join("\n"),
+  }),
 };
 
 interface EdgeClaim {
@@ -46,9 +49,8 @@ interface EdgeClaim {
 
 const edgesEndingIn = ({ name, guidance, kind, fault }: EdgeClaim): Claim => ({
   name,
-  guidance,
-  check: ({ graph }) =>
-    graph.edges
+  check: ({ graph }) => ({
+    findings: graph.edges
       .filter((edge) => edge.to.kind === kind)
       .map((edge) => ({
         severity: "error",
@@ -56,6 +58,8 @@ const edgesEndingIn = ({ name, guidance, kind, fault }: EdgeClaim): Claim => ({
         file: edge.from,
         start: edge.start,
       })),
+    guidance,
+  }),
 });
 
 const everyImportedNameIsExported = edgesEndingIn({

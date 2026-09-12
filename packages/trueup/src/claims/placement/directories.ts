@@ -28,9 +28,8 @@ const limitFor = (directory: string, fallback: number, limits: readonly Director
 export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit[]): Claim {
   return {
     name: "no-directory-holds-too-many-files",
-    guidance: GUIDANCE,
     onePerFile: true,
-    check: ({ zones }): readonly Finding[] => {
+    check: ({ zones }) => {
       const counts = new Map<string, number>();
       const analysed = [...zones.declaredNames.flatMap((zone) => zones.filesIn(zone)), ...zones.unclassified];
 
@@ -39,7 +38,7 @@ export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit
         counts.set(directory, (counts.get(directory) ?? 0) + 1);
       }
 
-      return [...counts]
+      const findings: readonly Finding[] = [...counts]
         .filter(([directory, count]) => count > limitFor(directory, maxFiles, limits))
         .sort(([left], [right]) => (left < right ? -1 : 1))
         .map(([directory, count]) => ({
@@ -48,6 +47,8 @@ export function directoryClaim(maxFiles: number, limits: readonly DirectoryLimit
           file: directory,
           start: null,
         }));
+
+      return { findings, guidance: GUIDANCE };
     },
   };
 }
