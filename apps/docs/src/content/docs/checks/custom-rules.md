@@ -68,6 +68,21 @@ defineRule(
 
 The message says what happened. The guidance says what to do, and where it matters, it names the fix that would make things worse.
 
+A rule that reports more than one kind of problem can give each kind its own remedy. Pass a function in place of the string and it receives the issues the rule just returned:
+
+```ts
+defineRule(
+  "domain-is-entered-through-its-index",
+  (project) => /* the same function as above */,
+  (issues) =>
+    issues.length === 1
+      ? "Export what this caller needs from the domain's index and import it from there."
+      : "Several callers reach past the index. Work out what the index should publish, then move every caller onto it in one go.",
+)
+```
+
+Whoever meets the rule then reads the advice for the case in front of them, rather than every case the rule can report.
+
 ## Rules see a model, not a syntax tree
 
 Rules are handed a view of the project rather than a syntax tree. The parser stays an implementation detail you never have to learn, and swapping it never breaks a rule you wrote.

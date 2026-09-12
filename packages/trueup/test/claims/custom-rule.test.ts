@@ -52,6 +52,23 @@ describe("a rule written in TypeScript", () => {
     expect(result.findings[0]?.file).toContain("engine");
   });
 
+  it("keeps a remedy written as a plain string", async () => {
+    const result = await runRule(defineRule("plain", () => [{ message: "something" }], "Move it."));
+    expect(result.guidance).toBe("Move it.");
+  });
+
+  it("builds its remedy from the issues it found when given a function", async () => {
+    const result = await runRule(
+      defineRule(
+        "shaped",
+        () => [{ message: "one" }, { message: "two" }],
+        (issues) => issues.map((issue) => `fix ${issue.message}`).join("\n"),
+      ),
+    );
+
+    expect(result.guidance).toBe("fix one\nfix two");
+  });
+
   it("can express a boundary from the import query alone", async () => {
     const result = await runRule(
       defineRule("engine-may-not-reach-domain", (project) =>

@@ -2,9 +2,11 @@ import type { Issue, Project } from "../project/model.ts";
 import type { Finding } from "../report/model.ts";
 import type { Claim } from "./model.ts";
 
+export type RuleGuidance = string | ((issues: readonly Issue[]) => string);
+
 export interface Rule {
   readonly name: string;
-  readonly guidance: string;
+  readonly guidance: RuleGuidance;
   readonly check: (project: Project) => readonly Issue[];
 }
 
@@ -14,7 +16,7 @@ const NO_GUIDANCE =
 export const defineRule = (
   name: string,
   check: (project: Project) => readonly Issue[],
-  guidance: string = NO_GUIDANCE,
+  guidance: RuleGuidance = NO_GUIDANCE,
 ): Rule => ({ name, guidance, check });
 
 const toFinding = (issue: Issue): Finding => ({
@@ -27,8 +29,12 @@ const toFinding = (issue: Issue): Finding => ({
 export const customClaims = (rules: readonly Rule[]): readonly Claim[] =>
   rules.map((rule) => ({
     name: rule.name,
-    check: ({ project }) => ({
-      findings: rule.check(project).map(toFinding),
-      guidance: rule.guidance,
-    }),
+    check: ({ project }) => {
+      const issues = rule.check(project);
+
+      return {
+        findings: issues.map(toFinding),
+        guidance: typeof rule.guidance === "string" ? rule.guidance : rule.guidance(issues),
+      };
+    },
   }));
