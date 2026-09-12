@@ -88,7 +88,7 @@ describe("zone assignment", () => {
 
 const ZONED = join(FIXTURES, "zoned");
 
-const withAGhostZone = (): Report =>
+const withAGhostZone = (): Promise<Report> =>
   check({
     root: ZONED,
     zones: [
@@ -99,9 +99,9 @@ const withAGhostZone = (): Report =>
   });
 
 describe("a check run", () => {
-  it("runs every claim in one pass rather than stopping at the first failure", () => {
-    const firing = withAGhostZone()
-      .claims.filter((claim) => claim.findings.length > 0)
+  it("runs every claim in one pass rather than stopping at the first failure", async () => {
+    const firing = (await withAGhostZone()).claims
+      .filter((claim) => claim.findings.length > 0)
       .map((claim) => claim.claim);
 
     expect(firing.sort()).toEqual([
@@ -112,8 +112,8 @@ describe("a check run", () => {
     ]);
   });
 
-  it("names the file no zone took, and where it is", () => {
-    expect(findingsIn(withAGhostZone(), "every-file-belongs-to-a-zone")).toEqual([
+  it("names the file no zone took, and where it is", async () => {
+    expect(findingsIn(await withAGhostZone(), "every-file-belongs-to-a-zone")).toEqual([
       {
         severity: "error",
         message: "matches no zone",
@@ -123,20 +123,20 @@ describe("a check run", () => {
     ]);
   });
 
-  it("names the zone that matched nothing, which is a rule nothing applies", () => {
-    expect(findingsIn(withAGhostZone(), "every-zone-has-a-file")).toEqual([
+  it("names the zone that matched nothing, which is a rule nothing applies", async () => {
+    expect(findingsIn(await withAGhostZone(), "every-zone-has-a-file")).toEqual([
       { severity: "error", message: "zone ghost matches no file", file: null, start: null },
     ]);
   });
 
-  it("names the pattern that matched nothing, not just the zone holding it", () => {
-    expect(findingsIn(withAGhostZone(), "every-zone-pattern-matches-a-file")).toEqual([
+  it("names the pattern that matched nothing, not just the zone holding it", async () => {
+    expect(findingsIn(await withAGhostZone(), "every-zone-pattern-matches-a-file")).toEqual([
       { severity: "error", message: "zone ghost pattern ghost/** matches no file", file: null, start: null },
     ]);
   });
 
-  it("tells the reader what each silence means and how to end it", () => {
-    const report = withAGhostZone();
+  it("tells the reader what each silence means and how to end it", async () => {
+    const report = await withAGhostZone();
 
     const unzoned = claimIn(report, "every-file-belongs-to-a-zone")?.guidance ?? "";
     const empty = claimIn(report, "every-zone-has-a-file")?.guidance ?? "";
@@ -150,8 +150,8 @@ describe("a check run", () => {
     expect(dead).toContain("- Fix the pattern, or delete it.");
   });
 
-  it("reports a result for every claim, including those that found nothing", () => {
-    const report = check({
+  it("reports a result for every claim, including those that found nothing", async () => {
+    const report = await check({
       root: join(FIXTURES, "zoned"),
       zones: [{ name: "everything", patterns: ["**"] }],
     });
@@ -171,8 +171,8 @@ describe("a check run", () => {
     ]);
   });
 
-  it("reports coverage alongside findings so a clean run can be told from an empty one", () => {
-    const report = check({
+  it("reports coverage alongside findings so a clean run can be told from an empty one", async () => {
+    const report = await check({
       root: join(FIXTURES, "zoned"),
       zones: [
         { name: "engine", patterns: ["engine/**"] },
@@ -188,8 +188,8 @@ describe("a check run", () => {
     expect(report.coverage.unresolvedImports).toBe(1);
   });
 
-  it("fails when no file was analysed instead of passing vacuously", () => {
-    const report = check({
+  it("fails when no file was analysed instead of passing vacuously", async () => {
+    const report = await check({
       root: join(FIXTURES, "zoned"),
       zones: [{ name: "everything", patterns: ["**"] }],
       extensions: [".nothing"],

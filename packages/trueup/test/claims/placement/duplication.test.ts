@@ -9,7 +9,7 @@ const CLAIM = "no-declaration-is-written-twice";
 const SHARED_DECLARATION = 80;
 const SHARED = "declares label, which is written the same way in src/notice.ts";
 
-const runWith = (duplication?: number): Report =>
+const runWith = (duplication?: number): Promise<Report> =>
   check({
     root: ROOT,
     zones: [{ name: "app", patterns: ["src/**"] }],
@@ -17,51 +17,51 @@ const runWith = (duplication?: number): Report =>
   });
 
 describe("finding the same declaration written twice", () => {
-  it("says nothing until a size is set", () => {
-    expect(runWith().claims.find((claim) => claim.claim === CLAIM)).toBeUndefined();
+  it("says nothing until a size is set", async () => {
+    expect((await runWith()).claims.find((claim) => claim.claim === CLAIM)).toBeUndefined();
   });
 
-  it("names every file holding a copy, and the others it matches", () => {
-    const reported = messagesIn(runWith(40), CLAIM);
+  it("names every file holding a copy, and the others it matches", async () => {
+    const reported = messagesIn(await runWith(40), CLAIM);
 
     expect(reported).toContain("declares slugify, which is written the same way in src/three.ts, src/two.ts");
     expect(reported).toContain("declares slugify, which is written the same way in src/one.ts, src/three.ts");
   });
 
-  it("matches a copy that was renamed, since the name is not part of the comparison", () => {
-    expect(messagesIn(runWith(40), CLAIM)).toContain(
+  it("matches a copy that was renamed, since the name is not part of the comparison", async () => {
+    expect(messagesIn(await runWith(40), CLAIM)).toContain(
       "declares toSlug, which is written the same way in src/one.ts, src/two.ts",
     );
   });
 
-  it("reports a copy that appears in exactly two files", () => {
-    expect(messagesIn(runWith(40), CLAIM)).toContain(SHARED);
+  it("reports a copy that appears in exactly two files", async () => {
+    expect(messagesIn(await runWith(40), CLAIM)).toContain(SHARED);
   });
 
-  it("matches a copy written over more lines, since a run of whitespace counts as one space", () => {
-    expect(messagesIn(runWith(40), CLAIM)).toContain(
+  it("matches a copy written over more lines, since a run of whitespace counts as one space", async () => {
+    expect(messagesIn(await runWith(40), CLAIM)).toContain(
       "declares headers, which is written the same way in src/mirror.ts",
     );
   });
 
-  it("keeps the space that tells two texts apart, rather than deleting it", () => {
-    expect(messagesIn(runWith(40), CLAIM).some((message) => message.includes("heading"))).toBe(false);
+  it("keeps the space that tells two texts apart, rather than deleting it", async () => {
+    expect(messagesIn(await runWith(40), CLAIM).some((message) => message.includes("heading"))).toBe(false);
   });
 
-  it("ignores a declaration shorter than the size given", () => {
-    expect(messagesIn(runWith(400), CLAIM)).toEqual([]);
+  it("ignores a declaration shorter than the size given", async () => {
+    expect(messagesIn(await runWith(400), CLAIM)).toEqual([]);
   });
 
-  it("keeps a declaration exactly as long as the size given", () => {
-    expect(messagesIn(runWith(SHARED_DECLARATION), CLAIM)).toContain(SHARED);
+  it("keeps a declaration exactly as long as the size given", async () => {
+    expect(messagesIn(await runWith(SHARED_DECLARATION), CLAIM)).toContain(SHARED);
   });
 
-  it("measures the declaration without the space in front of it", () => {
-    expect(messagesIn(runWith(SHARED_DECLARATION + 1), CLAIM)).not.toContain(SHARED);
+  it("measures the declaration without the space in front of it", async () => {
+    expect(messagesIn(await runWith(SHARED_DECLARATION + 1), CLAIM)).not.toContain(SHARED);
   });
 
-  it("orders the copies by what was written, not by where it was found", () => {
-    expect(messagesIn(runWith(40), CLAIM)).toEqual([
+  it("orders the copies by what was written, not by where it was found", async () => {
+    expect(messagesIn(await runWith(40), CLAIM)).toEqual([
       SHARED,
       "declares notice, which is written the same way in src/label.ts",
       "declares slugify, which is written the same way in src/three.ts, src/two.ts",
@@ -72,16 +72,16 @@ describe("finding the same declaration written twice", () => {
     ]);
   });
 
-  it("leaves a declaration that only looks similar alone", () => {
-    expect(messagesIn(runWith(40), CLAIM).some((message) => message.includes("different"))).toBe(false);
+  it("leaves a declaration that only looks similar alone", async () => {
+    expect(messagesIn(await runWith(40), CLAIM).some((message) => message.includes("different"))).toBe(false);
   });
 
-  it("points at the declaration rather than the top of the file", () => {
-    expect(findingsIn(runWith(40), CLAIM)[0]?.start).toBeGreaterThan(0);
+  it("points at the declaration rather than the top of the file", async () => {
+    expect(findingsIn(await runWith(40), CLAIM)[0]?.start).toBeGreaterThan(0);
   });
 
-  it("tells the reader to keep one and delete the rest", () => {
-    const claim = runWith(40).claims.find((entry) => entry.claim === CLAIM);
+  it("tells the reader to keep one and delete the rest", async () => {
+    const claim = (await runWith(40)).claims.find((entry) => entry.claim === CLAIM);
     expect(claim?.guidance).toContain("Keep one");
   });
 });

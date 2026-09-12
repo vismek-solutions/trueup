@@ -15,5 +15,5 @@ export type RunnerOutcome =
 
 export interface Runner {
   readonly name: string;
-  readonly run: (root: string) => RunnerOutcome;
+  readonly run: (root: string) => Promise<RunnerOutcome>;
 }

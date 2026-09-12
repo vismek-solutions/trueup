@@ -233,13 +233,14 @@ const claimsFor = (options: CheckOptions): Claim[] => {
   ];
 };
 
-export function check(options: CheckOptions): Report {
+export async function check(options: CheckOptions): Promise<Report> {
   const { root, runners = [] } = options;
+  const delegated = runDelegated(runners, root);
   const { graph, zones, lexicon, project } = analyseProject(options);
   const report = runClaims(claimsFor(options), { root, graph, zones, lexicon, project });
 
   return {
-    claims: withoutDuplicates([...report.claims, ...runDelegated(runners, root)]),
+    claims: withoutDuplicates([...report.claims, ...(await delegated)]),
     coverage: report.coverage,
   };
 }

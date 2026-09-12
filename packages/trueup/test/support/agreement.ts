@@ -80,7 +80,7 @@ export async function disagreements({ configPath, breakZone }: AgreementInput): 
     ignoreFiles,
   });
 
-  const breached = breachedIn(check({ ...config, root, roots, ignoreFiles }));
+  const breached = breachedIn(await check({ ...config, root, roots, ignoreFiles }));
   const files = [...graph.files];
   const { zoneOf } = assignZones({ root, files, zones: config.zones });
   const mayReachIn = reachIndex({

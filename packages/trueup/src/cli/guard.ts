@@ -178,7 +178,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   if (!analysed({ root, config, roots }, checked)) return 0;
 
   const report = withCommand(
-    check({
+    await check({
       root,
       roots,
       zones: config.zones,

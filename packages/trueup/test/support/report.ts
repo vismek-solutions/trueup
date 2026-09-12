@@ -5,7 +5,7 @@ import type { ClaimResult, Finding, Report } from "../../src/report/model.ts";
 
 export const reportForConfig = async (configPath: string): Promise<Report> => {
   const { config, root, memberConfigs } = await loadConfig(configPath);
-  return check({
+  return await check({
     root,
     roots: resolveInclude(root, config.include),
     ignoreFiles: [configPath, ...memberConfigs],

@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import type { Runner, RunnerOutcome } from "../ports/runner.ts";
 import { objectOf, summarize } from "./tool-output.ts";
 
@@ -14,25 +14,45 @@ export type Captured =
   | { readonly kind: "captured"; readonly stdout: string; readonly stderr: string; readonly status: number }
   | { readonly kind: "failed"; readonly reason: string };
 
-export function captureTool({ command, args, cwd }: ToolInvocation): Captured {
+const KILLED = "the process was killed before it finished";
+
+const textOf = (value: unknown): string => (typeof value === "string" ? value : "");
+
+const capturedFrom = (status: number, stdout: unknown, stderr: unknown): Captured => ({
+  kind: "captured",
+  stdout: textOf(stdout),
+  stderr: textOf(stderr),
+  status,
+});
+
+interface SpawnFailure extends Error {
+  readonly code?: number | string | undefined;
+  readonly signal?: string | null | undefined;
+}
+
+// a non-zero exit is how these tools report findings, so only a spawn error is a failure
+export function awaitTool({ command, args, cwd }: ToolInvocation): Promise<Captured> {
   const [executable, ...rest] = command;
-  if (executable === undefined) return { kind: "failed", reason: "no command configured" };
+  if (executable === undefined) {
+    return Promise.resolve({ kind: "failed", reason: "no command configured" });
+  }
 
-  const result = spawnSync(executable, [...rest, ...args], {
-    cwd,
-    encoding: "utf8",
-    maxBuffer: MAX_BUFFER,
+  return new Promise((settle) => {
+    execFile(
+      executable,
+      [...rest, ...args],
+      { cwd, encoding: "utf8", maxBuffer: MAX_BUFFER },
+      (error, stdout, stderr) => {
+        const failure = error as SpawnFailure | null;
+        if (failure === null) return settle(capturedFrom(0, stdout, stderr));
+        if (typeof failure.code === "number") {
+          return settle(capturedFrom(failure.code, stdout, stderr));
+        }
+        const signalled = failure.signal !== undefined && failure.signal !== null;
+        return settle({ kind: "failed", reason: signalled ? KILLED : failure.message });
+      },
+    );
   });
-
-  if (result.error !== undefined) return { kind: "failed", reason: result.error.message };
-  if (result.status === null) return { kind: "failed", reason: "the process was killed before it finished" };
-
-  return {
-    kind: "captured",
-    stdout: typeof result.stdout === "string" ? result.stdout : "",
-    stderr: typeof result.stderr === "string" ? result.stderr : "",
-    status: result.status,
-  };
 }
 
 export type ToolJson =
@@ -45,8 +65,8 @@ const silentReason = (status: number, stderr: string): string => {
   return detail === "" ? banner : `${banner}: ${detail}`;
 };
 
-export function readToolJson(invocation: ToolInvocation): ToolJson {
-  const captured = captureTool(invocation);
+export async function readToolJson(invocation: ToolInvocation): Promise<ToolJson> {
+  const captured = await awaitTool(invocation);
   if (captured.kind === "failed") return captured;
   if (captured.stdout.trim() === "") {
     return { kind: "failed", reason: silentReason(captured.status, captured.stderr) };
@@ -96,13 +116,13 @@ export const toolCallFrom = (options: ToolOptions, defaults: ToolDefaults): Tool
 export interface JsonRunnerPlan {
   readonly name: string;
   readonly invoke: (root: string) => ToolInvocation;
-  readonly read: (source: JsonSource, root: string) => RunnerOutcome;
+  readonly read: (source: JsonSource, root: string) => RunnerOutcome | Promise<RunnerOutcome>;
 }
 
 export const jsonRunner = ({ name, invoke, read }: JsonRunnerPlan): Runner => ({
   name,
-  run: (root): RunnerOutcome => {
-    const report = readToolJson(invoke(root));
+  run: async (root): Promise<RunnerOutcome> => {
+    const report = await readToolJson(invoke(root));
     return report.kind === "failed" ? report : read(report, root);
   },
 });

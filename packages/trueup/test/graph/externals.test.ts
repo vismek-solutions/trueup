@@ -43,8 +43,8 @@ describe("specifiers a build tool supplies", () => {
     expect(edge?.to).toEqual({ kind: "external", path: null });
   });
 
-  it("clears the claim that a docs app would otherwise fail on", () => {
-    const report = check({ root: ROOT, zones: ZONES, externals: ["astro:*", "virtual:*"] });
+  it("clears the claim that a docs app would otherwise fail on", async () => {
+    const report = await check({ root: ROOT, zones: ZONES, externals: ["astro:*", "virtual:*"] });
     expect(messagesIn(report, CLAIM)).toEqual([]);
   });
 });

@@ -59,7 +59,7 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
   if (typeof opened === "number") return opened;
 
   const { config, root, project, rulebooks } = opened;
-  const report = check({
+  const report = await check({
     ...config,
     root,
     roots: resolveInclude(root, config.include),

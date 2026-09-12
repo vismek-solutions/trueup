@@ -15,21 +15,21 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "fixtures", "project");
 const TOOL = join(HERE, "..", "fixtures", "fake-tool", "tool.mjs");
 
-const runWith = (mode: string, categories?: readonly string[]): RunnerOutcome =>
+const runWith = (mode: string, categories?: readonly string[]): Promise<RunnerOutcome> =>
   fallowRunner({
     command: ["node", TOOL, mode],
     ...(categories === undefined ? {} : { categories }),
   }).run(ROOT);
 
-const runDupes = (mode: string, duplication: FallowDuplicationOptions = {}): RunnerOutcome =>
+const runDupes = (mode: string, duplication: FallowDuplicationOptions = {}): Promise<RunnerOutcome> =>
   fallowRunner({ command: ["node", TOOL, mode], categories: ["unused_exports"], duplication }).run(ROOT);
 
 const clonesOf = (outcome: RunnerOutcome): readonly RunnerFinding[] =>
   findingsOf(outcome).filter((finding) => finding.category === "code_duplication");
 
 describe("reading a delegated tool's output", () => {
-  it("reports a finding per entry in a requested category", () => {
-    const outcome = runWith("ok", ["unused_exports"]);
+  it("reports a finding per entry in a requested category", async () => {
+    const outcome = await runWith("ok", ["unused_exports"]);
     expect(outcome.kind).toBe("findings");
     expect(outcome.kind === "findings" && outcome.findings).toEqual([
       {
@@ -42,30 +42,30 @@ describe("reading a delegated tool's output", () => {
     ]);
   });
 
-  it("turns the reported line and column into an offset landing on the named symbol", () => {
-    const outcome = runWith("ok", ["unused_exports"]);
+  it("turns the reported line and column into an offset landing on the named symbol", async () => {
+    const outcome = await runWith("ok", ["unused_exports"]);
     const start = outcome.kind === "findings" ? (outcome.findings[0]?.start ?? 0) : 0;
     const source = readFileSync(join(ROOT, "src/engine/runner.ts"), "utf8");
 
     expect(source.slice(start, start + 3)).toBe("run");
   });
 
-  it("ignores a category that was not asked for", () => {
-    const outcome = runWith("ok", ["unused_exports"]);
+  it("ignores a category that was not asked for", async () => {
+    const outcome = await runWith("ok", ["unused_exports"]);
     expect(outcome.kind === "findings" && outcome.findings.map((f) => f.category)).toEqual([
       "unused_exports",
     ]);
   });
 
-  it("describes a cycle by its members", () => {
-    const outcome = runWith("ok", ["circular_dependencies"]);
+  it("describes a cycle by its members", async () => {
+    const outcome = await runWith("ok", ["circular_dependencies"]);
     expect(outcome.kind === "findings" && outcome.findings[0]?.message).toBe(
       "circular dependencies: a.ts -> b.ts",
     );
   });
 
-  it("names the category alone when the entry names no subject to hang it on", () => {
-    expect(findingsOf(runWith("ok", ["a_category_fallow_added"]))).toEqual([
+  it("names the category alone when the entry names no subject to hang it on", async () => {
+    expect(findingsOf(await runWith("ok", ["a_category_fallow_added"]))).toEqual([
       {
         category: "a_category_fallow_added",
         message: "a category fallow added",
@@ -76,12 +76,12 @@ describe("reading a delegated tool's output", () => {
     ]);
   });
 
-  it("reports a category this version has no rule name for, rather than refusing the run", () => {
-    expect(runWith("ok", ["a_category_fallow_added"]).kind).toBe("findings");
+  it("reports a category this version has no rule name for, rather than refusing the run", async () => {
+    expect((await runWith("ok", ["a_category_fallow_added"])).kind).toBe("findings");
   });
 
-  it("places nothing when the entry names a line but no file, and nothing when it names neither", () => {
-    expect(findingsOf(runWith("ok", ["unused_types"]))).toEqual([
+  it("places nothing when the entry names a line but no file, and nothing when it names neither", async () => {
+    expect(findingsOf(await runWith("ok", ["unused_types"]))).toEqual([
       {
         category: "unused_types",
         message: "unused types: Placeless",
@@ -101,8 +101,8 @@ describe("reading a delegated tool's output", () => {
 });
 
 describe("reading a delegated tool's duplicate code", () => {
-  it("reports every copy, each naming the others rather than the group", () => {
-    expect(clonesOf(runDupes("named"))).toEqual([
+  it("reports every copy, each naming the others rather than the group", async () => {
+    expect(clonesOf(await runDupes("named"))).toEqual([
       {
         category: "code_duplication",
         message: "7 lines written the same way at src/domain/thing.ts:1",
@@ -122,66 +122,67 @@ describe("reading a delegated tool's duplicate code", () => {
     ]);
   });
 
-  it("keys the copies together by the tool's fingerprint, so one problem stays one problem", () => {
-    expect(clonesOf(runDupes("named")).map((finding) => finding.group)).toEqual([
+  it("keys the copies together by the tool's fingerprint, so one problem stays one problem", async () => {
+    expect(clonesOf(await runDupes("named")).map((finding) => finding.group)).toEqual([
       "a-fingerprint",
       "a-fingerprint",
     ]);
   });
 
-  it("keys them by where they are when the tool named no fingerprint", () => {
-    expect(clonesOf(runDupes("unnamed")).map((finding) => finding.group)).toEqual([
+  it("keys them by where they are when the tool named no fingerprint", async () => {
+    expect(clonesOf(await runDupes("unnamed")).map((finding) => finding.group)).toEqual([
       "src/engine/runner.ts:3|src/domain/thing.ts:1",
       "src/engine/runner.ts:3|src/domain/thing.ts:1",
     ]);
   });
 
-  it("drops a group whose copies it cannot place, rather than reporting one that names nowhere", () => {
-    expect(clonesOf(runDupes("partial"))).toEqual([]);
-    expect(findingsOf(runDupes("partial"))).toHaveLength(1);
+  it("drops a group whose copies it cannot place, rather than reporting one that names nowhere", async () => {
+    expect(clonesOf(await runDupes("partial"))).toEqual([]);
+    expect(findingsOf(await runDupes("partial"))).toHaveLength(1);
   });
 
-  it("drops a group where every copy is missing a line, not only one missing a file", () => {
-    expect(clonesOf(runDupes("unplaceable"))).toEqual([]);
+  it("drops a group where every copy is missing a line, not only one missing a file", async () => {
+    expect(clonesOf(await runDupes("unplaceable"))).toEqual([]);
   });
 
-  it("drops a group that carries no copies at all", () => {
-    expect(clonesOf(runDupes("no-instances"))).toEqual([]);
+  it("drops a group that carries no copies at all", async () => {
+    expect(clonesOf(await runDupes("no-instances"))).toEqual([]);
   });
 
-  it("keeps the copies it can place in a group where some copy it cannot", () => {
-    expect(clonesOf(runDupes("mixed")).map((finding) => finding.file)).toEqual([
+  it("keeps the copies it can place in a group where some copy it cannot", async () => {
+    expect(clonesOf(await runDupes("mixed")).map((finding) => finding.file)).toEqual([
       join(ROOT, "src/engine/runner.ts"),
       join(ROOT, "src/domain/thing.ts"),
       join(ROOT, "src/engine/other.ts"),
     ]);
-    expect(findingsOf(runDupes("mixed"))).toHaveLength(4);
+    expect(findingsOf(await runDupes("mixed"))).toHaveLength(4);
   });
 
-  it("names only the copies it could place, separated so they can be told apart", () => {
-    expect(clonesOf(runDupes("mixed"))[0]?.message).toBe(
+  it("names only the copies it could place, separated so they can be told apart", async () => {
+    expect(clonesOf(await runDupes("mixed"))[0]?.message).toBe(
       "5 lines written the same way at src/domain/thing.ts:1 · src/engine/other.ts:2",
     );
   });
 
-  it("leaves the other categories alone", () => {
-    expect(findingsOf(runDupes("named")).map((finding) => finding.category)).toEqual([
+  it("leaves the other categories alone", async () => {
+    expect(findingsOf(await runDupes("named")).map((finding) => finding.category)).toEqual([
       "unused_exports",
       "code_duplication",
       "code_duplication",
     ]);
   });
 
-  it("reports no duplicates when none were asked for, even though the tool sent them", () => {
-    const outcome = fallowRunner({ command: ["node", TOOL, "named"], categories: ["unused_exports"] }).run(
-      ROOT,
-    );
+  it("reports no duplicates when none were asked for, even though the tool sent them", async () => {
+    const outcome = await fallowRunner({
+      command: ["node", TOOL, "named"],
+      categories: ["unused_exports"],
+    }).run(ROOT);
 
     expect(clonesOf(outcome)).toEqual([]);
   });
 
-  it("asks the tool for the duplication settings it was given", () => {
-    const outcome = fallowRunner({
+  it("asks the tool for the duplication settings it was given", async () => {
+    const outcome = await fallowRunner({
       command: ["node", TOOL, "argv"],
       categories: ["unused_exports"],
       duplication: { mode: "weak", minLines: 5, minTokens: 30 },
@@ -202,8 +203,8 @@ describe("reading a delegated tool's duplicate code", () => {
     ]);
   });
 
-  it("asks for no duplication settings when it was given none of them", () => {
-    const outcome = fallowRunner({
+  it("asks for no duplication settings when it was given none of them", async () => {
+    const outcome = await fallowRunner({
       command: ["node", TOOL, "argv"],
       categories: ["unused_exports"],
       duplication: {},
@@ -218,8 +219,8 @@ describe("reading a delegated tool's duplicate code", () => {
     ]);
   });
 
-  it("asks for no duplication settings at all when duplication was never mentioned", () => {
-    const outcome = fallowRunner({
+  it("asks for no duplication settings at all when duplication was never mentioned", async () => {
+    const outcome = await fallowRunner({
       command: ["node", TOOL, "argv"],
       categories: ["unused_exports"],
     }).run(ROOT);
@@ -233,8 +234,8 @@ describe("reading a delegated tool's duplicate code", () => {
     ]);
   });
 
-  it("asks for nothing it was not given", () => {
-    const outcome = fallowRunner({
+  it("asks for nothing it was not given", async () => {
+    const outcome = await fallowRunner({
       command: ["node", TOOL, "argv"],
       categories: ["unused_exports"],
       duplication: { mode: "strict" },
@@ -249,79 +250,83 @@ describe("reading a delegated tool's duplicate code", () => {
 });
 
 describe("refusing to trust a delegated tool", () => {
-  it("fails when duplication was asked for and the output carried no clone groups", () => {
-    expect(reasonOf(runDupes("no-clone-groups"))).toContain("no clone groups");
+  it("fails when duplication was asked for and the output carried no clone groups", async () => {
+    expect(reasonOf(await runDupes("no-clone-groups"))).toContain("no clone groups");
   });
 
-  it("fails when duplication was asked for and the output carried no dupes section at all", () => {
-    expect(reasonOf(runDupes("ok"))).toContain("no clone groups");
+  it("fails when duplication was asked for and the output carried no dupes section at all", async () => {
+    expect(reasonOf(await runDupes("ok"))).toContain("no clone groups");
   });
 
-  it("fails when the dupes section is there but empty of meaning", () => {
-    expect(reasonOf(runDupes("null-dupes"))).toContain("no clone groups");
+  it("fails when the dupes section is there but empty of meaning", async () => {
+    expect(reasonOf(await runDupes("null-dupes"))).toContain("no clone groups");
   });
 
-  it("fails when the tool would not say which of its own rules are on", () => {
-    expect(reasonOf(runWith("config-silent", ["unused_exports"]))).toContain("severities were unreadable");
+  it("fails when the tool would not say which of its own rules are on", async () => {
+    expect(reasonOf(await runWith("config-silent", ["unused_exports"]))).toContain(
+      "severities were unreadable",
+    );
   });
 
-  it("asks for every category it knows when it was given none, and says which is missing", () => {
-    expect(reasonOf(runWith("ok"))).toContain("unused_files");
+  it("asks for every category it knows when it was given none, and says which is missing", async () => {
+    expect(reasonOf(await runWith("ok"))).toContain("unused_files");
   });
 
   it("carries the name a delegated tool's findings are reported under", () => {
     expect(fallowRunner().name).toBe("fallow");
   });
 
-  it("fails when the output schema is not the one it was written against", () => {
-    expect(reasonOf(runWith("old-schema"))).toContain("is not the expected 9");
+  it("fails when the output schema is not the one it was written against", async () => {
+    expect(reasonOf(await runWith("old-schema"))).toContain("is not the expected 9");
   });
 
-  it("fails when the output carries no check section", () => {
-    expect(reasonOf(runWith("no-check"))).toContain("no check section");
+  it("fails when the output carries no check section", async () => {
+    expect(reasonOf(await runWith("no-check"))).toContain("no check section");
   });
 
-  it("fails when the output is not JSON", () => {
-    expect(reasonOf(runWith("not-json"))).toContain("not JSON");
+  it("fails when the output is not JSON", async () => {
+    expect(reasonOf(await runWith("not-json"))).toContain("not JSON");
   });
 
-  it("fails on a category the tool never reported, rather than reading it as empty", () => {
-    expect(reasonOf(runWith("ok", ["unused_exports", "no_such_category"]))).toContain("no_such_category");
+  it("fails on a category the tool never reported, rather than reading it as empty", async () => {
+    expect(reasonOf(await runWith("ok", ["unused_exports", "no_such_category"]))).toContain(
+      "no_such_category",
+    );
   });
 
-  it("fails on a category whose rule the tool has switched off, which would report nothing forever", () => {
-    const reason = reasonOf(runWith("rule-off", ["unused_exports"]));
+  it("fails on a category whose rule the tool has switched off, which would report nothing forever", async () => {
+    const reason = reasonOf(await runWith("rule-off", ["unused_exports"]));
 
     expect(reason).toContain("unused-exports");
     expect(reason).toContain("can never report");
     expect(reason).toContain("Turn them on in fallow, or drop the category from the runner");
   });
 
-  it("names every switched-off rule apart, rather than running them into one word", () => {
-    const reason = reasonOf(runWith("rules-off", ["unused_exports", "unused_types"]));
+  it("names every switched-off rule apart, rather than running them into one word", async () => {
+    const reason = reasonOf(await runWith("rules-off", ["unused_exports", "unused_types"]));
 
     expect(reason).toContain("unused-exports, unused-types");
   });
 
-  it("lets a category through when its rule is live", () => {
-    expect(runWith("ok", ["unused_exports"]).kind).toBe("findings");
+  it("lets a category through when its rule is live", async () => {
+    expect((await runWith("ok", ["unused_exports"])).kind).toBe("findings");
   });
 
-  it("fails when the tool will not say which of its rules are on", () => {
-    expect(reasonOf(runWith("no-rules", ["unused_exports"]))).toContain("severities were unreadable");
+  it("fails when the tool will not say which of its rules are on", async () => {
+    expect(reasonOf(await runWith("no-rules", ["unused_exports"]))).toContain("severities were unreadable");
   });
 
-  it("fails when the tool printed nothing", () => {
-    expect(reasonOf(runWith("silent"))).toContain("no output");
+  it("fails when the tool printed nothing", async () => {
+    expect(reasonOf(await runWith("silent"))).toContain("no output");
   });
 
-  it("fails when the command does not exist", () => {
-    const outcome = fallowRunner({ command: ["definitely-not-a-real-binary-xyz"] }).run(ROOT);
+  it("fails when the command does not exist", async () => {
+    const outcome = await fallowRunner({ command: ["definitely-not-a-real-binary-xyz"] }).run(ROOT);
     expect(outcome.kind).toBe("failed");
   });
 
-  it("fails when no command was configured at all", () => {
-    expect(reasonOf(fallowRunner({ command: [] }).run(ROOT))).toContain("no command");
+  it("fails when no command was configured at all", async () => {
+    expect(reasonOf(await fallowRunner({ command: [] }).run(ROOT))).toContain("no command");
   });
 });
 

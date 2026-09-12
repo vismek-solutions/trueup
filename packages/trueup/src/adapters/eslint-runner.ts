@@ -1,7 +1,7 @@
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
 import { summarize } from "./tool-output.ts";
-import { captureTool } from "./tool-process.ts";
+import { awaitTool } from "./tool-process.ts";
 
 const CONFIGURATION_ERROR = 2;
 const WARNING_SEVERITY = 1;
@@ -174,8 +174,8 @@ export function eslintRunner(options: EslintRunnerOptions = {}): Runner {
 
   return {
     name: "eslint",
-    run: (root): RunnerOutcome => {
-      const captured = captureTool({ command, args: [...patterns, "--format", "json"], cwd: root });
+    run: async (root): Promise<RunnerOutcome> => {
+      const captured = await awaitTool({ command, args: [...patterns, "--format", "json"], cwd: root });
       if (captured.kind === "failed") return captured;
       if (captured.status >= CONFIGURATION_ERROR) {
         return { kind: "failed", reason: `exit ${captured.status}: ${summarize(captured.stderr)}` };

@@ -46,12 +46,12 @@ export const DEFAULT_FALLOW_CATEGORIES: readonly string[] = FALLOW_CATEGORIES.fi
   (category) => !OFF_IN_FALLOW.has(category),
 );
 
-const silencedIn = (
+const silencedIn = async (
   command: readonly string[],
   root: string,
   categories: readonly string[],
-): readonly string[] | null => {
-  const resolved = readToolJson({ command, args: ["config", "--root", root, "--format", "json"] });
+): Promise<readonly string[] | null> => {
+  const resolved = await readToolJson({ command, args: ["config", "--root", root, "--format", "json"] });
   if (resolved.kind === "failed") return null;
 
   const rules = objectOf(resolved.payload.rules);
@@ -217,11 +217,11 @@ export function fallowRunner(options: FallowRunnerOptions = {}): Runner {
   return jsonRunner({
     name: "fallow",
     invoke: (root) => ({ command, args: ["--root", root, "--format", "json", "--quiet", ...extra] }),
-    read: (source, root): RunnerOutcome => {
+    read: async (source, root): Promise<RunnerOutcome> => {
       const payload = readPayload(source.payload);
       if (payload.kind === "failed") return payload;
 
-      const silenced = silencedIn(command, root, categories);
+      const silenced = await silencedIn(command, root, categories);
       if (silenced === null)
         return { kind: "failed", reason: "its resolved rule severities were unreadable" };
       if (silenced.length > 0) {

@@ -1,4 +1,4 @@
-import type { Runner, RunnerFinding } from "../ports/runner.ts";
+import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { ClaimResult, Finding } from "../report/model.ts";
 
 export const RUNNERS_RAN_CLAIM = "every-delegated-tool-ran";
@@ -17,14 +17,28 @@ const findingGuidance = (runner: string): string =>
 
 const claimNameOf = (runner: string, category: string): string => `${runner}/${category}`;
 
-export function runDelegated(runners: readonly Runner[], root: string): readonly ClaimResult[] {
+const reasonOf = (answer: PromiseSettledResult<RunnerOutcome> | undefined): string => {
+  if (answer === undefined || answer.status !== "rejected") return "it produced no outcome";
+  return answer.reason instanceof Error ? answer.reason.message : String(answer.reason);
+};
+
+export async function runDelegated(
+  runners: readonly Runner[],
+  root: string,
+): Promise<readonly ClaimResult[]> {
   if (runners.length === 0) return [];
 
   const failures: Finding[] = [];
   const byClaim = new Map<string, { readonly runner: string; readonly findings: RunnerFinding[] }>();
 
-  for (const runner of runners) {
-    const outcome = runner.run(root);
+  const settled = await Promise.allSettled(runners.map((runner) => runner.run(root)));
+
+  for (const [at, runner] of runners.entries()) {
+    const answer = settled[at];
+    const outcome: RunnerOutcome =
+      answer === undefined || answer.status === "rejected"
+        ? { kind: "failed", reason: reasonOf(answer) }
+        : answer.value;
 
     if (outcome.kind === "failed") {
       failures.push({

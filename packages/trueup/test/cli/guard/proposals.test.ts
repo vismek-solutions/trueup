@@ -87,7 +87,7 @@ describe("guarding a proposed write", () => {
   });
 
   it("allows a proposal whose violation is already in the baseline", async () => {
-    const report = check({
+    const report = await check({
       root: PROJECT,
       roots: [join(PROJECT, "src")],
       zones: [

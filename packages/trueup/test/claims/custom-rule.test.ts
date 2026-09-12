@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { SEAM_ZONES as ZONES } from "../support/zones.ts";
 import { defineRule } from "../../src/claims/custom.ts";
@@ -9,20 +9,20 @@ import type { ClaimResult } from "../../src/report/model.ts";
 
 const ROOT = fixtureAt("seam");
 
-const runRule = (rule: ReturnType<typeof defineRule>): ClaimResult => {
-  const report = check({ root: ROOT, zones: ZONES, rules: [rule] });
+const runRule = async (rule: ReturnType<typeof defineRule>): Promise<ClaimResult> => {
+  const report = await check({ root: ROOT, zones: ZONES, rules: [rule] });
   const result = report.claims.find((claim) => claim.claim === rule.name);
   if (result === undefined) throw new Error(`no result for ${rule.name}`);
   return result;
 };
 
-const captureProject = (): { readonly get: () => Project } => {
+const captureProject = async (): Promise<{ readonly get: () => Project }> => {
   let captured: Project | null = null;
   const rule = defineRule("capture", (project) => {
     captured = project;
     return [];
   });
-  check({ root: ROOT, zones: ZONES, rules: [rule] });
+  await check({ root: ROOT, zones: ZONES, rules: [rule] });
   return {
     get: () => {
       if (captured === null) throw new Error("rule never ran");
@@ -32,17 +32,17 @@ const captureProject = (): { readonly get: () => Project } => {
 };
 
 describe("a rule written in TypeScript", () => {
-  it("runs as a claim of its own name", () => {
-    expect(runRule(defineRule("my-rule", () => [])).claim).toBe("my-rule");
+  it("runs as a claim of its own name", async () => {
+    expect((await runRule(defineRule("my-rule", () => []))).claim).toBe("my-rule");
   });
 
-  it("turns a bare message into an error finding", () => {
-    const result = runRule(defineRule("bare", () => [{ message: "something" }]));
+  it("turns a bare message into an error finding", async () => {
+    const result = await runRule(defineRule("bare", () => [{ message: "something" }]));
     expect(result.findings).toEqual([{ severity: "error", message: "something", file: null, start: null }]);
   });
 
-  it("carries a file and position through when the rule supplies them", () => {
-    const result = runRule(
+  it("carries a file and position through when the rule supplies them", async () => {
+    const result = await runRule(
       defineRule("located", (project) => [
         { message: "here", file: project.filesIn("engine")[0], at: 7, severity: "warning" },
       ]),
@@ -52,8 +52,8 @@ describe("a rule written in TypeScript", () => {
     expect(result.findings[0]?.file).toContain("engine");
   });
 
-  it("can express a boundary from the import query alone", () => {
-    const result = runRule(
+  it("can express a boundary from the import query alone", async () => {
+    const result = await runRule(
       defineRule("engine-may-not-reach-domain", (project) =>
         project.imports({ fromZone: "engine", declaredZone: "domain" }).map((entry) => ({
           message: `${project.relative(entry.from)} takes ${entry.imported}`,
@@ -68,7 +68,11 @@ describe("a rule written in TypeScript", () => {
 });
 
 describe("the project a rule receives", () => {
-  const project = captureProject();
+  let project: Awaited<ReturnType<typeof captureProject>>;
+
+  beforeAll(async () => {
+    project = await captureProject();
+  });
 
   it("reports the zone a file belongs to", () => {
     const engine = project.get().filesIn("engine");

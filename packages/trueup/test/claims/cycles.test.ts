@@ -18,45 +18,45 @@ const ZONES: readonly ZoneDefinition[] = [
   { name: "browser", patterns: ["web/**"] },
 ];
 
-const zonedAs = (zones: readonly ZoneDefinition[]): readonly string[] =>
-  messagesIn(check({ root: ROOT, zones }), CLAIM);
+const zonedAs = async (zones: readonly ZoneDefinition[]): Promise<readonly string[]> =>
+  messagesIn(await check({ root: ROOT, zones }), CLAIM);
 
 describe("zones that depend on each other", () => {
-  it("reports a pair that imports each other", () => {
-    expect(zonedAs(ZONES)).toContain("zones left and right form an import cycle");
+  it("reports a pair that imports each other", async () => {
+    expect(await zonedAs(ZONES)).toContain("zones left and right form an import cycle");
   });
 
-  it("reports a cycle that closes through a third zone", () => {
-    expect(zonedAs(ZONES)).toContain("zones alpha, beta and gamma form an import cycle");
+  it("reports a cycle that closes through a third zone", async () => {
+    expect(await zonedAs(ZONES)).toContain("zones alpha, beta and gamma form an import cycle");
   });
 
-  it("reports each tangle once rather than once per zone in it", () => {
-    expect(zonedAs(ZONES)).toHaveLength(3);
+  it("reports each tangle once rather than once per zone in it", async () => {
+    expect(await zonedAs(ZONES)).toHaveLength(3);
   });
 
-  it("names the zones in a tangle by name, not by the order their imports were read", () => {
-    expect(zonedAs(ZONES)).toContain("zones browser and server form an import cycle");
+  it("names the zones in a tangle by name, not by the order their imports were read", async () => {
+    expect(await zonedAs(ZONES)).toContain("zones browser and server form an import cycle");
   });
 
-  it("keeps tangles apart when one of them reaches into another", () => {
-    expect(zonedAs(ZONES)).toEqual([
+  it("keeps tangles apart when one of them reaches into another", async () => {
+    expect(await zonedAs(ZONES)).toEqual([
       "zones alpha, beta and gamma form an import cycle",
       "zones browser and server form an import cycle",
       "zones left and right form an import cycle",
     ]);
   });
 
-  it("leaves alone a zone that only reaches into a cycle", () => {
-    expect(zonedAs(ZONES).join(" ")).not.toContain("free");
+  it("leaves alone a zone that only reaches into a cycle", async () => {
+    expect((await zonedAs(ZONES)).join(" ")).not.toContain("free");
   });
 
-  it("sees no cycle when the zones that close it are one zone", () => {
+  it("sees no cycle when the zones that close it are one zone", async () => {
     const merged: readonly ZoneDefinition[] = [
       { name: "ring", patterns: ["alpha/**", "beta/**", "gamma/**"] },
       { name: "left", patterns: ["left/**"] },
       { name: "right", patterns: ["right/**"] },
       { name: "free", patterns: ["free/**"] },
     ];
-    expect(zonedAs(merged)).toEqual(["zones left and right form an import cycle"]);
+    expect(await zonedAs(merged)).toEqual(["zones left and right form an import cycle"]);
   });
 });

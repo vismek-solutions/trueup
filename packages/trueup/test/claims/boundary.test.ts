@@ -13,59 +13,63 @@ const ZONES = [
   { name: "reaching", patterns: ["reaching/**"] },
 ];
 
-const boundaryFindings = (rule: BoundaryRule): readonly Finding[] => {
-  const report = check({ root: ROOT, zones: ZONES, boundaries: [rule] });
+const boundaryFindings = async (rule: BoundaryRule): Promise<readonly Finding[]> => {
+  const report = await check({ root: ROOT, zones: ZONES, boundaries: [rule] });
   return (
     report.claims.find((claim) => claim.claim === "every-import-respects-its-zone-boundary")?.findings ?? []
   );
 };
 
 describe("a boundary crossed through a barrel", () => {
-  it("is seen when the edge is anchored on the declaring file", () => {
-    const findings = boundaryFindings({ from: "components", allow: ["shared"] });
+  it("is seen when the edge is anchored on the declaring file", async () => {
+    const findings = await boundaryFindings({ from: "components", allow: ["shared"] });
 
     expect(findings).toHaveLength(1);
     expect(findings[0]?.message).toContain("Warrant");
     expect(findings[0]?.message).toContain("shared/warrants.ts through shared/index.ts");
   });
 
-  it("is invisible when the edge is anchored on the module the specifier named", () => {
-    expect(boundaryFindings({ from: "components", allow: ["shared"], anchor: "imported-module" })).toEqual(
-      [],
-    );
+  it("is invisible when the edge is anchored on the module the specifier named", async () => {
+    expect(
+      await boundaryFindings({ from: "components", allow: ["shared"], anchor: "imported-module" }),
+    ).toEqual([]);
   });
 
-  it("does not flag a sibling symbol that the same barrel re-exports", () => {
-    const findings = boundaryFindings({ from: "components", allow: ["shared"] });
+  it("does not flag a sibling symbol that the same barrel re-exports", async () => {
+    const findings = await boundaryFindings({ from: "components", allow: ["shared"] });
 
     expect(findings.map((finding) => finding.message).join()).not.toContain("other");
   });
 
-  it("can be told to ignore a type-only import", () => {
-    expect(boundaryFindings({ from: "components", allow: ["shared"], ignoreTypeOnly: true })).toEqual([]);
+  it("can be told to ignore a type-only import", async () => {
+    expect(await boundaryFindings({ from: "components", allow: ["shared"], ignoreTypeOnly: true })).toEqual(
+      [],
+    );
   });
 
-  it("says nothing when the origin zone has no rule", () => {
-    expect(boundaryFindings({ from: "shared", allow: ["warrants"] })).toEqual([]);
+  it("says nothing when the origin zone has no rule", async () => {
+    expect(await boundaryFindings({ from: "shared", allow: ["warrants"] })).toEqual([]);
   });
 });
 
 describe("a boundary crossed by something other than a plain named import", () => {
-  const messages = (): readonly string[] =>
-    boundaryFindings({ from: "reaching", allow: [] }).map((finding) => finding.message);
+  const messages = async (): Promise<readonly string[]> =>
+    (await boundaryFindings({ from: "reaching", allow: [] })).map((finding) => finding.message);
 
-  it("is crossed by taking the whole module, which lands in the module's own zone", () => {
-    expect(messages()).toContain("is reaching and may not reach warrants: * from shared/warrants.ts");
+  it("is crossed by taking the whole module, which lands in the module's own zone", async () => {
+    expect(await messages()).toContain("is reaching and may not reach warrants: * from shared/warrants.ts");
   });
 
-  it("is crossed by asking for a name the module never exported", () => {
-    expect(messages()).toContain("is reaching and may not reach warrants: absent from shared/warrants.ts");
+  it("is crossed by asking for a name the module never exported", async () => {
+    expect(await messages()).toContain(
+      "is reaching and may not reach warrants: absent from shared/warrants.ts",
+    );
   });
 });
 
 describe("two rules for one zone", () => {
-  it("reports a breached edge once, not once per rule", () => {
-    const report = check({
+  it("reports a breached edge once, not once per rule", async () => {
+    const report = await check({
       root: ROOT,
       zones: ZONES,
       boundaries: [
@@ -84,8 +88,8 @@ describe("two rules for one zone", () => {
 });
 
 describe("rule validation", () => {
-  it("rejects a rule naming a zone that was never declared", () => {
-    const report = check({
+  it("rejects a rule naming a zone that was never declared", async () => {
+    const report = await check({
       root: ROOT,
       zones: ZONES,
       boundaries: [{ from: "components", allow: ["typo"] }],

@@ -20,19 +20,19 @@ const measured = (...files: readonly FileChange[]): Changes =>
 const reportOf = (reviewable: ReviewBudget, changes: Changes) =>
   check({ root: ROOT, zones: [], reviewable, changes });
 
-const said = (reviewable: ReviewBudget, changes: Changes): readonly string[] =>
-  messagesIn(reportOf(reviewable, changes), CLAIM);
+const said = async (reviewable: ReviewBudget, changes: Changes): Promise<readonly string[]> =>
+  messagesIn(await reportOf(reviewable, changes), CLAIM);
 
-const severityOf = (reviewable: ReviewBudget, changes: Changes): string | undefined =>
-  findingsIn(reportOf(reviewable, changes), CLAIM)[0]?.severity;
+const severityOf = async (reviewable: ReviewBudget, changes: Changes): Promise<string | undefined> =>
+  findingsIn(await reportOf(reviewable, changes), CLAIM)[0]?.severity;
 
 describe("switching the budget on", () => {
-  it("says nothing at all until a project sets one", () => {
-    expect(claimIn(check({ root: ROOT, zones: [] }), CLAIM)).toBeUndefined();
+  it("says nothing at all until a project sets one", async () => {
+    expect(claimIn(await check({ root: ROOT, zones: [] }), CLAIM)).toBeUndefined();
   });
 
-  it("names splitting as the answer, and raising the cap as the mistake", () => {
-    const guidance = claimIn(reportOf(CAP, measured()), CLAIM)?.guidance ?? "";
+  it("names splitting as the answer, and raising the cap as the mistake", async () => {
+    const guidance = claimIn(await reportOf(CAP, measured()), CLAIM)?.guidance ?? "";
 
     expect(guidance).toContain("Find a seam in what you have already done");
     expect(guidance).toContain("Not the fix: raising the budget because the work is nearly done.");
@@ -40,41 +40,41 @@ describe("switching the budget on", () => {
 });
 
 describe("a change that still fits its review", () => {
-  it("says nothing while both counts are under the cap", () => {
-    expect(said(CAP, measured(of("src/one.ts", 599, 399)))).toEqual([]);
+  it("says nothing while both counts are under the cap", async () => {
+    expect(await said(CAP, measured(of("src/one.ts", 599, 399)))).toEqual([]);
   });
 
-  it("says nothing about a change of no size, so a clean tree is quiet", () => {
-    expect(said(CAP, measured())).toEqual([]);
+  it("says nothing about a change of no size, so a clean tree is quiet", async () => {
+    expect(await said(CAP, measured())).toEqual([]);
   });
 
-  it("stays quiet at exactly the cap, which is what the cap allows", () => {
-    expect(said(CAP, measured(of("src/one.ts", 600, 400)))).toEqual([]);
+  it("stays quiet at exactly the cap, which is what the cap allows", async () => {
+    expect(await said(CAP, measured(of("src/one.ts", 600, 400)))).toEqual([]);
   });
 });
 
 describe("a change too large to review", () => {
-  it("counts additions and deletions apart, since a deletion is cheaper to read", () => {
-    expect(said(CAP, measured(of("src/one.ts", 0, 401)))[0]).toContain("+0 / -401");
+  it("counts additions and deletions apart, since a deletion is cheaper to read", async () => {
+    expect((await said(CAP, measured(of("src/one.ts", 0, 401))))[0]).toContain("+0 / -401");
   });
 
-  it("names the branch it measured against, so the number can be reproduced", () => {
-    expect(said(CAP, measured(of("src/one.ts", 601)))[0]).toContain("against main");
+  it("names the branch it measured against, so the number can be reproduced", async () => {
+    expect((await said(CAP, measured(of("src/one.ts", 601))))[0]).toContain("against main");
   });
 
-  it("names the cap it passed rather than only the count", () => {
-    expect(said(CAP, measured(of("src/one.ts", 601)))[0]).toContain("over the +600 / -400");
+  it("names the cap it passed rather than only the count", async () => {
+    expect((await said(CAP, measured(of("src/one.ts", 601))))[0]).toContain("over the +600 / -400");
   });
 
-  it("names the heaviest files, so a lock file that ate the budget is visible", () => {
+  it("names the heaviest files, so a lock file that ate the budget is visible", async () => {
     const changed = measured(of("small.ts", 1), of("pnpm-lock.yaml", 900), of("mid.ts", 50));
 
-    expect(said(CAP, changed)[0]).toContain(
+    expect((await said(CAP, changed))[0]).toContain(
       "heaviest: pnpm-lock.yaml +900/-0, mid.ts +50/-0, small.ts +1/-0",
     );
   });
 
-  it("names only the heaviest few, so a wide change does not print every file it touched", () => {
+  it("names only the heaviest few, so a wide change does not print every file it touched", async () => {
     const changed = measured(
       of("wide.ts", 10, 500),
       of("mid.ts", 200),
@@ -82,89 +82,91 @@ describe("a change too large to review", () => {
       of("tiny.ts", 1),
     );
 
-    expect(said(CAP, changed)[0]).toContain("heaviest: wide.ts +10/-500, mid.ts +200/-0, small.ts +100/-0");
-    expect(said(CAP, changed)[0]).not.toContain("tiny.ts");
+    expect((await said(CAP, changed))[0]).toContain(
+      "heaviest: wide.ts +10/-500, mid.ts +200/-0, small.ts +100/-0",
+    );
+    expect((await said(CAP, changed))[0]).not.toContain("tiny.ts");
   });
 
-  it("warns rather than failing, so an unattended agent is not stopped mid-change", () => {
-    expect(severityOf(CAP, measured(of("src/one.ts", 601)))).toBe("warning");
+  it("warns rather than failing, so an unattended agent is not stopped mid-change", async () => {
+    expect(await severityOf(CAP, measured(of("src/one.ts", 601)))).toBe("warning");
   });
 
-  it("fails instead when the project asked it to", () => {
-    expect(severityOf({ ...CAP, severity: "error" }, measured(of("src/one.ts", 601)))).toBe("error");
+  it("fails instead when the project asked it to", async () => {
+    expect(await severityOf({ ...CAP, severity: "error" }, measured(of("src/one.ts", 601)))).toBe("error");
   });
 });
 
 describe("a change nearing its cap", () => {
   const NEARING: ReviewBudget = { ...CAP, nearing: 0.8 };
 
-  it("says nothing before the warning band, however close", () => {
-    expect(said(NEARING, measured(of("src/one.ts", 480)))).toEqual([]);
+  it("says nothing before the warning band, however close", async () => {
+    expect(await said(NEARING, measured(of("src/one.ts", 480)))).toEqual([]);
   });
 
-  it("warns inside the band, in time to pick a seam", () => {
-    expect(said(NEARING, measured(of("src/one.ts", 481)))[0]).toContain("nearing the +600 / -400");
+  it("warns inside the band, in time to pick a seam", async () => {
+    expect((await said(NEARING, measured(of("src/one.ts", 481))))[0]).toContain("nearing the +600 / -400");
   });
 
-  it("says nearing rather than over, since nothing has been passed yet", () => {
-    expect(said(NEARING, measured(of("src/one.ts", 481)))[0]).not.toContain("over the");
+  it("says nearing rather than over, since nothing has been passed yet", async () => {
+    expect((await said(NEARING, measured(of("src/one.ts", 481))))[0]).not.toContain("over the");
   });
 
-  it("warns inside the band on deletions alone, since a large removal is still a large review", () => {
-    expect(said(NEARING, measured(of("src/one.ts", 0, 321)))[0]).toContain("nearing the +600 / -400");
+  it("warns inside the band on deletions alone, since a large removal is still a large review", async () => {
+    expect((await said(NEARING, measured(of("src/one.ts", 0, 321))))[0]).toContain("nearing the +600 / -400");
   });
 
-  it("says nothing at the edge of the deletions band, which is not yet inside it", () => {
-    expect(said(NEARING, measured(of("src/one.ts", 0, 320)))).toEqual([]);
+  it("says nothing at the edge of the deletions band, which is not yet inside it", async () => {
+    expect(await said(NEARING, measured(of("src/one.ts", 0, 320)))).toEqual([]);
   });
 
-  it("warns inside the band even where the cap itself would fail", () => {
+  it("warns inside the band even where the cap itself would fail", async () => {
     const failing = { ...NEARING, severity: "error" as const };
 
-    expect(severityOf(failing, measured(of("src/one.ts", 481)))).toBe("warning");
+    expect(await severityOf(failing, measured(of("src/one.ts", 481)))).toBe("warning");
   });
 
-  it("still fails once the cap is passed", () => {
+  it("still fails once the cap is passed", async () => {
     const failing = { ...NEARING, severity: "error" as const };
 
-    expect(severityOf(failing, measured(of("src/one.ts", 601)))).toBe("error");
+    expect(await severityOf(failing, measured(of("src/one.ts", 601)))).toBe("error");
   });
 });
 
 describe("what the budget leaves out", () => {
   const SPARING: ReviewBudget = { ...CAP, except: ["*.lock", "**/generated/**"] };
 
-  it("drops a file the project named, so a generated one cannot eat the budget", () => {
-    expect(said(SPARING, measured(of("deps.lock", 900)))).toEqual([]);
+  it("drops a file the project named, so a generated one cannot eat the budget", async () => {
+    expect(await said(SPARING, measured(of("deps.lock", 900)))).toEqual([]);
   });
 
-  it("matches a pattern against the whole path, not only the file name", () => {
-    expect(said(SPARING, measured(of("src/generated/api.ts", 900)))).toEqual([]);
+  it("matches a pattern against the whole path, not only the file name", async () => {
+    expect(await said(SPARING, measured(of("src/generated/api.ts", 900)))).toEqual([]);
   });
 
-  it("leaves out a dotted file the project named, since a generated file often carries a dot", () => {
-    expect(said(SPARING, measured(of(".deps.lock", 900)))).toEqual([]);
+  it("leaves out a dotted file the project named, since a generated file often carries a dot", async () => {
+    expect(await said(SPARING, measured(of(".deps.lock", 900)))).toEqual([]);
   });
 
-  it("keeps counting everything the project did not name", () => {
+  it("keeps counting everything the project did not name", async () => {
     const changed = measured(of("deps.lock", 900), of("src/one.ts", 601));
 
-    expect(said(SPARING, changed)[0]).toContain("+601 / -0");
+    expect((await said(SPARING, changed))[0]).toContain("+601 / -0");
   });
 });
 
 describe("a change it could not measure", () => {
   const unmeasured = reading({ kind: "unmeasured", reason: "no common commit with main" });
 
-  it("says so rather than passing quietly, since a budget measuring nothing enforces nothing", () => {
-    expect(said(CAP, unmeasured)[0]).toContain("could not be measured");
+  it("says so rather than passing quietly, since a budget measuring nothing enforces nothing", async () => {
+    expect((await said(CAP, unmeasured))[0]).toContain("could not be measured");
   });
 
-  it("repeats what git said, so a shallow clone is recognisable", () => {
-    expect(said(CAP, unmeasured)[0]).toContain("no common commit with main");
+  it("repeats what git said, so a shallow clone is recognisable", async () => {
+    expect((await said(CAP, unmeasured))[0]).toContain("no common commit with main");
   });
 
-  it("warns rather than failing, since this is the environment and not the change", () => {
-    expect(severityOf({ ...CAP, severity: "error" }, unmeasured)).toBe("warning");
+  it("warns rather than failing, since this is the environment and not the change", async () => {
+    expect(await severityOf({ ...CAP, severity: "error" }, unmeasured)).toBe("warning");
   });
 });

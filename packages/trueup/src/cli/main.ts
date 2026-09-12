@@ -81,7 +81,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   const command = config.command ?? DEFAULT_COMMAND;
   const present = presenterFor(argv, path, command);
   const rulebooks = [path, ...memberConfigs];
-  const report = check({
+  const report = await check({
     root,
     roots: resolveInclude(root, config.include),
     zones: config.zones,

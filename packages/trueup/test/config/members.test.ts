@@ -17,7 +17,7 @@ const loaded = () => loadConfig(CONFIG);
 const reportOf = async (): Promise<Report> => {
   const { config, root, memberConfigs } = await loaded();
   const roots = resolveInclude(root, config.include);
-  return check({ root, roots, ignoreFiles: [CONFIG, ...memberConfigs], ...config });
+  return await check({ root, roots, ignoreFiles: [CONFIG, ...memberConfigs], ...config });
 };
 
 const breaches = async (): Promise<readonly string[]> => messagesIn(await reportOf(), BOUNDARY);
@@ -127,7 +127,7 @@ describe("what a member says about itself", () => {
 
   it("is enforced like any other boundary", async () => {
     const { config, root, memberConfigs } = await loaded();
-    const report = check({
+    const report = await check({
       root,
       roots: resolveInclude(root, config.include),
       ignoreFiles: [CONFIG, ...memberConfigs],

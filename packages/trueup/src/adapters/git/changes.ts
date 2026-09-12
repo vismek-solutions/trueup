@@ -1,8 +1,37 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ChangeSet, Changes, FileChange } from "../../ports/changes.ts";
-import { captureTool } from "../tool-process.ts";
 import { summarize } from "../tool-output.ts";
+
+const MAX_BUFFER = 64 * 1024 * 1024;
+
+interface Ran {
+  readonly failure: string | null;
+  readonly status: number;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+const NOTHING: Ran = { failure: null, status: 0, stdout: "", stderr: "" };
+
+const failing = (failure: string): Ran => ({ ...NOTHING, failure });
+
+// the review budget asks for the change set while claims run, so this one stays synchronous
+const ran = (executable: string | undefined, args: readonly string[]): Ran => {
+  if (executable === undefined) return failing("no command configured");
+
+  const result = spawnSync(executable, args, { encoding: "utf8", maxBuffer: MAX_BUFFER });
+  if (result.error !== undefined) return failing(result.error.message);
+  if (result.status === null) return failing("the process was killed before it finished");
+
+  return {
+    failure: null,
+    status: result.status,
+    stdout: typeof result.stdout === "string" ? result.stdout : "",
+    stderr: typeof result.stderr === "string" ? result.stderr : "",
+  };
+};
 
 const countOf = (value: string): number => {
   const parsed = Number.parseInt(value, 10);
@@ -39,22 +68,23 @@ const refused = (reason: string, stderr: string): ChangeSet => {
 };
 
 export const gitChanges = (command: readonly string[] = ["git"]): Changes => {
+  const [executable, ...rest] = command;
   const git = (root: string, args: readonly string[]) =>
-    captureTool({ command, args: ["-C", root, ...args] });
+    ran(executable, [...rest, "-C", root, ...args]);
 
   return {
     since: (root, base): ChangeSet => {
       const point = git(root, ["merge-base", "HEAD", base]);
-      if (point.kind === "failed") return { kind: "unmeasured", reason: point.reason };
+      if (point.failure !== null) return { kind: "unmeasured", reason: point.failure };
       if (point.status !== 0) return refused(`no common commit with ${base}`, point.stderr);
 
       const at = point.stdout.trim();
       const diff = git(root, ["diff", "--numstat", "--no-renames", at, "--"]);
-      if (diff.kind === "failed") return { kind: "unmeasured", reason: diff.reason };
+      if (diff.failure !== null) return { kind: "unmeasured", reason: diff.failure };
       if (diff.status !== 0) return refused(`could not read the change since ${base}`, diff.stderr);
 
       const others = git(root, ["ls-files", "--others", "--exclude-standard"]);
-      const added = others.kind === "captured" && others.status === 0 ? others.stdout : "";
+      const added = others.failure === null && others.status === 0 ? others.stdout : "";
 
       return { kind: "measured", base, files: [...tracked(diff.stdout), ...untracked(root, added)] };
     },
