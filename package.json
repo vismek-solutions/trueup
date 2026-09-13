@@ -2,8 +2,9 @@
   "name": "trueup-repo",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@12.4.1",
   "engines": {
-    "node": ">=22.18"
+    "node": ">=24"
   },
   "scripts": {
     "check": "node ./packages/trueup/bin/trueup.js",
@@ -14,8 +15,8 @@
     "build": "pnpm --filter trueup run build"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.12",
-    "fallow": "^3.22.0",
-    "oxlint": "^1.81.0"
+    "@biomejs/biome": "^2.5.13",
+    "fallow": "^3.25.0",
+    "oxlint": "^1.82.0"
   }
 }

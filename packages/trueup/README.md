@@ -14,7 +14,7 @@ You describe the shape once. Every run after that answers a single question: is 
 
 ## Getting started
 
-You need Node 22.18 or newer.
+You need Node 24 or newer.
 
 ```sh
 npm install --save-dev @vismek-solutions/trueup

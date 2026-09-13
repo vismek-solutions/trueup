@@ -3,7 +3,7 @@ title: Getting started
 description: Install trueup, write down the shape of your project in one file, and run it.
 ---
 
-This takes about ten minutes on an ordinary project. You need Node 22.18 or newer.
+This takes about ten minutes on an ordinary project. You need Node 24 or newer.
 
 Install it as a development dependency:
 
