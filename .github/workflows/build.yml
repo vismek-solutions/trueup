@@ -36,7 +36,7 @@ jobs:
           path: packages/trueup/dist
           retention-days: 1
 
-  publish:
+  stage:
     needs: check
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -73,6 +73,6 @@ jobs:
           declared=$(node -p "require('./package.json').version")
           npm pkg set version="${declared}-dev.${{ github.run_number }}"
 
-      - name: Publish
-        working-directory: packages/trueup
-        run: npm publish --ignore-scripts --tag ${{ startsWith(github.ref, 'refs/tags/') && 'latest' || 'dev' }}
+      # nothing reaches the registry until someone runs `npm stage approve <stage-id>`
+      - name: Stage for publishing
+        run: npm stage publish ./packages/trueup --ignore-scripts --tag ${{ startsWith(github.ref, 'refs/tags/') && 'latest' || 'dev' }}
