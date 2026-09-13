@@ -1,7 +1,6 @@
 {
   "name": "@vismek-solutions/trueup",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Checks that a TypeScript codebase still has the shape you meant it to have, and blocks an edit that would change it",
   "keywords": [
     "architecture",
@@ -12,6 +11,7 @@
     "claude-code",
     "agent"
   ],
+  "license": "Apache-2.0",
   "type": "module",
   "engines": {
     "node": ">=22.18"
