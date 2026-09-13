@@ -26,6 +26,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -R ../../apps/docs/src/content/docs dist/docs",
     "prepack": "pnpm run build",
