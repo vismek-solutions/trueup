@@ -4,7 +4,7 @@ import { IGNORED_DIRECTORIES } from "./packages/trueup/src/adapters/node-files.t
 import { oxlintRunner } from "./packages/trueup/src/adapters/oxlint-runner.ts";
 import { defineConfig } from "./packages/trueup/src/config/model.ts";
 
-const PATHS = ["packages/trueup/src", "packages/trueup/test", "packages/trueup/bin"];
+const PATHS = ["packages/trueup/src", "packages/trueup/test", "packages/trueup/bin", "scripts"];
 
 export default defineConfig({
   members: ["packages/*"],

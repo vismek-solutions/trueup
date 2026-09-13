@@ -14,7 +14,7 @@
     "typecheck": "pnpm --filter trueup run typecheck",
     "build": "pnpm --filter trueup run build",
     "staged": "npm stage list @vismek-solutions/trueup",
-    "approve": "node ./scripts/approve-release.mjs"
+    "release": "node ./scripts/release-commands.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13",
