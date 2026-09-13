@@ -28,12 +28,11 @@ export default defineConfig({
     fallowRunner({
       command: ["node_modules/.bin/fallow"],
       categories: [...FALLOW_CATEGORIES],
-      duplication: { mode: "weak", minLines: 13, minTokens: 30 },
+      duplication: {},
     }),
     oxlintRunner({
       command: ["node_modules/.bin/oxlint"],
       paths: PATHS,
-      categories: ["eslint/max-params"],
       write: process.env.CI === undefined,
     }),
   ],

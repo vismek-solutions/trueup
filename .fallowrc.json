@@ -7,6 +7,11 @@
     "trueup.config.ts",
     "apps/docs/src/styles/custom.css"
   ],
+  "duplicates": {
+    "mode": "weak",
+    "minLines": 13,
+    "minTokens": 30
+  },
   "ignorePatterns": ["**/test/fixtures/**"],
   "rules": {
     "private-type-leaks": "error",

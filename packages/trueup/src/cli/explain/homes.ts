@@ -11,16 +11,13 @@ const reachedBy = (rules: Rulebook, zone: string): readonly string[] => reachOf(
 
 const closureOf = (rules: Rulebook, from: readonly string[]): ReadonlySet<string> => {
   const seen = new Set(from);
-  let growing = true;
+  const pending = Array.from(seen);
 
-  while (growing) {
-    growing = false;
-    for (const zone of [...seen]) {
-      for (const next of reachedBy(rules, zone)) {
-        if (seen.has(next)) continue;
-        seen.add(next);
-        growing = true;
-      }
+  for (let zone = pending.pop(); zone !== undefined; zone = pending.pop()) {
+    for (const next of reachedBy(rules, zone)) {
+      if (seen.has(next)) continue;
+      seen.add(next);
+      pending.push(next);
     }
   }
 
