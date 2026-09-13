@@ -1,6 +1,6 @@
 {
   "name": "@vismek-solutions/trueup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Checks that a TypeScript codebase still has the shape you meant it to have, and blocks an edit that would change it",
   "keywords": [
     "architecture",
@@ -11,6 +11,11 @@
     "claude-code",
     "agent"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vismek-solutions/trueup.git",
+    "directory": "packages/trueup"
+  },
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
