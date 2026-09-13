@@ -17,7 +17,7 @@
     "node": ">=24"
   },
   "bin": {
-    "trueup": "./dist/cli/entry.js"
+    "trueup": "dist/cli/entry.js"
   },
   "exports": {
     ".": "./dist/index.js"
