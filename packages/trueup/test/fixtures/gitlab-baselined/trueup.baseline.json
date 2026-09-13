@@ -1,0 +1,9 @@
+{
+  "entries": [
+    {
+      "claim": "every-import-respects-its-zone-boundary",
+      "file": "src/engine/known.ts",
+      "message": "is engine and may not reach domain: thing from src/domain/thing.ts"
+    }
+  ]
+}

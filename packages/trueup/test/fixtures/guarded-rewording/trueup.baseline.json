@@ -1,0 +1,9 @@
+{
+  "entries": [
+    {
+      "claim": "no-value-is-declared-away-from-its-only-consumer",
+      "file": "src/lib/thing.ts",
+      "message": "declares helper, used only by src/app/reader.ts, and by this file as well"
+    }
+  ]
+}
