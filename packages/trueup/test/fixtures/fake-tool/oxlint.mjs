@@ -1,5 +1,21 @@
 const mode = process.argv[2];
 
+if (process.argv.includes("--print-config")) {
+  if (mode === "config-silent") process.exit(0);
+  if (mode === "config-no-rules") {
+    process.stdout.write(JSON.stringify({ plugins: ["oxc"] }));
+    process.exit(0);
+  }
+
+  const rules = {
+    "max-params": ["deny", [{ max: 3 }]],
+    "typescript/no-explicit-any": "warn",
+    "oxc/bad-shape": mode === "rule-off" ? "allow" : "deny",
+  };
+  process.stdout.write(JSON.stringify({ rules }));
+  process.exit(0);
+}
+
 if (mode === "silent") process.exit(0);
 
 if (mode === "not-json") {

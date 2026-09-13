@@ -49,8 +49,9 @@ describe("reading oxlint's output", () => {
   });
 
   it("keeps what any one filter matches, rather than only what they all match", async () => {
-    expect(findingsOf(await runWith("ok", ["eslint", "nothing"])).map((f) => f.category)).toEqual([
+    expect(findingsOf(await runWith("ok", ["eslint", "typescript"])).map((f) => f.category)).toEqual([
       "eslint/max-params",
+      "typescript/no-explicit-any",
     ]);
   });
 
@@ -115,5 +116,37 @@ describe("distrusting oxlint", () => {
   it("fails rather than reporting nothing found when the binary is missing", async () => {
     const outcome = await oxlintRunner({ command: ["./no-such-oxlint"] }).run(ROOT);
     expect(outcome.kind).toBe("failed");
+  });
+});
+
+describe("a category oxlint can never report", () => {
+  it("fails when no enabled rule falls under it", async () => {
+    expect(reasonOf(await runWith("ok", ["nowhere"]))).toContain("can never report: nowhere");
+  });
+
+  it("names every such category, rather than stopping at the first", async () => {
+    expect(reasonOf(await runWith("ok", ["nowhere", "nothing"]))).toContain("nowhere, nothing");
+  });
+
+  it("fails when the rule under it is switched off in oxlint's own config", async () => {
+    expect(reasonOf(await runWith("rule-off", ["oxc/bad-shape"]))).toContain("can never report");
+  });
+
+  it("counts a rule oxlint only warns on as able to report", async () => {
+    expect(findingsOf(await runWith("ok", ["typescript"])).map((f) => f.category)).toEqual([
+      "typescript/no-explicit-any",
+    ]);
+  });
+
+  it("fails when the resolved config says nothing rather than trusting the filter", async () => {
+    expect(reasonOf(await runWith("config-silent", ["eslint"]))).toContain("unreadable");
+  });
+
+  it("fails when the resolved config carries no rules at all", async () => {
+    expect(reasonOf(await runWith("config-no-rules", ["eslint"]))).toContain("unreadable");
+  });
+
+  it("leaves the resolved config unread when the runner was given no categories", async () => {
+    expect(findingsOf(await runWith("config-silent"))).not.toEqual([]);
   });
 });

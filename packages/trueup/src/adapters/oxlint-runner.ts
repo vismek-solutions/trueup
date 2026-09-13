@@ -1,9 +1,10 @@
 import type { Runner, RunnerFinding, RunnerOutcome } from "../ports/runner.ts";
 import type { Severity } from "../ports/severity.ts";
 import { absoluteIn, numberOf, objectOf, stringOf } from "./tool-output.ts";
-import { jsonRunner, toolCallFrom } from "./tool-process.ts";
+import { jsonRunner, readToolJson, toolCallFrom } from "./tool-process.ts";
 
 const CODE = /^([A-Za-z-]+)\(([^)]+)\)$/;
+const REPORTING = new Set(["warn", "deny"]);
 
 export interface OxlintRunnerOptions {
   readonly command?: readonly string[] | undefined;
@@ -65,9 +66,35 @@ const findingOf = (entry: unknown, root: string): RunnerFinding | null => {
   };
 };
 
+const covers = (entry: string, name: string): boolean => name === entry || name.startsWith(`${entry}/`);
+
 const wanted = (categories: readonly string[], category: string): boolean =>
-  categories.length === 0 ||
-  categories.some((entry) => category === entry || category.startsWith(`${entry}/`));
+  categories.length === 0 || categories.some((entry) => covers(entry, category));
+
+const stateOf = (raw: unknown): string | null => (Array.isArray(raw) ? stringOf(raw[0]) : stringOf(raw));
+
+const enabledIn = async (command: readonly string[], root: string): Promise<readonly string[] | null> => {
+  const resolved = await readToolJson({ command, args: ["--print-config"], cwd: root });
+  if (resolved.kind === "failed") return null;
+
+  const rules = objectOf(resolved.payload.rules);
+  if (rules === null) return null;
+
+  return Object.entries(rules)
+    .filter(([, raw]) => REPORTING.has(stateOf(raw) ?? ""))
+    .map(([rule]) => (rule.includes("/") ? rule : `eslint/${rule}`));
+};
+
+const unreportableIn = async (
+  command: readonly string[],
+  root: string,
+  categories: readonly string[],
+): Promise<readonly string[] | null> => {
+  if (categories.length === 0) return [];
+
+  const enabled = await enabledIn(command, root);
+  return enabled === null ? null : categories.filter((entry) => !enabled.some((rule) => covers(entry, rule)));
+};
 
 export function oxlintRunner(options: OxlintRunnerOptions = {}): Runner {
   const { command, paths, fixing } = toolCallFrom(options, {
@@ -79,9 +106,20 @@ export function oxlintRunner(options: OxlintRunnerOptions = {}): Runner {
   return jsonRunner({
     name: "oxlint",
     invoke: (root) => ({ command, args: [...fixing, "--format", "json", ...paths], cwd: root }),
-    read: (source, root): RunnerOutcome => {
+    read: async (source, root): Promise<RunnerOutcome> => {
       const read = readPayload(source.payload);
       if (read.kind === "failed") return read;
+
+      const unreportable = await unreportableIn(command, root, categories);
+      if (unreportable === null) {
+        return { kind: "failed", reason: "its resolved rule severities were unreadable" };
+      }
+      if (unreportable.length > 0) {
+        return {
+          kind: "failed",
+          reason: `these categories rest on rules oxlint has not enabled, so they can never report: ${unreportable.join(", ")}. Turn them on in oxlint's own config, or drop them from the runner.`,
+        };
+      }
 
       const findings = read.payload.diagnostics
         .map((entry) => findingOf(entry, root))

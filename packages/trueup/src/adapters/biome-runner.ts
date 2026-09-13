@@ -20,7 +20,6 @@ const SEVERITIES: Readonly<Record<string, Severity>> = {
 export interface BiomeRunnerOptions {
   readonly command?: readonly string[] | undefined;
   readonly paths?: readonly string[] | undefined;
-  readonly categories?: readonly string[] | undefined;
   readonly maxDiagnostics?: number | undefined;
   readonly write?: boolean | undefined;
 }
@@ -35,18 +34,12 @@ type Payload =
 
 type Converted =
   | { readonly kind: "finding"; readonly finding: RunnerFinding }
-  | { readonly kind: "skip" }
   | { readonly kind: "failed"; readonly reason: string };
 
 interface ConvertInput {
   readonly root: string;
   readonly offsetOf: OffsetOf;
-  readonly categories: readonly string[] | undefined;
 }
-
-const wanted = (category: string, categories: readonly string[] | undefined): boolean =>
-  categories === undefined ||
-  categories.some((prefix) => category === prefix || category.startsWith(`${prefix}/`));
 
 const readPayload = (report: Record<string, unknown>): Payload => {
   const summary = objectOf(report.summary);
@@ -88,7 +81,7 @@ const startOf = (
   return path === null || line === null ? null : offsetOf(path, line, column - 1);
 };
 
-const convert = (entry: unknown, { root, offsetOf, categories }: ConvertInput): Converted => {
+const convert = (entry: unknown, { root, offsetOf }: ConvertInput): Converted => {
   const raw = objectOf(entry);
   const category = raw === null ? null : stringOf(raw.category);
   if (raw === null || category === null) return { kind: "failed", reason: SHAPE };
@@ -107,8 +100,6 @@ const convert = (entry: unknown, { root, offsetOf, categories }: ConvertInput): 
       reason: `biome reported an unrecognised severity ${JSON.stringify(raw.severity)}`,
     };
   }
-
-  if (!wanted(category, categories)) return { kind: "skip" };
 
   const message = summarize(raw.message);
   return {
@@ -129,7 +120,7 @@ const collect = (diagnostics: readonly unknown[], context: ConvertInput): Runner
   for (const entry of diagnostics) {
     const converted = convert(entry, context);
     if (converted.kind === "failed") return converted;
-    if (converted.kind === "finding") findings.push(converted.finding);
+    findings.push(converted.finding);
   }
 
   return { kind: "findings", findings };
@@ -140,7 +131,6 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
     command: ["npx", "--yes", "@biomejs/biome", "lint"],
     fix: ["--write"],
   });
-  const categories = options.categories;
   const maxDiagnostics = options.maxDiagnostics ?? DEFAULT_MAX_DIAGNOSTICS;
 
   return jsonRunner({
@@ -157,7 +147,7 @@ export function biomeRunner(options: BiomeRunnerOptions = {}): Runner {
       const reason = unusable(payload.summary, { paths, stderr: source.stderr, maxDiagnostics });
       if (reason !== null) return { kind: "failed", reason };
 
-      return collect(payload.diagnostics, { root, offsetOf: createOffsetReader(root), categories });
+      return collect(payload.diagnostics, { root, offsetOf: createOffsetReader(root) });
     },
   });
 }

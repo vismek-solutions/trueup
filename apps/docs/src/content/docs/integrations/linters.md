@@ -48,11 +48,9 @@ A claim per category means a baseline entry pins one rule rather than a whole to
 
 Each tool runs with your project root as its working directory, and keeps its own severities. A rule you set to warn stays a warning here.
 
-You can narrow a runner to the categories you want. Biome matches by prefix, so this keeps every lint rule and leaves out the formatter and config noise:
+The fallow and oxlint runners take a list of categories to narrow what they report, and each checks that list against the tool's own resolved config, so a category nothing can report fails the run rather than passing quietly. Their sections below show both halves.
 
-```ts
-biomeRunner({ categories: ["lint"] })
-```
+The biome runner takes no such list. Biome's own config decides which rules run, and the command decides whether the formatter is in scope, so a filter here would only be a second place to get that wrong.
 
 ## Handing the rest to fallow
 
@@ -117,10 +115,25 @@ The exit codes matter here, because none of them mean what you would guess. esli
 
 ## oxlint, if you are on TypeScript 7
 
-The typescript-eslint parser refuses to load against TypeScript 7, which takes eslint out of play for TypeScript there. oxlint carries its own parser, needs no TypeScript API, and implements most of the eslint rules, including ones eslint has and biome does not, like a cap on how many parameters a function takes:
+The typescript-eslint parser refuses to load against TypeScript 7, which takes eslint out of play for TypeScript there. oxlint carries its own parser, needs no TypeScript API, and implements most of the eslint rules, including ones eslint has and biome does not, like a cap on how many parameters a function takes.
+
+oxlint ships that cap switched off, so turn it on in oxlint's own config first:
+
+```json
+{ "rules": { "eslint/max-params": ["error", { "max": 3 }] } }
+```
+
+Then ask for it:
 
 ```ts
 oxlintRunner({ paths: ["src"], categories: ["eslint/max-params"] })
+```
+
+Leave the first half out and the run says so, rather than passing on a rule that can never fire:
+
+```
+every-delegated-tool-ran  1 error
+    oxlint did not run: these categories rest on rules oxlint has not enabled, so they can never report: eslint/max-params. Turn them on in oxlint's own config, or drop them from the runner.
 ```
 
 ## Letting biome fix what it can

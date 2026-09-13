@@ -4,23 +4,17 @@ interface RunnerRecipe {
   readonly dependency: string;
   readonly call: string;
   readonly scope?: "paths" | "patterns";
-  readonly fixed?: string;
 }
 
 const RUNNERS: readonly RunnerRecipe[] = [
-  { dependency: "@biomejs/biome", call: "biomeRunner", scope: "paths", fixed: 'categories: ["lint"]' },
+  { dependency: "@biomejs/biome", call: "biomeRunner", scope: "paths" },
   { dependency: "eslint", call: "eslintRunner", scope: "patterns" },
   { dependency: "fallow", call: "fallowRunner" },
   { dependency: "oxlint", call: "oxlintRunner", scope: "paths" },
 ];
 
-const callOf = ({ call, scope, fixed }: RunnerRecipe, scoped: readonly string[]): string => {
-  const options = [
-    ...(fixed === undefined ? [] : [fixed]),
-    ...(scope === undefined || scoped.length === 0 ? [] : [`${scope}: [${list(scoped)}]`]),
-  ];
-  return options.length === 0 ? `${call}()` : `${call}({ ${options.join(", ")} })`;
-};
+const callOf = ({ call, scope }: RunnerRecipe, scoped: readonly string[]): string =>
+  scope === undefined || scoped.length === 0 ? `${call}()` : `${call}({ ${scope}: [${list(scoped)}] })`;
 
 export const runnersFor = (dependencies: readonly string[], scoped: readonly string[]): readonly string[] =>
   RUNNERS.filter((recipe) => dependencies.includes(recipe.dependency)).map((recipe) =>

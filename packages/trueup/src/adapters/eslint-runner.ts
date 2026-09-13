@@ -13,7 +13,6 @@ const NO_SUPPRESSIONS = "this eslint does not report suppressed messages";
 export interface EslintRunnerOptions {
   readonly command?: readonly string[] | undefined;
   readonly patterns?: readonly string[] | undefined;
-  readonly categories?: readonly string[] | undefined;
   readonly reportSuppressed?: boolean | undefined;
 }
 
@@ -43,7 +42,6 @@ type Results =
 
 interface CollectInput {
   readonly offsetOf: OffsetOf;
-  readonly categories: readonly string[] | undefined;
   readonly reportSuppressed: boolean;
 }
 
@@ -104,9 +102,6 @@ const readResults = (stdout: string, patterns: readonly string[]): Results => {
   return { kind: "results", results: parsed as readonly RawResult[] };
 };
 
-const keeps = (categories: readonly string[] | undefined, category: string): boolean =>
-  categories === undefined || categories.includes(category);
-
 const fromMessages = (messages: readonly RawMessage[], file: string, input: CollectInput): RunnerOutcome => {
   const findings: RunnerFinding[] = [];
 
@@ -116,9 +111,7 @@ const fromMessages = (messages: readonly RawMessage[], file: string, input: Coll
     }
 
     const category = ruleIdOf(raw);
-    if (keeps(input.categories, category)) {
-      findings.push(findingOf(raw, messageOf(raw), { file, category, offsetOf: input.offsetOf }));
-    }
+    findings.push(findingOf(raw, messageOf(raw), { file, category, offsetOf: input.offsetOf }));
   }
 
   return { kind: "findings", findings };
@@ -129,12 +122,13 @@ const fromSuppressed = (
   file: string,
   input: CollectInput,
 ): readonly RunnerFinding[] =>
-  suppressed
-    .map((raw) => ({ raw, category: `${SUPPRESSED}/${ruleIdOf(raw)}` }))
-    .filter(({ category }) => keeps(input.categories, category))
-    .map(({ raw, category }) =>
-      findingOf(raw, suppressedMessageOf(raw), { file, category, offsetOf: input.offsetOf }),
-    );
+  suppressed.map((raw) =>
+    findingOf(raw, suppressedMessageOf(raw), {
+      file,
+      category: `${SUPPRESSED}/${ruleIdOf(raw)}`,
+      offsetOf: input.offsetOf,
+    }),
+  );
 
 const fromResult = (entry: RawResult, input: CollectInput): RunnerOutcome => {
   const file = typeof entry.filePath === "string" ? entry.filePath : null;
@@ -169,7 +163,6 @@ const collect = (results: readonly RawResult[], input: CollectInput): RunnerOutc
 export function eslintRunner(options: EslintRunnerOptions = {}): Runner {
   const command = options.command ?? ["npx", "--yes", "eslint"];
   const patterns = options.patterns ?? ["."];
-  const categories = options.categories;
   const reportSuppressed = options.reportSuppressed ?? false;
 
   return {
@@ -187,11 +180,7 @@ export function eslintRunner(options: EslintRunnerOptions = {}): Runner {
       const results = readResults(captured.stdout, patterns);
       if (results.kind === "failed") return results;
 
-      return collect(results.results, {
-        offsetOf: createOffsetReader(root),
-        categories,
-        reportSuppressed,
-      });
+      return collect(results.results, { offsetOf: createOffsetReader(root), reportSuppressed });
     },
   };
 }

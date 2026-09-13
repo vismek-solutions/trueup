@@ -11,11 +11,8 @@ const ROOT = join(HERE, "..", "fixtures", "project");
 const TOOL = join(HERE, "..", "fixtures", "fake-tool", "eslint.mjs");
 const LINTED = join(ROOT, "src/engine/runner.ts");
 
-const runWith = (mode: string, categories?: readonly string[]): Promise<RunnerOutcome> =>
-  eslintRunner({
-    command: ["node", TOOL, mode],
-    ...(categories === undefined ? {} : { categories }),
-  }).run(ROOT);
+const runWith = (mode: string): Promise<RunnerOutcome> =>
+  eslintRunner({ command: ["node", TOOL, mode] }).run(ROOT);
 
 const runReportingSuppressed = (mode: string): Promise<RunnerOutcome> =>
   eslintRunner({ command: ["node", TOOL, mode], reportSuppressed: true }).run(ROOT);
@@ -39,12 +36,6 @@ describe("reading eslint's output", () => {
 
   it("reports the file eslint named", async () => {
     expect(findingsOf(await runWith("ok"))[0]?.file).toBe(LINTED);
-  });
-
-  it("ignores a rule that was not asked for", async () => {
-    expect(findingsOf(await runWith("ok", ["prefer-const"])).map((finding) => finding.category)).toEqual([
-      "prefer-const",
-    ]);
   });
 
   it("treats a lint failure exit code as a normal result", async () => {
@@ -131,16 +122,6 @@ describe("surfacing what an inline comment silenced", () => {
     expect(findingsOf(await runReportingSuppressed("odd-suppressions"))[2]?.message).toBe(
       "silenced twice suppressed because: first; second",
     );
-  });
-
-  it("filters a suppressed rule by the category it is reported under", async () => {
-    const found = await eslintRunner({
-      command: ["node", TOOL, "ok"],
-      reportSuppressed: true,
-      categories: ["suppressed/no-console"],
-    }).run(ROOT);
-
-    expect(findingsOf(found).map((finding) => finding.category)).toEqual(["suppressed/no-console"]);
   });
 
   it("still fails on a parse error rather than going looking for suppressions", async () => {

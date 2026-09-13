@@ -11,11 +11,8 @@ const ROOT = join(HERE, "..", "fixtures", "project");
 const TOOL = join(HERE, "..", "fixtures", "fake-tool", "biome.mjs");
 const LINTED = join(ROOT, "src/engine/runner.ts");
 
-const runWith = (mode: string, categories?: readonly string[]): Promise<RunnerOutcome> =>
-  biomeRunner({
-    command: ["node", TOOL, mode],
-    ...(categories === undefined ? {} : { categories }),
-  }).run(ROOT);
+const runWith = (mode: string): Promise<RunnerOutcome> =>
+  biomeRunner({ command: ["node", TOOL, mode] }).run(ROOT);
 
 describe("reading biome's output", () => {
   it("keeps biome's full rule path as the category", async () => {
@@ -73,24 +70,6 @@ describe("reading biome's output", () => {
     expect(biomeRunner().name).toBe("biome");
   });
 
-  it("matches a category filter by prefix, so one entry keeps a whole group", async () => {
-    expect(findingsOf(await runWith("ok", ["lint/style"])).map((finding) => finding.category)).toEqual([
-      "lint/style/useConst",
-    ]);
-  });
-
-  it("matches a filter naming a rule exactly, not only a group above it", async () => {
-    expect(findingsOf(await runWith("ok", ["deserialize"])).map((finding) => finding.category)).toEqual([
-      "deserialize",
-    ]);
-  });
-
-  it("keeps what any one filter matches, rather than only what they all match", async () => {
-    const found = await runWith("ok", ["lint/style", "nothing/here"]);
-
-    expect(findingsOf(found).map((finding) => finding.category)).toEqual(["lint/style/useConst"]);
-  });
-
   it("shows the rule name when biome sent no message to show", async () => {
     expect(findingsOf(await runWith("terse"))[0]?.message).toBe("lint/style/useConst");
   });
@@ -111,13 +90,6 @@ describe("reading biome's output", () => {
     const message = findingsOf(await runWith("long-message"))[0]?.message ?? "";
 
     expect(message).toBe(`${"a".repeat(300)}…`);
-  });
-
-  it("keeps every lint rule under a single lint filter", async () => {
-    expect(findingsOf(await runWith("ok", ["lint"])).map((finding) => finding.category)).toEqual([
-      "lint/suspicious/noDoubleEquals",
-      "lint/style/useConst",
-    ]);
   });
 
   it("treats a diagnostics exit code as a normal result", async () => {
@@ -205,10 +177,6 @@ describe("refusing to trust biome", () => {
 
   it("fails on a severity it does not recognise", async () => {
     expect(reasonOf(await runWith("bad-severity"))).toContain("unrecognised severity");
-  });
-
-  it("fails on an unparseable file even when the category filter excludes it", async () => {
-    expect(reasonOf(await runWith("parse-error", ["lint"]))).toContain("was not checked");
   });
 
   it("fails when the output is not JSON", async () => {
