@@ -8,8 +8,14 @@ const PATHS = ["packages/trueup/src", "packages/trueup/test", "packages/trueup/b
 
 export default defineConfig({
   members: ["packages/*"],
-  zones: [{ name: "docs", patterns: ["apps/docs/**"] }],
-  boundaries: [{ from: "docs", allow: [] }],
+  zones: [
+    { name: "docs", patterns: ["apps/docs/**"] },
+    { name: "scripts", patterns: ["scripts/**"], role: "wiring" },
+  ],
+  boundaries: [
+    { from: "docs", allow: [] },
+    { from: "scripts", allow: [] },
+  ],
   externals: ["astro:*"],
   ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro", ".stryker-tmp"],
   command: "node ./packages/trueup/bin/trueup.js",

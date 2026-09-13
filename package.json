@@ -12,7 +12,9 @@
     "biome": "biome check --write --unsafe .",
     "test": "pnpm --filter trueup run test",
     "typecheck": "pnpm --filter trueup run typecheck",
-    "build": "pnpm --filter trueup run build"
+    "build": "pnpm --filter trueup run build",
+    "staged": "npm stage list @vismek-solutions/trueup",
+    "approve": "node ./scripts/approve-release.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.13",
