@@ -51,8 +51,13 @@ export interface ComparedBaselines {
 export function acceptanceOf({ next, previous, report }: ComparedBaselines): Acceptance {
   const key = keying(onePerFileIn(report));
   const had = new Set(previous.entries.map(key));
+  const has = new Set(next.entries.map(key));
 
-  return { added: next.entries.filter((entry) => !had.has(key(entry))), first: had.size === 0 };
+  return {
+    added: next.entries.filter((entry) => !had.has(key(entry))),
+    retired: previous.entries.filter((entry) => !has.has(key(entry))),
+    first: had.size === 0,
+  };
 }
 
 const stillReporting = (claims: readonly ClaimResult[], root: string): ReadonlySet<string> => {

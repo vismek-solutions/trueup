@@ -319,10 +319,10 @@ describe("adopting the ratchet from the command line", () => {
     expect(output).not.toContain("src/engine/runner.ts");
   });
 
-  it("says nothing is new when it accepts the list it already held", async () => {
+  it("says nothing changed when it accepts the list it already held", async () => {
     await runIn(["--update-baseline"]);
 
-    expect((await runIn(["--update-baseline"])).output).toContain("nothing new");
+    expect((await runIn(["--update-baseline"])).output).toContain("nothing changed");
   });
 
   it("fails on a violation the baseline never recorded, whatever else the baseline holds", async () => {

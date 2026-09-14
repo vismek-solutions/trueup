@@ -21,19 +21,34 @@ const byClaim = (entries: readonly BaselineEntry[]): Map<string, BaselineEntry[]
   return groups;
 };
 
-export function renderAcceptance({ total, path, added, first }: AcceptanceInput): string {
-  const head = `accepted ${plural(total, "finding")} into ${path}`;
-  if (added.length === 0) return `${head} · nothing new`;
+interface RowsInput {
+  readonly entries: readonly BaselineEntry[];
+  readonly word: string;
+  readonly width: number;
+  readonly detail: boolean;
+}
 
-  const groups = byClaim(added);
-  const width = Math.max(44, ...[...groups.keys()].map((claim) => claim.length + 2));
+const rowsFor = ({ entries, word, width, detail }: RowsInput): string[] =>
+  [...byClaim(entries)].flatMap(([claim, found]) => [
+    `${claim.padEnd(width)}${found.length} ${word}`,
+    ...(detail ? found.flatMap(entryLines) : []),
+  ]);
+
+export function renderAcceptance({ total, path, added, retired, first }: AcceptanceInput): string {
+  const head = `accepted ${plural(total, "finding")} into ${path}`;
+  const changed = [...added, ...retired];
+  if (changed.length === 0) return `${head} · nothing changed`;
+
+  const width = Math.max(44, ...changed.map((entry) => entry.claim.length + 2));
+  const counts = [
+    ...(added.length === 0 ? [] : [first ? "the first baseline" : `${added.length} new`]),
+    ...(retired.length === 0 ? [] : [`${retired.length} retired`]),
+  ];
 
   return [
-    `${head} · ${first ? "the first baseline" : `${added.length} new`}`,
+    `${head} · ${counts.join(" · ")}`,
     "",
-    ...[...groups].flatMap(([claim, entries]) => [
-      `${claim.padEnd(width)}${entries.length} new`,
-      ...(first ? [] : entries.flatMap(entryLines)),
-    ]),
+    ...rowsFor({ entries: added, word: "new", width, detail: !first }),
+    ...rowsFor({ entries: retired, word: "retired", width, detail: false }),
   ].join("\n");
 }

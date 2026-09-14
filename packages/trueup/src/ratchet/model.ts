@@ -9,5 +9,6 @@ export interface RatchetResult {
 
 export interface Acceptance {
   readonly added: readonly BaselineEntry[];
+  readonly retired: readonly BaselineEntry[];
   readonly first: boolean;
 }

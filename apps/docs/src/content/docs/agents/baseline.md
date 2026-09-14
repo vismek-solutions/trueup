@@ -41,12 +41,18 @@ every-import-respects-its-zone-boundary     1 new
 That list is what makes the commit reviewable. A baseline that grows is a decision to live with something new, and whoever reads the commit should be able to see what it was. When the run accepts only what the file already held, it says so in one line:
 
 ```
-accepted 2 findings into trueup.baseline.json · nothing new
+accepted 2 findings into trueup.baseline.json · nothing changed
 ```
 
 ## When you fix one
 
-If you fix a violation that was in the baseline, the run exits with code 2 and tells you to update the file. Nothing has gone wrong. The list has grown shorter, and the record needs to catch up.
+If you fix a violation that was in the baseline, the run exits with code 2 and tells you to update the file. Nothing has gone wrong. The list has grown shorter, and the record needs to catch up. The update says what it dropped, so a shrinking list is as visible in the commit as a growing one:
+
+```
+accepted 0 findings into trueup.baseline.json · 1 retired
+
+every-import-respects-its-zone-boundary     1 retired
+```
 
 Sometimes an entry stops matching and nothing was fixed. Upgrading the tool can change how a claim words a finding, and the message is part of what an entry remembers, so the old entry falls away while the same violation comes back under new words. The run tells the two apart for you. An entry saying the claim no longer reports on that file is a fix. One saying the claim still reports on that file in other words is not, and updating the baseline records the new wording rather than dropping anything.
 
