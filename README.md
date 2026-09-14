@@ -4,7 +4,7 @@ trueup keeps a TypeScript codebase in the shape you meant it to have, and stops 
 
 It reads your source files without running them, works out which file depends on which, and compares that against rules you wrote down. When something breaks a rule, it names the file, says what happened, and says what to do about it.
 
-[Read the guides](https://vismek-solutions.github.io/trueup/)
+[Read the guides](https://vismek-solutions.github.io/trueup/), or go straight to [the package on npm](https://www.npmjs.com/package/@vismek-solutions/trueup).
 
 ## It reads between files, not inside them
 
