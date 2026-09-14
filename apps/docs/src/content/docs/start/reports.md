@@ -226,6 +226,18 @@ npx trueup --help
 
 Suppose trueup had quietly ignored that flag and run the default check instead. It would tell you the project is clean, having done something other than what you asked. That is the same silence the completeness claims exist to prevent, so it gets its own exit code rather than being folded into a failed run.
 
+Two flags that each ask for a different report are refused the same way, rather than one of them winning quietly:
+
+```
+$ npx trueup --dots --json
+--dots and --json answer different questions, so give one of them
+
+trueup — checks that the code matches the architecture its rulebook describes
+
+usage: trueup [options]
+       trueup <command> [arguments]
+```
+
 ## Exit codes
 
 | code | meaning |

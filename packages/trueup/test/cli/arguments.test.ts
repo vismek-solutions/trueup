@@ -110,6 +110,17 @@ describe("choosing which claim to fix first", () => {
     expect(await codeFor(VIOLATING, "--next=bondary")).toBe(EXIT_ERRORS);
   });
 
+  it("refuses two report flags rather than answering one and dropping the other", async () => {
+    const said = await spoken(VIOLATING, "--dots", "--json");
+
+    expect(said[0]).toBe("--dots and --json answer different questions, so give one of them");
+    expect(await codeFor(VIOLATING, "--dots", "--json")).toBe(EXIT_BAD_USAGE);
+  });
+
+  it("counts the scoped and bare forms of a flag as the one report they are", async () => {
+    expect(await codeFor(VIOLATING, "--next", "--next=boundary")).toBe(EXIT_ERRORS);
+  });
+
   it("refuses a filter that named nothing, so a typo cannot pass as a clean run", async () => {
     expect(await codeFor(CLEAN, "--next=bondary")).toBe(EXIT_BAD_USAGE);
   });

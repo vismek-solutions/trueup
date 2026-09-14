@@ -19,6 +19,11 @@ const VALUED_FLAGS = ["--config=", "--next="];
 const unknownArgumentsIn = (argv: readonly string[], known: readonly string[]): readonly string[] =>
   argv.filter((entry) => !known.includes(entry) && !VALUED_FLAGS.some((flag) => entry.startsWith(flag)));
 
+const REPORTS = ["--dots", "--next", "--json", "--gitlab", "--update-baseline"];
+
+const reportsIn = (argv: readonly string[]): readonly string[] =>
+  REPORTS.filter((flag) => argv.some((entry) => entry === flag || entry.startsWith(`${flag}=`)));
+
 import {
   EXIT_BAD_RULEBOOK,
   EXIT_BAD_USAGE,
@@ -70,13 +75,23 @@ const presenterFor = ({ argv, rulebook, command, only }: Asked): Present => {
   return argv.includes("--dots") ? renderDots : render;
 };
 
-const usageIn = (argv: readonly string[], write: (line: string) => void): number | null => {
+const refusalIn = (argv: readonly string[]): string | null => {
   const unknown = unknownArgumentsIn(argv, REPORT_FLAGS);
-  const asked = argv.includes("--help") || argv.includes("-h");
-  if (!asked && unknown.length === 0) return null;
+  if (unknown.length > 0) return `unrecognised: ${unknown.join(" ")}`;
 
-  if (!asked) {
-    write(`unrecognised: ${unknown.join(" ")}`);
+  const reports = reportsIn(argv);
+  if (reports.length < 2) return null;
+
+  return `${reports.join(" and ")} answer different questions, so give one of them`;
+};
+
+const usageIn = (argv: readonly string[], write: (line: string) => void): number | null => {
+  const refused = refusalIn(argv);
+  const asked = argv.includes("--help") || argv.includes("-h");
+  if (!asked && refused === null) return null;
+
+  if (!asked && refused !== null) {
+    write(refused);
     write("");
   }
   for (const line of helpLines()) write(line);
