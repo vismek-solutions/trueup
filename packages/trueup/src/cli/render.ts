@@ -60,7 +60,7 @@ const headerOf = (report: Report, ratchet: RatchetSummary | undefined): string[]
     .join(" · ");
 
   return [
-    `coverage  ${coverage.files} files · ${coverage.edges} edges · ${coverage.symbolEdges} symbol · ${coverage.externalEdges} external · ${coverage.builtinEdges} builtin · ${coverage.unresolvedImports} unresolved`,
+    `coverage  ${coverage.files} files · ${coverage.edges} edges · ${coverage.symbolEdges} symbol · ${coverage.namespaceEdges} namespace · ${coverage.externalEdges} external · ${coverage.builtinEdges} builtin · ${coverage.unresolvedImports} unresolved`,
     `zones     ${zones || "none"} · ${coverage.unclassifiedFiles} unclassified`,
     ...(ratchet === undefined ? [] : [`baseline  ${ratchet.known} known · ${ratchet.stale} stale`]),
     ...(report.notices ?? []).map((notice) => `notice    ${notice}`),

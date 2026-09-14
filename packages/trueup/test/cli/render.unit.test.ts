@@ -23,7 +23,7 @@ describe("a claim whose name outgrows the column", () => {
   it("widens the column to fit it rather than truncating or colliding", () => {
     expect(render(WIDE, "/p")).toBe(
       [
-        "coverage  3 files · 2 edges · 2 symbol · 0 external · 0 builtin · 0 unresolved",
+        "coverage  3 files · 2 edges · 2 symbol · 0 namespace · 0 external · 0 builtin · 0 unresolved",
         "zones     app 2 · domain 1 · 0 unclassified",
         "",
         `${LONG}  2 errors`,
@@ -96,7 +96,7 @@ describe("the full report, to the character", () => {
   it("writes exactly this, so a dropped column or blank line is a failure", () => {
     expect(render(MIXED, "/p")).toBe(
       [
-        "coverage  3 files · 2 edges · 2 symbol · 0 external · 0 builtin · 0 unresolved",
+        "coverage  3 files · 2 edges · 2 symbol · 0 namespace · 0 external · 0 builtin · 0 unresolved",
         "zones     app 3 · 0 unclassified",
         "",
         "a-passing-claim                             ok",

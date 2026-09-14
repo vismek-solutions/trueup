@@ -124,7 +124,7 @@ An agent may then edit the rulebook and the baseline freely, in every permission
 So the report says so, on every run.
 
 ```
-coverage  1 files · 0 edges · 0 symbol · 0 external · 0 builtin · 0 unresolved
+coverage  1 files · 0 edges · 0 symbol · 0 namespace · 0 external · 0 builtin · 0 unresolved
 zones     all 1 · 0 unclassified
 notice    the rulebook is unguarded: an agent may edit this config and the baseline
 ```

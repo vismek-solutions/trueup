@@ -8,7 +8,7 @@ Every run prints a list of claims. A claim is one sentence trueup believes about
 Here is a run where one claim did not hold.
 
 ```
-coverage  898 files · 7524 edges · 5816 symbol · 1663 external · 41 builtin · 0 unresolved
+coverage  898 files · 7524 edges · 5816 symbol · 4 namespace · 1663 external · 41 builtin · 0 unresolved
 zones     spec 274 · domain 39 · engine 102 · app 483 · 0 unclassified
 
 the-analysis-reached-files                  ok
@@ -54,6 +54,7 @@ Each edge is counted by what it reaches.
 | | |
 |---|---|
 | `symbol` | a name declared in a file the run read |
+| `namespace` | a whole module, where the import named nothing inside it |
 | `external` | anything outside your source: a package, a stylesheet, an image |
 | `builtin` | a `node:` module |
 | `unresolved` | a specifier that pointed nowhere |

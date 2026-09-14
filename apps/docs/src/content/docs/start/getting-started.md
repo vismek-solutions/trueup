@@ -69,7 +69,7 @@ npx trueup
 ```
 
 ```
-coverage  9 files · 6 edges · 6 symbol · 0 external · 0 builtin · 0 unresolved
+coverage  9 files · 6 edges · 6 symbol · 0 namespace · 0 external · 0 builtin · 0 unresolved
 zones     spec 1 · components 2 · hooks 1 · api 1 · domain 1 · app 1 · server 1 · 1 unclassified
 
 the-analysis-reached-files                  ok
