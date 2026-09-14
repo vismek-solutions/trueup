@@ -251,6 +251,27 @@ describe("picking which problem to see first", () => {
     );
   });
 
+  it("takes the config key that turns a claim on, since the claim name never holds it", () => {
+    const seams = reportOf([
+      {
+        claim: "generic-code-names-no-domain-concept",
+        setting: "seams",
+        guidance: "Take the name from the domain rather than restating it.",
+        findings: [error("is components and names the value awaiting_payment", "/p/b.tsx")],
+      },
+    ]);
+
+    expect(renderNext(seams, "/p", { only: "seams" })).toContain("problem 1 of 1 in `seams`");
+  });
+
+  it("wants the whole key, so a fragment of one does not stand in for it", () => {
+    const seams = reportOf([
+      { claim: "generic-code-names-no-domain-concept", setting: "seams", guidance: "g", findings: [] },
+    ]);
+
+    expect(renderNext(seams, "/p", { only: "seam" })).toContain("no claim matches `seam`");
+  });
+
   it("says so loudly when the filter matches no claim, and names the ones there are", () => {
     expect(renderNext(COPIES, "/p", { only: "bondary" })).toBe(
       [

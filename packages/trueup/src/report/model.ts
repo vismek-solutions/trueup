@@ -16,6 +16,7 @@ export interface Finding {
 
 export interface ClaimResult {
   readonly claim: string;
+  readonly setting?: string | undefined;
   readonly guidance: string;
   readonly onePerFile?: boolean | undefined;
   readonly findings: readonly Finding[];

@@ -1,7 +1,7 @@
 import { relative } from "node:path";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
 import { messageLines, wrapped } from "../report/lines.ts";
-import type { Finding, Report } from "../report/model.ts";
+import type { ClaimResult, Finding, Report } from "../report/model.ts";
 import { locator, type Locate } from "./position.ts";
 
 const locate = (root: string, finding: Finding, at: Locate): string => {
@@ -126,6 +126,9 @@ const problemsIn = (report: Report, keep: (finding: Finding) => boolean): Proble
 
 const scopeOf = (only: string | undefined): string => (only === undefined ? "" : ` in \`${only}\``);
 
+const asked = (claim: ClaimResult, only: string): boolean =>
+  claim.claim.includes(only) || claim.setting === only;
+
 export interface NextInput {
   readonly ratchet?: RatchetSummary | undefined;
   readonly only?: string | undefined;
@@ -152,7 +155,7 @@ const blockFor = (problem: Problem, { root, tally, after = [] }: BlockInput): st
 
 export function renderNext(report: Report, root: string, options: NextInput = {}): string {
   const { ratchet, only, command = DEFAULT_COMMAND } = options;
-  const claims = only === undefined ? report.claims : report.claims.filter((c) => c.claim.includes(only));
+  const claims = only === undefined ? report.claims : report.claims.filter((c) => asked(c, only));
   const tally = tallyLine(report);
 
   if (claims.length === 0 && only !== undefined) {

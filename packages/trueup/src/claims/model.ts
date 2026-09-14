@@ -19,6 +19,7 @@ export interface Verdict {
 
 export interface Claim {
   readonly name: string;
+  readonly setting?: string | undefined;
   readonly onePerFile?: boolean | undefined;
   readonly check: (context: CheckContext) => Verdict;
 }

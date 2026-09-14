@@ -116,7 +116,7 @@ const HELP = [
   "options",
   "  --dots                  one mark per claim, with detail only for what failed",
   "  --next                  the first problem to fix, with the remedy for it",
-  "  --next=<claim>          the first problem from claims whose name contains <claim>",
+  "  --next=<claim>          the first problem from a claim <claim> names or turns on",
   "  --json                  the whole report as JSON",
   "  --gitlab                the report as a GitLab code quality artifact",
   "  --update-baseline       accept every finding standing now, so only new ones fail",

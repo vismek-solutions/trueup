@@ -193,6 +193,22 @@ const isolationClaims = (isolate: readonly IsolationRule[]): Claim[] =>
         ...(isolate.some((rule) => rule.wiring !== undefined) ? [loosePlacementClaim(isolate)] : []),
       ];
 
+const under = <T extends object>(setting: string, claims: readonly T[]): T[] =>
+  claims.map((claim) => ({ ...claim, setting }));
+
+const directoryClaims = (max: number | undefined, limits: readonly DirectoryLimit[]): Claim[] =>
+  max === undefined && limits.length === 0 ? [] : [directoryClaim(max ?? Number.POSITIVE_INFINITY, limits)];
+
+const duplicationClaims = (minSize: number | undefined, boundaries: readonly BoundaryRule[]): Claim[] =>
+  minSize === undefined ? [] : [duplicationClaim({ minSize, boundaries })];
+
+const internalsFor = (zones: readonly ZoneDefinition[]): Claim =>
+  testInternalsClaim({
+    testZones: namesOf(zones, "tests"),
+    apiZones: namesOf(zones, "api"),
+    wiringZones: namesOf(zones, "wiring"),
+  });
+
 const claimsFor = (options: CheckOptions): Claim[] => {
   const { zones, boundaries = [], seams = [], isolate = [], rules = [] } = options;
   const { maxFilesPerDirectory, directoryLimits = [], apiSurfaces = [], grants = [] } = options;
@@ -202,29 +218,19 @@ const claimsFor = (options: CheckOptions): Claim[] => {
   return [
     ...standardClaims,
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
-    boundaryClaim(boundaries),
-    seamClaim(seams),
+    ...under("boundaries", [boundaryClaim(boundaries)]),
+    ...under("seams", [seamClaim(seams)]),
     cycleClaim,
-    ...isolationClaims(isolate),
-    ...(apiSurfaces.length === 0 ? [] : [apiSurfaceClaim(apiSurfaces)]),
-    ...(grants.length === 0 ? [] : [grantClaim(grants)]),
-    ...(maxFilesPerDirectory === undefined && directoryLimits.length === 0
-      ? []
-      : [directoryClaim(maxFilesPerDirectory ?? Number.POSITIVE_INFINITY, directoryLimits)]),
-    ...(duplication === undefined ? [] : [duplicationClaim({ minSize: duplication, boundaries })]),
-    ...(reviewable === undefined ? [] : [reviewClaim(reviewable, changes)]),
-    ...(colocation ? placementClaims(zones) : []),
-    ...(readerships ? [readershipClaim(roleZonesIn(zones))] : []),
-    ...(testInternals
-      ? [
-          testInternalsClaim({
-            testZones: namesOf(zones, "tests"),
-            apiZones: namesOf(zones, "api"),
-            wiringZones: namesOf(zones, "wiring"),
-          }),
-        ]
-      : []),
-    ...customClaims(rules),
+    ...under("isolate", isolationClaims(isolate)),
+    ...under("members", apiSurfaces.length === 0 ? [] : [apiSurfaceClaim(apiSurfaces)]),
+    ...under("members", grants.length === 0 ? [] : [grantClaim(grants)]),
+    ...under("maxFilesPerDirectory", directoryClaims(maxFilesPerDirectory, directoryLimits)),
+    ...under("duplication", duplicationClaims(duplication, boundaries)),
+    ...under("reviewable", reviewable === undefined ? [] : [reviewClaim(reviewable, changes)]),
+    ...under("colocation", colocation ? placementClaims(zones) : []),
+    ...under("readerships", readerships ? [readershipClaim(roleZonesIn(zones))] : []),
+    ...under("testInternals", testInternals ? [internalsFor(zones)] : []),
+    ...under("rules", customClaims(rules)),
   ];
 };
 
@@ -235,7 +241,7 @@ export async function check(options: CheckOptions): Promise<Report> {
   const report = runClaims(claimsFor(options), { root, graph, zones, lexicon, project });
 
   return {
-    claims: withoutDuplicates([...report.claims, ...(await delegated)]),
+    claims: withoutDuplicates([...report.claims, ...under("runners", await delegated)]),
     coverage: report.coverage,
   };
 }
