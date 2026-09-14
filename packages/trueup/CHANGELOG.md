@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-The first stable release. The command line, the rulebook keys, the claim names and the exit codes stay as they are until the first number moves again.
-
 ### Fixed
 
 - The explain command called with no path exits 4, an argument it does not know. It exited 3, which means no rulebook found.
