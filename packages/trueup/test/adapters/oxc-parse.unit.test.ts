@@ -53,9 +53,9 @@ describe("what an import statement binds", () => {
 });
 
 describe("what an import awaited at runtime binds", () => {
-  it("binds the whole module, because the call names a module and no name inside it", () => {
+  it("binds the whole module under no local name, since the call gives it none", () => {
     expect(importsIn('const late = import("./a.ts");\n')).toEqual([
-      { specifier: "./a.ts", start: 13, bindings: [{ imported: "*", local: "*", kind: "value", start: 20 }] },
+      { specifier: "./a.ts", start: 13, bindings: [{ imported: "*", local: "", kind: "value", start: 20 }] },
     ]);
   });
 

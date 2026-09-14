@@ -115,7 +115,7 @@ const lazyOf = (record: DynamicRecord, text: string): ImportStatement[] => {
   const specifier = literalIn(text.slice(start, record.moduleRequest.end));
   if (specifier === null) return [];
 
-  const binding: ImportBinding = { imported: NAMESPACE, local: NAMESPACE, kind: "value", start };
+  const binding: ImportBinding = { imported: NAMESPACE, local: "", kind: "value", start };
   return [{ specifier, start: record.start, bindings: [binding] }];
 };
 
