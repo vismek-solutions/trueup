@@ -209,9 +209,9 @@ describe("explaining a path before writing it", () => {
     expect(output).toContain("zone        engine");
   });
 
-  it("asks for a path when given none", async () => {
+  it("refuses a missing path as bad usage rather than as a missing rulebook", async () => {
     const { code, output } = await explain();
-    expect(code).toBe(3);
+    expect(code).toBe(EXIT_BAD_USAGE);
     expect(output).toContain("usage");
   });
 

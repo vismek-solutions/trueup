@@ -243,7 +243,7 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
   const target = argv[0];
   if (target === undefined) {
     for (const line of USAGE) write(line);
-    return 3;
+    return EXIT_BAD_USAGE;
   }
 
   return target.includes("#") ? nameFor(cwd, target, write) : pathFor(cwd, target, write);
