@@ -5,6 +5,7 @@
 ### Added
 
 - The github flag writes the report as SARIF, the format GitHub code scanning reads, so a finding lands on the line that caused it in a pull request. The remedy travels as the rule's help text, and a violation the baseline already accepted arrives as a warning rather than an error. A clean run still writes a run with no results, which is what closes the alerts a branch fixed.
+- The npm page links to the guides and to the issue tracker, through homepage and bugs fields in the manifest.
 
 ### Changed
 

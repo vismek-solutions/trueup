@@ -16,6 +16,8 @@
     "url": "git+https://github.com/vismek-solutions/trueup.git",
     "directory": "packages/trueup"
   },
+  "homepage": "https://vismek-solutions.github.io/trueup/",
+  "bugs": "https://github.com/vismek-solutions/trueup/issues",
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
