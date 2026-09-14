@@ -1,10 +1,14 @@
 # trueup
 
+[![build](https://github.com/vismek-solutions/trueup/actions/workflows/build.yml/badge.svg)](https://github.com/vismek-solutions/trueup/actions/workflows/build.yml)
+[![npm](https://img.shields.io/npm/v/%40vismek-solutions%2Ftrueup)](https://www.npmjs.com/package/@vismek-solutions/trueup)
+[![node](https://img.shields.io/node/v/%40vismek-solutions%2Ftrueup)](https://nodejs.org)
+
 trueup keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing that shape.
 
 It reads your source files without running them, works out which file depends on which, and compares that against rules you wrote down. When something breaks a rule, it names the file, says what happened, and says what to do about it.
 
-[Read the guides](https://vismek-solutions.github.io/trueup/), or go straight to [the package on npm](https://www.npmjs.com/package/@vismek-solutions/trueup).
+[Read the guides](https://vismek-solutions.github.io/trueup/).
 
 ## It reads between files, not inside them
 
