@@ -28,6 +28,21 @@ describe("handing the whole report to another program", () => {
   it("carries the coverage counts, so a shrunken graph is visible in the machine form too", async () => {
     expect((await parsed()).coverage.files).toBeGreaterThan(0);
   });
+
+  it("carries a remedy only where something needs remedying, so a clean claim costs a line", async () => {
+    const idle = (await parsed()).claims.filter(
+      (claim) => claim.findings.length === 0 && claim.guidance !== undefined,
+    );
+
+    expect(idle).toEqual([]);
+  });
+
+  it("still carries the remedy for a claim that found something", async () => {
+    const failed = (await parsed()).claims.filter((claim) => claim.findings.length > 0);
+
+    expect(failed.length).toBeGreaterThan(0);
+    expect(failed.every((claim) => (claim.guidance ?? "") !== "")).toBe(true);
+  });
 });
 
 describe("being told which rulebook to read", () => {

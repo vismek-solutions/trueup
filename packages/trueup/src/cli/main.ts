@@ -5,7 +5,7 @@ import { findConfig, resolveInclude } from "../config/load.ts";
 import { rulebookGuarded } from "../guard/protected.ts";
 import { acceptanceOf, applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
-import { countOf, type Report } from "../report/model.ts";
+import { type ClaimResult, countOf, type Report } from "../report/model.ts";
 import { renderAcceptance } from "./acceptance.ts";
 import { renderGitlab } from "./gitlab.ts";
 import { helpLines } from "./help.ts";
@@ -36,8 +36,16 @@ const claimFilterIn = (argv: readonly string[]): string | undefined => {
   return named === "" ? undefined : named;
 };
 
+type Reported = Omit<ClaimResult, "guidance"> & { readonly guidance?: string };
+
+const reported = ({ guidance, ...rest }: ClaimResult): Reported =>
+  rest.findings.length === 0 ? rest : { ...rest, guidance };
+
+const asJson = (report: Report): string =>
+  JSON.stringify({ ...report, claims: report.claims.map(reported) }, null, 2);
+
 const presenterFor = (argv: readonly string[], rulebook: string, command: string): Present => {
-  if (argv.includes("--json")) return (report) => JSON.stringify(report, null, 2);
+  if (argv.includes("--json")) return asJson;
   if (argv.includes("--gitlab")) return (report, root) => renderGitlab(report, root, rulebook);
 
   const only = claimFilterIn(argv);

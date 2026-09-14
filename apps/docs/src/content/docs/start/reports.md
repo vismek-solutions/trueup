@@ -132,7 +132,7 @@ Run it, fix what it shows, run it again. When the errors are gone it tells you t
 npx trueup --json
 ```
 
-The whole report, claims in the order they ran, each with its guidance and its findings.
+The whole report, claims in the order they ran, each with its findings. A claim that found nothing carries no guidance, because the remedy is written for a violation that is not there.
 
 ```json
 {
