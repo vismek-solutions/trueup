@@ -1,4 +1,4 @@
-import type { BoundaryRule } from "../claims/boundary.ts";
+import type { BoundaryRule, RefusalNotes } from "../claims/boundary.ts";
 import type { Rule } from "../claims/custom.ts";
 import type { IsolationRule } from "../claims/isolation/siblings.ts";
 import type { ApiSurface } from "../claims/members/api-surface.ts";
@@ -58,6 +58,7 @@ export type ResolvedConfig = ArchitectureConfig & {
   readonly directoryLimits: readonly DirectoryLimit[];
   readonly apiSurfaces: readonly ApiSurface[];
   readonly grants: readonly MemberGrants[];
+  readonly doorNotes: RefusalNotes;
 };
 
 export const defineConfig = (config: ArchitectureConfig): ArchitectureConfig => config;

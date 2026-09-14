@@ -47,7 +47,18 @@ interface BreachInput {
   readonly fromZone: string;
 }
 
-const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput): Finding | null => {
+export interface Refusal {
+  readonly from: string;
+  readonly to: string;
+}
+
+export type RefusalNotes = (refused: readonly Refusal[]) => readonly string[];
+
+interface Breach extends Refusal {
+  readonly finding: Finding;
+}
+
+const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput): Breach | null => {
   if (rule.ignoreTypeOnly === true && edge.kind === "type") return null;
 
   const anchored = rule.anchor === "imported-module" ? edge.via : targetPathOf(edge.to);
@@ -64,11 +75,15 @@ const breachOf = (edge: SymbolImportEdge, rule: BoundaryRule, input: BreachInput
       : `${relative(root, anchored)} through ${relative(root, edge.via)}`;
 
   return {
-    severity: "error",
-    message: `is ${fromZone} and may not reach ${targetZone}: ${edge.imported} from ${reached}`,
-    file: edge.from,
-    start: edge.start,
-    symbols: [edge.imported],
+    from: fromZone,
+    to: targetZone,
+    finding: {
+      severity: "error",
+      message: `is ${fromZone} and may not reach ${targetZone}: ${edge.imported} from ${reached}`,
+      file: edge.from,
+      start: edge.start,
+      symbols: [edge.imported],
+    },
   };
 };
 
@@ -84,34 +99,42 @@ const rulesByOrigin = (rules: readonly BoundaryRule[]): ReadonlyMap<string, Boun
   return byOrigin;
 };
 
-export function boundaryClaim(rules: readonly BoundaryRule[]): Claim {
+const CAUSE =
+  "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.";
+
+const REMEDY = [
+  "Do this:",
+  "- Move the code to a zone that may reach the target.",
+  "- Or have the target expose what the caller needs through a zone the caller may reach.",
+  "- Run `{trueup} explain <file>` to see what a file may reach.",
+  "",
+  "Not the fix: widening the rule so the edge becomes legal.",
+];
+
+const guidanceFor = (notes: readonly string[]): string =>
+  [CAUSE, ...notes.flatMap((note) => ["", note]), "", ...REMEDY].join("\n");
+
+export function boundaryClaim(rules: readonly BoundaryRule[], notes?: RefusalNotes): Claim {
   return {
     name: "every-import-respects-its-zone-boundary",
     check: ({ root, graph, zones }) => {
       const byOrigin = rulesByOrigin(rules);
       const zoneOf = (path: string): string | null => zones.zoneOf(path);
 
+      const breaches = graph.edges.flatMap((edge) => {
+        const fromZone = zoneOf(edge.from);
+        if (fromZone === null) return [];
+
+        const breach = (byOrigin.get(fromZone) ?? [])
+          .map((rule) => breachOf(edge, rule, { root, zoneOf, fromZone }))
+          .find((found): found is Breach => found !== null);
+
+        return breach === undefined ? [] : [breach];
+      });
+
       return {
-        findings: graph.edges.flatMap((edge) => {
-          const fromZone = zoneOf(edge.from);
-          if (fromZone === null) return [];
-
-          const breach = (byOrigin.get(fromZone) ?? [])
-            .map((rule) => breachOf(edge, rule, { root, zoneOf, fromZone }))
-            .find((finding): finding is Finding => finding !== null);
-
-          return breach === undefined ? [] : [breach];
-        }),
-        guidance: [
-          "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.",
-          "",
-          "Do this:",
-          "- Move the code to a zone that may reach the target.",
-          "- Or have the target expose what the caller needs through a zone the caller may reach.",
-          "- Run `{trueup} explain <file>` to see what a file may reach.",
-          "",
-          "Not the fix: widening the rule so the edge becomes legal.",
-        ].join("\n"),
+        findings: breaches.map((breach) => breach.finding),
+        guidance: guidanceFor(notes === undefined ? [] : notes(breaches)),
       };
     },
   };

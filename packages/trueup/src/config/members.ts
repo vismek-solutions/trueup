@@ -190,10 +190,10 @@ export const assertReachable = (members: readonly Member[]): void => {
   }
 };
 
-const namesOf = (member: Member): readonly string[] =>
+export const namesOf = (member: Member): readonly string[] =>
   member.config.zones.map((zone) => qualified(member, zone.name));
 
-const doorsOf = (member: Member): readonly string[] => {
+export const doorsOf = (member: Member): readonly string[] => {
   const doors = member.config.zones.filter((zone) => zone.role === "api");
   return doors.length === 0 ? namesOf(member) : doors.map((zone) => qualified(member, zone.name));
 };

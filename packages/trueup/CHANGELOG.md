@@ -22,6 +22,7 @@ The first stable release. The command line, the rulebook keys, the claim names a
 ### Changed
 
 - The list shown when a next filter names no claim gives each claim the config key that turns it on.
+- The remedy printed with a boundary finding names the api zone that closed the target, when the import crossed from one package to another. It described the refusal without naming the door.
 
 ## 0.1.0
 

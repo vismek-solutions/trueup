@@ -74,6 +74,15 @@ export default defineMember({
 
 A subpath pointing at build output is skipped, because init only writes a door onto a file it actually found in the tree.
 
+A package with no api zone has no door, so a grant opens all of it. Declaring the first one is therefore not a local edit. Everything else in that package closes at the same moment, and any package that was reaching past it starts failing:
+
+```
+every-import-respects-its-zone-boundary  1 error
+    packages/app/src/spec.ts:1:10  is app/specs and may not reach lib/routes: home from packages/lib/src/routes/home.ts
+```
+
+That is what a door is for, and it is worth knowing before you add one to a package others already import. The errors land in their files rather than in the rulebook you edited, so the cause and the effect sit in different packages. The remedy printed under the finding names the door, because the rule that refused the import came from the package on the other side.
+
 ## The workspace file is read once
 
 After that, the workspace file is never read again. The members list is not derived from it when a check runs, because the two lists are allowed to disagree. A docs app can be a workspace package and still be governed by a zone in the root config instead of being a member. What init writes is a draft, and it is yours.

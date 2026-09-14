@@ -130,6 +130,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     directoryLimits: config.directoryLimits,
     apiSurfaces: config.apiSurfaces,
     grants: config.grants,
+    doorNotes: config.doorNotes,
     duplication: config.duplication,
     reviewable: config.reviewable,
     changes: config.changes,

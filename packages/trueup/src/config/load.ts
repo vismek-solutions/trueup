@@ -1,6 +1,7 @@
 import { dirname, isAbsolute, join, parse, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { toPosix } from "../paths/posix.ts";
+import { doorNotes } from "./doors.ts";
 import { withDerivedDoors } from "./exports.ts";
 import { strayKeysIn, type ConfigKind } from "./keys.ts";
 import {
@@ -122,6 +123,7 @@ const withMembers = (
     directoryLimits: directoryLimitsOf(members, root),
     apiSurfaces: apiSurfaces(members, root),
     grants: grantsOf(members, root),
+    doorNotes: doorNotes(members),
   };
 };
 

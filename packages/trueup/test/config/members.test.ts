@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { runGuard } from "../../src/cli/guard.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import { memberDirectories } from "../../src/config/members.ts";
-import { check } from "../../src/compose.ts";
+import { check, type Overlay } from "../../src/compose.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
-import { messagesIn } from "../support/report.ts";
+import { claimIn, messagesIn } from "../support/report.ts";
 
 const ROOT = fixtureAt("federated");
 const CONFIG = join(ROOT, "trueup.config.ts");
@@ -14,11 +14,18 @@ const BOUNDARY = "every-import-respects-its-zone-boundary";
 
 const loaded = () => loadConfig(CONFIG);
 
-const reportOf = async (): Promise<Report> => {
+const reportOf = async (overlay?: Overlay): Promise<Report> => {
   const { config, root, memberConfigs } = await loaded();
   const roots = resolveInclude(root, config.include);
-  return await check({ root, roots, ignoreFiles: [CONFIG, ...memberConfigs], ...config });
+  return await check({ root, roots, ignoreFiles: [CONFIG, ...memberConfigs], ...config, overlay });
 };
+
+const REACHES_ENGINE: Overlay = new Map([
+  [
+    join(ROOT, "packages/lib/src/domain/thing.ts"),
+    'import { run } from "../engine/run.ts";\n\nexport const thing = run();\n',
+  ],
+]);
 
 const breaches = async (): Promise<readonly string[]> => messagesIn(await reportOf(), BOUNDARY);
 
@@ -96,6 +103,25 @@ describe("what one member may reach in another", () => {
   });
 });
 
+describe("why a member refused an import", () => {
+  const guidance = async (overlay?: Overlay): Promise<string> =>
+    claimIn(await reportOf(overlay), BOUNDARY)?.guidance ?? "";
+
+  it("names the door standing in front of the zone the import reached", async () => {
+    expect(await guidance()).toContain(
+      "lib has an api zone, so every other package reaches it through lib/api and nowhere else. That closes lib/domain.",
+    );
+  });
+
+  it("stays quiet about a member with no door, where the refusal was the missing invitation", async () => {
+    expect(await guidance()).not.toContain("ui has an api zone");
+  });
+
+  it("stays quiet when the refusal stayed inside one member, whose own zones are open to it", async () => {
+    expect(await guidance(REACHES_ENGINE)).not.toContain("lib/engine");
+  });
+});
+
 describe("naming a member that is not there", () => {
   const rulebookIn = (fixture: string): string => join(fixtureAt(fixture), "trueup.config.ts");
 
@@ -126,19 +152,8 @@ describe("what a member says about itself", () => {
   });
 
   it("is enforced like any other boundary", async () => {
-    const { config, root, memberConfigs } = await loaded();
-    const report = await check({
-      root,
-      roots: resolveInclude(root, config.include),
-      ignoreFiles: [CONFIG, ...memberConfigs],
-      ...config,
-      overlay: new Map([
-        [
-          join(ROOT, "packages/lib/src/domain/thing.ts"),
-          'import { run } from "../engine/run.ts";\n\nexport const thing = run();\n',
-        ],
-      ]),
-    });
+    const report = await reportOf(REACHES_ENGINE);
+
     expect(messagesIn(report, BOUNDARY)).toContain(
       "is lib/domain and may not reach lib/engine: run from packages/lib/src/engine/run.ts",
     );

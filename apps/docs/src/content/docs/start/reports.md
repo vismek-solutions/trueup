@@ -176,7 +176,7 @@ The same findings in GitLab's Code Quality format, which puts each one on its li
 ```json
 [
   {
-    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.\n\nDo this:\n- Move the code to a zone that may reach the target. …",
+    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.\n\nlib has an api zone, so every other package reaches it through lib/api and nowhere else. That closes lib/domain.\n\nDo this:\n- Move the code to a zone that may reach the target. …",
     "check_name": "every-import-respects-its-zone-boundary",
     "fingerprint": "a6336074136ec154dc9fcaa5bf72dacab993d46e2b1fe6d2ad64dd52a09be576",
     "severity": "major",

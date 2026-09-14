@@ -9,6 +9,7 @@ import {
   reachedBy,
   sharedHomes,
   type BoundaryRule,
+  type RefusalNotes,
 } from "./claims/boundary.ts";
 import { completenessClaims } from "./claims/completeness.ts";
 import { colocationClaim } from "./claims/placement/colocation.ts";
@@ -160,6 +161,7 @@ export interface CheckOptions extends Settings {
   readonly directoryLimits?: readonly DirectoryLimit[] | undefined;
   readonly apiSurfaces?: readonly ApiSurface[] | undefined;
   readonly grants?: readonly MemberGrants[] | undefined;
+  readonly doorNotes?: RefusalNotes | undefined;
   readonly overlay?: Overlay | undefined;
   readonly ignoreFiles?: readonly string[] | undefined;
 }
@@ -211,14 +213,14 @@ const internalsFor = (zones: readonly ZoneDefinition[]): Claim =>
 
 const claimsFor = (options: CheckOptions): Claim[] => {
   const { zones, boundaries = [], seams = [], isolate = [], rules = [] } = options;
-  const { maxFilesPerDirectory, directoryLimits = [], apiSurfaces = [], grants = [] } = options;
+  const { maxFilesPerDirectory, directoryLimits = [], apiSurfaces = [], grants = [], doorNotes } = options;
   const { duplication, reviewable, colocation, readerships, testInternals } = options;
   const { changes = gitChanges() } = options;
 
   return [
     ...standardClaims,
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
-    ...under("boundaries", boundaries.length === 0 ? [] : [boundaryClaim(boundaries)]),
+    ...under("boundaries", boundaries.length === 0 ? [] : [boundaryClaim(boundaries, doorNotes)]),
     ...under("seams", seams.length === 0 ? [] : [seamClaim(seams)]),
     cycleClaim,
     ...under("isolate", isolationClaims(isolate)),
