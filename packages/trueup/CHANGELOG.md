@@ -10,6 +10,7 @@
 - The boundary claim and the seam claim run only when `boundaries` or `seams` is set, as the guides already said. Both ran on every project and reported a pass on rules nobody had written.
 - Two flags asking for different reports are refused with exit 4. One of them won quietly and the other was dropped.
 - Accepting a baseline reports the entries it dropped as well as the ones it took. A run that only dropped entries said nothing new.
+- An export that production reaches through a lazy import is no longer reported as one only tests use. The import names the module rather than a name inside it, so nothing in it says the tests are the only readers.
 - A zone whose rule allows every other zone is no longer described as one no rule constrains. That line is how an unguarded zone is spotted, so it has to mean what it says.
 - A claim name given to the docs command prints the page that explains that claim. It printed a list of every page mentioning the name and asked for one of them. Each guide names the claims it explains under `claims` in its frontmatter.
 

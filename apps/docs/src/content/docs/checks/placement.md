@@ -132,6 +132,8 @@ The fix is to test the behaviour through the surface that production code actual
 
 A helper that genuinely exists to serve tests belongs in the tests zone. On that same monorepo, putting the fixture files in that zone removed a quarter of this check's findings. Fixtures are test code, and zoning them as such is the honest fix, rather than an exception inside the rule.
 
+An export is left alone where production reaches the whole module it sits in rather than a name inside it, which is what a lazy import does. Nothing in that reach says which export is taken, so the tests cannot be called the only ones taking it.
+
 :::caution
 One fix here we would ask you to avoid: adding a caller in production code so the export has a real consumer. That satisfies the check and leaves the codebase worse than the finding did. The guidance printed with the finding says so too.
 :::

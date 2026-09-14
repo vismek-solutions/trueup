@@ -116,6 +116,23 @@ describe("an export that exists only for its test", () => {
   });
 });
 
+describe("an export reached by a lazy import", () => {
+  const lazyReport = (): Promise<Report> =>
+    check({
+      root: fixtureAt("lazy-reader"),
+      colocation: true,
+      zones: [
+        { name: "spec", patterns: ["src/spec/**"], role: "tests" },
+        { name: "app", patterns: ["src/app/**"] },
+        { name: "view", patterns: ["src/view/**"] },
+      ],
+    });
+
+  it("is not an export only tests use, since production reaches the module it sits in", async () => {
+    expect(claimIn(await lazyReport(), TEST_ONLY)?.findings).toEqual([]);
+  });
+});
+
 describe("what the shared fixture reports, in full", () => {
   it("carries a branch for every shape standing in the report", async () => {
     const guidance = claimIn(await sharedReport(), CLAIM)?.guidance ?? "";

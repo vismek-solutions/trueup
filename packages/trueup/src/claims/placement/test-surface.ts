@@ -70,6 +70,14 @@ export interface TestOnlyExportInput {
   readonly apiZones: readonly string[];
 }
 
+const readWhole = (project: Project, tests: ReadonlySet<string>): ReadonlySet<string> =>
+  new Set(
+    project
+      .imports()
+      .filter((edge) => edge.target.kind === "namespace" && !tests.has(edge.fromZone ?? ""))
+      .flatMap((edge) => (edge.declaredIn === null ? [] : [edge.declaredIn])),
+  );
+
 export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput): Claim {
   const tests = new Set(testZones);
 
@@ -77,9 +85,11 @@ export function testOnlyExportClaim({ testZones, apiZones }: TestOnlyExportInput
     name: "no-export-exists-only-for-a-test",
     check: ({ project }) => {
       const published = publishedBy(project, apiZones);
+      const whole = readWhole(project, tests);
 
       const findings: readonly Finding[] = everyConsumer(project.imports())
         .filter((reach) => !tests.has(reach.declaredZone) && !published.has(reach.symbol))
+        .filter((reach) => !whole.has(reach.declaredIn))
         .filter((reach) => [...reach.zones].every((zone) => tests.has(zone)))
         .map((reach) => ({
           severity: "error" as const,
