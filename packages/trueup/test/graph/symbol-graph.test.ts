@@ -76,6 +76,22 @@ describe("re-export chains", () => {
   });
 });
 
+describe("an import awaited at runtime", () => {
+  const graph = graphOf("lazy");
+
+  it("reaches the module it named, since nothing says which of its exports is used", () => {
+    expect(targetOf(graph, "start.ts", "*")).toEqual({
+      kind: "namespace",
+      path: join(FIXTURES, "lazy/engine/run.ts"),
+    });
+  });
+
+  it("leaves a specifier built at runtime alone, rather than guessing a path from it", () => {
+    expect(graph.edges).toHaveLength(1);
+    expect(graph.unresolvedImports).toEqual([]);
+  });
+});
+
 describe("degraded input", () => {
   it("reports the same name reached through two star re-exports as ambiguous", () => {
     const target = targetOf(graphOf("ambiguous"), "consumer.ts", "shared");

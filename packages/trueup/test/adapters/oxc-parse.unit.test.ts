@@ -52,6 +52,36 @@ describe("what an import statement binds", () => {
   });
 });
 
+describe("what an import awaited at runtime binds", () => {
+  it("binds the whole module, because the call names a module and no name inside it", () => {
+    expect(importsIn('const late = import("./a.ts");\n')).toEqual([
+      { specifier: "./a.ts", start: 13, bindings: [{ imported: "*", local: "*", kind: "value", start: 20 }] },
+    ]);
+  });
+
+  it("reads a specifier written in backticks, which is a literal path like any other", () => {
+    expect(importsIn("const late = import(`./a.ts`);\n")[0]?.specifier).toBe("./a.ts");
+  });
+
+  it("skips a specifier the program fills in as it runs, rather than guessing a path", () => {
+    expect(importsIn(`const late = (name: string) => import(\`./\${name}.ts\`);\n`)).toEqual([]);
+  });
+
+  it("skips a specifier joined from pieces, which starts and ends with a quote like a path does", () => {
+    expect(importsIn('const late = (name: string) => import("./" + name + ".ts");\n')).toEqual([]);
+  });
+
+  it("skips an import written in a type position, which loads nothing at runtime", () => {
+    expect(importsIn('type Shape = import("./a.ts").Shape;\n')).toEqual([]);
+  });
+
+  it("returns the statements in the order the file writes them", () => {
+    const source = 'const late = import("./b.ts");\nimport { one } from "./a.ts";\n';
+
+    expect(importsIn(source).map((statement) => statement.specifier)).toEqual(["./b.ts", "./a.ts"]);
+  });
+});
+
 describe("what an export statement publishes", () => {
   it("reads a local export, keeping the name it was declared under", () => {
     expect(exportsIn("const local = 1;\nexport { local as renamed };\n")).toEqual([

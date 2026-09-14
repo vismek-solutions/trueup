@@ -21,6 +21,7 @@ interface AstNode {
 
 type Module = ReturnType<typeof parseSync>["module"];
 type ImportRecord = Module["staticImports"][number];
+type DynamicRecord = Module["dynamicImports"][number];
 type ExportRecord = Module["staticExports"][number]["entries"][number];
 
 const SKIPPED_SUBTREES = new Set(["ImportDeclaration", "ExportAllDeclaration", "TSImportType"]);
@@ -102,6 +103,20 @@ const statementOf = (statement: ImportRecord): ImportStatement => {
   }));
 
   return { specifier: statement.moduleRequest.value, start: statement.start, bindings };
+};
+
+const QUOTED = /^(['"])([^'"]*)\1$/;
+const TEMPLATE = /^`([^`$]*)`$/;
+
+const literalIn = (raw: string): string | null => QUOTED.exec(raw)?.[2] ?? TEMPLATE.exec(raw)?.[1] ?? null;
+
+const lazyOf = (record: DynamicRecord, text: string): ImportStatement[] => {
+  const start = record.moduleRequest.start;
+  const specifier = literalIn(text.slice(start, record.moduleRequest.end));
+  if (specifier === null) return [];
+
+  const binding: ImportBinding = { imported: NAMESPACE, local: NAMESPACE, kind: "value", start };
+  return [{ specifier, start: record.start, bindings: [binding] }];
 };
 
 const exportEntryOf = (entry: ExportRecord): ExportEntry | null => {
@@ -209,10 +224,10 @@ export const parseModule: ParseModule = (path, text): ModuleRecord => {
     .flatMap((statement) => statement.entries.map(exportEntryOf))
     .filter((entry): entry is ExportEntry => entry !== null);
 
-  return {
-    path,
-    imports: module.staticImports.map(statementOf),
-    exports,
-    esm: module.hasModuleSyntax,
-  };
+  const imports = [
+    ...module.staticImports.map(statementOf),
+    ...module.dynamicImports.flatMap((record) => lazyOf(record, text)),
+  ].sort((left, right) => left.start - right.start);
+
+  return { path, imports, exports, esm: module.hasModuleSyntax };
 };

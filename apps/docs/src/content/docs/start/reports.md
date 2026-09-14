@@ -45,6 +45,10 @@ An edge is one name imported by one file. So this line is two edges rather than 
 import { a, b } from "./x"
 ```
 
+An import that names nothing inside a module is one edge onto the module itself. A namespace import works that way, and so does an import awaited while the program runs, because neither one says which export it will use.
+
+A specifier the program builds as it runs names no file, so nothing about it can be checked.
+
 Each edge is counted by what it reaches.
 
 | | |

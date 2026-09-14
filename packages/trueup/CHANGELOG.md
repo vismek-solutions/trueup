@@ -18,6 +18,7 @@ The first stable release. The command line, the rulebook keys, the claim names a
 
 - The next flag takes the config key that turns a claim on, so `--next=seams`, `--next=duplication` and `--next=colocation` each reach their claim. A fragment of a claim name still works as before.
 - The npm page links back to the source, through a repository field in the manifest.
+- An import awaited while the program runs is an edge onto the module it names, so the boundary, cycle and isolation claims judge it. It was invisible. A specifier the program builds as it runs is still not followed.
 
 ### Changed
 
