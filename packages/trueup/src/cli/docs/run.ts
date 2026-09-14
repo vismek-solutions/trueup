@@ -14,7 +14,10 @@ const matching = (pages: readonly Page[], term: string): readonly Page[] => {
   if (titled.length > 0) return titled;
 
   const named = pages.filter((page) => page.key.includes(term));
-  return named.length > 0 ? named : pages.filter((page) => page.body.includes(term));
+  if (named.length > 0) return named;
+
+  const claimed = pages.filter((page) => page.claims.includes(term));
+  return claimed.length > 0 ? claimed : pages.filter((page) => page.body.includes(term));
 };
 
 const listed = (pages: readonly Page[], write: (line: string) => void): void => {

@@ -1,6 +1,8 @@
 ---
 title: The same thing written twice
 description: The one check here that looks for an import which should exist and does not.
+claims:
+  - no-declaration-is-written-twice
 ---
 
 ```ts

@@ -1,6 +1,9 @@
 ---
 title: Boundaries
 description: A boundary says which zones a zone may reach, anchored on the file where a name is really written.
+claims:
+  - every-import-respects-its-zone-boundary
+  - no-zones-form-a-cycle
 ---
 
 A boundary is a note saying which zones a zone is allowed to reach. A zone, in case you have arrived here first, is a name you give to a group of files, chosen by where the files sit.

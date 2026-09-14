@@ -1,6 +1,12 @@
 ---
 title: Placement
 description: Where a file belongs, judged by who uses it, and when a directory has turned into a drawer.
+claims:
+  - no-directory-holds-too-many-files
+  - no-value-is-declared-away-from-its-only-consumer
+  - no-export-exists-only-for-a-test
+  - no-file-serves-two-readerships
+  - no-test-reaches-an-internal
 ---
 
 A zone is a name you give to a group of files, chosen by where the files sit. A boundary is a note saying which zones a zone is allowed to reach.

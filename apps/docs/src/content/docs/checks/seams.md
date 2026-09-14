@@ -1,6 +1,8 @@
 ---
 title: Seams
 description: Domain knowledge that leaks into reusable code with no import to show it.
+claims:
+  - generic-code-names-no-domain-concept
 ---
 
 Some of your code is meant to be reused anywhere. Other code knows your business. The line between the two is a seam.

@@ -1,6 +1,8 @@
 ---
 title: Keeping the linter you already have
 description: trueup hands the ordinary checks to the tools you already run, and reports their findings beside its own.
+claims:
+  - every-delegated-tool-ran
 ---
 
 Yes, you can keep it. Nothing here replaces eslint, biome or oxlint.

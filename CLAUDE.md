@@ -19,7 +19,7 @@ Paths below are relative to `apps/docs/src/content/docs`.
 | an exit code | the "Exit codes" table in `start/reports.md` |
 | a root config key in `src/config/keys.ts` | the "Root config" table in `reference/config.md` |
 | a member config key in `src/config/keys.ts` | the "Members" section in `reference/config.md` |
-| a claim name | the claim table in `checks/index.md`, and the page explaining that claim |
+| a claim name | the claim table in `checks/index.md`, and the page explaining that claim, which names it under `claims` in its frontmatter so `trueup docs <claim>` reaches it |
 | what turns a claim on | the "What turns each one on" table in `checks/index.md` |
 | the guidance printed with a claim | the page describing that claim's remedy |
 

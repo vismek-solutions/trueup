@@ -1,6 +1,10 @@
 ---
 title: Zones
 description: A zone is a name you give to a group of files, and every other rule is written in those names.
+claims:
+  - every-file-belongs-to-a-zone
+  - every-zone-has-a-file
+  - every-zone-pattern-matches-a-file
 ---
 
 A zone is a name you give to a group of files. You choose the files by their location, and you choose the name yourself.

@@ -1,6 +1,13 @@
 ---
 title: What it checks
 description: The full list of what trueup looks for, and what you set up to turn each one on.
+claims:
+  - the-analysis-reached-files
+  - every-import-resolves
+  - every-imported-name-is-exported
+  - every-imported-name-is-unambiguous
+  - every-rule-names-a-declared-zone
+  - no-change-outgrows-its-review
 ---
 
 Everything trueup checks is written as a claim. A claim is one sentence the tool believes about your project, and every run either proves it or disproves it.

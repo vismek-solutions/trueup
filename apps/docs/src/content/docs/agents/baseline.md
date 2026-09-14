@@ -1,6 +1,8 @@
 ---
 title: Starting on the code you already have
 description: Write down what is already there, then hold the line from today.
+claims:
+  - every-baseline-entry-is-still-needed
 ---
 
 A first run on a codebase with some history behind it will find plenty. That is expected, and it says nothing about how well you work. Almost nobody starts clean.

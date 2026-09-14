@@ -1,6 +1,9 @@
 ---
 title: Sibling directories
 description: One rule keeps a row of look-alike directories from reaching into each other.
+claims:
+  - no-sibling-directory-reaches-another
+  - no-file-sits-loose-beside-a-group
 ---
 
 Picture a directory for each route in your app: src/routes/catalog, src/routes/checkout, src/routes/account. What you want from them is easy to say. None of these knows about any other.

@@ -1,6 +1,8 @@
 ---
 title: Stopping an edit before it lands
 description: A check that reads a proposed edit, works out what it would do, and can turn it down.
+claims:
+  - no-edit-changes-the-rules-themselves
 ---
 
 Claude Code can run a command of your choosing before it saves a file, and cancel the write if that command objects. The guard is that command.

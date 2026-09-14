@@ -1,6 +1,9 @@
 ---
 title: Monorepos
 description: The root config names your packages, and each package names its own zones and what it may reach.
+claims:
+  - every-api-zone-is-exported
+  - every-grant-has-a-dependency
 ---
 
 A package is a folder of code with its own package.json file. A workspace is a repository that holds several of those packages side by side, so your package manager can treat them as one project.
