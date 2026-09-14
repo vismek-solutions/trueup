@@ -1,6 +1,6 @@
 {
   "name": "@vismek-solutions/trueup",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Checks that a TypeScript codebase still has the shape you meant it to have, and blocks an edit that would change it",
   "keywords": [
     "architecture",
@@ -29,7 +29,8 @@
   },
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"
