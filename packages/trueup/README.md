@@ -125,6 +125,17 @@ npx trueup --update-baseline
 
 A new violation fails the build after that. A recorded one prints as a warning, so nobody forgets the debt is there.
 
+## On a merge request
+
+The report comes out in the format your forge reads, so a finding lands on the line that caused it rather than in a job log nobody opens.
+
+```sh
+npx trueup --gitlab
+npx trueup --github
+```
+
+The first is GitLab Code Quality, the second is SARIF for GitHub code scanning. Both carry the remedy with the finding, and a violation the baseline already accepted arrives ranked below a new one. [Wiring either into a pipeline](https://vismek-solutions.github.io/trueup/start/reports/).
+
 ## Full documentation
 
 The guides ship with the package, so you can read them without leaving the terminal and without a browser:
@@ -139,18 +150,18 @@ That lists every page with a line about each. Name one and it prints in full, an
 npx trueup docs seams
 ```
 
-The same guides live in [apps/docs](../../apps/docs/src/content/docs), and cover the parts this page only mentions.
+The same guides are published at [vismek-solutions.github.io/trueup](https://vismek-solutions.github.io/trueup/), and cover the parts this page only mentions.
 
-- [Getting started](../../apps/docs/src/content/docs/start/getting-started.md), the same ten minutes in more detail
-- [Zones](../../apps/docs/src/content/docs/concepts/zones.md), the one idea everything else is built on
-- [Boundaries](../../apps/docs/src/content/docs/concepts/boundaries.md), including why barrels defeat other tools
-- [Reading a report](../../apps/docs/src/content/docs/start/reports.md), and the quieter output modes
-- [Everything it checks](../../apps/docs/src/content/docs/checks/index.md), claim by claim
-- [The write time guard](../../apps/docs/src/content/docs/agents/guard.md), in full
-- [Starting on code you already have](../../apps/docs/src/content/docs/agents/baseline.md)
-- [Keeping the linter you already have](../../apps/docs/src/content/docs/integrations/linters.md)
-- [Monorepos](../../apps/docs/src/content/docs/concepts/monorepos.md), where each package keeps its own rules
-- [Configuration](../../apps/docs/src/content/docs/reference/config.md), every key and every command
+- [Getting started](https://vismek-solutions.github.io/trueup/start/getting-started/), the same ten minutes in more detail
+- [Zones](https://vismek-solutions.github.io/trueup/concepts/zones/), the one idea everything else is built on
+- [Boundaries](https://vismek-solutions.github.io/trueup/concepts/boundaries/), including why barrels defeat other tools
+- [Reading a report](https://vismek-solutions.github.io/trueup/start/reports/), and the quieter output modes
+- [Everything it checks](https://vismek-solutions.github.io/trueup/checks/), claim by claim
+- [The write time guard](https://vismek-solutions.github.io/trueup/agents/guard/), in full
+- [Starting on code you already have](https://vismek-solutions.github.io/trueup/agents/baseline/)
+- [Keeping the linter you already have](https://vismek-solutions.github.io/trueup/integrations/linters/)
+- [Monorepos](https://vismek-solutions.github.io/trueup/concepts/monorepos/), where each package keeps its own rules
+- [Configuration](https://vismek-solutions.github.io/trueup/reference/config/), every key and every command
 
 ## How this is tested
 
@@ -161,3 +172,25 @@ That is the same failure this tool exists to catch between files, turned back on
 ## Cost
 
 A full check on a 900-file monorepo takes about a tenth of a second. The guard takes about the same, including the time to start the process.
+
+## Working on trueup itself
+
+```
+packages/trueup    the checker, the CLI, and the write-time guard
+apps/docs          the documentation site
+trueup.config.ts   what this repo asserts about itself
+```
+
+trueup checks its own shape, so the first thing to run on a clone is the tool:
+
+```sh
+pnpm install
+pnpm run check
+```
+
+The guides are readable from the repo the same way they are from the package:
+
+```sh
+pnpm run docs
+pnpm run docs concepts/zones
+```
