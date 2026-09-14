@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { findConfig, loadConfig, resolveInclude } from "../../src/config/load.ts";
 import { EXIT_BAD_RULEBOOK } from "../../src/cli/command.ts";
 import { runCli } from "../../src/cli/main.ts";
-import { runActivate } from "../../src/cli/activate.ts";
+import { runActivate } from "../../src/cli/activate/run.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 
 const SPLIT = fixtureAt("split-rulebook");

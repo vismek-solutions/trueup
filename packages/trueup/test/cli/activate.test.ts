@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
-import { runActivate } from "../../src/cli/activate.ts";
+import { runActivate } from "../../src/cli/activate/run.ts";
 
 const ACTIVATED = fixtureAt("activated");
 const MEMBERS = fixtureAt("member-isolate");
@@ -182,6 +182,12 @@ describe("the block an agent reads at the start of a session", () => {
         "    _state → nothing",
         "    _root  → _state",
       ].join("\n"),
+    );
+  });
+
+  it("puts a package above its zones, so the path it owns is said once", async () => {
+    expect(await capture(fixtureAt("grouped-zones"))).toContain(
+      ["  lib", "    lib/read      1 file  read/**", "    lib/write     1 file  write/**"].join("\n"),
     );
   });
 

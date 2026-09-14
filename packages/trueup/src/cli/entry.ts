@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runActivate } from "./activate.ts";
+import { runActivate } from "./activate/run.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
 import type { CommandInput } from "./command.ts";
 import { runDocs } from "./docs/run.ts";

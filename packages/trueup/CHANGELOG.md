@@ -23,7 +23,7 @@
 
 - The list shown when a next filter names no claim gives each claim the config key that turns it on.
 - The coverage line counts the edges that reach a whole module rather than a name inside it. They were in the total and in none of the columns under it.
-- The activate command names a whole package once where a zone may reach all of it, as `server/*`, and writes a wide reach as what it leaves out. A short reach is still listed. On a workspace of 50 zones the block went from 12936 to 11448 bytes.
+- The activate command groups the zones of a package under the path they share, and names a whole package once where a zone may reach all of it, as `server/*`. A reach covering most of the tree says what it leaves out instead, and a short reach is still listed. On a workspace of 50 zones the block went from 12936 to 10938 bytes.
 - The remedy printed with a boundary finding names the api zone that closed the target, when the import crossed from one package to another. It described the refusal without naming the door.
 
 ## 0.1.0
