@@ -159,10 +159,12 @@ export function renderNext(report: Report, root: string, options: NextInput = {}
   const tally = tallyLine(report);
 
   if (claims.length === 0 && only !== undefined) {
+    const width = Math.max(44, ...report.claims.map((claim) => claim.claim.length + 2));
+
     return [
       `no claim matches \`${only}\` · ${tally}`,
       "",
-      ...report.claims.map((claim) => `    ${claim.claim}`),
+      ...report.claims.map((claim) => `    ${claim.claim.padEnd(width)}${claim.setting ?? ""}`.trimEnd()),
     ].join("\n");
   }
 

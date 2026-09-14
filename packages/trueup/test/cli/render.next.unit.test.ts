@@ -283,6 +283,16 @@ describe("picking which problem to see first", () => {
     );
   });
 
+  it("names the key beside each claim it lists, so a near miss finds the word that works", () => {
+    const seams = reportOf([
+      { claim: "generic-code-names-no-domain-concept", setting: "seams", guidance: "g", findings: [] },
+    ]);
+
+    expect(renderNext(seams, "/p", { only: "seam" }).split("\n").at(-1)).toBe(
+      "    generic-code-names-no-domain-concept        seams",
+    );
+  });
+
   it("keeps the run's own tally when the filter is clean, so it cannot read as all clear", () => {
     const clean = reportOf([
       { claim: "a-passing-claim", guidance: "g", findings: [] },
