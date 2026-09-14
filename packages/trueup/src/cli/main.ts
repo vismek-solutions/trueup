@@ -7,19 +7,29 @@ import { acceptanceOf, applyBaseline, baselineOf } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import { type ClaimResult, countOf, type Report } from "../report/model.ts";
 import { renderAcceptance } from "./acceptance.ts";
-import { renderGitlab } from "./gitlab.ts";
 import { helpLines } from "./help.ts";
 import { rulebookAt } from "./preamble.ts";
 import { answering, render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
+import { renderGithub } from "./reports/github.ts";
+import { renderGitlab } from "./reports/gitlab.ts";
 
-const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline", "--help", "-h"];
+const REPORT_FLAGS = [
+  "--json",
+  "--gitlab",
+  "--github",
+  "--next",
+  "--dots",
+  "--update-baseline",
+  "--help",
+  "-h",
+];
 
 const VALUED_FLAGS = ["--config=", "--next="];
 
 const unknownArgumentsIn = (argv: readonly string[], known: readonly string[]): readonly string[] =>
   argv.filter((entry) => !known.includes(entry) && !VALUED_FLAGS.some((flag) => entry.startsWith(flag)));
 
-const REPORTS = ["--dots", "--next", "--json", "--gitlab", "--update-baseline"];
+const REPORTS = ["--dots", "--next", "--json", "--gitlab", "--github", "--update-baseline"];
 
 const reportsIn = (argv: readonly string[]): readonly string[] =>
   REPORTS.filter((flag) => argv.some((entry) => entry === flag || entry.startsWith(`${flag}=`)));
@@ -68,6 +78,7 @@ interface Asked {
 const presenterFor = ({ argv, rulebook, command, only }: Asked): Present => {
   if (argv.includes("--json")) return asJson;
   if (argv.includes("--gitlab")) return (report, root) => renderGitlab(report, root, rulebook);
+  if (argv.includes("--github")) return (report, root) => renderGithub(report, root, rulebook);
 
   if (argv.includes("--next") || argv.some((entry) => entry.startsWith("--next="))) {
     return (report, root, ratchet) => renderNext(report, root, { ratchet, only, command });

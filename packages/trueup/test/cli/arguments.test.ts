@@ -155,6 +155,7 @@ const HELP = [
   "  --next=<claim>          the first problem from a claim <claim> names or turns on",
   "  --json                  the whole report as JSON",
   "  --gitlab                the report as a GitLab code quality artifact",
+  "  --github                the report as SARIF, for GitHub code scanning",
   "  --update-baseline       accept every finding standing now, so only new ones fail",
   "  --config=<path>         read this rulebook instead of searching upward for one",
   "  --help                  this text",
