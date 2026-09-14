@@ -185,6 +185,25 @@ describe("the block an agent reads at the start of a session", () => {
     );
   });
 
+  it("says a whole package once, rather than every zone in it", async () => {
+    const said = await capture(fixtureAt("grouped-zones"));
+
+    expect(said).toContain("  app/pages   → lib/*");
+    expect(said).toContain("nothing else; a name ending in /* is every zone under it");
+  });
+
+  it("leaves the heading alone where no package stands whole", async () => {
+    expect(await capture(MEMBERS)).toContain("and nothing else\n");
+  });
+
+  it("names what a wide reach leaves out, rather than listing most of the project", async () => {
+    expect(await capture(fixtureAt("wide-reach"))).toContain("  a → every other zone except g");
+  });
+
+  it("keeps a short reach a list, even where naming what it leaves out would be shorter", async () => {
+    expect(await capture(fixtureAt("wide-reach"))).toContain("  b → c · d · e · f");
+  });
+
   it("says nothing about the branch where no budget was set", async () => {
     expect(await capture(ACTIVATED)).not.toContain("this branch");
   });

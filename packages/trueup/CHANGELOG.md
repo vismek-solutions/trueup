@@ -10,6 +10,7 @@
 - The boundary claim and the seam claim run only when `boundaries` or `seams` is set, as the guides already said. Both ran on every project and reported a pass on rules nobody had written.
 - Two flags asking for different reports are refused with exit 4. One of them won quietly and the other was dropped.
 - Accepting a baseline reports the entries it dropped as well as the ones it took. A run that only dropped entries said nothing new.
+- A zone whose rule allows every other zone is no longer described as one no rule constrains. That line is how an unguarded zone is spotted, so it has to mean what it says.
 - A claim name given to the docs command prints the page that explains that claim. It printed a list of every page mentioning the name and asked for one of them. Each guide names the claims it explains under `claims` in its frontmatter.
 
 ### Added
@@ -22,6 +23,7 @@
 
 - The list shown when a next filter names no claim gives each claim the config key that turns it on.
 - The coverage line counts the edges that reach a whole module rather than a name inside it. They were in the total and in none of the columns under it.
+- The activate command names a whole package once where a zone may reach all of it, as `server/*`, and writes a wide reach as what it leaves out. A short reach is still listed. On a workspace of 50 zones the block went from 12936 to 11448 bytes.
 - The remedy printed with a boundary finding names the api zone that closed the target, when the import crossed from one package to another. It described the refusal without naming the door.
 
 ## 0.1.0

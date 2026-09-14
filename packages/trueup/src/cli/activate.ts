@@ -30,21 +30,79 @@ const zoneLines = (config: ResolvedConfig, project: Zoned): readonly string[] =>
   });
 };
 
-const reachedBy = (named: readonly string[], zones: number): string => {
-  if (named.length === 0) return "nothing";
-  return named.length === zones - 1 ? "every other zone, since no rule constrains it" : named.join(" · ");
+const FEW = 4;
+
+const listed = (names: readonly string[]): string => (names.length === 0 ? "nothing" : names.join(" · "));
+
+const groupOf = (zone: string): string | null => {
+  const cut = zone.indexOf("/");
+  return cut === -1 ? null : zone.slice(0, cut);
 };
+
+const wholeGroups = (named: readonly string[], others: readonly string[]): ReadonlySet<string> => {
+  const held = new Map<string, number>();
+  const taken = new Map<string, number>();
+
+  for (const zone of others) {
+    const group = groupOf(zone);
+    if (group === null) continue;
+    held.set(group, (held.get(group) ?? 0) + 1);
+    if (named.includes(zone)) taken.set(group, (taken.get(group) ?? 0) + 1);
+  }
+
+  return new Set([...held].filter(([group, count]) => count > 1 && taken.get(group) === count).map(pairName));
+};
+
+const pairName = ([name]: readonly [string, number]): string => name;
+
+const byGroup = (named: readonly string[], whole: ReadonlySet<string>): readonly string[] => {
+  const said = new Set<string>();
+
+  return named.flatMap((zone) => {
+    const group = groupOf(zone);
+    if (group === null || !whole.has(group)) return [zone];
+    if (said.has(group)) return [];
+    said.add(group);
+    return [`${group}/*`];
+  });
+};
+
+const everything = (ruled: boolean): string =>
+  ruled ? "every other zone" : "every other zone, since no rule constrains it";
+
+const reachedBy = (named: readonly string[], others: readonly string[], ruled: boolean): string => {
+  if (named.length === 0) return "nothing";
+  if (named.length === others.length) return everything(ruled);
+
+  const grouped = byGroup(named, wholeGroups(named, others));
+  const closed = others.filter((name) => !named.includes(name));
+  return grouped.length > FEW && closed.length < grouped.length
+    ? `every other zone except ${listed(closed)}`
+    : listed(grouped);
+};
+
+const BOUNDARIES = "boundaries — a zone may reach itself and what is listed here, and nothing else";
+const UNDER_IT = "; a name ending in /* is every zone under it";
 
 const boundaryLines = (config: ResolvedConfig): readonly string[] => {
   const boundaries = config.boundaries;
   if (boundaries.length === 0) return [];
 
-  const width = Math.max(...config.zones.map((zone) => zone.name.length));
+  const names = config.zones.map((zone) => zone.name);
+  const width = Math.max(...names.map((name) => name.length));
+  const ruled = new Set(boundaries.map((rule) => rule.from));
+
   return config.zones.map((zone) => {
     const { mayReach } = reachOf({ zone: zone.name, zones: config.zones, boundaries });
     const named = mayReach.filter((name) => name !== zone.name);
-    return `  ${zone.name.padEnd(width)} → ${reachedBy(named, config.zones.length)}`;
+    const others = names.filter((name) => name !== zone.name);
+    return `  ${zone.name.padEnd(width)} → ${reachedBy(named, others, ruled.has(zone.name))}`;
   });
+};
+
+const boundarySection = (config: ResolvedConfig): readonly string[] => {
+  const lines = boundaryLines(config);
+  return section(lines.some((line) => line.includes("/*")) ? BOUNDARIES + UNDER_IT : BOUNDARIES, lines);
 };
 
 const seamLines = (config: ResolvedConfig): readonly string[] =>
@@ -60,7 +118,7 @@ type Exception = NonNullable<ResolvedConfig["isolate"][number]["except"]>[number
 const orderedLines = (except: readonly Exception[]): readonly string[] => {
   const ordered = except.filter((exception) => typeof exception !== "string");
   const width = Math.max(0, ...ordered.map((entry) => entry.shared.length));
-  return ordered.map((entry) => `    ${entry.shared.padEnd(width)} → ${reachedBy(entry.allow, 0)}`);
+  return ordered.map((entry) => `    ${entry.shared.padEnd(width)} → ${listed(entry.allow)}`);
 };
 
 const isolateLines = (config: ResolvedConfig): readonly string[] =>
@@ -163,10 +221,7 @@ export async function runActivate({ cwd, argv, write }: CommandInput): Promise<n
         ...(homeless.length === 0 ? [] : [`  and ${plural(homeless.length, "file")} in no zone at all`]),
       ],
     ),
-    ...section(
-      "boundaries — a zone may reach itself and what is listed here, and nothing else",
-      boundaryLines(config),
-    ),
+    ...boundarySection(config),
     ...section("seams — generic code may not use the vocabulary its domains own", seamLines(config)),
     ...section(
       "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
