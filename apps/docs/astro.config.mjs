@@ -1,8 +1,15 @@
 // @ts-check
+import { satteri } from "@astrojs/markdown-satteri";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import { baseLinks } from "./base-links.mjs";
+
+const base = "/trueup";
 
 export default defineConfig({
+  site: "https://vismek-solutions.github.io",
+  base,
+  markdown: { processor: satteri({ hastPlugins: [baseLinks({ base })] }) },
   integrations: [
     starlight({
       title: "trueup",
