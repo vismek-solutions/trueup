@@ -16,6 +16,9 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -25,6 +28,18 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check
+
+      # pnpm run check is the gate, so this one only has to produce the file
+      - name: Write the architecture report for code scanning
+        if: always()
+        continue-on-error: true
+        run: node ./packages/trueup/bin/trueup.js --github > trueup.sarif
+
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trueup.sarif
+
       - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm run build
