@@ -10,7 +10,7 @@ import { renderAcceptance } from "./acceptance.ts";
 import { renderGitlab } from "./gitlab.ts";
 import { helpLines } from "./help.ts";
 import { rulebookAt } from "./preamble.ts";
-import { render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
+import { answering, render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
 
 const REPORT_FLAGS = ["--json", "--gitlab", "--next", "--dots", "--update-baseline", "--help", "-h"];
 
@@ -44,11 +44,26 @@ const reported = ({ guidance, ...rest }: ClaimResult): Reported =>
 const asJson = (report: Report): string =>
   JSON.stringify({ ...report, claims: report.claims.map(reported) }, null, 2);
 
-const presenterFor = (argv: readonly string[], rulebook: string, command: string): Present => {
+const named = (report: Report, only: string | undefined): boolean =>
+  only === undefined || answering(report.claims, only).length > 0;
+
+const exitFor = (report: Report, only: string | undefined, stale: number): number => {
+  if (countOf(report, "error") > 0) return EXIT_ERRORS;
+  if (stale > 0) return EXIT_STALE_BASELINE;
+  return named(report, only) ? EXIT_CLEAN : EXIT_BAD_USAGE;
+};
+
+interface Asked {
+  readonly argv: readonly string[];
+  readonly rulebook: string;
+  readonly command: string;
+  readonly only: string | undefined;
+}
+
+const presenterFor = ({ argv, rulebook, command, only }: Asked): Present => {
   if (argv.includes("--json")) return asJson;
   if (argv.includes("--gitlab")) return (report, root) => renderGitlab(report, root, rulebook);
 
-  const only = claimFilterIn(argv);
   if (argv.includes("--next") || argv.some((entry) => entry.startsWith("--next="))) {
     return (report, root, ratchet) => renderNext(report, root, { ratchet, only, command });
   }
@@ -87,7 +102,8 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
 
   const { config, root, memberConfigs } = loaded;
   const command = config.command ?? DEFAULT_COMMAND;
-  const present = presenterFor(argv, path, command);
+  const only = claimFilterIn(argv);
+  const present = presenterFor({ argv, rulebook: path, command, only });
   const rulebooks = [path, ...memberConfigs];
   const report = await check({
     root,
@@ -137,13 +153,12 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
   if (previous.entries.length === 0) {
     const finished = withCommand(noticed, command);
     write(present(finished, root));
-    return countOf(finished, "error") > 0 ? EXIT_ERRORS : EXIT_CLEAN;
+    return exitFor(finished, only, 0);
   }
 
   const ratcheted = applyBaseline({ report: noticed, baseline: previous, root });
   const finished = withCommand(ratcheted.report, command);
   write(present(finished, root, { known: ratcheted.known, stale: ratcheted.stale }));
 
-  if (countOf(finished, "error") > 0) return EXIT_ERRORS;
-  return ratcheted.stale > 0 ? EXIT_STALE_BASELINE : EXIT_CLEAN;
+  return exitFor(finished, only, ratcheted.stale);
 }

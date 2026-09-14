@@ -126,8 +126,8 @@ const problemsIn = (report: Report, keep: (finding: Finding) => boolean): Proble
 
 const scopeOf = (only: string | undefined): string => (only === undefined ? "" : ` in \`${only}\``);
 
-const asked = (claim: ClaimResult, only: string): boolean =>
-  claim.claim.includes(only) || claim.setting === only;
+export const answering = (claims: readonly ClaimResult[], only: string): readonly ClaimResult[] =>
+  claims.filter((claim) => claim.claim.includes(only) || claim.setting === only);
 
 export interface NextInput {
   readonly ratchet?: RatchetSummary | undefined;
@@ -155,7 +155,7 @@ const blockFor = (problem: Problem, { root, tally, after = [] }: BlockInput): st
 
 export function renderNext(report: Report, root: string, options: NextInput = {}): string {
   const { ratchet, only, command = DEFAULT_COMMAND } = options;
-  const claims = only === undefined ? report.claims : report.claims.filter((c) => asked(c, only));
+  const claims = only === undefined ? report.claims : answering(report.claims, only);
   const tally = tallyLine(report);
 
   if (claims.length === 0 && only !== undefined) {

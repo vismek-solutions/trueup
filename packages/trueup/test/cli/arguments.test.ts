@@ -7,6 +7,8 @@ import { fixtureAt, nowhere } from "../support/fixtures.ts";
 
 const VIOLATING = fixtureAt("violating");
 
+const CLEAN = fixtureAt("explained");
+
 const spoken = async (cwd: string, ...argv: readonly string[]): Promise<readonly string[]> => {
   const lines: string[] = [];
   await runCli({ cwd, argv, write: (line) => lines.push(line) });
@@ -106,6 +108,14 @@ describe("choosing which claim to fix first", () => {
 
   it("still fails the run when the filter hides the errors, since the view is not the verdict", async () => {
     expect(await codeFor(VIOLATING, "--next=bondary")).toBe(EXIT_ERRORS);
+  });
+
+  it("refuses a filter that named nothing, so a typo cannot pass as a clean run", async () => {
+    expect(await codeFor(CLEAN, "--next=bondary")).toBe(EXIT_BAD_USAGE);
+  });
+
+  it("passes a clean run whose filter did name a claim", async () => {
+    expect(await codeFor(CLEAN, "--next=zone")).toBe(EXIT_CLEAN);
   });
 
   it("takes a bare --next as before, with nothing scoped", async () => {
