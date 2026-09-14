@@ -33,7 +33,6 @@ Each category of finding becomes a claim of its own. A claim is one sentence tru
 
 ```
 every-import-respects-its-zone-boundary     ok
-generic-code-names-no-domain-concept        ok
 no-zones-form-a-cycle                       ok
 every-delegated-tool-ran                    ok
 oxlint/eslint/no-unused-vars                2 warnings
@@ -43,7 +42,7 @@ oxlint/eslint/no-unused-vars                2 warnings
     Reported by oxlint, which this project delegates to. Consult oxlint for what the finding means;
     the rules here did not produce it.
 
-13 claims · 0 errors · 2 warnings
+12 claims · 0 errors · 2 warnings
 ```
 
 A claim per category means a baseline entry pins one rule rather than a whole tool. One claim stands apart from the rest: every-delegated-tool-ran says the tool started at all.

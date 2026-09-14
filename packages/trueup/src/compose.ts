@@ -218,8 +218,8 @@ const claimsFor = (options: CheckOptions): Claim[] => {
   return [
     ...standardClaims,
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
-    ...under("boundaries", [boundaryClaim(boundaries)]),
-    ...under("seams", [seamClaim(seams)]),
+    ...under("boundaries", boundaries.length === 0 ? [] : [boundaryClaim(boundaries)]),
+    ...under("seams", seams.length === 0 ? [] : [seamClaim(seams)]),
     cycleClaim,
     ...under("isolate", isolationClaims(isolate)),
     ...under("members", apiSurfaces.length === 0 ? [] : [apiSurfaceClaim(apiSurfaces)]),

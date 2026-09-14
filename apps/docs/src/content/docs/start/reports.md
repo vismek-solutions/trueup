@@ -33,9 +33,8 @@ every-import-respects-its-zone-boundary     1 error
     Not the fix: widening the rule so the edge becomes legal.
 
 no-zones-form-a-cycle                       ok
-generic-code-names-no-domain-concept        ok
 
-11 claims · 1 error · 0 warnings
+10 claims · 1 error · 0 warnings
 ```
 
 The first two lines are a receipt. They exist so that a clean report cannot mean "I checked nothing".

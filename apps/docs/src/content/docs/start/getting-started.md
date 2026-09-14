@@ -102,10 +102,9 @@ every-import-respects-its-zone-boundary     1 error
 
     Not the fix: widening the rule so the edge becomes legal.
 
-generic-code-names-no-domain-concept        ok
 no-zones-form-a-cycle                       ok
 
-11 claims · 2 errors · 0 warnings
+10 claims · 2 errors · 0 warnings
 ```
 
 Those two findings are the two kinds this tool exists to show you. One is a file that no zone claims, so no rule is watching it. The other is a line between two parts of the project that you did not know was being crossed.

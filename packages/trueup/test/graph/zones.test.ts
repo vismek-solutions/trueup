@@ -150,7 +150,7 @@ describe("a check run", () => {
     expect(dead).toContain("- Fix the pattern, or delete it.");
   });
 
-  it("reports a result for every claim, including those that found nothing", async () => {
+  it("reports every claim it ran, found nothing or not, and runs none whose key is absent", async () => {
     const report = await check({
       root: join(FIXTURES, "zoned"),
       zones: [{ name: "everything", patterns: ["**"] }],
@@ -165,8 +165,6 @@ describe("a check run", () => {
       "every-zone-has-a-file",
       "every-zone-pattern-matches-a-file",
       "every-rule-names-a-declared-zone",
-      "every-import-respects-its-zone-boundary",
-      "generic-code-names-no-domain-concept",
       "no-zones-form-a-cycle",
     ]);
   });

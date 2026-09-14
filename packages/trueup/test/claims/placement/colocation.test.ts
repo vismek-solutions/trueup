@@ -262,7 +262,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", async () => {
-    expect((await next()).split("\n")[0]).toContain("problem 1 of 10 · 13 claims · 14 errors");
+    expect((await next()).split("\n")[0]).toContain("problem 1 of 10 · 11 claims · 14 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", async () => {
