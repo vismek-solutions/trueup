@@ -16,6 +16,8 @@
     "url": "git+https://github.com/vismek-solutions/trueup.git",
     "directory": "packages/trueup"
   },
+  "homepage": "https://vismek-solutions.github.io/trueup/",
+  "bugs": "https://github.com/vismek-solutions/trueup/issues",
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
@@ -37,7 +39,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -R ../../apps/docs/src/content/docs dist/docs",
-    "prepack": "pnpm run build",
+    "prepack": "pnpm run build && cp ../../README.md README.md",
     "test": "vitest run",
     "test:watch": "vitest",
     "mutate": "TRUEUP_MUTATION=1 stryker run",

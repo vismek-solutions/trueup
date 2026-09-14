@@ -6,4 +6,6 @@ dist/
 coverage/
 *.tsbuildinfo
 **/test/fixtures/*-run-*/
+/packages/trueup/README.md
+/trueup.sarif
 .DS_Store

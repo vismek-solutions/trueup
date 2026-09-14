@@ -1,13 +1,13 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { renderGitlab } from "../../src/cli/gitlab.ts";
+import { renderGitlab } from "../../src/cli/reports/gitlab.ts";
 import { runCli } from "../../src/cli/main.ts";
 import type { Finding, Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 
 const CLEAN = fixtureAt("explained");
 const VIOLATING = fixtureAt("violating");
-const BASELINED = fixtureAt("gitlab-baselined");
+const BASELINED = fixtureAt("ci-baselined");
 
 interface Issue {
   readonly description: string;

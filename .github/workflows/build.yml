@@ -16,20 +16,35 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check
+
+      # pnpm run check is the gate, so this one only has to produce the file
+      - name: Write the architecture report for code scanning
+        if: always()
+        continue-on-error: true
+        run: node ./packages/trueup/bin/trueup.js --github > trueup.sarif
+
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trueup.sarif
+
       - run: pnpm test
       - run: pnpm typecheck
       - run: pnpm run build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: github.event_name == 'push'
         with:
           name: package
@@ -44,17 +59,21 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # trusted publishing needs npm 11.5.1 or newer, which every current 24.x ships
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: package
           path: packages/trueup/dist
+
+      # publishing skips lifecycle scripts, so prepack does not run and cannot carry it
+      - name: Carry the readme into the package
+        run: cp README.md packages/trueup/README.md
 
       - name: Refuse a tag that does not match the version it claims
         if: startsWith(github.ref, 'refs/tags/')

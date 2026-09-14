@@ -174,6 +174,7 @@ The rulebook is the config file holding the rules, whether at the root or inside
 | `npx trueup --next=<claim>` | one problem, from a claim that text names, or that a config key of that name turns on |
 | `npx trueup --json` | machine-readable |
 | `npx trueup --gitlab` | [GitLab Code Quality](/start/reports/#on-a-gitlab-merge-request) |
+| `npx trueup --github` | [SARIF for GitHub code scanning](/start/reports/#on-a-github-pull-request) |
 | `npx trueup --update-baseline` | record current violations |
 | `npx trueup --config=<path>` | use a specific config |
 | `npx trueup --help` | this list, printed by the tool itself |

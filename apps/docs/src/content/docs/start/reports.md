@@ -211,6 +211,96 @@ Some findings name no file at all: an empty zone, or a pattern nothing matches. 
 GitLab renders an annotation only on lines the merge request touched. A boundary violation sits on the import that caused it, so it lands. A directory-size finding has no line, so it shows in the widget instead. Either way the pass or fail is [the baseline's](/agents/baseline/) job, and we would ask you not to use the Code Quality widget as the ratchet.
 :::
 
+## On a GitHub pull request
+
+```sh
+npx trueup --github
+```
+
+The same findings as SARIF, which is the format GitHub code scanning reads. Upload that file and every finding becomes an alert sitting on the line that caused it, in the pull request diff and in the repository's security tab.
+
+```json
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "trueup",
+          "informationUri": "https://vismek-solutions.github.io/trueup/",
+          "rules": [
+            {
+              "id": "every-import-respects-its-zone-boundary",
+              "shortDescription": {
+                "text": "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it."
+              },
+              "fullDescription": { "text": "Code in one zone reached a symbol declared in a zone it may not reach. …" },
+              "help": {
+                "text": "Code in one zone reached a symbol declared in a zone it may not reach. …\n\nDo this:\n- Move the code to a zone that may reach the target. …"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "every-import-respects-its-zone-boundary",
+          "ruleIndex": 0,
+          "level": "error",
+          "message": {
+            "text": "is web and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts through packages/lib/src/api/index.ts"
+          },
+          "partialFingerprints": {
+            "trueupFinding/v1": "739863bc6908c780b6a1720007a9b289f24f470b5b727614c348efba421a14f0"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "apps/web/src/cart.ts" },
+                "region": { "startLine": 1, "startColumn": 10 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+The remedy is split across two fields because GitHub reads them in different places. The opening of the guidance becomes the short description, which is the part that fits on one row of the alert list. The whole remedy becomes the help text, which is what opening an alert shows.
+
+Severity follows the baseline, which is the recorded list of problems you have agreed to live with for now. A new violation is an error. One [the baseline](/agents/baseline/) already accepted is a warning, so it stays visible without competing with what this branch broke.
+
+```yaml
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: npx trueup --github > trueup.sarif
+
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trueup.sarif
+```
+
+Two lines there matter more than the rest. The write permission is what lets the upload through, and the always condition is what keeps the upload on a run that failed. Without it the report is dropped on exactly the runs that had something to say.
+
+A clean run still writes a file, holding a run with no results. Uploading that is how GitHub learns the alerts are gone, so it is worth running this on every branch rather than only where you expect a failure.
+
+Some findings name no file at all: an empty zone, or a pattern nothing matches. Those are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it, so reformatting a file does not open a second alert for a problem GitHub is already tracking.
+
+:::note
+Uploading SARIF needs code scanning, which a public repository has and a private one gets with GitHub Advanced Security. Without it the upload step fails while the check itself still runs and still fails the job, so the gate holds even where the alerts cannot be shown. The pass or fail is [the baseline's](/agents/baseline/) job, and we would ask you not to use the alert list as the ratchet.
+:::
+
 ## A flag trueup does not know
 
 ```
