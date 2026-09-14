@@ -11,6 +11,8 @@
 
 - The readme the npm page is built from lives at the root of the repository and is copied into the package when it is packed. Its links now point at the published guides rather than at files in the repository, so they resolve wherever the page is read.
 
+## 0.2.0
+
 ### Fixed
 
 - The explain command called with no path exits 4, an argument it does not know. It exited 3, which means no rulebook found.
