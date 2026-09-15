@@ -17,6 +17,18 @@ export default defineConfig({
         "Keeps a TypeScript codebase in the shape you meant it to have, and stops a coding agent from quietly changing it.",
       customCss: ["./src/styles/custom.css"],
       lastUpdated: true,
+      social: [
+        {
+          icon: "github",
+          label: "Source on GitHub",
+          href: "https://github.com/vismek-solutions/trueup",
+        },
+        {
+          icon: "npm",
+          label: "Package on npm",
+          href: "https://www.npmjs.com/package/@vismek-solutions/trueup",
+        },
+      ],
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       sidebar: [
         {
