@@ -115,6 +115,58 @@ Giving the value a zone of its own, or a package sitting under the ones that rea
 
 Reach for the shared home anyway when the consumer named must not own the value, a test harness or a downstream app for instance. The finding stands after that move, and standing is the right answer: [accept it into the baseline](/agents/baseline/) rather than working it a second time.
 
+### A layer that serves one layer
+
+Some projects split by kind rather than by feature. Components sit in one folder, routes in another, and every component is there so that a route can use it. Counting zones then says each component has a single customer, which is true and useless:
+
+```
+no-value-is-declared-away-from-its-only-consumer  6 errors
+    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts
+    src/components/button.ts  declares renderButton, used only by routes (2 files)
+    src/components/chip.ts  declares renderChip, used only by routes (2 files)
+    src/components/layout.ts  declares renderLayout, used only by routes (3 files)
+    src/components/pair.ts  declares 2 exports, all used only by routes (2 files), so the file is in the wrong directory rather than the declarations
+    src/components/user-card.ts  declares renderUserCard, used only by routes (2 files)
+```
+
+No role fits here. The routes zone owns real code, so calling it wiring or tests would be untrue, and it would stop that zone counting as a customer of everything else as well.
+
+The zone that declares them says it instead:
+
+```ts
+{ name: "components", patterns: ["src/components/**"], shared: true },
+```
+
+That does not switch the check off for the zone. It moves the count down one level, from zones of the consumer to parts of the consumer, and a part is whatever the rest of the rulebook already makes one. Where [sibling isolation](/checks/isolation/) keeps each route directory apart, a route is a part:
+
+```ts
+isolate: [{ siblings: "src/routes/*" }],
+```
+
+```
+no-value-is-declared-away-from-its-only-consumer  3 errors
+    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts
+    src/components/pair.ts  declares 2 exports, all used only by src/routes/users (2 files), so the file is in the wrong directory rather than the declarations
+    src/components/user-card.ts  declares renderUserCard, used only by src/routes/users (2 files)
+```
+
+The components that more than one part reads have dropped off, and what stands is worth reading. renderUserCard is read twice and never leaves the users route, so it belongs inside it. Both exports of the pair file go the same way, so the file moves rather than its declarations.
+
+renderChip dropped off for a different reason. Its two readers sit directly in the routes folder rather than in any route, so no rule groups them and each counts as a part of its own.
+
+When nothing groups the readers, the floor is the file. The same project without the isolation rule counts each reading file as a part:
+
+```
+no-value-is-declared-away-from-its-only-consumer  3 errors
+    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts
+    src/components/pair.ts  declares renderPairFoot, used only by src/routes/users/detail/row.ts
+    src/components/pair.ts  declares renderPairHead, used only by src/routes/users/list/page.ts
+```
+
+The pair file is what changed. Its two exports are read by two different files, so no single move holds them both, and each declaration is named on its own.
+
+Say this about a layer written to serve the layer above it. A package that several products share is a different thing, and declaring that one shared hides the finding you most want from it: one product's code sitting in the shared package.
+
 ### Exports that exist only for a test
 
 This second check needs two things: the colocation switch above, and at least one zone carrying the tests role. Once the tool knows which files are tests, it can turn the question around.

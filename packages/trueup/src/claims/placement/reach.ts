@@ -97,18 +97,21 @@ export const acrossZones = (project: Project): readonly SymbolReach[] =>
 
 export const everyConsumer = (imports: readonly ResolvedImport[]): SymbolReach[] => gather(imports, true);
 
-export const zonesReadingEach = (
+export type UnitOf = (declaredIn: string, reader: string) => string;
+
+export const unitsReadingEach = (
   project: Project,
   roles: ReadonlySet<string>,
+  unitOf: UnitOf,
 ): Map<string, Set<string>> => {
   const readers = new Map<string, Set<string>>();
 
   for (const edge of project.imports()) {
     if (!named(edge) || roles.has(edge.fromZone)) continue;
 
-    const zones = readers.get(edge.declaredIn) ?? new Set<string>();
-    zones.add(edge.fromZone);
-    readers.set(edge.declaredIn, zones);
+    const units = readers.get(edge.declaredIn) ?? new Set<string>();
+    units.add(unitOf(edge.declaredIn, edge.from));
+    readers.set(edge.declaredIn, units);
   }
 
   return readers;

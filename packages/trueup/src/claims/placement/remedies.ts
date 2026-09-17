@@ -10,6 +10,8 @@ const BRANCH = {
     "`declares <name>, used outside its zone only by ...` means the declaring zone reads it too. Moving it leaves that reader crossing a boundary, so check what the declaring zone may reach before you move anything, and prefer dissolving the value into its one outside consumer.",
   neighbour:
     "`... and by this file as well` means another declaration here reads it, so the file it leaves would have to import it back. Move that declaration with it, or leave both where they are. The zone may be reading it through that neighbour, in which case moving the pair leaves the zone crossing the boundary for the neighbour instead.",
+  partwise:
+    "The consumer named is a directory or a file rather than a zone, because the zone that declares it is `shared`. The count is already parts of that consumer, so a second part reading it would have closed this, and the move is into the part named.",
   typeReaders:
     "A list under the finding names what each reader imports, and appears when one of them reaches the value through a type built from it. Such a reader pins the value where it is as firmly as one that names it, so the list is there to be checked rather than argued with.",
   silenced:
@@ -30,6 +32,7 @@ const NOT_THE_FIX = [
   "Not the fix:",
   "- Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.",
   "- Leaving it because a second consumer may arrive later. That is a reason to move it back then, not a reason to leave it now.",
+  "- Declaring a zone `shared` so its count falls to parts of the consumer. That is honest only for a layer written to serve the layer above it.",
 ].join("\n");
 
 const WHY_NO_TYPES =

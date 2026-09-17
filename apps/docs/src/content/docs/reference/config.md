@@ -72,10 +72,12 @@ Only the zones are required. Everything under them is optional, and a config wit
 A zone is a name you give to a group of files, chosen by where the files sit.
 
 ```ts
-{ name: string, patterns: string[], role?: "wiring" | "tests" | "api" }
+{ name: string, patterns: string[], role?: "wiring" | "tests" | "api", shared?: boolean }
 ```
 
 A file belongs to the first zone whose patterns match it, in the order you declared them. [What each role changes](/concepts/zones/#roles).
+
+A shared zone is one written to serve the layer above it, and saying so changes what counts as a second customer in [the colocation check](/checks/placement/#a-layer-that-serves-one-layer).
 
 ## Boundaries
 
