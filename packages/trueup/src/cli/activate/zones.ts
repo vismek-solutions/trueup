@@ -71,9 +71,10 @@ const linesFor = (place: Placed, width: number, project: Zoned): readonly string
 
   return place.run.zones.map((zone) => {
     const held = plural(project.filesIn(zone.name).length, "file").padStart(TALLY);
-    const role = zone.role === undefined ? "" : `  (${zone.role})`;
+    const marks = [zone.role, zone.shared === true ? "shared" : undefined].filter((mark) => mark !== undefined);
+    const said = marks.length === 0 ? "" : `  (${marks.join(", ")})`;
     const shown = zone.patterns.map((one) => (directory === "" ? one : one.slice(directory.length + 1)));
-    return `${indent}${zone.name.padEnd(column)}  ${held}  ${shown.join(" · ")}${role}`;
+    return `${indent}${zone.name.padEnd(column)}  ${held}  ${shown.join(" · ")}${said}`;
   });
 };
 
