@@ -36,7 +36,7 @@ const ADVICE = [
 ];
 
 const ZONE_HEADING =
-  "zones — a file belongs to the first zone whose patterns match it; a role changes what is expected of it";
+  "zones — a file belongs to the first zone whose patterns match it; a role or a shared mark changes what is expected of it";
 
 describe("the block an agent reads at the start of a session", () => {
   it("gives every zone, rule and setting a project set", async () => {
@@ -144,6 +144,10 @@ describe("the block an agent reads at the start of a session", () => {
     expect(said).not.toContain("warning from");
   });
 
+  it("marks a zone written to serve the layer above it, so a quiet component is explained", async () => {
+    expect(await capture(fixtureAt("activated-switches"))).toContain("  lib     1 file  src/lib/**  (shared)");
+  });
+
   it("names every switch a project turned on, and who may sit beside a sibling", async () => {
     expect(await capture(fixtureAt("activated-switches"))).toBe(
       [
@@ -153,7 +157,7 @@ describe("the block an agent reads at the start of a session", () => {
         "",
         ZONE_HEADING,
         "  app     1 file  src/app/**",
-        "  lib     1 file  src/lib/**",
+        "  lib     1 file  src/lib/**  (shared)",
         "",
         "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
         "  src/*, and nothing may sit beside them",

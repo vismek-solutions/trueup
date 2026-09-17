@@ -177,12 +177,12 @@ const roleZonesIn = (zones: readonly ZoneDefinition[]): string[] => [
   ...namesOf(zones, "api"),
 ];
 
-const placementClaims = (zones: readonly ZoneDefinition[]): Claim[] => {
+const placementClaims = ({ zones, isolate = [], root }: CheckOptions): Claim[] => {
   const testZones = namesOf(zones, "tests");
   const apiZones = namesOf(zones, "api");
 
   return [
-    colocationClaim(roleZonesIn(zones)),
+    colocationClaim(roleZonesIn(zones), { zones, groups: isolate.map((rule) => rule.siblings), root }),
     ...(testZones.length === 0 ? [] : [testOnlyExportClaim({ testZones, apiZones })]),
   ];
 };
@@ -229,7 +229,7 @@ const claimsFor = (options: CheckOptions): Claim[] => {
     ...under("maxFilesPerDirectory", directoryClaims(maxFilesPerDirectory, directoryLimits)),
     ...under("duplication", duplicationClaims(duplication, boundaries)),
     ...under("reviewable", reviewable === undefined ? [] : [reviewClaim(reviewable, changes)]),
-    ...under("colocation", colocation ? placementClaims(zones) : []),
+    ...under("colocation", colocation ? placementClaims(options) : []),
     ...under("readerships", readerships ? [readershipClaim(roleZonesIn(zones))] : []),
     ...under("testInternals", testInternals ? [internalsFor(zones)] : []),
     ...under("rules", customClaims(rules)),

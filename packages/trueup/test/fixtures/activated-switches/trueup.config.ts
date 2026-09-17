@@ -3,7 +3,7 @@ import { defineConfig } from "../../../src/config/model.ts";
 export default defineConfig({
   zones: [
     { name: "app", patterns: ["src/app/**"] },
-    { name: "lib", patterns: ["src/lib/**"] },
+    { name: "lib", patterns: ["src/lib/**"], shared: true },
   ],
   isolate: [
     { siblings: "src/*", wiring: [] },

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.4.0
+
+### Added
+
+- A zone written to serve the layer above it says so with `shared`, and the colocation check then counts parts of its consumer rather than zones. Where an isolation rule names siblings, the part is the sibling directory; where nothing groups the readers, it is the reading file. A component that several routes read is no longer reported, one that never leaves a single route still is, and the finding names the directory it belongs in.
+
+### Changed
+
+- The activate block marks a shared zone beside its role, so an agent can see why a component nothing else reads goes unreported.
+
+## 0.3.0
+
 ### Added
 
 - The github flag writes the report as SARIF, the format GitHub code scanning reads, so a finding lands on the line that caused it in a pull request. The remedy travels as the rule's help text, and a violation the baseline already accepted arrives as a warning rather than an error. A clean run still writes a run with no results, which is what closes the alerts a branch fixed.

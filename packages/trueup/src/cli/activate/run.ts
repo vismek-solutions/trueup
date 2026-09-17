@@ -134,7 +134,7 @@ export async function runActivate({ cwd, argv, write }: CommandInput): Promise<n
     "",
     `${plural(project.files.length, "file")} in ${plural(config.zones.length, "zone")}, and every rule below is enforced.`,
     ...section(
-      "zones — a file belongs to the first zone whose patterns match it; a role changes what is expected of it",
+      "zones — a file belongs to the first zone whose patterns match it; a role or a shared mark changes what is expected of it",
       [
         ...zoneLines(config, project),
         ...(homeless.length === 0 ? [] : [`  and ${plural(homeless.length, "file")} in no zone at all`]),

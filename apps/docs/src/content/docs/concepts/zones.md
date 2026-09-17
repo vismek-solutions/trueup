@@ -66,6 +66,16 @@ The api role marks a package's public surface. Names re-exported there answer to
 
 None of the three roles counts as the lone consumer of a name in the [colocation check](/checks/placement/). Without that exclusion, tests alone accounted for 646 of 758 findings on a large monorepo.
 
+## Zones written to serve one layer
+
+A zone can also say that it exists for the layer above it, which is the usual shape when a project splits by kind and every component is there for a route to use.
+
+```ts
+{ name: "components", patterns: ["src/components/**"], shared: true },
+```
+
+Being used by one zone is then no longer evidence that the code sits in the wrong place, and the colocation check counts [parts of that consumer](/checks/placement/#a-layer-that-serves-one-layer) instead.
+
 ## Asking where a file belongs
 
 When you are unsure which zone something falls into, ask.

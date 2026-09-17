@@ -1,17 +1,27 @@
 import type { Project } from "../../project/model.ts";
 import type { Finding } from "../../report/model.ts";
+import type { ZoneDefinition } from "../../zones/model.ts";
+import { partReader } from "../isolation/groups.ts";
 import type { Claim } from "../model.ts";
-import { type SymbolReach, acrossZones, alsoReadAtHome, zonesReadingEach } from "./reach.ts";
+import { type SymbolReach, type UnitOf, acrossZones, alsoReadAtHome, unitsReadingEach } from "./reach.ts";
 import { type PlacementShape, placementGuidance } from "./remedies.ts";
 
 interface Reported {
   readonly reach: SymbolReach;
   readonly owner: string;
+  readonly unit: string;
+  readonly partwise: boolean;
   readonly atHome: boolean;
   readonly silenced: readonly string[];
 }
 
-const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Reported[] => {
+interface Counting {
+  readonly roles: ReadonlySet<string>;
+  readonly shared: ReadonlySet<string>;
+  readonly unitOf: UnitOf;
+}
+
+const reportedIn = (project: Project, { roles, shared, unitOf }: Counting): readonly Reported[] => {
   const home = alsoReadAtHome(project);
 
   return acrossZones(project).flatMap((reach) => {
@@ -19,8 +29,14 @@ const reportedIn = (project: Project, roles: ReadonlySet<string>): readonly Repo
     const only = owners[0];
     if (owners.length !== 1 || only === undefined) return [];
 
+    const counted = [...reach.files].filter((file) => !roles.has(project.zoneOf(file) ?? ""));
+    const units = new Set(counted.map((file) => unitOf(reach.declaredIn, file)));
+    const unit = [...units][0];
+    if (units.size !== 1 || unit === undefined) return [];
+
     const silenced = [...reach.zones].filter((zone) => roles.has(zone)).sort();
-    return [{ reach, owner: only, atHome: home.has(`${reach.declaredIn}\0${reach.symbol}`), silenced }];
+    const atHome = home.has(`${reach.declaredIn}\0${reach.symbol}`);
+    return [{ reach, owner: only, unit, partwise: shared.has(reach.declaredZone), atHome, silenced }];
   });
 };
 
@@ -36,23 +52,41 @@ const byFile = (reported: readonly Reported[]): [string, Reported[]][] => {
   return [...groups];
 };
 
-const consumerOf = (group: readonly Reported[], owner: string, project: Project): string => {
-  const files = [
-    ...new Set(group.flatMap(({ reach }) => [...reach.files])),
-  ].filter((file) => project.zoneOf(file) === owner);
-  const only = files[0];
+const sharedDirectory = (files: readonly string[], project: Project): string => {
+  const segments = files.map((file) => project.relative(file).split("/").slice(0, -1));
+  const common: string[] = [];
 
-  return files.length === 1 && only !== undefined ? project.relative(only) : `${owner} (${files.length} files)`;
+  for (const [index, name] of (segments[0] ?? []).entries()) {
+    if (!segments.every((parts) => parts[index] === name)) break;
+    common.push(name);
+  }
+
+  return common.join("/");
 };
 
-const listed = (reach: SymbolReach, owner: string, project: Project): readonly string[] => {
+interface Reading {
+  readonly project: Project;
+  readonly unitOf: UnitOf;
+}
+
+const consumerOf = (group: readonly Reported[], entry: Reported, { project, unitOf }: Reading): string => {
+  const files = [...new Set(group.flatMap(({ reach }) => [...reach.files]))].filter(
+    (file) => unitOf(entry.reach.declaredIn, file) === entry.unit,
+  );
+  const only = files[0];
+  if (files.length === 1 && only !== undefined) return project.relative(only);
+
+  return `${entry.partwise ? sharedDirectory(files, project) : entry.owner} (${files.length} files)`;
+};
+
+const listed = (entry: Reported, { project, unitOf }: Reading): readonly string[] => {
   const mine: string[] = [];
   const others: string[] = [];
 
-  for (const [name, files] of reach.through) {
+  for (const [name, files] of entry.reach.through) {
     for (const file of files) {
-      if (project.zoneOf(file) !== owner) continue;
-      (name === reach.symbol ? mine : others).push(`- ${name} in ${project.relative(file)}`);
+      if (unitOf(entry.reach.declaredIn, file) !== entry.unit) continue;
+      (name === entry.reach.symbol ? mine : others).push(`- ${name} in ${project.relative(file)}`);
     }
   }
 
@@ -96,19 +130,22 @@ interface Placed {
 const shapesOf = (entry: Reported, atFile: boolean, typed: boolean): readonly PlacementShape[] => [
   entry.atHome ? "homeReads" : "oneName",
   ...(atFile ? (["neighbour"] as const) : []),
+  ...(entry.partwise ? (["partwise"] as const) : []),
   ...(typed ? (["typeReaders"] as const) : []),
   ...(entry.silenced.length === 0 ? [] : (["silenced"] as const)),
 ];
 
-const eachDeclaration = (group: readonly Reported[], project: Project, declaredIn: string): Placed => {
-  const kin = readWithin(project, declaredIn);
+const eachDeclaration = (group: readonly Reported[], from: string, reading: Reading): Placed => {
+  const { project } = reading;
+  const kin = readWithin(project, from);
   const findings: Finding[] = [];
   const shapes: PlacementShape[] = [];
 
   for (const entry of group) {
     const atFile = kin.has(entry.reach.symbol);
-    const said = `${saying(entry, consumerOf([entry], entry.owner, project), atFile)}${uncounted(entry.silenced, project)}`;
-    const lines = listed(entry.reach, entry.owner, project);
+    const where = consumerOf([entry], entry, reading);
+    const said = `${saying(entry, where, atFile)}${uncounted(entry.silenced, project)}`;
+    const lines = listed(entry, reading);
 
     shapes.push(...shapesOf(entry, atFile, lines.length > 0));
     findings.push({
@@ -124,41 +161,56 @@ const eachDeclaration = (group: readonly Reported[], project: Project, declaredI
   return { findings, shapes };
 };
 
-const misplaced = (group: readonly Reported[], project: Project, readBy: ReadonlySet<string>): Placed => {
+const misplaced = (group: readonly Reported[], readBy: ReadonlySet<string>, reading: Reading): Placed => {
   const first = group[0];
   if (first === undefined) return { findings: [], shapes: [] };
 
-  const owners = new Set(group.map(({ owner }) => owner));
-  const wholeFile = owners.size === 1 && readBy.size === 1 && readBy.has(first.owner);
-  if (group.length === 1 || !wholeFile) return eachDeclaration(group, project, first.reach.declaredIn);
+  const units = new Set(group.map(({ unit }) => unit));
+  const wholeFile = units.size === 1 && readBy.size === 1 && readBy.has(first.unit);
+  if (group.length === 1 || !wholeFile) return eachDeclaration(group, first.reach.declaredIn, reading);
 
-  const where = consumerOf(group, first.owner, project);
+  const where = consumerOf(group, first, reading);
   const silenced = [...new Set(group.flatMap((entry) => entry.silenced))].sort();
 
   return {
     findings: [
       {
         severity: "error" as const,
-        message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations${uncounted(silenced, project)}`,
+        message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations${uncounted(silenced, reading.project)}`,
         file: first.reach.declaredIn,
         start: null,
         symbols: group.map(({ reach }) => reach.symbol).sort(),
         group: first.reach.declaredIn,
       },
     ],
-    shapes: silenced.length === 0 ? ["wholeFile"] : ["wholeFile", "silenced"],
+    shapes: [
+      "wholeFile" as const,
+      ...(first.partwise ? (["partwise"] as const) : []),
+      ...(silenced.length === 0 ? [] : (["silenced"] as const)),
+    ],
   };
 };
 
-export function colocationClaim(roleZones: readonly string[]): Claim {
+export interface SharedZones {
+  readonly zones: readonly ZoneDefinition[];
+  readonly groups: readonly string[];
+  readonly root: string;
+}
+
+export function colocationClaim(roleZones: readonly string[], sharing: SharedZones): Claim {
   const roles = new Set(roleZones);
+  const named = sharing.zones.filter((zone) => zone.shared === true);
+  const shared = new Set(named.map((zone) => zone.name));
+  const partOf = partReader(sharing.groups, sharing.root);
 
   return {
     name: "no-value-is-declared-away-from-its-only-consumer",
     check: ({ project }) => {
-      const readBy = zonesReadingEach(project, roles);
-      const placed = byFile(reportedIn(project, roles)).map(([file, group]) =>
-        misplaced(group, project, readBy.get(file) ?? new Set()),
+      const unitOf: UnitOf = (declaredIn, reader) =>
+        shared.has(project.zoneOf(declaredIn) ?? "") ? partOf(reader) : (project.zoneOf(reader) ?? "");
+      const readBy = unitsReadingEach(project, roles, unitOf);
+      const placed = byFile(reportedIn(project, { roles, shared, unitOf })).map(([file, group]) =>
+        misplaced(group, readBy.get(file) ?? new Set(), { project, unitOf }),
       );
 
       return {

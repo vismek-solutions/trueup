@@ -4,6 +4,7 @@ export interface ZoneDefinition {
   readonly name: string;
   readonly patterns: readonly string[];
   readonly role?: ZoneRole | undefined;
+  readonly shared?: boolean | undefined;
 }
 
 export interface DeadPattern {
