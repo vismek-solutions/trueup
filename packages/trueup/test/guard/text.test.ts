@@ -7,7 +7,6 @@ const verdictOn = verdictFrom(PROJECT);
 
 const CLEAN = "# Clean\n\nA pause, here.\n";
 const MARKED = "# Clean\n\nA pause — here.\n";
-const REPEATED = "# Clean\n\nThe report names the file. The report names the file it names.\n";
 
 describe("guarding a guide", () => {
   it("refuses a write that puts a banned mark into a file that is clean on disk", async () => {
@@ -20,10 +19,6 @@ describe("guarding a guide", () => {
 
   it("judges a guide that does not exist yet", async () => {
     expect(await verdictOn("docs/new.md", MARKED)).toBe("deny");
-  });
-
-  it("lets a warning through rather than refusing the write", async () => {
-    expect(await verdictOn("docs/clean.md", REPEATED)).toBe("allowed");
   });
 
   it("says nothing about a guide falling in no zone, since no zone can hold one", async () => {

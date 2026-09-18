@@ -98,7 +98,6 @@ const proseSaid = (text: Prose | undefined): string | undefined => {
     text.words === undefined ? null : "words",
     lengths === undefined ? null : "length",
     text.maxInlineCodeWords === undefined ? null : "inline code",
-    text.echo === undefined ? null : "repetition",
   ].filter((name) => name !== null);
 
   return held.length === 0 ? undefined : `${text.files.join(" · ")} held to ${held.join(" · ")}`;

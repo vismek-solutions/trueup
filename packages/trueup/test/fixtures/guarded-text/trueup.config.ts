@@ -10,6 +10,5 @@ export default defineConfig({
     maxSentenceWords: 12,
     maxParagraphSentences: 2,
     maxInlineCodeWords: 3,
-    echo: 0.6,
   },
 });

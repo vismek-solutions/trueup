@@ -58,7 +58,6 @@ export default defineConfig({
     maxSentenceWords: 30,
     maxParagraphSentences: 5,
     maxInlineCodeWords: 4,
-    echo: 0.6,
   },
   runners: [
     biomeRunner({

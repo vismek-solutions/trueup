@@ -43,7 +43,6 @@ Here is the whole list. Read down the right-hand column to see which ones matter
 | `no-prose-uses-a-banned-word` | no sentence in your guides uses a word you banned |
 | `no-passage-runs-past-its-limit` | no sentence or paragraph is longer than you allow |
 | `no-inline-code-holds-more-than-a-path` | inline code holds a path, a command or a symbol, never a phrase |
-| `no-sentence-restates-the-one-before-it` | no sentence repeats the point of the one above it |
 | `no-change-outgrows-its-review` | no change has grown past the size a person can review |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 

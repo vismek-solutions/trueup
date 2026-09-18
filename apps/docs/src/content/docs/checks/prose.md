@@ -6,7 +6,6 @@ claims:
   - no-prose-uses-a-banned-word
   - no-passage-runs-past-its-limit
   - no-inline-code-holds-more-than-a-path
-  - no-sentence-restates-the-one-before-it
 ---
 
 An agent writes your guides as well as your code. The code has this tool watching it. The prose has a style guide somebody wrote once, and nothing that reads it.
@@ -41,8 +40,8 @@ Now the run says so:
 no-prose-uses-a-banned-mark                 1 error
     docs/setup.md:3:29  uses "—" where a full stop, a comma, a colon or a joining word would do
     ────────
-    A mark the project banned stands in for a pause. A dash used this way reads as generated prose,
-    and it hides which of a full stop, a comma or a colon the sentence actually needed.
+    A mark the project banned stands in for a pause, which hides which of a full stop, a comma or a
+    colon the sentence actually needed.
 
     Do this:
     - Split the sentence where the mark stands, or put a comma, a colon or a joining word there.
@@ -54,14 +53,18 @@ no-prose-uses-a-banned-mark                 1 error
 no-passage-runs-past-its-limit              1 error
     docs/setup.md:5:1  runs to 35 words in one sentence, more than the 30 allowed
     ────────
-    A sentence or a paragraph runs past the length the project set. A long sentence stacks two ideas
-    where a reader can hold one, and a long paragraph hides where its point is.
+    A sentence or a paragraph runs past the limit this project set. No study establishes a length
+    threshold, so the number is a house convention rather than a standard.
 
     Do this:
-    - Split the sentence at its joining word and give each half a full stop.
+    - Cut what the sentence does not need. Shortening on its own is measured to buy nothing, so
+      removing a clause beats moving it.
+    - Keep the joining word if you do split. Deleting it drops the relation the sentence was
+      carrying.
     - Break the paragraph where the subject changes, or move the extra sentences into a list.
 
-    Not the fix: raising the limit. The number exists to force the split.
+    Not the fix: raising the limit. The number exists to force the question of what the sentence is
+    for.
 ```
 
 ## What gets read
@@ -80,9 +83,8 @@ Headings and list items are read as passages of their own. A heading is one pass
 | `no-prose-uses-a-banned-word` | no sentence uses a word you banned | `words` |
 | `no-passage-runs-past-its-limit` | no sentence or paragraph is longer than you allow | `maxSentenceWords`, `maxParagraphSentences` |
 | `no-inline-code-holds-more-than-a-path` | inline code holds a path, a command or a symbol, never a phrase | `maxInlineCodeWords` |
-| `no-sentence-restates-the-one-before-it` | no sentence repeats the point of the one above it | `echo` |
 
-The first four are exact, so they fail the run and the guard refuses the edit. The last one compares how many content words two neighbouring sentences share, which is a threshold you chose rather than a fact about the text. It warns and never blocks.
+All four are exact, so they fail the run and the write time guard refuses the edit. Nothing here rests on a threshold tuned until it went quiet.
 
 ## Fixing one
 
@@ -98,7 +100,7 @@ Turn it on when a guide in your repo is something a reader outside your team wil
 
 Start with marks and words. Both are exact, both are cheap to fix, and neither has an argument in it. A repo that already writes this way reports nothing on the first run, which is what you want from a rule that holds a line rather than opening a project.
 
-Add the length limits next, and expect a backlog. Thirty words is a long sentence, and a repo that has never counted will have plenty. Record what is there in the baseline and let the numbers hold from that point on.
+Add the length limits next, and expect a backlog. No study establishes a length threshold, so take the number from your own writing rather than from a style guide. The ninety fifth percentile of your sentences is a defensible place to start. Record what stands in the baseline and let the number hold from there.
 
 The word list takes the plainer word beside the one it replaces, so the finding can say what to write instead:
 

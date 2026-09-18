@@ -78,17 +78,6 @@ describe("a phrase standing in inline code", () => {
   });
 });
 
-describe("a sentence that restates the one before it", () => {
-  const CLAIM = "no-sentence-restates-the-one-before-it";
-
-  it("warns rather than failing, because the threshold is a judgement", async () => {
-    const [finding] = await foundIn(CLAIM, "docs/loose.md");
-
-    expect(finding?.severity).toBe("warning");
-    expect(finding?.message).toBe("restates the sentence before it");
-  });
-});
-
 describe("a text setting the rulebook leaves out", () => {
   it("makes no claim at all, rather than one that passes", async () => {
     const report = await check({
