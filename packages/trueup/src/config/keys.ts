@@ -21,6 +21,7 @@ const ROOT: Record<keyof ArchitectureConfig, true> = {
   runners: true,
   seams: true,
   testInternals: true,
+  text: true,
   zones: true,
 };
 

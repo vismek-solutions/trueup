@@ -149,6 +149,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     colocation: config.colocation,
     readerships: config.readerships,
     testInternals: config.testInternals,
+    text: config.text,
     rules: config.rules,
     runners: config.runners,
     extensions: config.extensions,

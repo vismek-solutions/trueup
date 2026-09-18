@@ -8,6 +8,7 @@ export default defineMember({
     { name: "flow", patterns: ["test/**"], role: "tests" },
     { name: "ports", patterns: ["src/ports/**"] },
     { name: "paths", patterns: ["src/paths/**"] },
+    { name: "text", patterns: ["src/text/**"] },
     { name: "graph", patterns: ["src/graph/**"] },
     { name: "zones", patterns: ["src/zones/**"] },
     { name: "lexicon", patterns: ["src/lexicon/**"] },
@@ -27,6 +28,7 @@ export default defineMember({
   boundaries: [
     { from: "ports", allow: [] },
     { from: "paths", allow: [] },
+    { from: "text", allow: [...AMBIENT, "project", "report", "claims"] },
     { from: "graph", allow: AMBIENT },
     { from: "zones", allow: AMBIENT },
     { from: "lexicon", allow: AMBIENT },
@@ -36,7 +38,7 @@ export default defineMember({
     { from: "ratchet", allow: [...AMBIENT, "report"] },
     { from: "guard", allow: [...AMBIENT, "report"] },
     { from: "claims", allow: [...AMBIENT, "graph", "zones", "lexicon", "project", "report"] },
-    { from: "config", allow: [...AMBIENT, "claims", "zones", "project"] },
+    { from: "config", allow: [...AMBIENT, "claims", "zones", "project", "text"] },
     { from: "cli", allow: [...AMBIENT, "config", "report", "ratchet", "guard", "adapters", "root"] },
   ],
 });

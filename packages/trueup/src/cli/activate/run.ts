@@ -87,6 +87,23 @@ const switched = (value: boolean | undefined): string | undefined => {
   return value ? "on" : "off";
 };
 
+type Prose = NonNullable<ResolvedConfig["text"]>;
+
+const proseSaid = (text: Prose | undefined): string | undefined => {
+  if (text === undefined) return undefined;
+
+  const lengths = text.maxSentenceWords ?? text.maxParagraphSentences;
+  const held = [
+    text.marks === undefined ? null : "marks",
+    text.words === undefined ? null : "words",
+    lengths === undefined ? null : "length",
+    text.maxInlineCodeWords === undefined ? null : "inline code",
+    text.echo === undefined ? null : "repetition",
+  ].filter((name) => name !== null);
+
+  return held.length === 0 ? undefined : `${text.files.join(" · ")} held to ${held.join(" · ")}`;
+};
+
 const settingLines = (config: ResolvedConfig, read: number): readonly string[] => {
   const values: readonly (readonly [string, string | undefined])[] = [
     ["files read", String(read)],
@@ -104,6 +121,7 @@ const settingLines = (config: ResolvedConfig, read: number): readonly string[] =
     ["colocation", switched(config.colocation)],
     ["readerships", switched(config.readerships)],
     ["test internals", switched(config.testInternals)],
+    ["prose", proseSaid(config.text)],
     [
       "rulebook",
       rulebookGuarded(config.protect)

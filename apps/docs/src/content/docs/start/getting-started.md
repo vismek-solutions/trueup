@@ -135,7 +135,7 @@ import logo from "./logo.svg";
 import data from "./config.json";
 ```
 
-Only files with a source extension are read and sorted into zones. For everything else the trail simply stops there.
+Only files with a source extension are read and sorted into zones. For everything else the trail stops there.
 
 If something genuinely fails to resolve, it is one of two things. Either a real typo, which you want to know about, or an import name that your build tool invents out of thin air. The second case is covered in [imports your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies).
 

@@ -34,6 +34,7 @@ import type { Claim } from "./claims/model.ts";
 import { resolutionClaims } from "./claims/resolution.ts";
 import { runClaims } from "./claims/run.ts";
 import { seamClaim, seamZoneReferences } from "./claims/seam.ts";
+import { textClaims } from "./text/claims.ts";
 import { ungovernedFlows, type Ungoverned } from "./claims/ungoverned.ts";
 import { zoneReferencesExistClaim } from "./claims/zone-references.ts";
 import type { Settings } from "./config/model.ts";
@@ -166,8 +167,6 @@ export interface CheckOptions extends Settings {
   readonly ignoreFiles?: readonly string[] | undefined;
 }
 
-const standardClaims: readonly Claim[] = [...resolutionClaims, ...completenessClaims];
-
 const namesOf = (zones: readonly ZoneDefinition[], role: ZoneRole): string[] =>
   zones.filter((zone) => zone.role === role).map((zone) => zone.name);
 
@@ -214,11 +213,12 @@ const internalsFor = (zones: readonly ZoneDefinition[]): Claim =>
 const claimsFor = (options: CheckOptions): Claim[] => {
   const { zones, boundaries = [], seams = [], isolate = [], rules = [] } = options;
   const { maxFilesPerDirectory, directoryLimits = [], apiSurfaces = [], grants = [], doorNotes } = options;
-  const { duplication, reviewable, colocation, readerships, testInternals } = options;
+  const { duplication, reviewable, colocation, readerships, testInternals, text } = options;
   const { changes = gitChanges() } = options;
 
   return [
-    ...standardClaims,
+    ...resolutionClaims,
+    ...completenessClaims,
     zoneReferencesExistClaim([...boundaryZoneReferences(boundaries), ...seamZoneReferences(seams)]),
     ...under("boundaries", boundaries.length === 0 ? [] : [boundaryClaim(boundaries, doorNotes)]),
     ...under("seams", seams.length === 0 ? [] : [seamClaim(seams)]),
@@ -232,6 +232,7 @@ const claimsFor = (options: CheckOptions): Claim[] => {
     ...under("colocation", colocation ? placementClaims(options) : []),
     ...under("readerships", readerships ? [readershipClaim(roleZonesIn(zones))] : []),
     ...under("testInternals", testInternals ? [internalsFor(zones)] : []),
+    ...under("text", text === undefined ? [] : textClaims(text)),
     ...under("rules", customClaims(rules)),
   ];
 };

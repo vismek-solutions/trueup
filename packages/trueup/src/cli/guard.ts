@@ -192,6 +192,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       colocation: config.colocation,
       readerships: config.readerships,
       testInternals: config.testInternals,
+      text: config.text,
       rules: config.rules,
       extensions: config.extensions,
       externals: config.externals,

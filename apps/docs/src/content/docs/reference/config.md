@@ -64,6 +64,7 @@ Only the zones are required. Everything under them is optional, and a config wit
 | `colocation` | `boolean` | `false` | Turns on [the placement claims](/checks/placement/). |
 | `readerships` | `boolean` | `false` | Turns on [the check for a file serving two audiences](/checks/placement/#one-file-answering-to-two-audiences). |
 | `testInternals` | `boolean` | `false` | Turns on [the check for a test reaching an internal](/checks/placement/#tests-that-reach-an-internal). |
+| `text` | `TextSettings` | off | [Claims over the markdown in your project](/checks/prose/). Its `files` key also joins that markdown to `assets`. |
 | `reviewable` | `ReviewBudget` | off | [How large a change may grow](/checks/#how-big-a-change-can-be-reviewed) before nobody can review it. |
 | `command` | `string` | `trueup` | The command named in printed guidance. Set it to `pnpm lint:arch` and every message says that. |
 
@@ -118,6 +119,24 @@ The siblings pattern is a glob, and each star in it names a group of directories
 An exception written as an object is shared the same way, and its allow list says which of the other shared directories it may reach. A bare name reaches all of them. [How the order is read](/checks/isolation/#an-order-among-the-shared-directories).
 
 The wiring list names the files allowed to sit in the parent directory rather than inside one of the groups. Leave it out and that question is never asked. [What it reports](/checks/isolation/#files-that-sit-beside-the-group).
+
+## Text
+
+The text settings name the markdown to read and the rules to hold it to.
+
+```ts
+{ files: string[], marks?, words?, maxSentenceWords?, maxParagraphSentences?, maxInlineCodeWords?, echo? }
+```
+
+Only files is required, and on its own it makes no claim. Every other key turns on one claim, so a key you leave out is a check that never runs. [What each one reports](/checks/prose/).
+
+A word in the list carries the plainer word that replaces it:
+
+```ts
+words: [{ word: "leverage", instead: "use" }]
+```
+
+The files globs also join that markdown to assets, so a rule you write yourself reads the same pages.
 
 ## Review budget
 
