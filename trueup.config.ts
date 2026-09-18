@@ -55,6 +55,8 @@ export default defineConfig({
     files: ["apps/docs/**/*.md", "README.md"],
     marks: ["—", "–", "--", "·"],
     words: PLAINER,
+    maxSentenceWords: 30,
+    maxParagraphSentences: 5,
     maxInlineCodeWords: 4,
     echo: 0.6,
   },
