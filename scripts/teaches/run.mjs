@@ -5,8 +5,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, "..");
-const CASES = join(HERE, "fixtures", "teaches");
+const ROOT = resolve(HERE, "../..");
+const CASES = join(HERE, "fixtures");
 const PAGES = join(ROOT, "apps/docs/src/content/docs");
 const BIN = join(ROOT, "packages/trueup/bin/trueup.js");
 const MODEL = process.env.TEACHES_MODEL ?? "claude-sonnet-5";
@@ -47,7 +47,7 @@ const promptFor = (name, pages) => {
 const answerTo = (prompt) =>
   execFileSync(
     "claude",
-    ["-p", "--safe-mode", "--no-session-persistence", "--tools", "", "--model", MODEL],
+    ["-p", "--safe-mode", "--no-session-persistence", "--model", MODEL, "--tools", ""],
     { input: prompt, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
   );
 

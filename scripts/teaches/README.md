@@ -19,7 +19,7 @@ TEACHES_MODEL to compare one model against another.
 A case is a directory under fixtures, holding three things:
 
 ```
-scripts/fixtures/teaches/isolation/
+scripts/teaches/fixtures/isolation/
   case.json    the pages the reader was given, the claim that must fire, the file it must name
   task.md      what the reader is asked to do
   tree/        the project, with the violation already in it
