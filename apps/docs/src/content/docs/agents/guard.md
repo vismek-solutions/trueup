@@ -53,7 +53,17 @@ The second block is there only for [Serena](https://github.com/oraios/serena), a
 
 Only findings on the file being written can block it. A violation somewhere else is not this edit's problem, and if it were enough to block, no edit in an existing codebase would ever land.
 
-Anything already in your baseline does not block either. A baseline is the recorded list of problems you have agreed to live with for now.
+The hook payload arrives on standard input, so you can try a proposed edit by hand:
+
+```sh
+npx trueup guard < add-price-to-cart.json
+```
+
+```
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"This edit is refused by the project's architecture rules.\n\nevery-import-respects-its-zone-boundary  src/api/cart.ts\n  is api and may not reach domain: priceOf from src/domain/price.ts …"}}
+```
+
+Anything already in your baseline does not block either. A baseline is the recorded list of problems you have agreed to live with for now. Run the same command on an edit that leaves a recorded finding where it was, and it prints nothing at all.
 
 A recorded finding that comes back under different words does not block either, and that matters for a fix landing in stages. The edit closes part of what a check was saying, the check then says something different about the same file, and the new wording is in no baseline. Refusing it would make the improving edit the one edit you cannot make.
 

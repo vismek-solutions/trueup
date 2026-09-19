@@ -64,6 +64,23 @@ Without that, a baseline slowly turns into a list of permanent exemptions nobody
 
 An entry is keyed on three things: the claim, the file and the message. A claim is one sentence the tool believes about your project, which each run proves or disproves.
 
+```json
+{
+  "entries": [
+    {
+      "claim": "every-file-belongs-to-a-zone",
+      "file": "scripts/build.ts",
+      "message": "matches no zone"
+    },
+    {
+      "claim": "every-import-respects-its-zone-boundary",
+      "file": "src/hooks/useCart.ts",
+      "message": "is hooks and may not reach components: CartRow from src/components/CartRow.tsx"
+    }
+  ]
+}
+```
+
 A line number is never part of the key, so moving code around does not churn the file.
 
 An entry answers for one finding. Where a claim says the same thing twice about one file, the list holds two identical entries. A third one of that shape fails until it is recorded too. Counting them is what keeps the list honest, since the key holds no line number to tell them apart.
