@@ -15,3 +15,6 @@ One. Two. This third sentence is deliberately written to run past the twelve wor
 Use the `run the whole thing now` phrase in code.
 
 The report names the file. The report names the file it names.
+
+* __name__: the value to read here, which
+  the reader passes on to the next step without changing it.

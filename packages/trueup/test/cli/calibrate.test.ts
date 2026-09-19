@@ -30,7 +30,7 @@ describe("reporting what a project's own prose measures", () => {
   it("says what the configured limit reports, which is what the claim reports", async () => {
     const { output } = await capture(TEXT);
 
-    expect(output).toContain("at 12 (configured) 2 over");
+    expect(output).toContain("at 12 (configured) 4 over");
   });
 
   it("offers a percentile of the project's own writing beside it", async () => {

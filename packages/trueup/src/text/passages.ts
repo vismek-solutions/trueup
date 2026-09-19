@@ -1,4 +1,4 @@
-import type { Passage, Section } from "./model.ts";
+import type { Passage, PassageKind, Section } from "./model.ts";
 import { wordsIn } from "./sentences.ts";
 
 interface Line {
@@ -106,32 +106,39 @@ export function sectionsIn(source: string): readonly Section[] {
 // every passage is a contiguous slice, so an index into its text plus its start is a source offset
 export function passagesIn(source: string): readonly Passage[] {
   const passages: Passage[] = [];
+  let openKind: PassageKind = "paragraph";
   let openStart = -1;
   let openEnd = -1;
 
-  const closeParagraph = (): void => {
-    if (openStart >= 0) {
-      passages.push({ kind: "paragraph", text: source.slice(openStart, openEnd), start: openStart });
-    }
+  const close = (): void => {
+    if (openStart < 0) return;
+    passages.push({ kind: openKind, text: source.slice(openStart, openEnd), start: openStart });
     openStart = -1;
+  };
+
+  const open = (kind: PassageKind, start: number, end: number): void => {
+    openKind = kind;
+    openStart = start;
+    openEnd = end;
   };
 
   for (const { kind, line } of markedLines(linesOf(source))) {
     const end = line.start + line.text.length;
 
     if (kind === "prose") {
-      if (openStart < 0) openStart = line.start;
+      if (openStart < 0) open("paragraph", line.start, end);
       openEnd = end;
       continue;
     }
 
-    closeParagraph();
+    close();
     if (kind === "skip") continue;
 
     const start = line.start + markerIn(kind, line.text);
-    passages.push({ kind, text: source.slice(start, end), start });
+    if (kind === "item") open("item", start, end);
+    else passages.push({ kind, text: source.slice(start, end), start });
   }
 
-  closeParagraph();
+  close();
   return passages;
 }

@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { check } from "../../src/main.ts";
@@ -58,7 +59,15 @@ describe("a passage past the length the project set", () => {
       "runs to 16 words in one sentence, more than the 12 allowed",
       "runs to 3 sentences, more than the 2 allowed",
       "runs to 14 words in one sentence, more than the 12 allowed",
+      "runs to 18 words in one sentence, more than the 12 allowed",
     ]);
+  });
+
+  it("reads a list item and the lines wrapping under it as one passage", async () => {
+    const source = await readFile(join(PROJECT, "docs/loose.md"), "utf8");
+    const wrapped = (await foundIn(CLAIM, "docs/loose.md")).at(-1);
+
+    expect(wrapped?.start).toBe(source.indexOf("__name__"));
   });
 
   it("reads a boundary the same whatever stands at it: inline code, a url, an underline", async () => {
