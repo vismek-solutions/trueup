@@ -32,10 +32,10 @@ end to end is how you find them, since they carry no marker.
 ## Writing the page
 
 Read two or three of the existing pages before writing one, and follow their shape. `checks/seams.md`
-is the shortest complete example: what the thing is and why, the config that switches it on, a
-captured report showing a finding, how to fix it including the fix that looks right and is not, and
-when to turn it on. `concepts/zones.md` is the model for a page explaining an idea rather than a
-check.
+is the shortest complete example. It gives what the thing is and why, the config that switches it on,
+and a captured report showing a finding. Then how to fix it, including the fix that looks right and
+is not, and when to turn it on. `concepts/zones.md` is the model for a page explaining an idea rather
+than a check.
 
 Two habits of those pages are easy to miss, because both show up as an absence. No dash is used as
 punctuation, and anything longer than a path or a command gets its own block instead of sitting
