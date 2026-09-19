@@ -61,6 +61,7 @@ export default defineConfig({
     maxSentenceWords: 30,
     maxParagraphSentences: 5,
     maxInlineCodeWords: 4,
+    maxSectionWordsWithoutExample: 200,
     links: true,
   },
   runners: [
