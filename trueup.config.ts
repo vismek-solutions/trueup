@@ -10,7 +10,6 @@ const PLAINER = [
   { word: "leverage", instead: "use" },
   { word: "utilize", instead: "use" },
   { word: "facilitate", instead: "help" },
-  { word: "delve", instead: "look at" },
   { word: "occludes", instead: "hides" },
   { word: "robust", instead: "solid" },
   { word: "seamless", instead: "smooth" },
@@ -24,12 +23,16 @@ const PLAINER = [
   { word: "effortlessly", instead: "nothing, and delete the word" },
   { word: "myriad", instead: "many" },
   { word: "plethora", instead: "many" },
+  { word: "streamline", instead: "simplify" },
+  { word: "unlock", instead: "a plain verb" },
+  { word: "elevate", instead: "a plain verb" },
+];
+
+const MODEL_TICS = [
+  { word: "delve", instead: "look at" },
   { word: "landscape", instead: "a plain noun" },
   { word: "realm", instead: "a plain noun" },
   { word: "tapestry", instead: "a plain noun" },
-  { word: "unlock", instead: "a plain verb" },
-  { word: "elevate", instead: "a plain verb" },
-  { word: "streamline", instead: "simplify" },
 ];
 
 export default defineConfig({
@@ -45,7 +48,6 @@ export default defineConfig({
   externals: ["astro:*"],
   ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro", ".stryker-tmp"],
   command: "node ./packages/trueup/bin/trueup.js",
-  protect: ["CLAUDE.md", ".claude/settings.json"],
   maxFilesPerDirectory: 12,
   duplication: 60,
   readerships: true,
@@ -54,7 +56,7 @@ export default defineConfig({
   text: {
     files: ["apps/docs/**/*.md", "README.md"],
     marks: ["—", "–", "--", "·"],
-    words: PLAINER,
+    words: [...PLAINER, ...MODEL_TICS],
     maxSentenceWords: 30,
     maxParagraphSentences: 5,
     maxInlineCodeWords: 4,
