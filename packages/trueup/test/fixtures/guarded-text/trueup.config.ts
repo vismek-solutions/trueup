@@ -11,5 +11,6 @@ export default defineConfig({
     maxParagraphSentences: 2,
     maxInlineCodeWords: 3,
     links: true,
+    maxSectionWordsWithoutExample: 20,
   },
 });

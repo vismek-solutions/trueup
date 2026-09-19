@@ -6,6 +6,12 @@ export interface Passage {
   readonly start: number;
 }
 
+export interface Section {
+  readonly start: number;
+  readonly words: number;
+  readonly shows: boolean;
+}
+
 export interface Span {
   readonly text: string;
   readonly start: number;

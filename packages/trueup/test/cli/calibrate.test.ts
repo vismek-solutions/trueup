@@ -44,7 +44,7 @@ describe("reporting what a project's own prose measures", () => {
   it("shows a metric with nothing to measure rather than leaving it out", async () => {
     const { output } = await capture(PLAIN);
 
-    expect(output).toContain("inline code words     0 measured");
+    expect(output).toContain("inline code words             0 measured");
   });
 
   it("says a rulebook with no text section has nothing to calibrate", async () => {

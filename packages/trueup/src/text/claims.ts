@@ -1,11 +1,12 @@
 import type { Claim } from "../claims/model.ts";
 import type { Finding, Severity } from "../report/model.ts";
-import { documentsIn } from "./documents.ts";
+import { documentsIn, type Document } from "./documents.ts";
+import { exampleIssues } from "./checks/examples.ts";
 import { inlineCodeIssues } from "./checks/inline.ts";
 import { limitIssues } from "./checks/limits.ts";
 import { linkIssues } from "./checks/links.ts";
 import { markIssues } from "./checks/marks.ts";
-import type { Passage, TextIssue } from "./model.ts";
+import type { TextIssue } from "./model.ts";
 import { wordIssues, type WordSwap } from "./checks/wording.ts";
 
 export interface TextSettings {
@@ -16,6 +17,7 @@ export interface TextSettings {
   readonly maxParagraphSentences?: number | undefined;
   readonly maxInlineCodeWords?: number | undefined;
   readonly links?: boolean | undefined;
+  readonly maxSectionWordsWithoutExample?: number | undefined;
 }
 
 const MARKS = [
@@ -69,7 +71,18 @@ const LINKS = [
   'Not the fix: writing "click here to read about seams". The link text is read on its own, so the rest of the sentence is not there to carry it.',
 ].join("\n");
 
-type IssuesOf = (passages: readonly Passage[]) => readonly TextIssue[];
+const EXAMPLES = [
+  "A section explains something at length with nothing to look at. A worked example is the part a reader takes away, and the measured gain from concrete framing is larger than from any wording rule here.",
+  "",
+  "Do this:",
+  "- Show the thing: the config that switches it on, the report it prints, or the code before and after.",
+  "- Capture the block by running the tool, since output written from memory is wrong more often than not.",
+  "- Split the section where the subject changes, if each half stands on its own.",
+  "",
+  "Not the fix: a block that repeats the prose beside it. This warns rather than fails, so a section that genuinely has nothing to show can stay as it is.",
+].join("\n");
+
+type IssuesOf = (document: Document) => readonly TextIssue[];
 
 interface TextClaim {
   readonly name: string;
@@ -83,11 +96,11 @@ const claimOver = ({ name, files, severity, issuesOf, guidance }: TextClaim): Cl
   name,
   check: ({ project }) => ({
     guidance,
-    findings: documentsIn(project, files).flatMap(({ file, passages }): readonly Finding[] =>
-      issuesOf(passages).map((issue) => ({
+    findings: documentsIn(project, files).flatMap((document): readonly Finding[] =>
+      issuesOf(document).map((issue) => ({
         severity,
         message: issue.message,
-        file,
+        file: document.file,
         start: issue.start,
       })),
     ),
@@ -96,7 +109,7 @@ const claimOver = ({ name, files, severity, issuesOf, guidance }: TextClaim): Cl
 
 export function textClaims(settings: TextSettings): readonly Claim[] {
   const { files, marks = [], words = [], maxSentenceWords, maxParagraphSentences } = settings;
-  const { maxInlineCodeWords, links } = settings;
+  const { maxInlineCodeWords, links, maxSectionWordsWithoutExample } = settings;
   const bounded = maxSentenceWords !== undefined || maxParagraphSentences !== undefined;
 
   const wanted: readonly (Omit<TextClaim, "files"> | null)[] = [
@@ -105,7 +118,7 @@ export function textClaims(settings: TextSettings): readonly Claim[] {
       : {
           name: "no-prose-uses-a-banned-mark",
           severity: "error",
-          issuesOf: (passages) => markIssues(passages, marks),
+          issuesOf: ({ passages }) => markIssues(passages, marks),
           guidance: MARKS,
         },
     words.length === 0
@@ -113,14 +126,14 @@ export function textClaims(settings: TextSettings): readonly Claim[] {
       : {
           name: "no-prose-uses-a-banned-word",
           severity: "error",
-          issuesOf: (passages) => wordIssues(passages, words),
+          issuesOf: ({ passages }) => wordIssues(passages, words),
           guidance: WORDS,
         },
     bounded
       ? {
           name: "no-passage-runs-past-its-limit",
           severity: "error",
-          issuesOf: (passages) => limitIssues(passages, { maxSentenceWords, maxParagraphSentences }),
+          issuesOf: ({ passages }) => limitIssues(passages, { maxSentenceWords, maxParagraphSentences }),
           guidance: LIMITS,
         }
       : null,
@@ -129,17 +142,25 @@ export function textClaims(settings: TextSettings): readonly Claim[] {
       : {
           name: "no-inline-code-holds-more-than-a-path",
           severity: "error",
-          issuesOf: (passages) => inlineCodeIssues(passages, maxInlineCodeWords),
+          issuesOf: ({ passages }) => inlineCodeIssues(passages, maxInlineCodeWords),
           guidance: INLINE,
         },
     links === true
       ? {
           name: "every-link-says-where-it-goes",
           severity: "error",
-          issuesOf: linkIssues,
+          issuesOf: ({ passages }) => linkIssues(passages),
           guidance: LINKS,
         }
       : null,
+    maxSectionWordsWithoutExample === undefined
+      ? null
+      : {
+          name: "every-long-section-shows-an-example",
+          severity: "warning",
+          issuesOf: ({ sections }) => exampleIssues(sections, maxSectionWordsWithoutExample),
+          guidance: EXAMPLES,
+        },
   ];
 
   return wanted.filter((claim) => claim !== null).map((claim) => claimOver({ ...claim, files }));

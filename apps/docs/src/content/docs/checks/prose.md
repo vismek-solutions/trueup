@@ -7,6 +7,7 @@ claims:
   - no-passage-runs-past-its-limit
   - no-inline-code-holds-more-than-a-path
   - every-link-says-where-it-goes
+  - every-long-section-shows-an-example
 ---
 
 An agent writes your guides as well as your code. The code has this tool watching it. The prose has a style guide somebody wrote once, and nothing that reads it.
@@ -85,8 +86,11 @@ Headings and list items are read as passages of their own. A heading is one pass
 | `no-passage-runs-past-its-limit` | no sentence or paragraph is longer than you allow | `maxSentenceWords`, `maxParagraphSentences` |
 | `no-inline-code-holds-more-than-a-path` | inline code holds a path, a command or a symbol, never a phrase | `maxInlineCodeWords` |
 | `every-link-says-where-it-goes` | no link hides its destination behind words like here or this page | `links` |
+| `every-long-section-shows-an-example` | no section explains at length with nothing to look at | `maxSectionWordsWithoutExample` |
 
-Each one is exact, so it fails the run and the write time guard refuses the edit. Nothing here rests on a threshold tuned until it went quiet.
+All but the last are exact, so they fail the run and the write time guard refuses the edit. Nothing there rests on a threshold tuned until it went quiet.
+
+The last one is different in kind. Every other claim names something the text must not contain, so it can only speak once the words exist. This one says what a section must carry, which is a requirement an agent can meet while writing rather than after. It warns and never refuses an edit, because a section can genuinely have nothing to show.
 
 ## Fixing one
 
@@ -97,6 +101,14 @@ For a long sentence, cut it at the joining word and give each half a full stop. 
 For a phrase in inline code, take the backticks off and let the words sit in the sentence. Inline code earns its place when a terminal can make the thing clickable, which is true of a path, a command and a symbol, and false of a sentence.
 
 For a link, put the destination in the words themselves: the page, the command or the setting it explains. A screen reader can list a page's links out of context, so text like here or this page leads nowhere. Writing click here to read about seams does not help, because the sentence around the link is not read out with it.
+
+For a section with nothing to look at, show the thing it is about. A section explaining what a zone is can carry one:
+
+```ts
+zones: [{ name: "engine", patterns: ["src/engine/**"] }]
+```
+
+A block that repeats the sentence beside it clears the warning and helps nobody, which is why this claim never refuses an edit.
 
 Better than fixing one is not writing it. The [session start block](/agents/instructions/) names the files held and every limit in force, so an agent reads the numbers before its first draft rather than meeting them in a refusal.
 

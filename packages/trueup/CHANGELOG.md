@@ -5,6 +5,7 @@
 ### Added
 
 - Claims read the markdown a project names under `text`. They report a banned mark, a banned word, and a sentence or paragraph past a length limit. They also report an inline code span holding more than a path, and a link whose text says nothing about where it goes. The write-time guard rules on them too.
+- A section that explains at length with nothing to look at is reported, which is the one prose claim that asks for something rather than banning it. It warns and never refuses an edit.
 - The calibrate command prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
 
 ### Fixed

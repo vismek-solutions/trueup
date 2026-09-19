@@ -1,4 +1,5 @@
-import type { Passage } from "./model.ts";
+import type { Passage, Section } from "./model.ts";
+import { wordsIn } from "./sentences.ts";
 
 interface Line {
   readonly text: string;
@@ -65,6 +66,29 @@ const markedLines = (lines: readonly Line[]): readonly Marked[] => {
 
   return marked;
 };
+
+const TABLE = /^ *\|/;
+
+const showsSomething = (text: string): boolean => FENCE.test(text) || TABLE.test(text);
+
+export function sectionsIn(source: string): readonly Section[] {
+  const sections: Section[] = [];
+  let open = { start: 0, words: 0, shows: false };
+
+  for (const { kind, line } of markedLines(linesOf(source))) {
+    if (kind === "heading") {
+      sections.push(open);
+      open = { start: line.start, words: 0, shows: false };
+    } else if (kind === "item" || showsSomething(line.text)) {
+      open.shows = true;
+    } else if (kind === "prose") {
+      open.words += wordsIn(line.text).length;
+    }
+  }
+
+  sections.push(open);
+  return sections;
+}
 
 // every passage is a contiguous slice, so an index into its text plus its start is a source offset
 export function passagesIn(source: string): readonly Passage[] {

@@ -5,7 +5,7 @@ import { openedIn, refusedArguments } from "../preamble.ts";
 type Distribution = ReturnType<typeof calibrationIn>[number];
 type Point = Distribution["points"][number];
 
-const COLUMN = 22;
+const COLUMN = 30;
 
 const NOTHING_DECLARED = "this rulebook declares no text section, so there is nothing to calibrate";
 

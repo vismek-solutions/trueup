@@ -1,9 +1,10 @@
 import type { Project } from "../project/model.ts";
 import type { TextSettings } from "./claims.ts";
 import { documentsIn } from "./documents.ts";
+import { wordsWithoutExample } from "./checks/examples.ts";
 import { proseSpanWords } from "./checks/inline.ts";
 import { paragraphSentences, sentenceWords } from "./checks/limits.ts";
-import type { Measure, Passage } from "./model.ts";
+import type { Measure, Passage, Section } from "./model.ts";
 
 export interface Point {
   readonly label: string;
@@ -51,15 +52,31 @@ const distributionOf = (
   };
 };
 
-const calibrationOf = (passages: readonly Passage[], settings: TextSettings): readonly Distribution[] =>
+const calibrationOf = (read: Read, settings: TextSettings): readonly Distribution[] =>
   [
-    distributionOf("sentence words", sentenceWords(passages), settings.maxSentenceWords),
-    distributionOf("paragraph sentences", paragraphSentences(passages), settings.maxParagraphSentences),
-    distributionOf("inline code words", proseSpanWords(passages), settings.maxInlineCodeWords),
+    distributionOf("sentence words", sentenceWords(read.passages), settings.maxSentenceWords),
+    distributionOf("paragraph sentences", paragraphSentences(read.passages), settings.maxParagraphSentences),
+    distributionOf("inline code words", proseSpanWords(read.passages), settings.maxInlineCodeWords),
+    distributionOf(
+      "words with nothing to look at",
+      wordsWithoutExample(read.sections),
+      settings.maxSectionWordsWithoutExample,
+    ),
   ].filter((entry) => entry !== null);
 
-export const distributionsIn = (project: Project, settings: TextSettings): readonly Distribution[] =>
-  calibrationOf(
-    documentsIn(project, settings.files).flatMap((document) => document.passages),
+interface Read {
+  readonly passages: readonly Passage[];
+  readonly sections: readonly Section[];
+}
+
+export const distributionsIn = (project: Project, settings: TextSettings): readonly Distribution[] => {
+  const documents = documentsIn(project, settings.files);
+
+  return calibrationOf(
+    {
+      passages: documents.flatMap((document) => document.passages),
+      sections: documents.flatMap((document) => document.sections),
+    },
     settings,
   );
+};

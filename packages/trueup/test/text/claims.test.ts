@@ -96,6 +96,22 @@ describe("a link whose text says nothing", () => {
   });
 });
 
+describe("a section that explains at length with nothing to look at", () => {
+  const CLAIM = "every-long-section-shows-an-example";
+
+  it("counts what the section spends and leaves a block, a list and a table alone", async () => {
+    expect(await messagesFor(CLAIM, "docs/sections.md")).toEqual([
+      "runs to 30 words with nothing to look at, more than the 20 allowed",
+    ]);
+  });
+
+  it("warns rather than fails, since a section with nothing to show is allowed to say so", async () => {
+    expect((await foundIn(CLAIM, "docs/sections.md")).map((finding) => finding.severity)).toEqual([
+      "warning",
+    ]);
+  });
+});
+
 describe("a text setting the rulebook leaves out", () => {
   it("makes no claim at all, rather than one that passes", async () => {
     const report = await check({
