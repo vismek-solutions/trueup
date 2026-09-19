@@ -26,7 +26,7 @@ const ASK_FIRST =
   "Before moving a single declaration, ask whether the seam should carry it at all. A value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not.";
 
 const SHARED_HOME =
-  "Giving the value a zone of its own, or a package underneath the ones that read it, closes nothing by itself, because the count is about who reads it rather than where it sits. Reach for the shared home anyway when the consumer named must not own the value, a test harness or a downstream app for instance, and accept the finding that stands after it.";
+  "Giving the value a zone of its own, or a package underneath the ones that read it, closes nothing by itself. The count is about who reads it rather than where it sits. Reach for the shared home anyway when the consumer named must not own the value, a test harness or a downstream app for instance. Accept the finding that stands after it.";
 
 const NOT_THE_FIX = `Not the fix:
 - Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.
@@ -34,7 +34,7 @@ const NOT_THE_FIX = `Not the fix:
 - Declaring a zone \`shared\` so its count falls to parts of the consumer. That is honest only for a layer written to serve the layer above it.`;
 
 const WHY_NO_TYPES =
-  "A type is never reported, because a type can be used through a value without ever being imported, so counting its readers would name one consumer where there are several. A zone that imports a type does count as a consumer of the values that type is built from, because the type cannot be declared anywhere those values are not, so that zone pins them where they are.";
+  "A type is never reported, because a type can be used through a value without ever being imported, so counting its readers would name one consumer where there are several. A zone that imports a type does count as a consumer of the values that type is built from. The type cannot be declared anywhere those values are not, so that zone pins them where they are.";
 
 export const placementGuidance = (shapes: ReadonlySet<PlacementShape>): string => {
   const bullets = ORDER.filter((shape) => shapes.has(shape)).map((shape) => `- ${BRANCH[shape]}`);
