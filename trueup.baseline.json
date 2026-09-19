@@ -62,36 +62,6 @@
     },
     {
       "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/boundaries.md",
-      "message": "runs to 31 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/boundaries.md",
-      "message": "runs to 32 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/boundaries.md",
-      "message": "runs to 33 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/boundaries.md",
-      "message": "runs to 35 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/boundaries.md",
-      "message": "runs to 39 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/boundaries.md",
-      "message": "runs to 41 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/concepts/zones.md",
       "message": "runs to 34 words in one sentence, more than the 30 allowed"
     },
