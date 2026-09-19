@@ -1,6 +1,6 @@
 # How often is a finding right
 
-Four of the prose claims refuse a write, and nothing said how often that refusal is wrong. This reads
+Every prose claim but one refuses a write, and nothing said how often that refusal is wrong. This reads
 markdown nobody wrote for this tool, runs the claims over it, and has a model judge each finding
 against the lines it names.
 
@@ -40,6 +40,7 @@ a sentence ending in a danda rather than a full stop
 a full stop swallowed by the url in front of it
 a dash that is really a command line flag
 a heading underlined with equals signs
+a sentence running from a list item into the lines wrapping under it
 ```
 
 The labels are not certain either. Read the lines in the json file before acting on a verdict, since
