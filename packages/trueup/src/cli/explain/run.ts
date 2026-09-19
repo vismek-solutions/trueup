@@ -1,5 +1,5 @@
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { check, homesFor, nameIn, placementOf, reachOf, siblingsIn, ungovernedIn } from "../../compose.ts";
+import { check, homesFor, nameIn, placementOf, reachOf, siblingsIn, ungovernedIn } from "../../main.ts";
 import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 

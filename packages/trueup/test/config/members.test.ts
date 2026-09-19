@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { runGuard } from "../../src/cli/guard.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import { memberDirectories } from "../../src/config/members.ts";
-import { check, type Overlay } from "../../src/compose.ts";
+import { check, type Overlay } from "../../src/main.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 import { claimIn, messagesIn } from "../support/report.ts";

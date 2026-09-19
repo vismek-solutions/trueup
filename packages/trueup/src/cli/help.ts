@@ -21,6 +21,7 @@ const COMMANDS: Record<string, string> = {
   guard: "rule on a proposed edit, reading a hook payload from stdin",
   "agent-instructions": "a short block to paste into an agent's memory file",
   "docs [<topic>]": "the guides that ship with this version, one page at a time",
+  calibrate: "what your own prose measures, so a text limit comes from it rather than a guess",
 };
 
 const WIDTH = 24;

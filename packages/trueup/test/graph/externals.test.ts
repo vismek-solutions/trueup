@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyze, check } from "../../src/compose.ts";
+import { analyze, check } from "../../src/main.ts";
 import type { SymbolGraph } from "../../src/graph/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 import { messagesIn } from "../support/report.ts";

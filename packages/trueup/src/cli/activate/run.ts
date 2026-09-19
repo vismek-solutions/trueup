@@ -1,6 +1,6 @@
 import { relative } from "node:path";
 import { gitChanges } from "../../adapters/git/changes.ts";
-import { changeSizeIn } from "../../compose.ts";
+import { changeSizeIn } from "../../main.ts";
 import type { ResolvedConfig } from "../../config/model.ts";
 import { pathsIn, rulebookGuarded } from "../../guard/protected.ts";
 import { toPosix } from "../../paths/posix.ts";

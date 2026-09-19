@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import type { ZoneDefinition } from "../../src/zones/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 import { messagesIn } from "../support/report.ts";

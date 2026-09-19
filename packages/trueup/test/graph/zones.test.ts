@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FIXTURES } from "../support/fixtures.ts";
 import { claimIn, findingsIn } from "../support/report.ts";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import type { Report } from "../../src/report/model.ts";
 import { assignZones } from "../../src/zones/assign.ts";
 

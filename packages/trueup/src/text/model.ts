@@ -12,6 +12,11 @@ export interface Span {
   readonly end: number;
 }
 
+export interface Measure {
+  readonly value: number;
+  readonly start: number;
+}
+
 export interface TextIssue {
   readonly message: string;
   readonly start: number;

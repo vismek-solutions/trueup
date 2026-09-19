@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../../support/fixtures.ts";
 import { messagesIn } from "../../support/report.ts";
-import { check } from "../../../src/compose.ts";
+import { check } from "../../../src/main.ts";
 import type { BoundaryRule } from "../../../src/claims/boundary.ts";
 
 const ROOT = fixtureAt("copied-across");

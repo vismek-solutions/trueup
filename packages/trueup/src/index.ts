@@ -9,14 +9,14 @@ export type { Vocabulary } from "./lexicon/model.ts";
 export type { Mention, MentionForm, BindingKind } from "./ports/module-record.ts";
 export type { ZoneDefinition } from "./zones/model.ts";
 export type { Finding, Report, Severity } from "./report/model.ts";
-export { analyze, check, type AnalyzeOptions, type CheckOptions } from "./compose.ts";
+export { analyze, check, type AnalyzeOptions, type CheckOptions } from "./main.ts";
 export {
   inspect,
   placementOf,
   type InspectOptions,
   type Placement,
   type PlacementInput,
-} from "./compose.ts";
+} from "./main.ts";
 export { consumersOf } from "./graph/model.ts";
 export { COMMAND_TOKEN, DEFAULT_COMMAND } from "./report/invocation.ts";
 export { EXIT_CLEAN, EXIT_ERRORS, EXIT_NO_CONFIG, EXIT_STALE_BASELINE } from "./cli/command.ts";
@@ -37,6 +37,6 @@ export { RUNNERS_RAN_CLAIM } from "./claims/delegated.ts";
 export { decideOnProposal } from "./guard/decide.ts";
 export type { Decision, Proposal, Verdict } from "./ports/proposal.ts";
 export type { Protection, ProtectionRule } from "./ports/protection.ts";
-export type { Overlay } from "./compose.ts";
+export type { Overlay } from "./main.ts";
 export { applyBaseline, baselineOf, STALE_CLAIM } from "./ratchet/apply.ts";
 export type { RatchetResult } from "./ratchet/model.ts";

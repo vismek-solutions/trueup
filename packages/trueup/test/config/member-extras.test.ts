@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { placementOf } from "../../src/compose.ts";
+import { placementOf } from "../../src/main.ts";
 import { loadConfig } from "../../src/config/load.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";

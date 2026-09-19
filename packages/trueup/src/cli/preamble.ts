@@ -1,6 +1,6 @@
 import { extname, relative, sep } from "node:path";
 import { IGNORED_DIRECTORIES, SOURCE_EXTENSIONS, namedAsset } from "../adapters/node-files.ts";
-import { inspect, type Overlay } from "../compose.ts";
+import { inspect, type Overlay } from "../main.ts";
 import { findConfig, loadConfig, messageOf, resolveInclude, type LoadedConfig } from "../config/load.ts";
 import type { ResolvedConfig } from "../config/model.ts";
 import { DEFAULT_COMMAND } from "../report/invocation.ts";

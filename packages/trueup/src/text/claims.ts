@@ -1,13 +1,10 @@
-import picomatch from "picomatch";
 import type { Claim } from "../claims/model.ts";
-import { toPosix } from "../paths/posix.ts";
-import type { Project } from "../project/model.ts";
 import type { Finding, Severity } from "../report/model.ts";
+import { documentsIn } from "./documents.ts";
 import { inlineCodeIssues } from "./inline.ts";
 import { limitIssues } from "./limits.ts";
 import { markIssues } from "./marks.ts";
 import type { Passage, TextIssue } from "./model.ts";
-import { passagesIn } from "./passages.ts";
 import { wordIssues, type WordSwap } from "./wording.ts";
 
 export interface TextSettings {
@@ -59,19 +56,6 @@ const INLINE = [
   "",
   "Not the fix: raising the word limit. A path, a command and a symbol all sit under it already.",
 ].join("\n");
-
-interface Document {
-  readonly file: string;
-  readonly passages: readonly Passage[];
-}
-
-const documentsIn = (project: Project, patterns: readonly string[]): readonly Document[] => {
-  const wanted = picomatch([...patterns], { dot: true });
-
-  return project.assets
-    .filter((file) => wanted(toPosix(project.relative(file))))
-    .map((file) => ({ file, passages: passagesIn(project.sourceOf(file) ?? "") }));
-};
 
 type IssuesOf = (passages: readonly Passage[]) => readonly TextIssue[];
 

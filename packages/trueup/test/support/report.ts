@@ -1,4 +1,4 @@
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import type { RunnerOutcome } from "../../src/ports/runner.ts";
 import type { ClaimResult, Finding, Report } from "../../src/report/model.ts";

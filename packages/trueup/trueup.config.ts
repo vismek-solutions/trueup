@@ -22,7 +22,7 @@ export default defineMember({
     { name: "adapters", patterns: ["src/adapters/**"] },
     { name: "api", patterns: ["src/index.ts"], role: "api" },
     { name: "bin", patterns: ["bin/**"], role: "wiring" },
-    { name: "root", patterns: ["src/compose.ts"], role: "wiring" },
+    { name: "compose", patterns: ["src/compose/**", "src/main.ts"], role: "wiring" },
     { name: "tooling", patterns: ["vitest.config.ts"], role: "wiring" },
   ],
   boundaries: [
@@ -39,6 +39,6 @@ export default defineMember({
     { from: "guard", allow: [...AMBIENT, "report"] },
     { from: "claims", allow: [...AMBIENT, "graph", "zones", "lexicon", "project", "report"] },
     { from: "config", allow: [...AMBIENT, "claims", "zones", "project", "text"] },
-    { from: "cli", allow: [...AMBIENT, "config", "report", "ratchet", "guard", "adapters", "root"] },
+    { from: "cli", allow: [...AMBIENT, "config", "report", "ratchet", "guard", "adapters", "compose"] },
   ],
 });

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { PROJECT_ZONES as ZONES } from "../support/zones.ts";
 import { RUNNERS_RAN_CLAIM } from "../../src/claims/delegated.ts";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import type { Runner, RunnerFinding } from "../../src/ports/runner.ts";
 import { countOf, type Report } from "../../src/report/model.ts";
 import { applyBaseline, baselineOf } from "../../src/ratchet/apply.ts";

@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { inspect } from "../../src/compose.ts";
+import { inspect } from "../../src/main.ts";
 import type { Project, ResolvedImport } from "../../src/project/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 

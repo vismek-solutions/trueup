@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { SEAM_ZONES as ZONES } from "../support/zones.ts";
 import type { SeamRule } from "../../src/claims/seam.ts";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 
 const ROOT = fixtureAt("seam");
 

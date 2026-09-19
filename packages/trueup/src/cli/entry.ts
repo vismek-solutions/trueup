@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { runActivate } from "./activate/run.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
+import { runCalibrate } from "./calibrate/run.ts";
 import type { CommandInput } from "./command.ts";
 import { runDocs } from "./docs/run.ts";
 import { runExplain } from "./explain/run.ts";
@@ -21,6 +22,7 @@ const COMMANDS: Record<string, Command> = {
   activate: runActivate,
   "agent-instructions": runAgentInstructions,
   docs: runDocs,
+  calibrate: runCalibrate,
 };
 
 const read = async (): Promise<string> => {

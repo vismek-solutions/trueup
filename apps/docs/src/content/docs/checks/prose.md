@@ -94,6 +94,37 @@ For a long sentence, cut it at the joining word and give each half a full stop. 
 
 For a phrase in inline code, take the backticks off and let the words sit in the sentence. Inline code earns its place when a terminal can make the thing clickable, which is true of a path, a command and a symbol, and false of a sentence.
 
+## Setting a limit you can defend
+
+No study establishes a sentence length. The 20 and 25 words in the technical writing standards cite nothing. The 25 in the GOV.UK guide traces back through its own blog to a magazine article. A number copied from a style guide is a number with nothing behind it.
+
+Take it from your own writing instead:
+
+```sh
+npx trueup calibrate
+```
+
+```
+calibration  apps/docs/**/*.md · README.md
+
+sentence words        1430 measured
+  at 30 (configured) 52 over
+  at 25 (p90) 131 over · at 29 (p95) 64 over · at 36 (p99) 12 over · at 59 (max) 0 over
+
+paragraph sentences   556 measured
+  at 5 (configured) 0 over
+  at 4 (p90) 16 over · at 4 (p95) 16 over · at 5 (p99) 0 over · at 5 (max) 0 over
+
+inline code words     0 measured
+
+A limit taken from a percentile of your own writing is one you can defend.
+No study establishes a length threshold, so a number from a style guide has nothing behind it.
+```
+
+The first line under each metric is where you are now. The second is what each percentile would cost you. Reading the example, tightening the sentence cap from 30 to 29 takes the backlog from 52 findings to 64, and loosening it to 36 cuts it to 12.
+
+A metric reading nothing measured is one whose check is switched on with nothing to look at. That is worth seeing, because the alternative is a check you believe is working.
+
 ## When to turn it on
 
 Turn it on when a guide in your repo is something a reader outside your team will see, and an agent is one of the people writing it. A README, a changelog and a documentation site all qualify. Notes nobody reads twice do not.

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../../support/fixtures.ts";
 import { claimIn } from "../../support/report.ts";
 import type { DirectoryLimit } from "../../../src/claims/placement/directories.ts";
-import { check } from "../../../src/compose.ts";
+import { check } from "../../../src/main.ts";
 import type { Report } from "../../../src/report/model.ts";
 
 const ROOT = fixtureAt("project");

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import type { BoundaryRule } from "../../src/claims/boundary.ts";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import type { Finding } from "../../src/report/model.ts";
 
 const ROOT = fixtureAt("boundary");

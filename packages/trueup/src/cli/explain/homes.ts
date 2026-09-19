@@ -1,5 +1,5 @@
 import { basename, dirname, join } from "node:path";
-import { reachOf, type HomesInput, type Rulebook } from "../../compose.ts";
+import { reachOf, type HomesInput, type Rulebook } from "../../main.ts";
 import { list } from "./lines.ts";
 
 export interface Home {
