@@ -22,21 +22,6 @@
     },
     {
       "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/start/reports.md",
-      "message": "runs to 31 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/start/reports.md",
-      "message": "runs to 33 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/start/reports.md",
-      "message": "runs to 36 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
       "file": "packages/trueup/src/claims/placement/remedies.ts",
       "message": "runs to 32 words in one sentence, more than the 30 allowed"
     },
