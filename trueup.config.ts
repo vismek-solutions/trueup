@@ -56,6 +56,12 @@ export default defineConfig({
   protect: ["CLAUDE.md", ".claude/settings.json"],
   text: {
     files: ["**/*.md", "*.md"],
+    strings: [
+      "packages/trueup/src/claims/**",
+      "packages/trueup/src/text/**",
+      "packages/trueup/src/guard/**",
+      "packages/trueup/src/ratchet/**",
+    ],
     marks: ["—", "–", "--", "·"],
     words: [...PLAINER, ...MODEL_TICS],
     maxSentenceWords: 30,
