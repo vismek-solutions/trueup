@@ -10,6 +10,7 @@
     "check": "node ./packages/trueup/bin/trueup.js",
     "docs": "node ./packages/trueup/bin/trueup.js docs",
     "biome": "biome check --write --unsafe .",
+    "teaches": "node ./scripts/teaches.mjs",
     "test": "pnpm --filter trueup run test",
     "typecheck": "pnpm --filter trueup run typecheck",
     "build": "pnpm --filter trueup run build",

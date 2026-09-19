@@ -1,0 +1,5 @@
+{
+  "pages": ["concepts/zones.md", "checks/seams.md"],
+  "expect": "generic-code-names-no-domain-concept",
+  "file": "src/engine/runner.ts"
+}
