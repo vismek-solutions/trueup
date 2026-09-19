@@ -63,6 +63,7 @@ export default defineConfig({
     maxInlineCodeWords: 4,
     maxSectionWordsWithoutExample: 200,
     links: true,
+    comments: true,
   },
   runners: [
     biomeRunner({
