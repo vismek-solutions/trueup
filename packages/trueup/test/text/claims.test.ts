@@ -57,6 +57,10 @@ describe("a passage past the length the project set", () => {
     ]);
   });
 
+  it("starts a sentence at inline code, rather than reading it as part of the one before", async () => {
+    expect(await messagesFor(CLAIM, "docs/clean.md")).toEqual([]);
+  });
+
   it("points at the sentence rather than at the paragraph holding it", async () => {
     const [, paragraph, sentence] = await foundIn(CLAIM, "docs/loose.md");
 

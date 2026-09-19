@@ -27,12 +27,15 @@ export function codeSpansIn(text: string): readonly Span[] {
   return spans;
 }
 
-// blanking keeps the length, so an index into the result is still an index into the original
+// masking keeps the length, so an index into the result is still an index into the original
+// the fill is a capital, so a span standing where a sentence opens still reads as one
+const FILL = "X";
+
 export function maskedProse(text: string): string {
   const characters = text.split("");
 
   const blank = (start: number, end: number): void => {
-    for (let at = start; at < end && at < characters.length; at += 1) characters[at] = " ";
+    for (let at = start; at < end && at < characters.length; at += 1) characters[at] = FILL;
   };
 
   for (const span of codeSpansIn(text)) blank(span.start, span.end);
