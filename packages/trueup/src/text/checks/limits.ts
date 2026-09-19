@@ -1,6 +1,6 @@
-import type { Measure, Passage, TextIssue } from "./model.ts";
-import { sentencesIn, wordsIn } from "./sentences.ts";
-import { maskedProse } from "./spans.ts";
+import type { Measure, Passage, TextIssue } from "../model.ts";
+import { sentencesIn, wordsIn } from "../sentences.ts";
+import { maskedProse } from "../spans.ts";
 
 export interface Limits {
   readonly maxSentenceWords?: number | undefined;

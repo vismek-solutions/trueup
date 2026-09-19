@@ -1,5 +1,5 @@
-import type { Passage, TextIssue } from "./model.ts";
-import { maskedProse } from "./spans.ts";
+import type { Passage, TextIssue } from "../model.ts";
+import { maskedProse } from "../spans.ts";
 
 const occurrencesOf = (prose: string, mark: string): readonly number[] => {
   const found: number[] = [];
@@ -13,10 +13,7 @@ const occurrencesOf = (prose: string, mark: string): readonly number[] => {
   return found;
 };
 
-export const markIssues = (
-  passages: readonly Passage[],
-  marks: readonly string[],
-): readonly TextIssue[] =>
+export const markIssues = (passages: readonly Passage[], marks: readonly string[]): readonly TextIssue[] =>
   passages.flatMap((passage) => {
     const prose = maskedProse(passage.text);
 

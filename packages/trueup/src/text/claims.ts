@@ -1,12 +1,12 @@
 import type { Claim } from "../claims/model.ts";
 import type { Finding, Severity } from "../report/model.ts";
 import { documentsIn } from "./documents.ts";
-import { inlineCodeIssues } from "./inline.ts";
-import { limitIssues } from "./limits.ts";
-import { linkIssues } from "./links.ts";
-import { markIssues } from "./marks.ts";
+import { inlineCodeIssues } from "./checks/inline.ts";
+import { limitIssues } from "./checks/limits.ts";
+import { linkIssues } from "./checks/links.ts";
+import { markIssues } from "./checks/marks.ts";
 import type { Passage, TextIssue } from "./model.ts";
-import { wordIssues, type WordSwap } from "./wording.ts";
+import { wordIssues, type WordSwap } from "./checks/wording.ts";
 
 export interface TextSettings {
   readonly files: readonly string[];
@@ -60,13 +60,13 @@ const INLINE = [
 ].join("\n");
 
 const LINKS = [
-  "A link says nothing about where it goes. Somebody reading with a screen reader can pull up a page's links as a list, out of the sentences around them, and a list of \"here\" and \"this page\" leads nowhere. WCAG 2.4.4 puts this at the strictest level.",
+  'A link says nothing about where it goes. Somebody reading with a screen reader can pull up a page\'s links as a list, out of the sentences around them, and a list of "here" and "this page" leads nowhere. WCAG 2.4.4 puts this at the strictest level.',
   "",
   "Do this:",
   "- Name the destination in the link text: the page, the command or the setting it explains.",
   "- Move the link onto the words already naming that thing, so the sentence keeps its shape.",
   "",
-  "Not the fix: writing \"click here to read about seams\". The link text is read on its own, so the rest of the sentence is not there to carry it.",
+  'Not the fix: writing "click here to read about seams". The link text is read on its own, so the rest of the sentence is not there to carry it.',
 ].join("\n");
 
 type IssuesOf = (passages: readonly Passage[]) => readonly TextIssue[];

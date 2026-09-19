@@ -1,8 +1,8 @@
 import type { Project } from "../project/model.ts";
 import type { TextSettings } from "./claims.ts";
 import { documentsIn } from "./documents.ts";
-import { proseSpanWords } from "./inline.ts";
-import { paragraphSentences, sentenceWords } from "./limits.ts";
+import { proseSpanWords } from "./checks/inline.ts";
+import { paragraphSentences, sentenceWords } from "./checks/limits.ts";
 import type { Measure, Passage } from "./model.ts";
 
 export interface Point {
@@ -51,20 +51,14 @@ const distributionOf = (
   };
 };
 
-const calibrationOf = (
-  passages: readonly Passage[],
-  settings: TextSettings,
-): readonly Distribution[] =>
+const calibrationOf = (passages: readonly Passage[], settings: TextSettings): readonly Distribution[] =>
   [
     distributionOf("sentence words", sentenceWords(passages), settings.maxSentenceWords),
     distributionOf("paragraph sentences", paragraphSentences(passages), settings.maxParagraphSentences),
     distributionOf("inline code words", proseSpanWords(passages), settings.maxInlineCodeWords),
   ].filter((entry) => entry !== null);
 
-export const distributionsIn = (
-  project: Project,
-  settings: TextSettings,
-): readonly Distribution[] =>
+export const distributionsIn = (project: Project, settings: TextSettings): readonly Distribution[] =>
   calibrationOf(
     documentsIn(project, settings.files).flatMap((document) => document.passages),
     settings,

@@ -35,5 +35,4 @@ export function sentencesIn(text: string): readonly Span[] {
   return spans;
 }
 
-export const wordsIn = (text: string): readonly string[] =>
-  text.split(/\s+/).filter((word) => word !== "");
+export const wordsIn = (text: string): readonly string[] => text.split(/\s+/).filter((word) => word !== "");

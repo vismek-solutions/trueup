@@ -1,6 +1,6 @@
-import type { Measure, Passage, TextIssue } from "./model.ts";
-import { wordsIn } from "./sentences.ts";
-import { codeSpansIn } from "./spans.ts";
+import type { Measure, Passage, TextIssue } from "../model.ts";
+import { wordsIn } from "../sentences.ts";
+import { codeSpansIn } from "../spans.ts";
 
 const PLAIN_WORD = /^[a-z]+$/;
 
@@ -12,10 +12,7 @@ export const proseSpanWords = (passages: readonly Passage[]): readonly Measure[]
       .map(({ words, start }) => ({ value: words.length, start })),
   );
 
-export const inlineCodeIssues = (
-  passages: readonly Passage[],
-  maxWords: number,
-): readonly TextIssue[] =>
+export const inlineCodeIssues = (passages: readonly Passage[], maxWords: number): readonly TextIssue[] =>
   proseSpanWords(passages)
     .filter((measure) => measure.value > maxWords)
     .map((measure) => ({

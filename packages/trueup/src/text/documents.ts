@@ -9,10 +9,7 @@ export interface Document {
   readonly passages: readonly Passage[];
 }
 
-export const documentsIn = (
-  project: Project,
-  patterns: readonly string[],
-): readonly Document[] => {
+export const documentsIn = (project: Project, patterns: readonly string[]): readonly Document[] => {
   const wanted = picomatch([...patterns], { dot: true });
 
   return project.assets

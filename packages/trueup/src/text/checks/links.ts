@@ -1,5 +1,5 @@
-import type { Passage, Span, TextIssue } from "./model.ts";
-import { codeSpansIn } from "./spans.ts";
+import type { Passage, Span, TextIssue } from "../model.ts";
+import { codeSpansIn } from "../spans.ts";
 
 const LINK = /\[([^\]]*)\]\(/g;
 const EDGES = /^[\s*_`"']+|[\s*_`"'.,:;!?]+$/g;

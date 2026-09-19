@@ -1,5 +1,5 @@
-import type { Passage, TextIssue } from "./model.ts";
-import { maskedProse } from "./spans.ts";
+import type { Passage, TextIssue } from "../model.ts";
+import { maskedProse } from "../spans.ts";
 
 export interface WordSwap {
   readonly word: string;
@@ -8,13 +8,9 @@ export interface WordSwap {
 
 const METACHARACTER = /[.*+?^${}()|[\]\\]/g;
 
-const wholeWord = (word: string): RegExp =>
-  new RegExp(`\\b${word.replace(METACHARACTER, "\\$&")}\\b`, "gi");
+const wholeWord = (word: string): RegExp => new RegExp(`\\b${word.replace(METACHARACTER, "\\$&")}\\b`, "gi");
 
-export const wordIssues = (
-  passages: readonly Passage[],
-  swaps: readonly WordSwap[],
-): readonly TextIssue[] =>
+export const wordIssues = (passages: readonly Passage[], swaps: readonly WordSwap[]): readonly TextIssue[] =>
   passages.flatMap((passage) => {
     const prose = maskedProse(passage.text);
 
