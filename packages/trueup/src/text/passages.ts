@@ -17,7 +17,7 @@ interface Marked {
 const FENCE = /^ {0,3}(?:`{3,}|~{3,})/;
 const HEADING = /^ {0,3}#{1,6} +/;
 const ITEM = /^ *(?:[-*+] +|\d+[.)] +)/;
-const RULE = /^ {0,3}(?:-{3,}|\*{3,}|_{3,}) *$/;
+const RULE = /^ {0,3}(?:-{3,}|\*{3,}|_{3,}|={2,}) *$/;
 const SKIPPED = /^ *(?:\||>|<|\[[^\]]+\]: )/;
 const BLANK = /^ *$/;
 
@@ -51,16 +51,29 @@ const kindOf = (text: string): LineKind => {
 const markerIn = (kind: "heading" | "item", text: string): number =>
   (kind === "heading" ? HEADING.exec(text) : ITEM.exec(text))?.[0].length ?? 0;
 
+const opensComment = (text: string): boolean => {
+  const at = text.lastIndexOf("<!--");
+  return at !== -1 && !text.slice(at).includes("-->");
+};
+
 const markedLines = (lines: readonly Line[]): readonly Marked[] => {
   const body = bodyFrom(lines);
   const marked: Marked[] = [];
   let fenced = false;
+  let commented = false;
 
   for (const line of lines) {
     if (line.start < body) continue;
 
+    if (commented) {
+      commented = !line.text.includes("-->");
+      marked.push({ kind: "skip", line });
+      continue;
+    }
+
     const kind = kindOf(line.text);
     if (kind === "fence") fenced = !fenced;
+    commented = !fenced && opensComment(line.text);
     marked.push({ kind: kind === "fence" || fenced ? "skip" : kind, line });
   }
 

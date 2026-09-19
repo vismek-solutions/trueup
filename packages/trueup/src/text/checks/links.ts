@@ -26,6 +26,7 @@ export const linkIssues = (passages: readonly Passage[]): readonly TextIssue[] =
 
     return [...passage.text.matchAll(LINK)].flatMap((match): readonly TextIssue[] => {
       const said = match[1] ?? "";
+      if (said.startsWith("`") && said.endsWith("`")) return [];
       if (!SAYS_NOTHING.has(said.toLowerCase().replace(EDGES, ""))) return [];
       if (passage.text[match.index - 1] === "!" || inCode(spans, match.index)) return [];
 

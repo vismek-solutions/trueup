@@ -1,7 +1,8 @@
 import type { Span } from "./model.ts";
 
-const TERMINAL = /[.!?]/;
-const OPENS_A_SENTENCE = /[A-Z0-9`[*_"(]/;
+const TERMINAL = /[.!?।。！？]/;
+// a caseless script opens a sentence with an ordinary letter, so Lo counts beside Lu
+const OPENS_A_SENTENCE = /[\p{Lu}\p{Lo}0-9`[*_"(]/u;
 const GAP_THEN_CHARACTER = /^[*_)"]*\s+(\S)/;
 const LAST_WORD = /\S*$/;
 const ABBREVIATIONS = new Set(["etc.", "vs.", "cf.", "no.", "al.", "fig."]);

@@ -27,7 +27,7 @@ describe("a mark the project banned", () => {
     expect(await messagesFor(CLAIM, "docs/clean.md")).toEqual([]);
   });
 
-  it("says nothing about a mark inside frontmatter or inline code", async () => {
+  it("says nothing about a mark in frontmatter, inline code, a command line option or any line of an html comment", async () => {
     expect(await messagesFor(CLAIM, "docs/shapes.md")).toEqual([]);
   });
 });
@@ -44,6 +44,10 @@ describe("a word the project banned", () => {
   it("says nothing about the word inside a fenced block", async () => {
     expect(await messagesFor(CLAIM, "docs/clean.md")).toEqual([]);
   });
+
+  it("says nothing about the word on the line that closes an html comment", async () => {
+    expect(await messagesFor(CLAIM, "docs/shapes.md")).toEqual([]);
+  });
 });
 
 describe("a passage past the length the project set", () => {
@@ -57,8 +61,8 @@ describe("a passage past the length the project set", () => {
     ]);
   });
 
-  it("starts a sentence at inline code, rather than reading it as part of the one before", async () => {
-    expect(await messagesFor(CLAIM, "docs/clean.md")).toEqual([]);
+  it("reads a boundary the same whatever stands at it: inline code, a url, an underline", async () => {
+    expect(await messagesFor(CLAIM, "docs/edges.md")).toEqual([]);
   });
 
   it("points at the sentence rather than at the paragraph holding it", async () => {
@@ -91,7 +95,7 @@ describe("a link whose text says nothing", () => {
     ]);
   });
 
-  it("leaves a link inside inline code, a fenced block and an image alone", async () => {
+  it("leaves inline code, a fenced block, an image and a link named in code alone", async () => {
     expect(await foundIn(CLAIM, "docs/links.md")).toHaveLength(1);
   });
 });

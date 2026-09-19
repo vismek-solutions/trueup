@@ -2,6 +2,8 @@ import type { Span } from "./model.ts";
 
 const LINK_TARGET = /\]\([^)]*\)/g;
 const URL = /https?:\/\/\S+/g;
+const COMMENT = /<!--[\s\S]*?-->/g;
+const TRAILING = /[.,;:!?)\]]+$/;
 
 export function codeSpansIn(text: string): readonly Span[] {
   const spans: Span[] = [];
@@ -39,8 +41,13 @@ export function maskedProse(text: string): string {
   };
 
   for (const span of codeSpansIn(text)) blank(span.start, span.end);
-  for (const pattern of [LINK_TARGET, URL]) {
+  for (const pattern of [LINK_TARGET, COMMENT]) {
     for (const match of text.matchAll(pattern)) blank(match.index, match.index + match[0].length);
+  }
+
+  // a bare url ends before the punctuation that follows it, or the sentence loses its full stop
+  for (const match of text.matchAll(URL)) {
+    blank(match.index, match.index + match[0].replace(TRAILING, "").length);
   }
 
   return characters.join("");
