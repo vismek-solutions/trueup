@@ -101,6 +101,7 @@ const proseSaid = (text: Prose | undefined): string | undefined => {
     limited(text.maxSentenceWords, "word", "a sentence"),
     limited(text.maxParagraphSentences, "sentence", "a paragraph"),
     limited(text.maxInlineCodeWords, "word", "of inline code"),
+    text.links === true ? "link text" : null,
   ].filter((name) => name !== null);
 
   return held.length === 0 ? undefined : `${text.files.join(" · ")} held to ${held.join(" · ")}`;

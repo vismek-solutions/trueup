@@ -146,7 +146,7 @@ describe("the block an agent reads at the start of a session", () => {
 
   it("gives each prose limit its number, since an agent cannot honour one it is not told", async () => {
     expect(await capture(fixtureAt("guarded-text"))).toContain(
-      "  prose                     docs/**/*.md held to marks · words · 12 words a sentence · 2 sentences a paragraph · 3 words of inline code",
+      "  prose                     docs/**/*.md held to marks · words · 12 words a sentence · 2 sentences a paragraph · 3 words of inline code · link text",
     );
   });
 
