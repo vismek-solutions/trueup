@@ -1,9 +1,3 @@
 {
-  "entries": [
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/checks/seams.md",
-      "message": "runs to 32 words in one sentence, more than the 30 allowed"
-    }
-  ]
+  "entries": []
 }
