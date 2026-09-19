@@ -9,8 +9,8 @@ const ROOT = resolve(HERE, "../..");
 const BIN = join(ROOT, "packages/trueup/bin/trueup.js");
 const MODEL = process.env.PRECISION_MODEL ?? "claude-sonnet-5";
 const CORPUS = process.env.PRECISION_CORPUS ?? join(ROOT, "node_modules/.pnpm");
-const PAGES = Number(process.env.PRECISION_PAGES ?? 250);
-const PER_CLAIM = Number(process.env.PRECISION_PER_CLAIM ?? 25);
+const PAGES = Number(process.env.PRECISION_PAGES ?? 600);
+const PER_CLAIM = Number(process.env.PRECISION_PER_CLAIM ?? 30);
 const BATCH = 25;
 
 const SETTINGS = {
