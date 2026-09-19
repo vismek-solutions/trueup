@@ -3,21 +3,19 @@ import type { Project } from "../../project/model.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
-const GUIDANCE = [
-  "The exports of this file fall into groups that no reader takes from across, so one file is serving audiences that never meet. Split it, and each half sits with the readers it has.",
-  "",
-  "The shape of the finding decides which part moves:",
-  "- `and only <name> can leave without taking anything else with it` names the part that lifts out on its own. Move that one, and opening the file will not give you a better answer than the check already has.",
-  "- With no such clause, either every part reaches something private this file holds, or no part does and either half may go first.",
-  "",
-  "Do this:",
-  "- When a group is a single export, dissolve it rather than rehousing it. A value one caller derives from what it already holds belongs inside that caller, and then there is no second file to place.",
-  "- When every export reaches one private thing this file holds, a context or a client or a table, no export can leave without promoting it, so decide about that private thing first. If it is a real module, something you would be content to name and let another file import, promote it and let each readership become a file that reads it. If it is not, these exports are one unit and this finding is one to accept rather than act on.",
-  "",
-  "Not the fix: reaching for a new home before asking whether a group of one can dissolve. That is the mistake this check sees most often.",
-  "",
-  "A declaration that names another in the same file counts with it, because one is built from the other. Two that merely reach the same private third do not, because sharing a helper is not being one thing, and promoting that helper is precisely the cost the split would carry. An export nothing reads is left out, because unused code is a different finding. A zone with a role is not reported and does not count as a reader: a barrel, a composition root and a test suite each answer to readers this analysis does not own.",
-].join("\n");
+const GUIDANCE = `The exports of this file fall into groups that no reader takes from across, so one file is serving audiences that never meet. Split it, and each half sits with the readers it has.
+
+The shape of the finding decides which part moves:
+- \`and only <name> can leave without taking anything else with it\` names the part that lifts out on its own. Move that one, and opening the file will not give you a better answer than the check already has.
+- With no such clause, either every part reaches something private this file holds, or no part does and either half may go first.
+
+Do this:
+- When a group is a single export, dissolve it rather than rehousing it. A value one caller derives from what it already holds belongs inside that caller, and then there is no second file to place.
+- When every export reaches one private thing this file holds, a context or a client or a table, no export can leave without promoting it. Decide about that private thing first. If it is a real module, something you would be content to name and let another file import, promote it and let each readership become a file that reads it. If it is not, these exports are one unit and this finding is one to accept rather than act on.
+
+Not the fix: reaching for a new home before asking whether a group of one can dissolve. That is the mistake this check sees most often.
+
+A declaration that names another in the same file counts with it, because one is built from the other. Two that merely reach the same private third do not, because sharing a helper is not being one thing, and promoting that helper is the cost the split would carry. An export nothing reads is left out, because unused code is a different finding. A zone with a role is not reported and does not count as a reader: a barrel, a composition root and a test suite each answer to readers this analysis does not own.`;
 
 type Readers = Map<string, Set<string>>;
 

@@ -1,16 +1,14 @@
 import type { Project } from "../project/model.ts";
 import type { Claim } from "./model.ts";
 
-const GUIDANCE = [
-  "Zones in a cycle cannot be read, tested, moved or deleted on their own, because each one needs the others to exist first.",
-  "",
-  "Do this:",
-  "- Decide which zone owns the concept they share, and give the rest a one-way dependency on it.",
-  "- If no zone owns it, it belongs in a new zone they may all reach.",
-  "- Run `{trueup} explain <file>` to see what a file reaches.",
-  "",
-  "Not the fix: adding a boundary rule. A rule does not break a cycle, because the imports are what has to change.",
-].join("\n");
+const GUIDANCE = `Zones in a cycle cannot be read, tested, moved or deleted on their own, because each one needs the others to exist first.
+
+Do this:
+- Decide which zone owns the concept they share, and give the rest a one-way dependency on it.
+- If no zone owns it, it belongs in a new zone they may all reach.
+- Run \`{trueup} explain <file>\` to see what a file reaches.
+
+Not the fix: adding a boundary rule. A rule does not break a cycle, because the imports are what has to change.`;
 
 type Reaches = ReadonlyMap<string, ReadonlySet<string>>;
 

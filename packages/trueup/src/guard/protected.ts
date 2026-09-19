@@ -7,21 +7,17 @@ import type { Decision, Verdict } from "../ports/proposal.ts";
 
 const CLAIM = "no-edit-changes-the-rules-themselves";
 
-const ASK_GUIDANCE = [
-  "An agent is asking to change a file the project's rules are read from.",
-  "",
-  "Approve it if this is setup, or a change to the rules you meant to make.",
-  "",
-  "Refuse it if a check was failing just before this. Editing the rulebook is how a failing check gets switched off, and it leaves no trace that it ever failed.",
-].join("\n");
+const ASK_GUIDANCE = `An agent is asking to change a file the project's rules are read from.
 
-const DENY_GUIDANCE = [
-  "This file is the rulebook the other checks are read from, so an edit to it is not governed by anything. Changing it to make a check pass switches the check off, and leaves no trace that it ever failed.",
-  "",
-  "Do this:",
-  "- If the code is wrong, fix the code.",
-  "- If the rule is genuinely wrong, say so, leave the check failing, and let a person decide. That judgement is not this edit's to make.",
-].join("\n");
+Approve it if this is setup, or a change to the rules you meant to make.
+
+Refuse it if a check was failing just before this. Editing the rulebook is how a failing check gets switched off, and it leaves no trace that it ever failed.`;
+
+const DENY_GUIDANCE = `This file is the rulebook the other checks are read from, so an edit to it is not governed by anything. Changing it to make a check pass switches the check off, and leaves no trace that it ever failed.
+
+Do this:
+- If the code is wrong, fix the code.
+- If the rule is genuinely wrong, say so, leave the check failing, and let a person decide. That judgement is not this edit's to make.`;
 
 const ALLOW: Decision = { verdict: "allow", reasons: [] };
 

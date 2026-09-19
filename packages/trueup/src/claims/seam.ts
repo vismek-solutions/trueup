@@ -72,16 +72,14 @@ export function seamClaim(rules: readonly SeamRule[]): Claim {
           }),
         );
       }),
-      guidance: [
-        "Generic code named a symbol the domain exports, or repeated a value the domain declares, with no import to explain it. This is the violation that crosses no import edge: a value arrives as a prop and the receiving file restates a shape it may not know.",
-        "",
-        "Do this:",
-        "- Take the name or value from the domain rather than restating it.",
-        "- Or move the code into a zone that may know the domain.",
-        "- Run `{trueup} explain <file>` to see the vocabulary this file may not use.",
-        "",
-        "Not the fix: adding the word to `allow` to quieten the finding. Add it there only for a word the two zones genuinely share.",
-      ].join("\n"),
+      guidance: `Generic code named a symbol the domain exports, or repeated a value the domain declares, with no import to explain it. This is the violation that crosses no import edge: a value arrives as a prop and the receiving file restates a shape it may not know.
+
+Do this:
+- Take the name or value from the domain rather than restating it.
+- Or move the code into a zone that may know the domain.
+- Run \`{trueup} explain <file>\` to see the vocabulary this file may not use.
+
+Not the fix: adding the word to \`allow\` to quieten the finding. Add it there only for a word the two zones genuinely share.`,
     }),
   };
 }
