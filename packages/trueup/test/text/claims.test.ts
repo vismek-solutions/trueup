@@ -49,6 +49,12 @@ describe("a word the project banned", () => {
   it("says nothing about the word on the line that closes an html comment", async () => {
     expect(await messagesFor(CLAIM, "docs/shapes.md")).toEqual([]);
   });
+
+  it("reads on past a comment marker that stands in inline code, rather than going quiet", async () => {
+    expect(await messagesFor(CLAIM, "docs/comments.md")).toEqual([
+      'uses "Leverage" where "use" would do',
+    ]);
+  });
 });
 
 describe("a passage past the length the project set", () => {

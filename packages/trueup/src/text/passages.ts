@@ -1,5 +1,6 @@
 import type { Passage, PassageKind, Section } from "./model.ts";
 import { wordsIn } from "./sentences.ts";
+import { maskedProse } from "./spans.ts";
 
 interface Line {
   readonly text: string;
@@ -52,8 +53,11 @@ const markerIn = (kind: "heading" | "item", text: string): number =>
   (kind === "heading" ? HEADING.exec(text) : ITEM.exec(text))?.[0].length ?? 0;
 
 const opensComment = (text: string): boolean => {
-  const at = text.lastIndexOf("<!--");
-  return at !== -1 && !text.slice(at).includes("-->");
+  if (!text.includes("<!--")) return false;
+
+  const masked = maskedProse(text);
+  const at = masked.lastIndexOf("<!--");
+  return at !== -1 && !masked.slice(at).includes("-->");
 };
 
 const markedLines = (lines: readonly Line[]): readonly Marked[] => {
