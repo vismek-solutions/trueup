@@ -78,6 +78,20 @@ describe("a phrase standing in inline code", () => {
   });
 });
 
+describe("a link whose text says nothing", () => {
+  const CLAIM = "every-link-says-where-it-goes";
+
+  it("quotes the text that stands in for the destination", async () => {
+    expect(await messagesFor(CLAIM, "docs/links.md")).toEqual([
+      'links as "this page", which says nothing about where it goes',
+    ]);
+  });
+
+  it("leaves a link inside inline code, a fenced block and an image alone", async () => {
+    expect(await foundIn(CLAIM, "docs/links.md")).toHaveLength(1);
+  });
+});
+
 describe("a text setting the rulebook leaves out", () => {
   it("makes no claim at all, rather than one that passes", async () => {
     const report = await check({

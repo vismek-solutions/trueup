@@ -4,7 +4,7 @@
 
 ### Added
 
-- Four claims read the markdown a project names under `text`: a banned mark, a banned word, a sentence or paragraph past a length limit, and an inline code span holding more than a path. The write-time guard rules on them too.
+- Claims read the markdown a project names under `text`: a banned mark, a banned word, a sentence or paragraph past a length limit, an inline code span holding more than a path, and a link whose text says nothing about where it goes. The write-time guard rules on them too.
 - The calibrate command prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
 
 ### Fixed

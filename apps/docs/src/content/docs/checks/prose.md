@@ -6,6 +6,7 @@ claims:
   - no-prose-uses-a-banned-word
   - no-passage-runs-past-its-limit
   - no-inline-code-holds-more-than-a-path
+  - every-link-says-where-it-goes
 ---
 
 An agent writes your guides as well as your code. The code has this tool watching it. The prose has a style guide somebody wrote once, and nothing that reads it.
@@ -83,8 +84,9 @@ Headings and list items are read as passages of their own. A heading is one pass
 | `no-prose-uses-a-banned-word` | no sentence uses a word you banned | `words` |
 | `no-passage-runs-past-its-limit` | no sentence or paragraph is longer than you allow | `maxSentenceWords`, `maxParagraphSentences` |
 | `no-inline-code-holds-more-than-a-path` | inline code holds a path, a command or a symbol, never a phrase | `maxInlineCodeWords` |
+| `every-link-says-where-it-goes` | no link hides its destination behind words like here or this page | `links` |
 
-All four are exact, so they fail the run and the write time guard refuses the edit. Nothing here rests on a threshold tuned until it went quiet.
+Each one is exact, so it fails the run and the write time guard refuses the edit. Nothing here rests on a threshold tuned until it went quiet.
 
 ## Fixing one
 
@@ -93,6 +95,8 @@ For a mark, split the sentence where the dash stands, or put there the mark the 
 For a long sentence, cut it at the joining word and give each half a full stop. For a long paragraph, break it where the subject changes, or turn the extra sentences into a list. Raising the number until the page passes is the one fix that leaves you worse off, because the number is the only thing forcing the split.
 
 For a phrase in inline code, take the backticks off and let the words sit in the sentence. Inline code earns its place when a terminal can make the thing clickable, which is true of a path, a command and a symbol, and false of a sentence.
+
+For a link, put the destination in the words themselves: the page, the command or the setting it explains. A screen reader can list a page's links out of context, so text like here or this page leads nowhere. Writing click here to read about seams does not help, because the sentence around the link is not read out with it.
 
 Better than fixing one is not writing it. The [session start block](/agents/instructions/) names the files held and every limit in force, so an agent reads the numbers before its first draft rather than meeting them in a refusal.
 

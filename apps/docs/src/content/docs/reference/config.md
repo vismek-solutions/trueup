@@ -125,7 +125,7 @@ The wiring list names the files allowed to sit in the parent directory rather th
 The text settings name the markdown to read and the rules to hold it to.
 
 ```ts
-{ files: string[], marks?, words?, maxSentenceWords?, maxParagraphSentences?, maxInlineCodeWords? }
+{ files: string[], marks?, words?, maxSentenceWords?, maxParagraphSentences?, maxInlineCodeWords?, links? }
 ```
 
 Only files is required, and on its own it makes no claim. Every other key turns on one claim, so a key you leave out is a check that never runs. [What each one reports](/checks/prose/).

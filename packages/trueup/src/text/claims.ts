@@ -3,6 +3,7 @@ import type { Finding, Severity } from "../report/model.ts";
 import { documentsIn } from "./documents.ts";
 import { inlineCodeIssues } from "./inline.ts";
 import { limitIssues } from "./limits.ts";
+import { linkIssues } from "./links.ts";
 import { markIssues } from "./marks.ts";
 import type { Passage, TextIssue } from "./model.ts";
 import { wordIssues, type WordSwap } from "./wording.ts";
@@ -14,6 +15,7 @@ export interface TextSettings {
   readonly maxSentenceWords?: number | undefined;
   readonly maxParagraphSentences?: number | undefined;
   readonly maxInlineCodeWords?: number | undefined;
+  readonly links?: boolean | undefined;
 }
 
 const MARKS = [
@@ -57,6 +59,16 @@ const INLINE = [
   "Not the fix: raising the word limit. A path, a command and a symbol all sit under it already.",
 ].join("\n");
 
+const LINKS = [
+  "A link says nothing about where it goes. Somebody reading with a screen reader can pull up a page's links as a list, out of the sentences around them, and a list of \"here\" and \"this page\" leads nowhere. WCAG 2.4.4 puts this at the strictest level.",
+  "",
+  "Do this:",
+  "- Name the destination in the link text: the page, the command or the setting it explains.",
+  "- Move the link onto the words already naming that thing, so the sentence keeps its shape.",
+  "",
+  "Not the fix: writing \"click here to read about seams\". The link text is read on its own, so the rest of the sentence is not there to carry it.",
+].join("\n");
+
 type IssuesOf = (passages: readonly Passage[]) => readonly TextIssue[];
 
 interface TextClaim {
@@ -84,7 +96,7 @@ const claimOver = ({ name, files, severity, issuesOf, guidance }: TextClaim): Cl
 
 export function textClaims(settings: TextSettings): readonly Claim[] {
   const { files, marks = [], words = [], maxSentenceWords, maxParagraphSentences } = settings;
-  const { maxInlineCodeWords } = settings;
+  const { maxInlineCodeWords, links } = settings;
   const bounded = maxSentenceWords !== undefined || maxParagraphSentences !== undefined;
 
   const wanted: readonly (Omit<TextClaim, "files"> | null)[] = [
@@ -120,6 +132,14 @@ export function textClaims(settings: TextSettings): readonly Claim[] {
           issuesOf: (passages) => inlineCodeIssues(passages, maxInlineCodeWords),
           guidance: INLINE,
         },
+    links === true
+      ? {
+          name: "every-link-says-where-it-goes",
+          severity: "error",
+          issuesOf: linkIssues,
+          guidance: LINKS,
+        }
+      : null,
   ];
 
   return wanted.filter((claim) => claim !== null).map((claim) => claimOver({ ...claim, files }));
