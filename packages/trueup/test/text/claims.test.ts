@@ -131,6 +131,13 @@ describe("a section that explains at length with nothing to look at", () => {
   });
 });
 
+describe("a blockquote", () => {
+  it("is passed over, since reproduced words cannot be reworded to suit this project", async () => {
+    expect(await messagesFor("no-prose-uses-a-banned-word", "docs/quotes.md")).toEqual([]);
+    expect(await messagesFor("no-prose-uses-a-banned-mark", "docs/quotes.md")).toEqual([]);
+  });
+});
+
 describe("a text setting the rulebook leaves out", () => {
   it("makes no claim at all, rather than one that passes", async () => {
     const report = await check({
