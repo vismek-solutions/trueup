@@ -11,7 +11,7 @@ A zone is a name you give to a group of files. You choose the files by their loc
 
 Zones are worth taking your time over. Every other rule on this site is written in the names you invent here, so this is the one idea to get right.
 
-You pick the files with path patterns. Each pattern is matched against a file's path relative to your project root, which is the directory holding trueup.config.ts. A pattern that starts with src therefore counts from there, not from wherever you happened to be standing when you ran the tool.
+You pick the files with path patterns. Each pattern is matched against a file's path relative to your project root, which is the directory holding the trueup.config.ts file. A pattern that starts with src therefore counts from there, not from wherever you happened to be standing when you ran the tool.
 
 ```ts
 zones: [
@@ -68,7 +68,7 @@ None of the three roles counts as the lone consumer of a name in the [colocation
 
 ## Zones written to serve one layer
 
-A zone can also say that it exists for the layer above it, which is the usual shape when a project splits by kind and every component is there for a route to use.
+A zone can also say that it exists for the layer above it. That is the usual shape when a project splits by kind, and every component is there for a route to use.
 
 ```ts
 { name: "components", patterns: ["src/components/**"], shared: true },
@@ -97,7 +97,7 @@ vocabulary  domain owns names this file may not use:
             search · testimony
 ```
 
-Useful when you are deciding where something goes, and useful to an agent, a coding assistant that writes code in your project, if you tell it to run this before it creates a file. A path in no zone is reported as such, which is the answer you want before you make a directory nothing covers.
+Useful when you are deciding where something goes. It is useful to an agent too, a coding assistant that writes code in your project, if you tell it to run this before it creates a file. A path in no zone is reported as such, which is the answer you want before you make a directory nothing covers.
 
 The vocabulary block only appears when a [seam rule](/checks/seams/) covers the file. A seam is the line between reusable code and code that knows your business. Without such a rule, the zone and its reach are the whole answer.
 
@@ -107,11 +107,17 @@ Add a name to the path and the question changes. Instead of where this file may 
 npx trueup explain src/engine/table.ts#rowKey
 ```
 
-The answer names the files and directories that read it, the zones those readers sit in with any role they carry, whether enough of them are far enough away for a move to have somewhere to land, how many declarations would have to travel with it, and which of the ones staying behind would need to import it back. That last number is the honest price of the move.
+The answer names the files and directories that read it, and the zones those readers sit in with any role they carry. Then it prices the move:
 
-The roles are worth reading closely there. A reader in a zone with a role is a real reader, and it is still not what the colocation check counts, so a name with three reader zones can honestly be reported as having one consumer.
+- whether enough readers are far enough away for a move to have somewhere to land
+- how many declarations would have to travel with it
+- which of the ones staying behind would need to import it back
 
-Where the zone that declares a name also keeps a reader of it, and may not reach the zone the other readers sit in, the answer says that instead of saying a move has somewhere to go. Moving the name would leave that reader reaching across a boundary, so the move is not the free one the other numbers would suggest.
+That last number is the honest price of the move.
+
+The roles are worth reading closely there. A reader in a zone with a role is a real reader, and it is still not what the colocation check counts. A name with three reader zones can honestly be reported as having one consumer.
+
+Sometimes the zone that declares a name also keeps a reader of it, and may not reach the zone the other readers sit in. The answer says so, instead of saying a move has somewhere to go. Moving the name would leave that reader reaching across a boundary, so the move is not the free one the other numbers would suggest.
 
 ## Asking where a new file may live
 

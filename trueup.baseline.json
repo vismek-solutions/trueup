@@ -62,36 +62,6 @@
     },
     {
       "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/zones.md",
-      "message": "runs to 34 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/zones.md",
-      "message": "runs to 34 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/zones.md",
-      "message": "runs to 37 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/zones.md",
-      "message": "runs to 37 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/zones.md",
-      "message": "runs to 42 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/concepts/zones.md",
-      "message": "runs to 59 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/integrations/fallow.md",
       "message": "runs to 33 words in one sentence, more than the 30 allowed"
     },
