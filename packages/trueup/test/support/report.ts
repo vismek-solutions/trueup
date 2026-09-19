@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { check } from "../../src/main.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import type { RunnerOutcome } from "../../src/ports/runner.ts";
@@ -12,6 +13,16 @@ export const reportForConfig = async (configPath: string): Promise<Report> => {
     ...config,
   });
 };
+
+export const readingText = (project: string, reported: Promise<Report>) => ({
+  foundIn: async (claim: string, file: string): Promise<readonly Finding[]> =>
+    findingsIn(await reported, claim).filter((finding) => finding.file === join(project, file)),
+
+  messagesFor: async (claim: string, file: string): Promise<readonly string[]> =>
+    findingsIn(await reported, claim)
+      .filter((finding) => finding.file === join(project, file))
+      .map((finding) => finding.message),
+});
 
 export const claimIn = (report: Report, claim: string): ClaimResult | undefined =>
   report.claims.find((entry) => entry.claim === claim);

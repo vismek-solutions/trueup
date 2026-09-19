@@ -3,17 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { check } from "../../src/main.ts";
 import { fixtureAt } from "../support/fixtures.ts";
-import { claimIn, findingsIn, reportForConfig } from "../support/report.ts";
+import { claimIn, readingText, reportForConfig } from "../support/report.ts";
 
 const PROJECT = fixtureAt("guarded-text");
-const CONFIG = join(PROJECT, "trueup.config.ts");
-const reported = reportForConfig(CONFIG);
-
-const foundIn = async (claim: string, file: string) =>
-  findingsIn(await reported, claim).filter((finding) => finding.file === join(PROJECT, file));
-
-const messagesFor = async (claim: string, file: string): Promise<readonly string[]> =>
-  (await foundIn(claim, file)).map((finding) => finding.message);
+const { foundIn, messagesFor } = readingText(PROJECT, reportForConfig(join(PROJECT, "trueup.config.ts")));
 
 describe("a mark the project banned", () => {
   const CLAIM = "no-prose-uses-a-banned-mark";

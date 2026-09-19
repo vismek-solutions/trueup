@@ -150,6 +150,12 @@ describe("the block an agent reads at the start of a session", () => {
     );
   });
 
+  it("says when the comments in the code are read too, since that is where an agent writes most", async () => {
+    expect(await capture(fixtureAt("guarded-comments"))).toContain(
+      "  prose                     docs/**/*.md · every comment held to marks · words · 12 words a sentence",
+    );
+  });
+
   it("marks a zone written to serve the layer above it, so a quiet component is explained", async () => {
     expect(await capture(fixtureAt("activated-switches"))).toContain("  lib     1 file  src/lib/**  (shared)");
   });

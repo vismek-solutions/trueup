@@ -48,6 +48,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
     sourceOf: project.sourceOf,
     mentionsIn: project.mentionsIn,
     declarationsIn: project.declarationsIn,
+    commentsIn: project.commentsIn,
     referencesIn: project.referencesIn,
     importsWithin: (file, names) =>
       inside(directory, file) ? project.importsWithin(file, names).map(narrow) : [],

@@ -77,6 +77,33 @@ Inside a paragraph, three things are blanked before any claim looks: an inline c
 
 Headings and list items are read as passages of their own. A heading is one passage without its hashes, and a list item is one passage without its bullet.
 
+## The comments in your code
+
+An agent writes comments as well as pages, and nobody reads a comment until something has already gone wrong. One key puts the claims you switched on over the comments in the code this tool already parses:
+
+```ts
+text: {
+  files: ["docs/**/*.md"],
+  comments: true,
+  marks: ["—"],
+  words: [{ word: "leverage", instead: "use" }],
+}
+```
+
+A comment then reports the way a page does:
+
+```
+no-prose-uses-a-banned-mark                 1 error
+    src/cart.ts:1:30  uses "—" where a full stop, a comma, a colon or a joining word would do
+
+no-prose-uses-a-banned-word                 1 error
+    src/cart.ts:1:4  uses "leverage" where "use" would do
+```
+
+The position names the word rather than the marker opening the comment, so a report points at where the prose starts. A parser finds the comments rather than a search for slashes, so a marker standing inside a string costs you nothing.
+
+Each comment is read on its own. Two comment lines in a row are two passages rather than one, because prose does not flow across a marker the way it wraps inside a paragraph. The cost is that a sentence you spread over two comment lines is counted in halves, so a long one can pass. The gain is that a block of short lines with no full stops is not read as one enormous sentence.
+
 ## The claims
 
 | claim | what it says | key |

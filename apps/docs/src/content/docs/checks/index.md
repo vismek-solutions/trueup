@@ -138,7 +138,7 @@ Nine claims are always on, and they need nothing from you but zones. The rest wa
 | `colocation` | `no-value-is-declared-away-from-its-only-consumer`, and `no-export-exists-only-for-a-test` when a zone also has `role: "tests"` |
 | `readerships` | [`no-file-serves-two-readerships`](/checks/placement/#one-file-answering-to-two-audiences) |
 | `testInternals` | [`no-test-reaches-an-internal`](/checks/placement/#tests-that-reach-an-internal) |
-| `text` | [one prose claim per key you set under it](/checks/prose/) |
+| `text` | [one prose claim per key you set under it](/checks/prose/), and `comments` widens what those read rather than adding a claim |
 | `reviewable` | [`no-change-outgrows-its-review`](#how-big-a-change-can-be-reviewed) |
 | `members` | [`every-api-zone-is-exported`](/concepts/monorepos/#the-door-is-written-down-twice) and [`every-grant-has-a-dependency`](/concepts/monorepos/#a-grant-with-no-dependency), wherever a member's `package.json` says enough to compare |
 | `runners` | [one claim per delegated category](/integrations/linters/) |

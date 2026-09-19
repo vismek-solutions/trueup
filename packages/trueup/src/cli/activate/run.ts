@@ -105,7 +105,8 @@ const proseSaid = (text: Prose | undefined): string | undefined => {
     limited(text.maxSectionWordsWithoutExample, "word", "a section without an example"),
   ].filter((name) => name !== null);
 
-  return held.length === 0 ? undefined : `${text.files.join(" · ")} held to ${held.join(" · ")}`;
+  const read = [...text.files, ...(text.comments === true ? ["every comment"] : [])];
+  return held.length === 0 ? undefined : `${read.join(" · ")} held to ${held.join(" · ")}`;
 };
 
 const settingLines = (config: ResolvedConfig, read: number): readonly string[] => {

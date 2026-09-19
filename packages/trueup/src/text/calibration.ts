@@ -70,7 +70,7 @@ interface Read {
 }
 
 export const distributionsIn = (project: Project, settings: TextSettings): readonly Distribution[] => {
-  const documents = documentsIn(project, settings.files);
+  const documents = documentsIn(project, { files: settings.files, comments: settings.comments === true });
 
   return calibrationOf(
     {

@@ -12,11 +12,7 @@ export interface Section {
   readonly shows: boolean;
 }
 
-export interface Span {
-  readonly text: string;
-  readonly start: number;
-  readonly end: number;
-}
+export type { Span } from "../ports/span.ts";
 
 export interface Measure {
   readonly value: number;

@@ -125,10 +125,18 @@ The wiring list names the files allowed to sit in the parent directory rather th
 The text settings name the markdown to read and the rules to hold it to.
 
 ```ts
-{ files: string[], marks?, words?, maxSentenceWords?, maxParagraphSentences?, maxInlineCodeWords?, links?, maxSectionWordsWithoutExample? }
+{ files: string[], comments?, marks?, words?, maxSentenceWords?, maxParagraphSentences?, maxInlineCodeWords?, links?, maxSectionWordsWithoutExample? }
 ```
 
-Only files is required, and on its own it makes no claim. Every other key turns on one claim, so a key you leave out is a check that never runs. [What each one reports](/checks/prose/).
+Only files is required, and on its own it makes no claim. Every key but comments turns on one claim, so a key you leave out is a check that never runs. [What each one reports](/checks/prose/).
+
+Setting comments to true widens what those claims read, rather than adding one of its own:
+
+```ts
+{ files: ["docs/**/*.md"], comments: true, marks: ["—"] }
+```
+
+Every claim you switched on then also reads the comments in the code this tool already parses. [How a comment is read](/checks/prose/#the-comments-in-your-code).
 
 A word in the list carries the plainer word that replaces it:
 

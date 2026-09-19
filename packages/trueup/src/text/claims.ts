@@ -1,6 +1,6 @@
 import type { Claim } from "../claims/model.ts";
 import type { Finding, Severity } from "../report/model.ts";
-import { documentsIn, type Document } from "./documents.ts";
+import { documentsIn, type Document, type Surface } from "./documents.ts";
 import { exampleIssues } from "./checks/examples.ts";
 import { inlineCodeIssues } from "./checks/inline.ts";
 import { limitIssues } from "./checks/limits.ts";
@@ -11,6 +11,7 @@ import { wordIssues, type WordSwap } from "./checks/wording.ts";
 
 export interface TextSettings {
   readonly files: readonly string[];
+  readonly comments?: boolean | undefined;
   readonly marks?: readonly string[] | undefined;
   readonly words?: readonly WordSwap[] | undefined;
   readonly maxSentenceWords?: number | undefined;
@@ -86,17 +87,17 @@ type IssuesOf = (document: Document) => readonly TextIssue[];
 
 interface TextClaim {
   readonly name: string;
-  readonly files: readonly string[];
+  readonly surface: Surface;
   readonly severity: Severity;
   readonly issuesOf: IssuesOf;
   readonly guidance: string;
 }
 
-const claimOver = ({ name, files, severity, issuesOf, guidance }: TextClaim): Claim => ({
+const claimOver = ({ name, surface, severity, issuesOf, guidance }: TextClaim): Claim => ({
   name,
   check: ({ project }) => ({
     guidance,
-    findings: documentsIn(project, files).flatMap((document): readonly Finding[] =>
+    findings: documentsIn(project, surface).flatMap((document): readonly Finding[] =>
       issuesOf(document).map((issue) => ({
         severity,
         message: issue.message,
@@ -108,11 +109,13 @@ const claimOver = ({ name, files, severity, issuesOf, guidance }: TextClaim): Cl
 });
 
 export function textClaims(settings: TextSettings): readonly Claim[] {
-  const { files, marks = [], words = [], maxSentenceWords, maxParagraphSentences } = settings;
+  const { files, comments = false, marks = [], words = [] } = settings;
+  const { maxSentenceWords, maxParagraphSentences } = settings;
   const { maxInlineCodeWords, links, maxSectionWordsWithoutExample } = settings;
   const bounded = maxSentenceWords !== undefined || maxParagraphSentences !== undefined;
+  const surface: Surface = { files, comments };
 
-  const wanted: readonly (Omit<TextClaim, "files"> | null)[] = [
+  const wanted: readonly (Omit<TextClaim, "surface"> | null)[] = [
     marks.length === 0
       ? null
       : {
@@ -163,5 +166,5 @@ export function textClaims(settings: TextSettings): readonly Claim[] {
         },
   ];
 
-  return wanted.filter((claim) => claim !== null).map((claim) => claimOver({ ...claim, files }));
+  return wanted.filter((claim) => claim !== null).map((claim) => claimOver({ ...claim, surface }));
 }

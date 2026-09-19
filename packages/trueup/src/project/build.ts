@@ -101,6 +101,7 @@ export function buildProject(input: BuildProjectInput): Project {
     sourceOf: (file) => sources.get(file) ?? assets.get(file) ?? null,
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
+    commentsIn: lexicon.commentsIn,
     referencesIn,
     importsWithin,
     reachedWithin,
