@@ -43,12 +43,37 @@
     {
       "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/checks/custom-rules.md",
+      "message": "runs to 31 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/checks/custom-rules.md",
+      "message": "runs to 33 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/checks/custom-rules.md",
       "message": "runs to 33 words in one sentence, more than the 30 allowed"
     },
     {
       "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/checks/placement.md",
       "message": "runs to 31 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/checks/placement.md",
+      "message": "runs to 31 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/checks/placement.md",
+      "message": "runs to 32 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/checks/placement.md",
+      "message": "runs to 32 words in one sentence, more than the 30 allowed"
     },
     {
       "claim": "no-passage-runs-past-its-limit",
@@ -113,7 +138,17 @@
     {
       "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/concepts/monorepos.md",
+      "message": "runs to 31 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/concepts/monorepos.md",
       "message": "runs to 32 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/concepts/monorepos.md",
+      "message": "runs to 33 words in one sentence, more than the 30 allowed"
     },
     {
       "claim": "no-passage-runs-past-its-limit",
@@ -139,6 +174,16 @@
       "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/concepts/zones.md",
       "message": "runs to 34 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/concepts/zones.md",
+      "message": "runs to 34 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/concepts/zones.md",
+      "message": "runs to 37 words in one sentence, more than the 30 allowed"
     },
     {
       "claim": "no-passage-runs-past-its-limit",
@@ -169,6 +214,11 @@
       "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/integrations/fallow.md",
       "message": "runs to 44 words in one sentence, more than the 30 allowed"
+    },
+    {
+      "claim": "no-passage-runs-past-its-limit",
+      "file": "apps/docs/src/content/docs/integrations/linters.md",
+      "message": "runs to 31 words in one sentence, more than the 30 allowed"
     },
     {
       "claim": "no-passage-runs-past-its-limit",

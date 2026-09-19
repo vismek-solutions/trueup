@@ -119,7 +119,7 @@ describe("a baseline", () => {
     ]);
   });
 
-  it("records each distinct violation once and in a stable order", () => {
+  it("records every violation in a stable order, counting two with the same words as two", () => {
     const many = reportOf([
       { claim: "c-claim", guidance: "", findings: [violation("third", 1)] },
       { claim: "a-claim", guidance: "", findings: [violation("first", 2), violation("first", 3)] },
@@ -127,6 +127,7 @@ describe("a baseline", () => {
     ]);
 
     expect(baselineOf(many, ROOT).entries.map((entry) => `${entry.claim} ${entry.message}`)).toEqual([
+      "a-claim first",
       "a-claim first",
       "b-claim second",
       "c-claim third",

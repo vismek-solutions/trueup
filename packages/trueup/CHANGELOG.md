@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- Four claims read the markdown a project names under `text`: a banned mark, a banned word, a sentence or paragraph past a length limit, and an inline code span holding more than a path. The write-time guard rules on them too.
+- The calibrate command prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
+
+### Fixed
+
+- Two delegated findings carrying the same message about one file need two baseline entries. Both were accepted on one, so the second passed as known.
+
 ## 0.4.0
 
 ### Added

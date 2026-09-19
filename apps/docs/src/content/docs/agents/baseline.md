@@ -66,6 +66,8 @@ An entry is keyed on three things: the claim, the file and the message. A claim 
 
 A line number is never part of the key, so moving code around does not churn the file.
 
+An entry answers for one finding. Where a claim says the same thing twice about one file, the list holds two identical entries. A third one of that shape fails until it is recorded too. Counting them is what keeps the list honest, since the key holds no line number to tell them apart.
+
 A message that changes wording no longer matches. If a claim now says something different about a finding, that is a new fact and deserves a fresh look.
 
 A few claims are the exception, and they are the ones that report at most one thing about a file. A file serving two readerships, or a directory holding too many files, gets one finding and the message spells out the current detail: which exports, how many files. That detail moves while the problem stands, so for those claims the file alone is the key. Half fixing one of them stops reading as a brand new violation, and the entry stays accepted until the finding is gone.
