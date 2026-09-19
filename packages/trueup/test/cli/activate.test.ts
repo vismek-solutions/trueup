@@ -144,6 +144,12 @@ describe("the block an agent reads at the start of a session", () => {
     expect(said).not.toContain("warning from");
   });
 
+  it("gives each prose limit its number, since an agent cannot honour one it is not told", async () => {
+    expect(await capture(fixtureAt("guarded-text"))).toContain(
+      "  prose                     docs/**/*.md held to marks · words · 12 words a sentence · 2 sentences a paragraph · 3 words of inline code",
+    );
+  });
+
   it("marks a zone written to serve the layer above it, so a quiet component is explained", async () => {
     expect(await capture(fixtureAt("activated-switches"))).toContain("  lib     1 file  src/lib/**  (shared)");
   });

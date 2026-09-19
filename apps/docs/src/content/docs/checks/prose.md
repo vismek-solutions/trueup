@@ -94,6 +94,8 @@ For a long sentence, cut it at the joining word and give each half a full stop. 
 
 For a phrase in inline code, take the backticks off and let the words sit in the sentence. Inline code earns its place when a terminal can make the thing clickable, which is true of a path, a command and a symbol, and false of a sentence.
 
+Better than fixing one is not writing it. The [session start block](/agents/instructions/) names the files held and every limit in force, so an agent reads the numbers before its first draft rather than meeting them in a refusal.
+
 ## Setting a limit you can defend
 
 No study establishes a sentence length. The 20 and 25 words in the technical writing standards cite nothing. The 25 in the GOV.UK guide traces back through its own blog to a magazine article. A number copied from a style guide is a number with nothing behind it.

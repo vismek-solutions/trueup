@@ -89,15 +89,18 @@ const switched = (value: boolean | undefined): string | undefined => {
 
 type Prose = NonNullable<ResolvedConfig["text"]>;
 
+const limited = (max: number | undefined, noun: string, per: string): string | null =>
+  max === undefined ? null : `${plural(max, noun)} ${per}`;
+
 const proseSaid = (text: Prose | undefined): string | undefined => {
   if (text === undefined) return undefined;
 
-  const lengths = text.maxSentenceWords ?? text.maxParagraphSentences;
   const held = [
     text.marks === undefined ? null : "marks",
     text.words === undefined ? null : "words",
-    lengths === undefined ? null : "length",
-    text.maxInlineCodeWords === undefined ? null : "inline code",
+    limited(text.maxSentenceWords, "word", "a sentence"),
+    limited(text.maxParagraphSentences, "sentence", "a paragraph"),
+    limited(text.maxInlineCodeWords, "word", "of inline code"),
   ].filter((name) => name !== null);
 
   return held.length === 0 ? undefined : `${text.files.join(" · ")} held to ${held.join(" · ")}`;
