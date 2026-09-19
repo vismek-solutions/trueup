@@ -49,9 +49,9 @@ A claim per category means a baseline entry pins one rule rather than a whole to
 
 Each tool runs with your project root as its working directory, and keeps its own severities. A rule you set to warn stays a warning here.
 
-The fallow and oxlint runners take a list of categories to narrow what they report, and each checks that list against the tool's own resolved config, so a category nothing can report fails the run rather than passing quietly. Their sections below show both halves.
+The fallow and oxlint runners take a list of categories to narrow what they report. Each checks that list against the tool's own resolved config, so a category nothing can report fails the run rather than passing quietly. Their sections below show both halves.
 
-The biome runner takes no such list. Biome's own config decides which rules run, and the command decides whether the formatter is in scope, so a filter here would only be a second place to get that wrong.
+The biome runner takes no such list. Biome's own config decides which rules run, and the command decides whether the formatter is in scope. A filter here would only be a second place to get that wrong.
 
 ## Handing the rest to fallow
 
@@ -98,7 +98,7 @@ It is off unless you ask for it. The clone detector and the rule here answer dif
 
 Please do not lower these numbers until the detector finds what the [declaration rule](/checks/duplication/) finds. On trueup's own repository, a setting that low reports 886 clone groups, which is 90% of the codebase. Every quieter setting misses a real renamed copy. Run both, each at its own threshold.
 
-Each clone group arrives as one finding per instance, and the findings share a group, so the run that shows you one problem at a time shows the whole group as that one problem:
+Each clone group arrives as one finding per instance, and the findings share a group. The run that shows you one problem at a time shows the whole group as that one problem:
 
 ```sh
 npx trueup --next
@@ -108,15 +108,15 @@ Expect one kind of false positive: two functions with the same shape and differe
 
 ## Silence is not the same as nothing found
 
-A runner fails the check when the tool it wraps is silent, missing, misconfigured, unparseable, reports that it analysed nothing, or has switched off a rule the runner was counting on. None of those is "nothing found", and a tool that could not run is never recorded in a baseline.
+A runner fails the check when the tool it wraps is silent, missing, misconfigured or unparseable. It also fails when the tool reports that it analysed nothing, or has switched off a rule the runner was counting on. None of those is "nothing found", and a tool that could not run is never recorded in a baseline.
 
 Naming a category the tool never reports fails the run as well. Otherwise a typo in that name would read as "nothing found", and the check would enforce nothing.
 
-The exit codes matter here, because none of them mean what you would guess. eslint exits 1 for "found problems" and saves 2 for a broken config. Biome and oxlint exit 1 whether they found problems or could not read the path at all, so those two runners read a count out of the payload instead of trusting the status.
+The exit codes matter here, because none of them mean what you would guess. eslint exits 1 for "found problems" and saves 2 for a broken config. Biome and oxlint exit 1 whether they found problems or could not read the path at all. Those two runners read a count out of the payload instead of trusting the status.
 
 ## oxlint, if you are on TypeScript 7
 
-The typescript-eslint parser refuses to load against TypeScript 7, which takes eslint out of play for TypeScript there. oxlint carries its own parser, needs no TypeScript API, and implements most of the eslint rules, including ones eslint has and biome does not, like a cap on how many parameters a function takes.
+The typescript-eslint parser refuses to load against TypeScript 7, which takes eslint out of play for TypeScript there. The oxlint binary carries its own parser, needs no TypeScript API, and implements most of the eslint rules. That includes ones eslint has and biome does not, like a cap on how many parameters a function takes.
 
 oxlint ships that cap switched off, so turn it on in oxlint's own config first:
 

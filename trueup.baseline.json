@@ -77,36 +77,6 @@
     },
     {
       "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/integrations/linters.md",
-      "message": "runs to 31 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/integrations/linters.md",
-      "message": "runs to 31 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/integrations/linters.md",
-      "message": "runs to 33 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/integrations/linters.md",
-      "message": "runs to 34 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/integrations/linters.md",
-      "message": "runs to 39 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/integrations/linters.md",
-      "message": "runs to 52 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/start/reports.md",
       "message": "runs to 31 words in one sentence, more than the 30 allowed"
     },
