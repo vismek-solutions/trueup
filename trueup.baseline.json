@@ -12,26 +12,6 @@
     },
     {
       "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/agents/guard.md",
-      "message": "runs to 31 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/agents/guard.md",
-      "message": "runs to 32 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/agents/guard.md",
-      "message": "runs to 33 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
-      "file": "apps/docs/src/content/docs/agents/guard.md",
-      "message": "runs to 36 words in one sentence, more than the 30 allowed"
-    },
-    {
-      "claim": "no-passage-runs-past-its-limit",
       "file": "apps/docs/src/content/docs/agents/instructions.md",
       "message": "runs to 31 words in one sentence, more than the 30 allowed"
     },
