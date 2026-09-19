@@ -102,6 +102,7 @@ export function buildProject(input: BuildProjectInput): Project {
     mentionsIn: lexicon.mentionsIn,
     declarationsIn: lexicon.declarationsIn,
     commentsIn: lexicon.commentsIn,
+    proseIn: lexicon.proseIn,
     referencesIn,
     importsWithin,
     reachedWithin,

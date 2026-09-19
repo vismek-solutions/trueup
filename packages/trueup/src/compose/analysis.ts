@@ -1,5 +1,7 @@
 import { readSets, readSources, type DiscoverFilesOptions } from "../adapters/node-files.ts";
-import { parseModule, readComments, readDeclarations, readMentions } from "../adapters/oxc-parse.ts";
+import { parseModule, readDeclarations, readMentions } from "../adapters/oxc-parse.ts";
+import { readComments } from "../adapters/text/comments.ts";
+import { readProse } from "../adapters/text/prose.ts";
 import { createResolver } from "../adapters/oxc-resolve.ts";
 import { buildSymbolGraph } from "../graph/build.ts";
 import type { SymbolGraph } from "../graph/model.ts";
@@ -46,7 +48,14 @@ export const analyseProject = (options: InspectOptions) => {
   const modules = parseAll(sources, parseModule);
   const graph = buildSymbolGraph({ modules, resolve: createResolver({ externals }) });
   const assignment = assignZones({ root, files: [...graph.files], zones });
-  const lexicon = buildLexicon({ modules, sources, readMentions, readDeclarations, readComments });
+  const lexicon = buildLexicon({
+    modules,
+    sources,
+    readMentions,
+    readDeclarations,
+    readComments,
+    readProse,
+  });
 
   return {
     graph,

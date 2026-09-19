@@ -45,6 +45,7 @@ Here is the whole list. Read down the right-hand column to see which ones matter
 | `no-inline-code-holds-more-than-a-path` | inline code holds a path, a command or a symbol, never a phrase |
 | `every-link-says-where-it-goes` | no link hides its destination behind words like here or this page |
 | `every-long-section-shows-an-example` | no section explains at length with nothing to look at |
+| `no-prose-is-assembled-from-parts` | no passage is built from pieces joined when the code runs |
 | `no-change-outgrows-its-review` | no change has grown past the size a person can review |
 | `every-delegated-tool-ran` | every other analyzer you configured actually ran |
 
@@ -138,7 +139,7 @@ Nine claims are always on, and they need nothing from you but zones. The rest wa
 | `colocation` | `no-value-is-declared-away-from-its-only-consumer`, and `no-export-exists-only-for-a-test` when a zone also has `role: "tests"` |
 | `readerships` | [`no-file-serves-two-readerships`](/checks/placement/#one-file-answering-to-two-audiences) |
 | `testInternals` | [`no-test-reaches-an-internal`](/checks/placement/#tests-that-reach-an-internal) |
-| `text` | [one prose claim per key you set under it](/checks/prose/), and `comments` widens what those read rather than adding a claim |
+| `text` | [one prose claim per key you set under it](/checks/prose/). `comments` widens what those read, and `strings` widens them and adds [`no-prose-is-assembled-from-parts`](/checks/prose/#the-prose-inside-your-code) |
 | `reviewable` | [`no-change-outgrows-its-review`](#how-big-a-change-can-be-reviewed) |
 | `members` | [`every-api-zone-is-exported`](/concepts/monorepos/#the-door-is-written-down-twice) and [`every-grant-has-a-dependency`](/concepts/monorepos/#a-grant-with-no-dependency), wherever a member's `package.json` says enough to compare |
 | `runners` | [one claim per delegated category](/integrations/linters/) |

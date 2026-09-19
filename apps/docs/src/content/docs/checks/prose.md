@@ -8,6 +8,7 @@ claims:
   - no-inline-code-holds-more-than-a-path
   - every-link-says-where-it-goes
   - every-long-section-shows-an-example
+  - no-prose-is-assembled-from-parts
 ---
 
 An agent writes your guides as well as your code. The code has this tool watching it. The prose has a style guide somebody wrote once, and nothing that reads it.
@@ -104,6 +105,56 @@ The position names the word rather than the marker opening the comment, so a rep
 
 Each comment is read on its own. Two comment lines in a row are two passages rather than one, because prose does not flow across a marker the way it wraps inside a paragraph. The cost is that a sentence you spread over two comment lines is counted in halves, so a long one can pass. The gain is that a block of short lines with no full stops is not read as one enormous sentence.
 
+## The prose inside your code
+
+An error message and a piece of guidance are read by a person, and they live in strings rather than pages. Name the modules holding them:
+
+```ts
+text: {
+  files: ["docs/**/*.md"],
+  strings: ["src/messages/**"],
+  marks: ["—"],
+  words: [{ word: "leverage", instead: "use" }],
+}
+```
+
+A finding then names the file and the position the string sits at:
+
+```
+no-prose-uses-a-banned-mark                 1 error
+    src/messages.ts:1:48  uses "—" where a full stop, a comma, a colon or a joining word would do
+
+no-prose-uses-a-banned-word                 1 error
+    src/messages.ts:1:22  uses "leverage" where "use" would do
+
+no-prose-is-assembled-from-parts            1 error
+    src/messages.ts:3:22  builds a passage from parts, where one whole string would read as the text it is
+```
+
+Name the modules rather than the whole tree. A string holding a path, a glob or a class name is passed over already, and so is anything under four words. The layout of your own output reads as prose by every other measure, though, and you probably do not want a separator judged as punctuation.
+
+### A passage belongs in one string
+
+The last claim above is what makes the others trustworthy. A passage built from parts and joined when the code runs looks like this:
+
+```ts
+const said = [
+  "The report names the file it found the problem in.",
+  "",
+  "It names the claim as well.",
+].join("\n");
+```
+
+Nothing can read that as the text a person sees, because the separator is a value the code supplies. The empty piece is a blank line only once it is joined. Judging the pieces one at a time gives the wrong sentence count and loses the list. Write it whole instead:
+
+```ts
+const said = `The report names the file it found the problem in.
+
+It names the claim as well.`;
+```
+
+A template carrying a value is fine and stays readable, since the value is blanked and the sentence around it is judged. This claim is about a paragraph split into pieces rather than about interpolation.
+
 ## The claims
 
 | claim | what it says | key |
@@ -114,10 +165,11 @@ Each comment is read on its own. Two comment lines in a row are two passages rat
 | `no-inline-code-holds-more-than-a-path` | inline code holds a path, a command or a symbol, never a phrase | `maxInlineCodeWords` |
 | `every-link-says-where-it-goes` | no link hides its destination behind words like here or this page | `links` |
 | `every-long-section-shows-an-example` | no section explains at length with nothing to look at | `maxSectionWordsWithoutExample` |
+| `no-prose-is-assembled-from-parts` | no passage is built from pieces joined when the code runs | `strings` |
 
-All but the last are exact, so they fail the run and the write time guard refuses the edit. Nothing there rests on a threshold tuned until it went quiet.
+All but the section claim are exact, so they fail the run and the write time guard refuses the edit. Nothing there rests on a threshold tuned until it went quiet.
 
-The last one is different in kind. Every other claim names something the text must not contain, so it can only speak once the words exist. This one says what a section must carry, which is a requirement an agent can meet while writing rather than after. It warns and never refuses an edit, because a section can genuinely have nothing to show.
+The section claim is different in kind. Every other claim names something the text must not contain, so it can only speak once the words exist. This one says what a section must carry, which is a requirement an agent can meet while writing rather than after. It warns and never refuses an edit, because a section can genuinely have nothing to show.
 
 ## Fixing one
 

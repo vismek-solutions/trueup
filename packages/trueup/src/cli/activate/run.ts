@@ -105,7 +105,11 @@ const proseSaid = (text: Prose | undefined): string | undefined => {
     limited(text.maxSectionWordsWithoutExample, "word", "a section without an example"),
   ].filter((name) => name !== null);
 
-  const read = [...text.files, ...(text.comments === true ? ["every comment"] : [])];
+  const read = [
+    ...text.files,
+    ...(text.comments === true ? ["every comment"] : []),
+    ...(text.strings ?? []).map((pattern) => `the prose in ${pattern}`),
+  ];
   return held.length === 0 ? undefined : `${read.join(" · ")} held to ${held.join(" · ")}`;
 };
 

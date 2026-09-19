@@ -1,17 +1,19 @@
 import type { Claim } from "../claims/model.ts";
 import type { Finding, Severity } from "../report/model.ts";
-import { documentsIn, type Document, type Surface } from "./documents.ts";
+import { documentsIn, matching, type Document, type Surface } from "./documents.ts";
 import { exampleIssues } from "./checks/examples.ts";
 import { inlineCodeIssues } from "./checks/inline.ts";
 import { limitIssues } from "./checks/limits.ts";
 import { linkIssues } from "./checks/links.ts";
 import { markIssues } from "./checks/marks.ts";
+import { assembledIssues } from "./checks/strings.ts";
 import type { TextIssue } from "./model.ts";
 import { wordIssues, type WordSwap } from "./checks/wording.ts";
 
 export interface TextSettings {
   readonly files: readonly string[];
   readonly comments?: boolean | undefined;
+  readonly strings?: readonly string[] | undefined;
   readonly marks?: readonly string[] | undefined;
   readonly words?: readonly WordSwap[] | undefined;
   readonly maxSentenceWords?: number | undefined;
@@ -83,7 +85,32 @@ const EXAMPLES = [
   "Not the fix: a block that repeats the prose beside it. This warns rather than fails, so a section that genuinely has nothing to show can stay as it is.",
 ].join("\n");
 
+const ASSEMBLED = [
+  "A passage is built from parts and joined when the code runs, so no reader of the source sees the text a person will read. The separator is a value rather than something written down, which is why nothing can judge the pieces as one passage.",
+  "",
+  "Do this:",
+  "- Write the passage as one template literal, keeping its blank lines and its list where they stand.",
+  "- Build a list of separate messages as an array if that is what it is, and leave the prose out of it.",
+  "",
+  "Not the fix: joining with a different separator. The pieces are the problem, not the character between them.",
+].join("\n");
+
 type IssuesOf = (document: Document) => readonly TextIssue[];
+
+const assembledClaim = (patterns: readonly string[]): Claim => ({
+  name: "no-prose-is-assembled-from-parts",
+  check: ({ project }) => ({
+    guidance: ASSEMBLED,
+    findings: project.files.filter(matching(project, patterns)).flatMap((file): readonly Finding[] =>
+      assembledIssues(project.proseIn(file).joined).map((issue) => ({
+        severity: "error",
+        message: issue.message,
+        file,
+        start: issue.start,
+      })),
+    ),
+  }),
+});
 
 interface TextClaim {
   readonly name: string;
@@ -109,11 +136,11 @@ const claimOver = ({ name, surface, severity, issuesOf, guidance }: TextClaim): 
 });
 
 export function textClaims(settings: TextSettings): readonly Claim[] {
-  const { files, comments = false, marks = [], words = [] } = settings;
+  const { files, comments = false, strings = [], marks = [], words = [] } = settings;
   const { maxSentenceWords, maxParagraphSentences } = settings;
   const { maxInlineCodeWords, links, maxSectionWordsWithoutExample } = settings;
   const bounded = maxSentenceWords !== undefined || maxParagraphSentences !== undefined;
-  const surface: Surface = { files, comments };
+  const surface: Surface = { files, comments, strings };
 
   const wanted: readonly (Omit<TextClaim, "surface"> | null)[] = [
     marks.length === 0
@@ -166,5 +193,8 @@ export function textClaims(settings: TextSettings): readonly Claim[] {
         },
   ];
 
-  return wanted.filter((claim) => claim !== null).map((claim) => claimOver({ ...claim, surface }));
+  return [
+    ...wanted.filter((claim) => claim !== null).map((claim) => claimOver({ ...claim, surface })),
+    ...(strings.length === 0 ? [] : [assembledClaim(strings)]),
+  ];
 }

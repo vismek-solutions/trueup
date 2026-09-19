@@ -2,9 +2,11 @@ import type {
   Declaration,
   Mention,
   ModuleRecord,
+  ProseInCode,
   ReadComments,
   ReadDeclarations,
   ReadMentions,
+  ReadProse,
 } from "../ports/module-record.ts";
 import type { Span } from "../ports/span.ts";
 import type { Lexicon, Vocabulary } from "./model.ts";
@@ -15,7 +17,10 @@ export interface BuildLexiconInput {
   readonly readMentions: ReadMentions;
   readonly readDeclarations: ReadDeclarations;
   readonly readComments: ReadComments;
+  readonly readProse: ReadProse;
 }
+
+const NOTHING: ProseInCode = { strings: [], joined: [] };
 
 const exportedNamesOf = (record: ModuleRecord | undefined): readonly string[] =>
   (record?.exports ?? []).flatMap((entry) => (entry.form === "re-export-star" ? [] : [entry.exported]));
@@ -29,11 +34,13 @@ export function buildLexicon({
   readMentions,
   readDeclarations,
   readComments,
+  readProse,
 }: BuildLexiconInput): Lexicon {
   const byPath = new Map(modules.map((record) => [record.path, record]));
   const walked = new Map<string, readonly Mention[]>();
   const declared = new Map<string, readonly Declaration[]>();
   const spoken = new Map<string, readonly Span[]>();
+  const said = new Map<string, ProseInCode>();
 
   const declarationsIn = (path: string): readonly Declaration[] => {
     const cached = declared.get(path);
@@ -53,6 +60,16 @@ export function buildLexicon({
     const mentions = text === undefined ? [] : readMentions(path, text);
     walked.set(path, mentions);
     return mentions;
+  };
+
+  const proseIn = (path: string): ProseInCode => {
+    const cached = said.get(path);
+    if (cached !== undefined) return cached;
+
+    const text = sources.get(path);
+    const prose = text === undefined ? NOTHING : readProse(path, text);
+    said.set(path, prose);
+    return prose;
   };
 
   const commentsIn = (path: string): readonly Span[] => {
@@ -82,6 +99,7 @@ export function buildLexicon({
     mentionsIn,
     declarationsIn,
     commentsIn,
+    proseIn,
     exportedNamesIn: (path) => exportedNamesOf(byPath.get(path)),
     importedNamesIn: (path) =>
       new Set(

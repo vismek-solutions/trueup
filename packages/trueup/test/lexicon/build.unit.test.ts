@@ -45,6 +45,7 @@ const counting = (): Counted => {
       readMentions,
       readDeclarations,
       readComments: () => [],
+      readProse: () => ({ strings: [], joined: [] }),
     }),
     parses: () => parses,
   };
