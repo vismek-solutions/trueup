@@ -4,7 +4,7 @@
 
 ### Added
 
-- Claims read the markdown a project names under `text`: a banned mark, a banned word, a sentence or paragraph past a length limit, an inline code span holding more than a path, and a link whose text says nothing about where it goes. The write-time guard rules on them too.
+- Claims read the markdown a project names under `text`. They report a banned mark, a banned word, and a sentence or paragraph past a length limit. They also report an inline code span holding more than a path, and a link whose text says nothing about where it goes. The write-time guard rules on them too.
 - The calibrate command prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
 
 ### Fixed
@@ -69,7 +69,7 @@ The first published release.
 - A graph built from resolved symbols rather than from import text, so a chain of re-exports leads to the file where a name is actually written.
 - Seam rules, which stop reusable code naming a domain concept it never imported. The vocabulary comes from the domain zone itself and is worked out on every run.
 - Isolation rules, which keep sibling directories out of each other.
-- Placement checks: a value declared away from its only reader, a file serving two readerships, a test reaching an internal, an export that exists only for a test, and a directory holding too many files.
+- Placement checks: a value declared away from its only reader, a file serving two readerships, and a test reaching an internal. The same group covers an export that exists only for a test, and a directory holding too many files.
 - Duplication at declaration granularity, which reports the same body written twice and names where a shared copy could live.
 - Rules you write yourself, reading a small facade over the project rather than the syntax tree.
 - Monorepo members, where each package declares what it reaches and the root declares what nobody may.
