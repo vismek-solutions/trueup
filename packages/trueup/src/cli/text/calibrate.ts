@@ -30,7 +30,7 @@ const linesFor = (distribution: Distribution): readonly string[] => {
 };
 
 export async function runCalibrate({ cwd, argv, write }: CommandInput): Promise<number> {
-  if (refusedArguments(argv, "calibrate", write)) return EXIT_BAD_USAGE;
+  if (refusedArguments(argv, "text calibrate", write)) return EXIT_BAD_USAGE;
 
   const opened = await openedIn(cwd, write);
   if (typeof opened === "number") return opened;

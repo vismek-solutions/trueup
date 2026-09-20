@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { runCalibrate } from "../../src/cli/calibrate/run.ts";
-import { EXIT_BAD_USAGE, EXIT_CLEAN } from "../../src/cli/command.ts";
-import { fixtureAt } from "../support/fixtures.ts";
+import { EXIT_BAD_USAGE, EXIT_CLEAN } from "../../../src/cli/command.ts";
+import { runText } from "../../../src/cli/text/run.ts";
+import { fixtureAt } from "../../support/fixtures.ts";
 
 const TEXT = fixtureAt("guarded-text");
 const PLAIN = fixtureAt("calibrated");
@@ -9,7 +9,7 @@ const NO_TEXT = fixtureAt("project");
 
 const capture = async (cwd: string, argv: readonly string[] = []) => {
   const lines: string[] = [];
-  const code = await runCalibrate({ cwd, argv, write: (line) => lines.push(line) });
+  const code = await runText({ cwd, argv: ["calibrate", ...argv], write: (line) => lines.push(line) });
   return { code, output: lines.join("\n") };
 };
 

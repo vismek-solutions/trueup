@@ -198,33 +198,33 @@ No study establishes a sentence length. The 20 and 25 words in the technical wri
 Take it from your own writing instead:
 
 ```sh
-npx trueup calibrate
+npx trueup text calibrate
 ```
 
 ```
 calibration  **/*.md · *.md
 
-sentence words                1635 measured
-  at 30 (configured) 52 over
-  at 25 (p90) 144 over · at 28 (p95) 78 over · at 35 (p99) 15 over · at 59 (max) 0 over
+sentence words                2000 measured
+  at 30 (configured) 0 over
+  at 23 (p90) 180 over · at 26 (p95) 74 over · at 29 (p99) 17 over · at 30 (max) 0 over
 
-paragraph sentences           599 measured
+paragraph sentences           768 measured
   at 5 (configured) 0 over
-  at 4 (p90) 18 over · at 4 (p95) 18 over · at 5 (p99) 0 over · at 5 (max) 0 over
+  at 4 (p90) 17 over · at 4 (p95) 17 over · at 5 (p99) 0 over · at 5 (max) 0 over
 
-inline code words             6 measured
+inline code words             8 measured
   at 4 (configured) 0 over
   at 1 (p90) 0 over · at 1 (p95) 0 over · at 1 (p99) 0 over · at 1 (max) 0 over
 
-words with nothing to look at 50 measured
-  at 200 (configured) 3 over
-  at 171 (p90) 5 over · at 210 (p95) 2 over · at 334 (p99) 0 over · at 334 (max) 0 over
+words with nothing to look at 54 measured
+  at 200 (configured) 0 over
+  at 152 (p90) 5 over · at 170 (p95) 2 over · at 184 (p99) 0 over · at 184 (max) 0 over
 
 A limit taken from a percentile of your own writing is one you can defend.
 No study establishes a length threshold, so a number from a style guide has nothing behind it.
 ```
 
-The first line under each metric is where you are now. The second is what each percentile would cost you. Reading the example, tightening the sentence cap from 30 to 28 takes the backlog from 52 findings to 78, and loosening it to 35 cuts it to 15.
+The first line under each metric is where you are now. The second is what each percentile would cost you. Reading the example, a cap of 30 reports nothing today, tightening it to 26 would report 74 sentences, and 29 would report 17.
 
 A metric reading nothing measured is one whose check is switched on with nothing to look at. That is worth seeing, because the alternative is a check you believe is working.
 

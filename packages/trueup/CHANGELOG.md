@@ -6,7 +6,7 @@
 
 - Claims read the markdown a project names under `text`. They report a banned mark, a banned word, and a sentence or paragraph past a length limit. They also report an inline code span holding more than a path, and a link whose text says nothing about where it goes. The write-time guard rules on them too.
 - A section that explains at length with nothing to look at is reported, which is the one prose claim that asks for something rather than banning it. It warns and never refuses an edit.
-- The calibrate command prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
+- The prose commands sit under one name, `trueup text`, which lists them when asked for help. The first is `trueup text calibrate`, which prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
 - Naming modules under `text.strings` holds the prose written into their strings to the same claims. It adds `no-prose-is-assembled-from-parts`, which asks that a passage is written as one string rather than joined when the code runs. A template carrying a value is read with the value blanked.
 - Setting `comments` under `text` holds the comments in the code to the same claims. A parser finds them, so a marker inside a string is not one, and each comment is read on its own.
 

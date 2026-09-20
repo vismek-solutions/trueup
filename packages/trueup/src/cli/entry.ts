@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { runActivate } from "./activate/run.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
-import { runCalibrate } from "./calibrate/run.ts";
 import type { CommandInput } from "./command.ts";
 import { runDocs } from "./docs/run.ts";
 import { runExplain } from "./explain/run.ts";
 import { runGuard } from "./guard.ts";
 import { runInit } from "./init/run.ts";
 import { runCli } from "./main.ts";
+import { runText } from "./text/run.ts";
 
 const argv = process.argv.slice(2);
 const write = (line: string): void => {
@@ -22,7 +22,7 @@ const COMMANDS: Record<string, Command> = {
   activate: runActivate,
   "agent-instructions": runAgentInstructions,
   docs: runDocs,
-  calibrate: runCalibrate,
+  text: runText,
 };
 
 const read = async (): Promise<string> => {
