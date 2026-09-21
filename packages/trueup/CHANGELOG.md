@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 ### Added
 
@@ -9,6 +9,7 @@
 - The prose commands sit under one name, `trueup text`, which lists them when asked for help. The first is `trueup text calibrate`, which prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
 - Naming modules under `text.strings` holds the prose written into their strings to the same claims. It adds `no-prose-is-assembled-from-parts`, which asks that a passage is written as one string rather than joined when the code runs. A template carrying a value is read with the value blanked.
 - Setting `comments` under `text` holds the comments in the code to the same claims. A parser finds them, so a marker inside a string is not one, and each comment is read on its own.
+- The session start block names what the prose claims hold and every limit in force. An agent reads the numbers before its first draft rather than meeting them in a refusal.
 
 ### Fixed
 
