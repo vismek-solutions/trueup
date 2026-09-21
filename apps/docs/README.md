@@ -19,7 +19,7 @@ A push to main builds the site and deploys it to GitHub Pages:
 https://vismek-solutions.github.io/trueup/
 ```
 
-The workflow behind that is .github/workflows/pages.yml. It enables Pages on the repository the first time it runs, so the only setting a person has to touch is the repository being public.
+The workflow behind that lives in .github/workflows/pages.yml and enables Pages on the repository the first time it runs. The only setting a person has to touch is the repository being public.
 
 ## Links carry a base path
 

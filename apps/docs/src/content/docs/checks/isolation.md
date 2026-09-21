@@ -24,6 +24,15 @@ isolate: [{ siblings: "src/routes/*", except: ["_shared"] }]
 
 The star is what names the group, and every directory it matches becomes an island. The except list holds directory names rather than paths, so _shared above means src/routes/_shared.
 
+That line goes in a rulebook that still declares zones, because every file in your project has to land in one. A whole file with nothing else in it looks like this:
+
+```ts
+export default defineConfig({
+  zones: [{ name: "routes", patterns: ["src/routes/**"] }],
+  isolate: [{ siblings: "src/routes/*", except: ["_shared"] }],
+});
+```
+
 Files inside an island may import each other freely, and they may reach anything outside the group. What they may not do is reach a sibling.
 
 This check runs on its own, alongside your [boundaries](/concepts/boundaries/), and both have to pass. So when this page says an island may reach anything outside the group, it means this check raises no objection. Another rule still might.

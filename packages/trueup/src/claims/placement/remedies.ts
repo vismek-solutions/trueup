@@ -26,17 +26,15 @@ const ASK_FIRST =
   "Before moving a single declaration, ask whether the seam should carry it at all. A value the caller derives from an argument it hands the same collaborator belongs to that collaborator, which can derive it itself and leave the two nothing to disagree about. Moving it is the fix only when it does not.";
 
 const SHARED_HOME =
-  "Giving the value a zone of its own, or a package underneath the ones that read it, closes nothing by itself, because the count is about who reads it rather than where it sits. Reach for the shared home anyway when the consumer named must not own the value, a test harness or a downstream app for instance, and accept the finding that stands after it.";
+  "Giving the value a zone of its own, or a package underneath the ones that read it, closes nothing by itself. The count is about who reads it rather than where it sits. Reach for the shared home anyway when the consumer named must not own the value, a test harness or a downstream app for instance. Accept the finding that stands after it.";
 
-const NOT_THE_FIX = [
-  "Not the fix:",
-  "- Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.",
-  "- Leaving it because a second consumer may arrive later. That is a reason to move it back then, not a reason to leave it now.",
-  "- Declaring a zone `shared` so its count falls to parts of the consumer. That is honest only for a layer written to serve the layer above it.",
-].join("\n");
+const NOT_THE_FIX = `Not the fix:
+- Giving a zone a role so it stops counting as a consumer. A role is honest only for a zone that never owns what it uses.
+- Leaving it because a second consumer may arrive later. That is a reason to move it back then, not a reason to leave it now.
+- Declaring a zone \`shared\` so its count falls to parts of the consumer. That is honest only for a layer written to serve the layer above it.`;
 
 const WHY_NO_TYPES =
-  "A type is never reported, because a type can be used through a value without ever being imported, so counting its readers would name one consumer where there are several. A zone that imports a type does count as a consumer of the values that type is built from, because the type cannot be declared anywhere those values are not, so that zone pins them where they are.";
+  "A type is never reported, because a type can be used through a value without ever being imported, so counting its readers would name one consumer where there are several. A zone that imports a type does count as a consumer of the values that type is built from. The type cannot be declared anywhere those values are not, so that zone pins them where they are.";
 
 export const placementGuidance = (shapes: ReadonlySet<PlacementShape>): string => {
   const bullets = ORDER.filter((shape) => shapes.has(shape)).map((shape) => `- ${BRANCH[shape]}`);
@@ -58,29 +56,25 @@ export const placementGuidance = (shapes: ReadonlySet<PlacementShape>): string =
   ].join("\n");
 };
 
-export const INTERNALS = [
-  "A test reaches a symbol that nothing outside its own directory calls, so the test knows a decomposition none of the callers know. Fold that symbol into the neighbour that uses it and the behaviour is unchanged while the test breaks, which is what it means for a test to be bound to an implementation detail rather than to behaviour.",
-  "",
-  "Do this:",
-  "- Reach the behaviour through the surface the production callers already go through, and the split underneath is free to move.",
-  "- When that is genuinely too expensive, because a handful of cases each need their own fixture to drive from outside, let the symbol become a module with a caller of its own.",
-  "",
-  "Not the fix:",
-  "- Widening the surface so the direct test becomes legitimate.",
-  "- Adding a production caller to justify it.",
-  "",
-  "Both leave the codebase worse than the finding did. A zone with the `wiring` role is not reported, because a composition root has no internals to protect, and something the package publishes belongs in a zone with the `api` role.",
-].join("\n");
+export const INTERNALS = `A test reaches a symbol that nothing outside its own directory calls, so the test knows a decomposition none of the callers know. Fold that symbol into the neighbour that uses it and the behaviour is unchanged while the test breaks. That is what it means for a test to be bound to an implementation detail rather than to behaviour.
 
-export const FOR_TESTS = [
-  "Nothing outside the tests uses this export, so it is public only so a test can reach in.",
-  "",
-  "Do this:",
-  "- Reach the behaviour through the surface production actually calls, and the export can go back to being private.",
-  "- If the piece genuinely deserves its own test, let it become its own module with a real caller rather than a widened surface on this one.",
-  "- A helper that exists purely to serve tests belongs in a zone with the `tests` role, not in the source it props up.",
-  "",
-  "Something a package publishes belongs in a zone with the `api` role, whose consumers this analysis cannot see.",
-  "",
-  "Not the fix: adding a production caller so the export has a real consumer. That is the one change that leaves the codebase worse than the finding did.",
-].join("\n");
+Do this:
+- Reach the behaviour through the surface the production callers already go through, and the split underneath is free to move.
+- When that is too expensive, because each case needs its own fixture to drive from outside, let the symbol become a module with a caller of its own.
+
+Not the fix:
+- Widening the surface so the direct test becomes legitimate.
+- Adding a production caller to justify it.
+
+Both leave the codebase worse than the finding did. A zone with the \`wiring\` role is not reported, because a composition root has no internals to protect. Something the package publishes belongs in a zone with the \`api\` role.`;
+
+export const FOR_TESTS = `Nothing outside the tests uses this export, so it is public only so a test can reach in.
+
+Do this:
+- Reach the behaviour through the surface production actually calls, and the export can go back to being private.
+- If the piece genuinely deserves its own test, let it become its own module with a real caller rather than a widened surface on this one.
+- A helper that exists purely to serve tests belongs in a zone with the \`tests\` role, not in the source it props up.
+
+Something a package publishes belongs in a zone with the \`api\` role, whose consumers this analysis cannot see.
+
+Not the fix: adding a production caller so the export has a real consumer. That is the one change that leaves the codebase worse than the finding did.`;

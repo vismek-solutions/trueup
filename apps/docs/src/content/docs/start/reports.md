@@ -65,7 +65,7 @@ Each line after the receipt is one claim. It either holds, or it holds everywher
 
 Every claim runs on every pass, and the whole list always prints. Fixing one thing still tells you whether everything else moved.
 
-Under that list, past a short rule that marks where the findings end, sits the guidance for that claim. It says what the violation means and what to do about it. Where a claim reports in more than one shape, the guidance carries only the parts that match the findings you have. It is written for whoever meets the rule without having read these pages, and most of the time that is an agent, meaning a coding assistant writing code in your project.
+Under that list, past a short rule that marks where the findings end, sits the guidance for that claim. It says what the violation means and what to do about it. Where a claim reports in more than one shape, the guidance carries only the parts that match the findings you have. It is written for whoever meets the rule without having read these pages. Most of the time that is an agent, meaning a coding assistant writing code in your project.
 
 ## When you only want the failures
 
@@ -205,7 +205,7 @@ architecture:
 
 The part to get right is the line that keeps the artifact on every run. Without it, the artifact is dropped on exactly the runs that had something to say.
 
-Some findings name no file at all: an empty zone, or a pattern nothing matches. Those are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it, so reformatting a file does not bring back a finding GitLab had already seen.
+Some findings name no file at all: an empty zone, or a pattern nothing matches. Those are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it. Reformatting a file does not bring back a finding GitLab had already seen.
 
 :::note
 GitLab renders an annotation only on lines the merge request touched. A boundary violation sits on the import that caused it, so it lands. A directory-size finding has no line, so it shows in the widget instead. Either way the pass or fail is [the baseline's](/agents/baseline/) job, and we would ask you not to use the Code Quality widget as the ratchet.
@@ -295,7 +295,7 @@ Two lines there matter more than the rest. The write permission is what lets the
 
 A clean run still writes a file, holding a run with no results. Uploading that is how GitHub learns the alerts are gone, so it is worth running this on every branch rather than only where you expect a failure.
 
-Some findings name no file at all: an empty zone, or a pattern nothing matches. Those are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it, so reformatting a file does not open a second alert for a problem GitHub is already tracking.
+Some findings name no file at all: an empty zone, or a pattern nothing matches. Those are placed on the config they came from. The fingerprint is a hash of the claim, the path and the message, with no line number in it. Reformatting a file does not open a second alert for a problem GitHub is already tracking.
 
 :::note
 Uploading SARIF needs code scanning, which a public repository has and a private one gets with GitHub Advanced Security. Without it the upload step fails while the check itself still runs and still fails the job, so the gate holds even where the alerts cannot be shown. The pass or fail is [the baseline's](/agents/baseline/) job, and we would ask you not to use the alert list as the ratchet.

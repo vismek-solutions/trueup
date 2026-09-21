@@ -9,14 +9,12 @@ const everyFileBelongsToAZone: Claim = {
       file,
       start: null,
     })),
-    guidance: [
-      "A file matches no zone, so no boundary or seam rule applies to it.",
-      "",
-      "Do this:",
-      "- Move it under an existing zone.",
-      "- Or declare a zone that covers it.",
-      "- Run `{trueup} explain <file>` to see what a location would allow.",
-    ].join("\n"),
+    guidance: `A file matches no zone, so no boundary or seam rule applies to it.
+
+Do this:
+- Move it under an existing zone.
+- Or declare a zone that covers it.
+- Run \`{trueup} explain <file>\` to see what a location would allow.`,
   }),
 };
 
@@ -29,13 +27,11 @@ const everyZoneHasAFile: Claim = {
       file: null,
       start: null,
     })),
-    guidance: [
-      "A declared zone matches nothing, which silently disables every rule naming it.",
-      "",
-      "Do this:",
-      "- Fix its patterns.",
-      "- Or remove the zone.",
-    ].join("\n"),
+    guidance: `A declared zone matches nothing, which silently disables every rule naming it.
+
+Do this:
+- Fix its patterns.
+- Or remove the zone.`,
   }),
 };
 
@@ -48,13 +44,11 @@ const everyZonePatternMatchesAFile: Claim = {
       file: null,
       start: null,
     })),
-    guidance: [
-      "A pattern matches nothing, so it is a rule you believe you have and do not.",
-      "",
-      "Do this:",
-      "- Fix the pattern, or delete it.",
-      "- Check the zones above it first. Zones match first-match-wins, so an earlier zone may already have taken these files.",
-    ].join("\n"),
+    guidance: `A pattern matches nothing, so it is a rule you believe you have and do not.
+
+Do this:
+- Fix the pattern, or delete it.
+- Check the zones above it first. Zones match first-match-wins, so an earlier zone may already have taken these files.`,
   }),
 };
 

@@ -31,7 +31,7 @@ describe("a configuration key nothing reads", () => {
         " A root configuration accepts `assets`, `boundaries`, `changes`, `colocation`, `command`, `duplication`," +
         " `extensions`, `externals`, `ignoreDirectories`, `include`, `isolate`, `maxFilesPerDirectory`," +
         " `members`, `protect`, `readerships`, `reviewable`, `rules`, `runners`, `seams`," +
-        " `testInternals`, `zones`." +
+        " `testInternals`, `text`, `zones`." +
         " A key it does not read is ignored, so the run makes one fewer claim than you configured" +
         " and nothing says so.",
     );

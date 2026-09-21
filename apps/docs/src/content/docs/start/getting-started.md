@@ -117,7 +117,35 @@ The zones say this project has seven kinds of file. The names are yours to inven
 
 Order matters, because a file belongs to the **first** zone that matches it. The test zone is listed first, so a test sitting inside the components folder counts as a test rather than as a component. The catch all zone is listed last and picks up everything under the source directory that no earlier zone claimed.
 
+Ask about any file and it will tell you which zone won:
+
+```sh
+npx trueup explain src/components/CartRow.test.ts
+```
+
+```
+src/components/CartRow.test.ts
+
+zone        spec
+may reach   spec · components · hooks · api · domain · app · server
+may not     none
+```
+
 The boundaries here say that components may reach hooks and the api, hooks may reach the api, and the api may reach nothing at all. A zone can always reach itself, so it never has to say so. And a zone with no rule of its own is unrestricted, which here means the catch all zone, the server zone and the test zone. That is what lets you add rules one zone at a time instead of all at once.
+
+The component sitting beside that test is in a zone a rule names, so its answer is shorter:
+
+```sh
+npx trueup explain src/components/CartRow.tsx
+```
+
+```
+src/components/CartRow.tsx
+
+zone        components
+may reach   components · hooks · api
+may not     spec · domain · app · server
+```
 
 ## What it will not complain about
 
@@ -135,7 +163,7 @@ import logo from "./logo.svg";
 import data from "./config.json";
 ```
 
-Only files with a source extension are read and sorted into zones. For everything else the trail simply stops there.
+Only files with a source extension are read and sorted into zones. For everything else the trail stops there.
 
 If something genuinely fails to resolve, it is one of two things. Either a real typo, which you want to know about, or an import name that your build tool invents out of thin air. The second case is covered in [imports your build tool supplies](/concepts/boundaries/#imports-your-build-tool-supplies).
 

@@ -1,6 +1,6 @@
 import { relative } from "node:path";
 import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baseline-file.ts";
-import { check } from "../compose.ts";
+import { check } from "../main.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
 import { rulebookGuarded } from "../guard/protected.ts";
 import { acceptanceOf, applyBaseline, baselineOf } from "../ratchet/apply.ts";
@@ -149,6 +149,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     colocation: config.colocation,
     readerships: config.readerships,
     testInternals: config.testInternals,
+    text: config.text,
     rules: config.rules,
     runners: config.runners,
     extensions: config.extensions,

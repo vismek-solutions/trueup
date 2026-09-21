@@ -1,0 +1,5 @@
+{
+  "pages": ["concepts/zones.md", "checks/isolation.md"],
+  "expect": "no-sibling-directory-reaches-another",
+  "file": "src/routes/checkout/page.ts"
+}

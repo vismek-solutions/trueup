@@ -1,6 +1,7 @@
 import type { EdgeTarget } from "../graph/model.ts";
 import type { Vocabulary } from "../lexicon/model.ts";
-import type { BindingKind, Declaration, Mention } from "../ports/module-record.ts";
+import type { BindingKind, Declaration, Mention, ProseInCode } from "../ports/module-record.ts";
+import type { Span } from "../ports/span.ts";
 import type { Severity } from "../report/model.ts";
 import type { ZoneRole } from "../zones/model.ts";
 
@@ -46,6 +47,8 @@ export interface Project {
   readonly sourceOf: (file: string) => string | null;
   readonly mentionsIn: (file: string) => readonly Mention[];
   readonly declarationsIn: (file: string) => readonly Declaration[];
+  readonly commentsIn: (file: string) => readonly Span[];
+  readonly proseIn: (file: string) => ProseInCode;
   readonly referencesIn: (file: string) => ReadonlyMap<string, ReadonlySet<string>>;
   readonly importsWithin: (file: string, names: readonly string[]) => readonly ResolvedImport[];
   readonly reachedWithin: (file: string, names: readonly string[]) => readonly string[];

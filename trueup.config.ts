@@ -6,6 +6,35 @@ import { defineConfig } from "./packages/trueup/src/config/model.ts";
 
 const PATHS = ["packages/trueup/src", "packages/trueup/test", "packages/trueup/bin", "scripts"];
 
+const PLAINER = [
+  { word: "leverage", instead: "use" },
+  { word: "utilize", instead: "use" },
+  { word: "facilitate", instead: "help" },
+  { word: "occludes", instead: "hides" },
+  { word: "robust", instead: "solid" },
+  { word: "seamless", instead: "smooth" },
+  { word: "seamlessly", instead: "smoothly" },
+  { word: "powerful", instead: "a plain description of what it does" },
+  { word: "comprehensive", instead: "complete" },
+  { word: "crucial", instead: "important" },
+  { word: "vital", instead: "important" },
+  { word: "simply", instead: "nothing, and delete the word" },
+  { word: "easily", instead: "nothing, and delete the word" },
+  { word: "effortlessly", instead: "nothing, and delete the word" },
+  { word: "myriad", instead: "many" },
+  { word: "plethora", instead: "many" },
+  { word: "streamline", instead: "simplify" },
+  { word: "unlock", instead: "a plain verb" },
+  { word: "elevate", instead: "a plain verb" },
+];
+
+const MODEL_TICS = [
+  { word: "delve", instead: "look at" },
+  { word: "landscape", instead: "a plain noun" },
+  { word: "realm", instead: "a plain noun" },
+  { word: "tapestry", instead: "a plain noun" },
+];
+
 export default defineConfig({
   members: ["packages/*"],
   zones: [
@@ -17,14 +46,31 @@ export default defineConfig({
     { from: "scripts", allow: [] },
   ],
   externals: ["astro:*"],
-  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro", ".stryker-tmp"],
+  ignoreDirectories: [...IGNORED_DIRECTORIES, "fixtures", ".astro", ".stryker-tmp", ".brainstorm"],
   command: "node ./packages/trueup/bin/trueup.js",
-  protect: ["CLAUDE.md", ".claude/settings.json"],
   maxFilesPerDirectory: 12,
   duplication: 60,
   readerships: true,
   colocation: true,
   testInternals: true,
+  protect: ["CLAUDE.md", ".claude/settings.json"],
+  text: {
+    files: ["**/*.md", "*.md"],
+    strings: [
+      "packages/trueup/src/claims/**",
+      "packages/trueup/src/text/**",
+      "packages/trueup/src/guard/**",
+      "packages/trueup/src/ratchet/**",
+    ],
+    marks: ["—", "–", "--", "·"],
+    words: [...PLAINER, ...MODEL_TICS],
+    maxSentenceWords: 30,
+    maxParagraphSentences: 5,
+    maxInlineCodeWords: 4,
+    maxSectionWordsWithoutExample: 200,
+    links: true,
+    comments: true,
+  },
   runners: [
     biomeRunner({
       command: ["node_modules/.bin/biome", "lint"],

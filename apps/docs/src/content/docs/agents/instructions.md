@@ -96,4 +96,4 @@ The second is faster, looks like progress, and leaves no trace that a check ever
 
 So every message this tool prints says which of the two is meant. The guidance on every claim names the fix that would make things worse. And the rulebook itself is [protected from agent edits](/agents/guard/#the-rulebook-goes-through-you).
 
-There is a third road, and it looks more responsible than it is. A real cleanup often makes the count go up, because the violation it removed was hiding the others, and an agent reading that as damage will revert its own correct work. So the block above says plainly that a longer report after a fix is progress.
+There is a third road, and it looks more responsible than it is. A real cleanup often makes the count go up, because the violation it removed was hiding the others. An agent reading that as damage will revert its own correct work. So the block above says plainly that a longer report after a fix is progress.

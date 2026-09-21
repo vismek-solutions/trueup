@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FIXTURES } from "../support/fixtures.ts";
-import { analyze } from "../../src/compose.ts";
+import { analyze } from "../../src/main.ts";
 import type { EdgeTarget, SymbolGraph } from "../../src/graph/model.ts";
 
 const graphOf = (fixture: string): SymbolGraph => analyze({ roots: [join(FIXTURES, fixture)] });

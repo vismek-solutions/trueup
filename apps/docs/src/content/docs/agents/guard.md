@@ -53,13 +53,25 @@ The second block is there only for [Serena](https://github.com/oraios/serena), a
 
 Only findings on the file being written can block it. A violation somewhere else is not this edit's problem, and if it were enough to block, no edit in an existing codebase would ever land.
 
-Anything already in your baseline does not block either. A baseline is the recorded list of problems you have agreed to live with for now.
+The hook payload arrives on standard input, so you can try a proposed edit by hand:
+
+```sh
+npx trueup guard < add-price-to-cart.json
+```
+
+```
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"This edit is refused by the project's architecture rules.\n\nevery-import-respects-its-zone-boundary  src/api/cart.ts\n  is api and may not reach domain: priceOf from src/domain/price.ts …"}}
+```
+
+Anything already in your baseline does not block either. A baseline is the recorded list of problems you have agreed to live with for now. Run the same command on an edit that leaves a recorded finding where it was, and it prints nothing at all.
 
 A recorded finding that comes back under different words does not block either, and that matters for a fix landing in stages. The edit closes part of what a check was saying, the check then says something different about the same file, and the new wording is in no baseline. Refusing it would make the improving edit the one edit you cannot make.
 
 So when a claim retires one of its own baseline entries on that file in the same run, the finding left standing counts as the recorded one under new words. A claim that retired nothing is forgiven nothing, and a full run still fails until the baseline catches up.
 
-One rule stands down for a file that does not exist yet. A new file holding a declaration that still stands somewhere else is a move half done, and it is impossible to tell from a copy until the old one is deleted. Blocking it had a worse effect than letting it through: it taught agents to reword the body until it stopped matching, which leaves two copies and no finding. So the write lands, and [the duplication check](/checks/duplication/) keeps failing until the old copy is gone. Every other rule still applies to that file, and a copy landing in a file that already exists is still refused.
+One rule stands down for a file that does not exist yet. A new file holding a declaration that still stands somewhere else is a move half done. Until the old one is deleted, it is impossible to tell from a copy. Blocking it had a worse effect than letting it through: it taught agents to reword the body until it stopped matching, which leaves two copies and no finding.
+
+So the write lands, and [the duplication check](/checks/duplication/) keeps failing until the old copy is gone. Every other rule still applies to that file, and a copy landing in a file that already exists is still refused.
 
 When the guard cannot make sense of the situation, it stands aside and lets the write happen. An edit it cannot read, a missing config, a file type you do not analyse: each of those allows the write. A guard that fell over on surprises would block every edit rather than the wrong ones.
 
@@ -113,7 +125,7 @@ protect: { decision: process.env.CI === undefined ? "ask" : "deny" }
 
 ## Handing the rulebook over
 
-The opposite is available too. It is the answer if the prompt is friction you do not want, because you read the rulebook diff on the merge request anyway, or because you run unattended and would rather the agent kept going.
+The opposite is available too. It is the answer if the prompt is friction you do not want. Perhaps you read the rulebook diff on the merge request anyway, or you run unattended and would rather the agent kept going.
 
 ```ts
 protect: { decision: "allow" }
@@ -133,7 +145,7 @@ Choose allow when you have decided that a later review is your gate. If what you
 
 ## Files the analysis never reads
 
-The guard runs before the filters for roots and file extensions, so it also covers files the analysis would never open: a JSON file, a YAML file, anything outside the include setting.
+The guard runs before the filters for roots and file extensions. It also covers files the analysis would never open: a JSON file, a YAML file, anything outside the include setting.
 
 It has no counterpart in a full run, because a snapshot of your code cannot show that the rulebook was edited on the way. This is the only rule that exists purely at write time.
 
@@ -141,6 +153,6 @@ You still edit these files yourself, directly. The hook only sees what an agent 
 
 ## Why there are two hooks
 
-The guard has to know what the file would look like after the edit. A find and replace is something it can reproduce exactly, so edits of that kind are checked before the write and refused. An edit such as "replace this function's body" depends on the language server's idea of where the function ends, so those are checked immediately after the write and come back as a correction. The guard never guesses at how another tool's edits work.
+The guard has to know what the file would look like after the edit. A find and replace is something it can reproduce exactly, so edits of that kind are checked before the write and refused. An edit such as "replace this function's body" depends on the language server's idea of where the function ends. Those are checked immediately after the write and come back as a correction. The guard never guesses at how another tool's edits work.
 
 Delegated tools do not run here. A runner hands a job to another tool you already use, and starting a whole-repo lint on every edit would cost far more than it catches.

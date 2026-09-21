@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ReviewBudget } from "../../../src/claims/review/budget.ts";
-import { check } from "../../../src/compose.ts";
+import { check } from "../../../src/main.ts";
 import type { ChangeSet, Changes, FileChange } from "../../../src/ports/changes.ts";
 import { claimIn, findingsIn, messagesIn } from "../../support/report.ts";
 import { fixtureAt } from "../../support/fixtures.ts";

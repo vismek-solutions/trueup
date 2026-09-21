@@ -1,4 +1,4 @@
-import type { ungovernedIn } from "../../compose.ts";
+import type { ungovernedIn } from "../../main.ts";
 
 type ZoneFlow = ReturnType<typeof ungovernedIn>["unspoken"][number];
 

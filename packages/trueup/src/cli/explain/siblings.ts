@@ -1,4 +1,4 @@
-import type { siblingsIn } from "../../compose.ts";
+import type { siblingsIn } from "../../main.ts";
 import { list } from "./lines.ts";
 
 type Placement = ReturnType<typeof siblingsIn>[number];

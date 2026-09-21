@@ -39,7 +39,9 @@ no zone   e2e
 
 Two more labels can appear in that output. A package that already has a rulebook keeps it and is listed as kept. A package holding no code yet gets a rulebook anyway and is named under no source. Its zones then match nothing, and that is reported as an error rather than passing in silence.
 
-The block headed no zone is the one to act on first. init cannot know what the e2e directory is, so it writes no zone for it, but it did walk the tree and it can see the code is there. Everything named in that block will fail on the first run as unclassified, which means no zone claimed it. Your linters will not see those files either. A runner is the bit of setup that hands a job to a linter you already use, and it covers what the zones cover.
+The block headed no zone is the one to act on first. The init command cannot know what the e2e directory is, so it writes no zone for it. It did walk the tree, though, and it can see the code is there. Everything named in that block will fail on the first run as unclassified, which means no zone claimed it.
+
+Your linters will not see those files either. A runner is the bit of setup that hands a job to a linter you already use, and it covers what the zones cover.
 
 ## What init writes for each package
 
@@ -123,7 +125,7 @@ export default defineMember({
 });
 ```
 
-This is the same shape as a dependency list in package.json, and for the same reason: adding a dependency is a local edit, made next to the code that took it on. Twenty packages need twenty declarations, not four hundred.
+This is the same shape as a dependency list in package.json, and for the same reason. Adding a dependency is a local edit, made next to the code that took it on. Twenty packages need twenty declarations, not four hundred.
 
 Naming lib there opens lib's api zones and nothing else. A package with no api zone opens entirely. It is the same allow a boundary rule takes, one level up. There it lists zones, here it lists members.
 
@@ -162,7 +164,7 @@ every-import-respects-its-zone-boundary     2 errors
     apps/web/src/cart.ts:2:10  is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts
 ```
 
-You can name a member anywhere a zone would go, and it expands. Used as the from of a rule it stands for all of that member's zones. Inside an allow list it stands for its api zones only. A rule about a member governs only its outward reach, so its own zones stay reachable from each other, and an empty allow list isolates the package rather than shattering it.
+You can name a member anywhere a zone would go, and it expands. Used as the from of a rule it stands for all of that member's zones. Inside an allow list it stands for its api zones only. A rule about a member governs only its outward reach, so its own zones stay reachable from each other. An empty allow list isolates the package rather than shattering it.
 
 A root rule can only narrow what a member granted itself, never widen it, because two rules for one zone intersect.
 
@@ -183,7 +185,9 @@ every-api-zone-is-exported                  3 errors
 
 The first finding is about imports that resolve perfectly well and are refused all the same. The second is a door nobody outside the workspace can walk through, because the file is not published.
 
-The third is the one worth understanding, because it is how a package quietly comes open. Widening an api zone by one pattern is not a local edit. An api zone is what an allow list opens, so every package you invited in can now reach that file directly, past the barrel, while nothing outside the workspace can import it at all. That is why the check is per file rather than per zone. A door that covers one exported file does not get to carry any others in with it.
+The third is the one worth understanding, because it is how a package quietly comes open. Widening an api zone by one pattern is not a local edit. An api zone is what an allow list opens, so every package you invited in can now reach that file directly, past the barrel. Nothing outside the workspace can import it at all.
+
+That is why the check is per file rather than per zone. A door that covers one exported file does not get to carry any others in with it.
 
 It reports only what it can prove. A member with no package.json, or none with an exports field, says nothing about its surface, so neither does the check. A wildcard subpath such as ./features/* matches no single zone. A subpath pointing at build output, such as ./dist/index.js, names a file the analysis never reads. In each of those the check stays quiet rather than guessing.
 
@@ -197,7 +201,7 @@ export default defineMember({
 });
 ```
 
-Every source file named in exports goes into a derived api zone ahead of your own, so the barrel is the door and the rest of the package sits behind it. One list, so there is nothing left to drift.
+Every source file named in exports goes into a derived api zone ahead of your own. The barrel is then the door, and the rest of the package sits behind it. One list, so there is nothing left to drift.
 
 This only works where exports points at source. A package that publishes build output would derive a door onto a file the analysis never reads, which is why the setting is off unless you ask for it. Setting it alongside a hand-written api zone is refused rather than merged.
 
@@ -216,7 +220,7 @@ It compares rather than derives, for the same reason the door check does. A pack
 
 ## Rules that belong to one package
 
-A member also takes seams, rules and maxFilesPerDirectory. A seam is the line between reusable code and code that knows your business. A rule about one package's components means nothing to the server beside it, and putting it in the root config rebuilds the single shared rulebook that the members list exists to break up.
+A member also takes seams, rules and maxFilesPerDirectory. A seam is the line between reusable code and code that knows your business. A rule about one package's components means nothing to the server beside it. Putting it in the root config rebuilds the single shared rulebook that the members list exists to break up.
 
 ```ts
 // apps/web/trueup.config.ts
@@ -246,9 +250,9 @@ web/one-declaration-per-file                1 error
     apps/web/src/view/chip.ts  apps/web/src/view/chip.ts declares more than one thing
 ```
 
-Because the view is narrowed, a member's rule cannot report on another package. A rule that spans packages is a rule about more than one of them, so it belongs in the root config, where it gets the whole project and the qualified names to go with it.
+Because the view is narrowed, a member's rule cannot report on another package. A rule that spans packages is a rule about more than one of them, so it belongs in the root config. There it gets the whole project and the qualified names to go with it.
 
-The duplication check stays root-only. It compares declarations across the whole repository, so a pair that spans two packages with different thresholds has no answer, and inventing one would be worse than the friction of a single number.
+The duplication check stays root-only. It compares declarations across the whole repository, so a pair that spans two packages with different thresholds has no answer. Inventing one would be worse than the friction of a single number.
 
 ## Members are not islands
 

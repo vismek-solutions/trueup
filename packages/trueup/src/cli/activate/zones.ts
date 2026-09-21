@@ -1,4 +1,4 @@
-import { reachOf } from "../../compose.ts";
+import { reachOf } from "../../main.ts";
 import type { ResolvedConfig } from "../../config/model.ts";
 import { plural } from "../render.ts";
 

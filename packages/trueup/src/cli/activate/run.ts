@@ -1,6 +1,6 @@
 import { relative } from "node:path";
 import { gitChanges } from "../../adapters/git/changes.ts";
-import { changeSizeIn } from "../../compose.ts";
+import { changeSizeIn } from "../../main.ts";
 import type { ResolvedConfig } from "../../config/model.ts";
 import { pathsIn, rulebookGuarded } from "../../guard/protected.ts";
 import { toPosix } from "../../paths/posix.ts";
@@ -87,6 +87,32 @@ const switched = (value: boolean | undefined): string | undefined => {
   return value ? "on" : "off";
 };
 
+type Prose = NonNullable<ResolvedConfig["text"]>;
+
+const limited = (max: number | undefined, noun: string, per: string): string | null =>
+  max === undefined ? null : `${plural(max, noun)} ${per}`;
+
+const proseSaid = (text: Prose | undefined): string | undefined => {
+  if (text === undefined) return undefined;
+
+  const held = [
+    text.marks === undefined ? null : "marks",
+    text.words === undefined ? null : "words",
+    limited(text.maxSentenceWords, "word", "a sentence"),
+    limited(text.maxParagraphSentences, "sentence", "a paragraph"),
+    limited(text.maxInlineCodeWords, "word", "of inline code"),
+    text.links === true ? "link text" : null,
+    limited(text.maxSectionWordsWithoutExample, "word", "a section without an example"),
+  ].filter((name) => name !== null);
+
+  const read = [
+    ...text.files,
+    ...(text.comments === true ? ["every comment"] : []),
+    ...(text.strings ?? []).map((pattern) => `the prose in ${pattern}`),
+  ];
+  return held.length === 0 ? undefined : `${read.join(" · ")} held to ${held.join(" · ")}`;
+};
+
 const settingLines = (config: ResolvedConfig, read: number): readonly string[] => {
   const values: readonly (readonly [string, string | undefined])[] = [
     ["files read", String(read)],
@@ -104,6 +130,7 @@ const settingLines = (config: ResolvedConfig, read: number): readonly string[] =
     ["colocation", switched(config.colocation)],
     ["readerships", switched(config.readerships)],
     ["test internals", switched(config.testInternals)],
+    ["prose", proseSaid(config.text)],
     [
       "rulebook",
       rulebookGuarded(config.protect)

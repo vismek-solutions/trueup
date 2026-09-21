@@ -54,7 +54,9 @@ accepted 0 findings into trueup.baseline.json · 1 retired
 every-import-respects-its-zone-boundary     1 retired
 ```
 
-Sometimes an entry stops matching and nothing was fixed. Upgrading the tool can change how a claim words a finding, and the message is part of what an entry remembers, so the old entry falls away while the same violation comes back under new words. The run tells the two apart for you. An entry saying the claim no longer reports on that file is a fix. One saying the claim still reports on that file in other words is not, and updating the baseline records the new wording rather than dropping anything.
+Sometimes an entry stops matching and nothing was fixed. Upgrading the tool can change how a claim words a finding, and the message is part of what an entry remembers. The old entry then falls away while the same violation comes back under new words.
+
+The run tells the two apart for you. An entry saying the claim no longer reports on that file is a fix. One saying the claim still reports on that file in other words is not, and updating the baseline records the new wording rather than dropping anything.
 
 The [write time guard](/agents/guard/) reads the same signal, so it lets through the edit that did the re-wording. Otherwise a fix that only gets halfway would be refused for the wording it leaves behind.
 
@@ -64,7 +66,26 @@ Without that, a baseline slowly turns into a list of permanent exemptions nobody
 
 An entry is keyed on three things: the claim, the file and the message. A claim is one sentence the tool believes about your project, which each run proves or disproves.
 
+```json
+{
+  "entries": [
+    {
+      "claim": "every-file-belongs-to-a-zone",
+      "file": "scripts/build.ts",
+      "message": "matches no zone"
+    },
+    {
+      "claim": "every-import-respects-its-zone-boundary",
+      "file": "src/hooks/useCart.ts",
+      "message": "is hooks and may not reach components: CartRow from src/components/CartRow.tsx"
+    }
+  ]
+}
+```
+
 A line number is never part of the key, so moving code around does not churn the file.
+
+An entry answers for one finding. Where a claim says the same thing twice about one file, the list holds two identical entries. A third one of that shape fails until it is recorded too. Counting them is what keeps the list honest, since the key holds no line number to tell them apart.
 
 A message that changes wording no longer matches. If a claim now says something different about a finding, that is a new fact and deserves a fresh look.
 

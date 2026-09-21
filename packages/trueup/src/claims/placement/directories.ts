@@ -2,15 +2,13 @@ import { dirname, sep } from "node:path";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
-const GUIDANCE = [
-  "A directory holds more files than the limit, which is how a folder stops being one idea and turns into a drawer.",
-  "",
-  "Do this:",
-  "- Group the related files into a subdirectory that names what they share.",
-  "- Move out the ones that never belonged here.",
-  "",
-  "Not the fix: raising the limit. The number exists to force the question of what this directory is for.",
-].join("\n");
+const GUIDANCE = `A directory holds more files than the limit, which is how a folder stops being one idea and turns into a drawer.
+
+Do this:
+- Group the related files into a subdirectory that names what they share.
+- Move out the ones that never belonged here.
+
+Not the fix: raising the limit. The number exists to force the question of what this directory is for.`;
 
 export interface DirectoryLimit {
   readonly within: string;

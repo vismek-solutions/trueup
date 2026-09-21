@@ -91,6 +91,7 @@ Rules you write, in one config file:
 - where a file belongs, judged by who actually reads it
 - the same declaration written twice, compared with its name stripped off
 - how large a change may grow before nobody can really review it
+- the prose you ship, in your guides, your comments and your messages, held to the marks, words and lengths you name
 - anything else, as a plain TypeScript function over the resolved project
 
 Checks that need nothing from you but zones:

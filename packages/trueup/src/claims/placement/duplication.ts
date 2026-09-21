@@ -3,15 +3,13 @@ import type { Finding } from "../../report/model.ts";
 import { sharedHomes, type BoundaryRule } from "../boundary.ts";
 import type { Claim } from "../model.ts";
 
-const GUIDANCE = [
-  "The same declaration was written more than once, in files that could have shared it. This is what an agent does when it cannot find what already exists: every copy is individually correct, and the codebase grows a second answer to a question it had already answered.",
-  "",
-  "Do this:",
-  "- Keep one copy, put it where every caller may reach it, and delete the rest.",
-  "- When the copies sit in different zones the finding names the zones that may hold the one you keep. If it names none, no zone both reaches what the declaration needs and is reachable from every copy, so a zone has to be declared before this can be shared at all.",
-  "- Under the write-time guard, write the shared file first and delete the copies after. A file that does not exist yet is let through holding declarations that still stand elsewhere, because a move looks exactly like a copy until the old one is gone. This claim keeps failing until it is.",
-  "- If the copies have drifted apart, they were two ideas wearing one shape. Rename them so the next reader is not misled.",
-].join("\n");
+const GUIDANCE = `The same declaration was written more than once, in files that could have shared it. This is what an agent does when it cannot find what already exists. Every copy is correct on its own, and the codebase grows a second answer to a question it had answered.
+
+Do this:
+- Keep one copy, put it where every caller may reach it, and delete the rest.
+- When the copies sit in different zones the finding names the zones that may hold the one you keep. If it names none, no zone both reaches what the declaration needs and is reachable from every copy. A zone has to be declared before this can be shared at all.
+- Under the write-time guard, write the shared file first and delete the copies after. A file that does not exist yet is let through holding declarations that still stand elsewhere, because a move looks exactly like a copy until the old one is gone. This claim keeps failing until it is.
+- If the copies have drifted apart, they were two ideas wearing one shape. Rename them so the next reader is not misled.`;
 
 interface Copy {
   readonly file: string;

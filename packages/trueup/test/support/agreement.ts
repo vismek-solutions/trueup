@@ -1,4 +1,4 @@
-import { analyze, check, placementOf } from "../../src/compose.ts";
+import { analyze, check, placementOf } from "../../src/main.ts";
 import type { BoundaryRule } from "../../src/claims/boundary.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import type { SymbolImportEdge } from "../../src/graph/model.ts";

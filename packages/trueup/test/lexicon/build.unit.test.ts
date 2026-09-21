@@ -44,6 +44,8 @@ const counting = (): Counted => {
       sources: new Map([[FILE, "const kept = 1"]]),
       readMentions,
       readDeclarations,
+      readComments: () => [],
+      readProse: () => ({ strings: [], joined: [] }),
     }),
     parses: () => parses,
   };

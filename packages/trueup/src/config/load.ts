@@ -112,6 +112,7 @@ const withMembers = (
   return {
     ...config,
     zones: [...members.flatMap(zonesOf), ...own],
+    assets: [...(config.assets ?? []), ...(config.text?.files ?? [])],
     boundaries: [
       ...boundariesOf(members),
       ...reachRules(members),

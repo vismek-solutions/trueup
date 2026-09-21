@@ -1,3 +1,5 @@
+import type { Span } from "./span.ts";
+
 export type BindingKind = "value" | "type";
 
 export const NAMESPACE = "*";
@@ -73,3 +75,18 @@ export interface Declaration {
 }
 
 export type ReadDeclarations = (path: string, text: string) => readonly Declaration[];
+
+// a comment's text keeps the source's length, its markers blanked, so an index into it indexes the file
+export type ReadComments = (path: string, text: string) => readonly Span[];
+
+export interface JoinedProse {
+  readonly parts: readonly Span[];
+  readonly start: number;
+}
+
+export interface ProseInCode {
+  readonly strings: readonly Span[];
+  readonly joined: readonly JoinedProse[];
+}
+
+export type ReadProse = (path: string, text: string) => ProseInCode;

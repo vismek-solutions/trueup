@@ -6,6 +6,7 @@ import type { MemberGrants } from "../claims/members/grants.ts";
 import type { DirectoryLimit } from "../claims/placement/directories.ts";
 import type { ReviewBudget } from "../claims/review/budget.ts";
 import type { SeamRule } from "../claims/seam.ts";
+import type { TextSettings } from "../text/claims.ts";
 import type { Changes } from "../ports/changes.ts";
 import type { Protection } from "../ports/protection.ts";
 import type { Runner } from "../ports/runner.ts";
@@ -33,6 +34,7 @@ export interface Settings {
   readonly colocation?: boolean | undefined;
   readonly readerships?: boolean | undefined;
   readonly testInternals?: boolean | undefined;
+  readonly text?: TextSettings | undefined;
   readonly rules?: readonly Rule[] | undefined;
   readonly runners?: readonly Runner[] | undefined;
   readonly changes?: Changes | undefined;
@@ -51,6 +53,7 @@ export interface ArchitectureConfig extends Settings {
 
 export type ResolvedConfig = ArchitectureConfig & {
   readonly zones: readonly ZoneDefinition[];
+  readonly assets: readonly string[];
   readonly boundaries: readonly BoundaryRule[];
   readonly seams: readonly SeamRule[];
   readonly isolate: readonly IsolationRule[];

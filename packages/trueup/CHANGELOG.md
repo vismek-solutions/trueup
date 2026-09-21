@@ -1,6 +1,19 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
+
+### Added
+
+- Claims read the markdown a project names under `text`. They report a banned mark, a banned word, and a sentence or paragraph past a length limit. They also report an inline code span holding more than a path, and a link whose text says nothing about where it goes. The write-time guard rules on them too.
+- A section that explains at length with nothing to look at is reported, which is the one prose claim that asks for something rather than banning it. It warns and never refuses an edit.
+- The prose commands sit under one name, `trueup text`, which lists them when asked for help. The first is `trueup text calibrate`, which prints the distribution behind each length limit, with the number of findings the configured limit and each percentile would report.
+- Naming modules under `text.strings` holds the prose written into their strings to the same claims. It adds `no-prose-is-assembled-from-parts`, which asks that a passage is written as one string rather than joined when the code runs. A template carrying a value is read with the value blanked.
+- Setting `comments` under `text` holds the comments in the code to the same claims. A parser finds them, so a marker inside a string is not one, and each comment is read on its own.
+- The session start block names what the prose claims hold and every limit in force. An agent reads the numbers before its first draft rather than meeting them in a refusal.
+
+### Fixed
+
+- Two delegated findings carrying the same message about one file need two baseline entries. Both were accepted on one, so the second passed as known.
 
 ## 0.4.0
 
@@ -60,7 +73,7 @@ The first published release.
 - A graph built from resolved symbols rather than from import text, so a chain of re-exports leads to the file where a name is actually written.
 - Seam rules, which stop reusable code naming a domain concept it never imported. The vocabulary comes from the domain zone itself and is worked out on every run.
 - Isolation rules, which keep sibling directories out of each other.
-- Placement checks: a value declared away from its only reader, a file serving two readerships, a test reaching an internal, an export that exists only for a test, and a directory holding too many files.
+- Placement checks: a value declared away from its only reader, a file serving two readerships, and a test reaching an internal. The same group covers an export that exists only for a test, and a directory holding too many files.
 - Duplication at declaration granularity, which reports the same body written twice and names where a shared copy could live.
 - Rules you write yourself, reading a small facade over the project rather than the syntax tree.
 - Monorepo members, where each package declares what it reaches and the root declares what nobody may.

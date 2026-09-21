@@ -30,7 +30,7 @@ no-value-is-declared-away-from-its-only-consumer  3 errors
     src/domain/order.ts  declares isSettled, used only by server/routes.ts
 ```
 
-There are three shapes this check prints, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included, so the file is what moves and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
+There are three shapes this check prints, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included. The file is what moves, and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
 
 The third shape is the one worth slowing down for. Both lines below name a reader that stays behind:
 
@@ -48,7 +48,7 @@ The two clauses are independent, and a declaration read by a neighbour in its fi
 
 That saves you the reading. Working out which case you are in by opening the file is the step that goes wrong most often, and the check already knows the answer.
 
-The words about its own zone are doing real work. A file can have every reported export pointing one way and still be read by a neighbour in the same zone, through an export that was never reported because a reader inside the zone is not a finding. Moving that file would leave the neighbour reaching across a boundary, so the check does not ask you to.
+The words about its own zone are doing real work. A file can have every reported export pointing one way and still be read by a neighbour in the same zone. That neighbour reads an export the check never reported, because a reader inside the zone is not a finding. Moving that file would leave the neighbour reaching across a boundary, so the check does not ask you to.
 
 Take the last one. isSettled sits in the domain zone, where shared business rules go, and the server is the only thing that ever asks for it. Move it into the server. A second customer arriving later is a reason to move it back then, and not a reason to have guessed now.
 
@@ -150,7 +150,7 @@ no-value-is-declared-away-from-its-only-consumer  3 errors
     src/components/user-card.ts  declares renderUserCard, used only by src/routes/users (2 files)
 ```
 
-The components that more than one part reads have dropped off, and what stands is worth reading. renderUserCard is read twice and never leaves the users route, so it belongs inside it. Both exports of the pair file go the same way, so the file moves rather than its declarations.
+The components that more than one part reads have dropped off, and what stands is worth reading. The renderUserCard export is read twice and never leaves the users route, so it belongs inside it. Both exports of the pair file go the same way, so the file moves rather than its declarations.
 
 renderChip dropped off for a different reason. Its two readers sit directly in the routes folder rather than in any route, so no rule groups them and each counts as a part of its own.
 
@@ -165,7 +165,7 @@ no-value-is-declared-away-from-its-only-consumer  3 errors
 
 The pair file is what changed. Its two exports are read by two different files, so no single move holds them both, and each declaration is named on its own.
 
-Say this about a layer written to serve the layer above it. A package that several products share is a different thing, and declaring that one shared hides the finding you most want from it: one product's code sitting in the shared package.
+Say this about a layer written to serve the layer above it. A package that several products share is a different thing. Declaring that one shared hides the finding you most want from it: one product's code sitting in the shared package.
 
 ### Exports that exist only for a test
 
@@ -227,15 +227,15 @@ A module holding one private object that every export goes through: a context, a
 
 Files like that are reported whenever their exports serve separate audiences, which is often. What the check sees is true, because the audiences really do differ. For this shape it names no direction, because every export reaches that private object and any cut would have to promote it.
 
-So the question here is about the private object rather than about the exports. If it is a real module, something you would be content to name and let another file import, promote it on purpose and let each audience become a file that reads it. If it is not, these exports are one unit and this is a finding to accept rather than act on.
+So the question here is about the private object rather than about the exports. If it is a real module, something you would be content to name and let another file import, promote it on purpose. Each audience then becomes a file that reads it. If it is not, these exports are one unit and this is a finding to accept rather than act on.
 
 ### What is left out of the count
 
 Readers in a zone with a role do not count, for the reverse of the reason they are not counted as a lone customer. A composition root wires both halves, so counting it would join every group it touches and hide the split. A file in a zone with a role is not reported either, because a barrel answers to readers this analysis cannot see. An export nothing reads at all is left out rather than forming a group of its own.
 
-Readers are grouped by directory. Grouping by zone would be too coarse to see a split inside one zone, and grouping by file too loud, because two exports imported by two different files describes most files rather than a defect.
+Readers are grouped by directory. Grouping by zone would be too coarse to see a split inside one zone, and grouping by file too loud. Two exports imported by two different files describes most files rather than a defect.
 
-A reader is a file that imports the export, not a file that could arrive at it by importing something else. Following the chain further would make the check quieter rather than stricter, because each step widens the set of things a file counts as reading, and wider sets overlap into one group.
+A reader is a file that imports the export, not a file that could arrive at it by importing something else. Following the chain further would make the check quieter rather than stricter. Each step widens the set of things a file counts as reading, and wider sets overlap into one group.
 
 ## Tests that reach an internal
 
@@ -252,7 +252,7 @@ no-test-reaches-an-internal                 1 error
 
 priceWithTax exists because orderTotal needed it. Fold it back into total.ts and nothing about the checkout behaves any differently. The test, though, breaks. That is what it means for a test to be pinned to a decomposition rather than to behaviour. An agent is a coding assistant that writes code in your project, and one that refactors the checkout later reads the red suite as a regression.
 
-The fix is to drive the same cases through orderTotal, which is what production calls. When that is genuinely too expensive, the symbol is asking to become a module with a caller of its own, rather than a wider surface on the one it sits in.
+The fix is to drive the same cases through orderTotal, which is what production calls. When that is too expensive, the symbol is asking to become a module with a caller of its own. A wider surface on the one it sits in is not the answer.
 
 Nothing is reported for orderTotal or toCents in that run. Both have a consumer in src/web, so their surface already reaches past the directory, and a test is welcome there too.
 

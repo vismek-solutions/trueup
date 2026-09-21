@@ -4,7 +4,7 @@ import { fixtureAt } from "../../support/fixtures.ts";
 import { claimIn } from "../../support/report.ts";
 import { PROJECT_ZONES as ZONES } from "../../support/zones.ts";
 import { renderNext } from "../../../src/cli/render.ts";
-import { check } from "../../../src/compose.ts";
+import { check } from "../../../src/main.ts";
 import type { Report } from "../../../src/report/model.ts";
 import type { ZoneDefinition } from "../../../src/zones/model.ts";
 

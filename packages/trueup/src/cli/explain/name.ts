@@ -1,4 +1,4 @@
-import type { nameIn } from "../../compose.ts";
+import type { nameIn } from "../../main.ts";
 import { messageLines } from "../../report/lines.ts";
 import { list } from "./lines.ts";
 

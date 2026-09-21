@@ -12,9 +12,9 @@ A boundary is a note saying which zones a zone is allowed to reach. A zone, in c
 boundaries: [{ from: "engine", allow: ["shared"] }]
 ```
 
-That says the engine may reach shared. Anything you leave off the list is refused. A zone may always reach itself, so it never has to name itself, and a zone with no boundary at all is left unrestricted, which means you can add these one zone at a time.
+That says the engine may reach shared. Anything you leave off the list is refused. A zone may always reach itself, so it never has to name itself. A zone with no boundary at all is left unrestricted, which means you can add these one zone at a time.
 
-There are two ways to write a rule like this. You can list what is forbidden, and then a new zone is reachable from everywhere until someone remembers to forbid it. Or you can list what is allowed, which is what these are: a new zone is reachable from nowhere until someone says otherwise, and the tool tells you which rule to add.
+There are two ways to write a rule like this. You can list what is forbidden, and then a new zone is reachable from everywhere until someone remembers to forbid it. Or you can list what is allowed, which is what these are: a new zone is reachable from nowhere until someone says otherwise. The tool tells you which rule to add.
 
 You may write more than one rule for the same zone. When you do, the zone may reach only what every one of those rules allows. That is how a monorepo root narrows what a package granted itself.
 
@@ -28,9 +28,9 @@ Most projects have a barrel: a file, usually index.ts, that re-exports its neigh
 import { Warrant } from "@app/shared"
 ```
 
-The convenience has a cost. To a tool that reads import statements, every consumer of that package looks identical, because they all import from shared/index.ts. A rule saying that components may not touch warrants then matches all of those imports or none of them. Neither of those is the truth.
+The convenience has a cost. To a tool that reads import statements, every consumer of that package looks identical, because they all import from shared/index.ts, the barrel. A rule saying that components may not touch warrants then matches all of those imports or none of them. Neither of those is the truth.
 
-This is the part people find surprising, so here it is slowly. trueup follows the chain of re-exports back to the declaring file, which is the file where the thing you imported is actually written, and it anchors the rule there. The import statement told it where to start looking, not what the rule is about.
+This is the part people find surprising, so here it is slowly. The tool follows the chain of re-exports back to the declaring file, which is where the thing you imported is actually written. The rule is anchored there. The import statement told it where to start looking, not what the rule is about.
 
 On a real monorepo, the same rule written both ways:
 
@@ -41,7 +41,7 @@ On a real monorepo, the same rule written both ways:
 
 The second row is where import-graph tools sit, including the ones that resolve the barrel perfectly well. Resolving it is not the hard part. Attaching the rule to the symbol is.
 
-There is one place where this is turned around on purpose. [Between packages in a monorepo](/concepts/monorepos/#what-a-member-may-reach) the rule is anchored on the module instead, because there a package's public entry point is its contract, and what it chooses to re-export is deliberate.
+There is one place where this is turned around on purpose. [Between packages in a monorepo](/concepts/monorepos/#what-a-member-may-reach) the rule is anchored on the module instead. There a package's public entry point is its contract, and what it chooses to re-export is deliberate.
 
 ## Two options on a boundary
 
@@ -103,5 +103,5 @@ A star matches any run of characters, slashes included. These are import names r
 Nothing relative or absolute can be declared external. A pattern wide enough to swallow a file of your own is ignored for that import, so this escape valve can never hide your own files.
 
 :::caution
-Please do not reach for the baseline here. A baseline is the recorded list of problems you have agreed to live with for now, and a name the build invents fails on every run, so baselining it buries the check permanently. The next real typo then lands in the same silence.
+Please do not reach for the baseline here. A baseline is the recorded list of problems you have agreed to live with for now. A name the build invents fails on every run, so baselining it buries the check permanently. The next real typo then lands in the same silence.
 :::

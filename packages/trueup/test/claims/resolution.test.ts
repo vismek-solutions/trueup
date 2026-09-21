@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import type { Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 import { claimIn, findingsIn, messagesIn } from "../support/report.ts";

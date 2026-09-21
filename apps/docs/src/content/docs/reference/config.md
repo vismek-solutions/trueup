@@ -64,6 +64,7 @@ Only the zones are required. Everything under them is optional, and a config wit
 | `colocation` | `boolean` | `false` | Turns on [the placement claims](/checks/placement/). |
 | `readerships` | `boolean` | `false` | Turns on [the check for a file serving two audiences](/checks/placement/#one-file-answering-to-two-audiences). |
 | `testInternals` | `boolean` | `false` | Turns on [the check for a test reaching an internal](/checks/placement/#tests-that-reach-an-internal). |
+| `text` | `TextSettings` | off | [Claims over the markdown in your project](/checks/prose/). Its `files` key also joins that markdown to `assets`. |
 | `reviewable` | `ReviewBudget` | off | [How large a change may grow](/checks/#how-big-a-change-can-be-reviewed) before nobody can review it. |
 | `command` | `string` | `trueup` | The command named in printed guidance. Set it to `pnpm lint:arch` and every message says that. |
 
@@ -118,6 +119,40 @@ The siblings pattern is a glob, and each star in it names a group of directories
 An exception written as an object is shared the same way, and its allow list says which of the other shared directories it may reach. A bare name reaches all of them. [How the order is read](/checks/isolation/#an-order-among-the-shared-directories).
 
 The wiring list names the files allowed to sit in the parent directory rather than inside one of the groups. Leave it out and that question is never asked. [What it reports](/checks/isolation/#files-that-sit-beside-the-group).
+
+## Text
+
+The text settings name the markdown to read and the rules to hold it to.
+
+```ts
+{ files: string[], comments?, strings?, marks?, words?, maxSentenceWords?, maxParagraphSentences?, maxInlineCodeWords?, links?, maxSectionWordsWithoutExample? }
+```
+
+Only files is required, and on its own it makes no claim. Every key but comments turns on one claim, so a key you leave out is a check that never runs. [What each one reports](/checks/prose/).
+
+Setting comments to true widens what those claims read, rather than adding one of its own:
+
+```ts
+{ files: ["docs/**/*.md"], comments: true, marks: ["—"] }
+```
+
+Every claim you switched on then also reads the comments in the code this tool already parses. [How a comment is read](/checks/prose/#the-comments-in-your-code).
+
+The strings key names the modules whose text a person reads, an error message or a piece of guidance:
+
+```ts
+{ files: ["docs/**/*.md"], strings: ["src/messages/**"], marks: ["—"] }
+```
+
+Those files get one claim of their own as well, which asks that a passage is written as one string. [Why that one exists](/checks/prose/#the-prose-inside-your-code).
+
+A word in the list carries the plainer word that replaces it:
+
+```ts
+words: [{ word: "leverage", instead: "use" }]
+```
+
+The files globs also join that markdown to assets, so a rule you write yourself reads the same pages.
 
 ## Review budget
 
@@ -189,6 +224,8 @@ The rulebook is the config file holding the rules, whether at the root or inside
 | `npx trueup agent-instructions` | a block to append to your agent's memory file |
 | `npx trueup docs` | [every guide that ships with this version](/agents/instructions/#the-guides-travel-with-the-package) |
 | `npx trueup docs <topic>` | one of those guides, printed in full |
+| `npx trueup text` | the prose commands, with what each one is for |
+| `npx trueup text calibrate` | [what your own prose measures](/checks/prose/#setting-a-limit-you-can-defend), so a text limit comes from it |
 | `npx trueup guard` | read a hook payload on stdin |
 
 An argument that is not on this list is an error rather than something to ignore quietly.

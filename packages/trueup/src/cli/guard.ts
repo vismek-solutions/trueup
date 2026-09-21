@@ -2,7 +2,7 @@ import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
 import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
 import { readSource } from "../adapters/node-files.ts";
 import { parseModule } from "../adapters/oxc-parse.ts";
-import { check, placementOf } from "../compose.ts";
+import { check, placementOf } from "../main.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
 import type { ResolvedConfig } from "../config/model.ts";
 import { decideOnProposal } from "../guard/decide.ts";
@@ -192,6 +192,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
       colocation: config.colocation,
       readerships: config.readerships,
       testInternals: config.testInternals,
+      text: config.text,
       rules: config.rules,
       extensions: config.extensions,
       externals: config.externals,

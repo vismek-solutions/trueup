@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../../support/fixtures.ts";
 import { claimIn, findingsIn, messagesIn } from "../../support/report.ts";
-import { check } from "../../../src/compose.ts";
+import { check } from "../../../src/main.ts";
 import type { ZoneDefinition } from "../../../src/zones/model.ts";
 import type { Report } from "../../../src/report/model.ts";
 

@@ -1,0 +1,5 @@
+{
+  "pages": ["concepts/zones.md", "concepts/boundaries.md"],
+  "expect": "every-import-respects-its-zone-boundary",
+  "file": "src/engine/runner.ts"
+}

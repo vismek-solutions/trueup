@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { fixtureAt } from "../support/fixtures.ts";
 import { SEAM_ZONES as ZONES } from "../support/zones.ts";
 import { defineRule } from "../../src/claims/custom.ts";
-import { check } from "../../src/compose.ts";
+import { check } from "../../src/main.ts";
 import type { Project } from "../../src/project/model.ts";
 import type { ClaimResult } from "../../src/report/model.ts";
 

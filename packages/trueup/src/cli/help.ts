@@ -1,4 +1,5 @@
 import { DEFAULT_COMMAND } from "../report/invocation.ts";
+import { listed } from "./listing.ts";
 
 const OPTIONS: Record<string, string> = {
   "--dots": "one mark per claim, with detail only for what failed",
@@ -21,12 +22,8 @@ const COMMANDS: Record<string, string> = {
   guard: "rule on a proposed edit, reading a hook payload from stdin",
   "agent-instructions": "a short block to paste into an agent's memory file",
   "docs [<topic>]": "the guides that ship with this version, one page at a time",
+  "text <command>": "the prose side of the rulebook; its own help lists what is under it",
 };
-
-const WIDTH = 24;
-
-const listed = (entries: Record<string, string>): readonly string[] =>
-  Object.entries(entries).map(([name, said]) => `  ${name.padEnd(WIDTH)}${said}`);
 
 export const helpLines = (): readonly string[] => [
   `${DEFAULT_COMMAND} — checks that the code matches the architecture its rulebook describes`,

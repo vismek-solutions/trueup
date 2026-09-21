@@ -15,9 +15,9 @@ A zone is a name you give to a group of files, chosen by where the files sit. A 
 
 Both tools describe a project as named zones of file globs, first match wins, and both check that every file lands in one. Both have rules about which zone may reach which. Written down, the two configs look alike.
 
-They part company on what a rule attaches to. fallow reports a violation as a pair of files and the import text between them. trueup follows the re-exports and anchors the rule on the declaring file, the one where the thing is actually written. [Why barrels break other tools](/concepts/boundaries/#why-barrels-break-other-tools) has what that changes, and the measurement behind it.
+They part company on what a rule attaches to. In fallow a violation is a pair of files and the import text between them. In trueup the rule follows the re-exports and sits on the declaring file, the one where the thing is actually written. [Why barrels break other tools](/concepts/boundaries/#why-barrels-break-other-tools) has what that changes, and the measurement behind it.
 
-A barrel is a file that re-exports its neighbours so people can import from one place. fallow's documentation is explicit about the other side of this: a barrel is handled by *exempting* it, so re-exports raise no false positives. That is a reasonable choice for a rule about modules, and the opposite of the one made here.
+A barrel is a file that re-exports its neighbours so people can import from one place. The fallow documentation is explicit about the other side of this: a barrel is handled by *exempting* it, so re-exports raise no false positives. That is a reasonable choice for a rule about modules, and the opposite of the one made here.
 
 ## What only trueup does
 
@@ -62,7 +62,9 @@ None of that is reimplemented here. A line of config hands the job to fallow, an
 
 ## Why this is not built on top of fallow
 
-fallow hands out findings, never the graph behind them. Both of its extension points are declarative by design and never run code from your project, so neither one can count the zones consuming a file, or ask where a symbol was declared. Its nearest rule kind matches the import text as written, and explicitly does not match an aliased one. Its Node bindings run the same analyses through a different call. And the guard it ships, the part that inspects an edit before it is saved, takes a path rather than the contents a tool is proposing to write.
+fallow hands out findings, never the graph behind them. Both of its extension points are declarative by design and never run code from your project. Neither one can count the zones consuming a file, or ask where a symbol was declared.
+
+Its nearest rule kind matches the import text as written, and explicitly does not match an aliased one. Its Node bindings run the same analyses through a different call. And the guard it ships, the part that inspects an edit before it is saved, takes a path rather than the contents a tool is proposing to write.
 
 ## Running both
 

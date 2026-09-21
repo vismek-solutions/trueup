@@ -66,7 +66,7 @@ Have the badge component take a tone instead, warning or neutral, and let the do
 
 ## When to turn it on
 
-Turn it on when you have a layer meant to be reusable, such as an engine, a renderer or a design system, and a domain it is meant not to know about. If every zone in your project is domain code, there is no seam to guard.
+Turn it on when you have a layer meant to be reusable: an engine, a renderer or a design system. The other half is a domain that layer is meant not to know about. If every zone in your project is domain code, there is no seam to guard.
 
 Two settings tune it. Use allow for words the two sides genuinely share, and minLiteralLength for short strings that match by accident.
 

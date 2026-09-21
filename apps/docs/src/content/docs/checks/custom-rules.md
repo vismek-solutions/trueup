@@ -107,7 +107,7 @@ Besides the imports, a project will answer any of these:
 
 One of those deserves a warning. When you need the text of a file, ask sourceOf for it rather than reading the disk yourself.
 
-The guard is the part that inspects an edit before it is saved. At that moment the file on disk still holds the old text, so a rule that reads the disk directly answers the opposite of what it answers in a full run. That is a hard thing to notice and a worse thing to debug.
+The guard is the part that inspects an edit before it is saved. At that moment the file on disk still holds the old text. A rule that reads the disk directly answers the opposite of what it answers in a full run. That is a hard thing to notice and a worse thing to debug.
 
 ## Files that are read but never parsed
 
@@ -119,7 +119,7 @@ Name those files and the run reads them as text:
 assets: ["**/*.css"]
 ```
 
-They stay apart from the code. Nothing parses them, they carry no imports, they are absent from the list of files, and they owe no zone, so a stylesheet never fails the check that every file belongs to one. A rule asks for them together:
+They stay apart from the code. Nothing parses them, they carry no imports, they are absent from the list of files, and they owe no zone. A stylesheet never fails the check that every file belongs to one. A rule asks for them together:
 
 ```ts
 defineRule(
@@ -139,10 +139,10 @@ no-stylesheet-forces-a-declaration          1 error
     src/card.css  forces a declaration
 ```
 
-The guard rules on a proposed stylesheet the same way, for the reason above: the text comes from the project, so the rule reads the edit rather than the copy still on disk.
+The guard rules on a proposed stylesheet the same way, for the reason above. The text comes from the project, so the rule reads the edit rather than the copy still on disk.
 
 ## When to write one instead of asking for a feature
 
-Write a rule when the constraint is specific to your project: a naming convention, an entry point everything must go through, a package that may only be imported from one place.
+Write a rule when the constraint is specific to your project: a naming convention, an entry point everything goes through, a package importable from one place only.
 
 A claim is one sentence the tool believes about your project, which every run proves or disproves. A claim is built in when it is true of many projects, or when a rule cannot express it. Zone cycles are the second case. Finding one means walking the whole zone graph, and a rule only sees one import at a time.

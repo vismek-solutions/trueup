@@ -12,7 +12,7 @@
     "minLines": 13,
     "minTokens": 30
   },
-  "ignorePatterns": ["**/test/fixtures/**"],
+  "ignorePatterns": ["**/fixtures/**"],
   "rules": {
     "private-type-leaks": "error",
     "require-suppression-reason": "error"

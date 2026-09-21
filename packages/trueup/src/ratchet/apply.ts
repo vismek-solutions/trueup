@@ -29,17 +29,38 @@ const entryOf = (claim: string, finding: Finding, root: string): BaselineEntry =
   message: finding.message,
 });
 
-const byEntry = (key: Key) => (left: BaselineEntry, right: BaselineEntry) =>
-  key(left) < key(right) ? -1 : 1;
+const countedBy = (key: Key, entries: readonly BaselineEntry[]): Map<string, number> => {
+  const counts = new Map<string, number>();
+  for (const entry of entries) {
+    const at = key(entry);
+    counts.set(at, (counts.get(at) ?? 0) + 1);
+  }
+
+  return counts;
+};
+
+const takenFrom =(counts: Map<string, number>, at: string): boolean => {
+  const left = counts.get(at) ?? 0;
+  if (left === 0) return false;
+  counts.set(at, left - 1);
+
+  return true;
+};
+
+const byEntry = (key: Key) => (left: BaselineEntry, right: BaselineEntry) => {
+  const first = key(left);
+  const second = key(right);
+  if (first === second) return 0;
+
+  return first < second ? -1 : 1;
+};
 
 export function baselineOf(report: Report, root: string): Baseline {
-  const key = keying(onePerFileIn(report));
   const entries = report.claims
     .filter((claim) => !NEVER_BASELINED.has(claim.claim))
     .flatMap((claim) => claim.findings.map((finding) => entryOf(claim.claim, finding, root)));
 
-  const unique = new Map(entries.map((entry) => [key(entry), entry]));
-  return { entries: [...unique.values()].sort(byEntry(key)) };
+  return { entries: entries.sort(byEntry(keying(onePerFileIn(report)))) };
 }
 
 export interface ComparedBaselines {
@@ -50,13 +71,13 @@ export interface ComparedBaselines {
 
 export function acceptanceOf({ next, previous, report }: ComparedBaselines): Acceptance {
   const key = keying(onePerFileIn(report));
-  const had = new Set(previous.entries.map(key));
-  const has = new Set(next.entries.map(key));
+  const had = countedBy(key, previous.entries);
+  const has = countedBy(key, next.entries);
 
   return {
-    added: next.entries.filter((entry) => !had.has(key(entry))),
-    retired: previous.entries.filter((entry) => !has.has(key(entry))),
-    first: had.size === 0,
+    added: next.entries.filter((entry) => !takenFrom(had, key(entry))),
+    retired: previous.entries.filter((entry) => !takenFrom(has, key(entry))),
+    first: previous.entries.length === 0,
   };
 }
 
@@ -113,8 +134,7 @@ export interface ApplyBaselineInput {
 
 export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): RatchetResult {
   const keyOf = keying(onePerFileIn(report));
-  const known = new Set(baseline.entries.map(keyOf));
-  const matched = new Set<string>();
+  const unmatched = countedBy(keyOf, baseline.entries);
   let downgraded = 0;
 
   const claims: ClaimResult[] = report.claims.map((claim) => {
@@ -123,31 +143,27 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
     return {
       ...claim,
       findings: claim.findings.map((finding) => {
-        const key = keyOf(entryOf(claim.claim, finding, root));
-        if (!known.has(key)) return finding;
-        matched.add(key);
+        if (!takenFrom(unmatched, keyOf(entryOf(claim.claim, finding, root)))) return finding;
         downgraded += 1;
         return { ...finding, severity: "warning" as const, accepted: true };
       }),
     };
   });
 
-  const stale = baseline.entries.filter((entry) => !matched.has(keyOf(entry)));
+  const stale = baseline.entries.filter((entry) => takenFrom(unmatched, keyOf(entry)));
   const reworded = stillReporting(claims, root);
   const settled = standingIn(claims, retiredIn(stale), root);
 
   settled.push({
     claim: STALE_CLAIM,
-    guidance: [
-      "These baseline entries match nothing any more.",
-      "",
-      "Do this:",
-      "- Run `{trueup} --update-baseline` to drop them.",
-      "",
-      "An entry saying the claim still reports on that file is not a fix. The same problem is standing under different words, it is failing now, and updating the baseline records the new wording rather than dropping anything.",
-      "",
-      "Left in place they become permanent exemptions nobody audits.",
-    ].join("\n"),
+    guidance: `These baseline entries match nothing any more.
+
+Do this:
+- Run \`{trueup} --update-baseline\` to drop them.
+
+An entry saying the claim still reports on that file is not a fix. The same problem is standing under different words, it is failing now, and updating the baseline records the new wording rather than dropping anything.
+
+Left in place they become permanent exemptions nobody audits.`,
     findings: stale.map((entry) => ({
       severity: "warning" as const,
       message: saidOf(entry, reworded),
