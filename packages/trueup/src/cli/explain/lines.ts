@@ -1,6 +1,3 @@
-export const spoken = (values: readonly string[]): string =>
-  values.length < 2 ? values.join("") : `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
-
 const INDENT = "   ";
 
 export const treeLines = (names: readonly string[], depth = 0): readonly string[] => {

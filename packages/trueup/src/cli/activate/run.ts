@@ -2,149 +2,65 @@ import { relative } from "node:path";
 import { gitChanges } from "../../adapters/git/changes.ts";
 import { changeSizeIn } from "../../main.ts";
 import type { ResolvedConfig } from "../../config/model.ts";
-import { pathsIn, rulebookGuarded } from "../../guard/protected.ts";
 import { toPosix } from "../../paths/posix.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 import { adviceLines } from "../agent-instructions.ts";
 import { EXIT_BAD_USAGE, EXIT_CLEAN, type CommandInput } from "../command.ts";
 import { openedIn, refusedArguments } from "../preamble.ts";
 import { plural } from "../render.ts";
-import { listed, reachLines, zoneLines } from "./zones.ts";
+import { spoken, tagged } from "../tags.ts";
+import { settingLines } from "./settings.ts";
+import { reachLines, zoneLines } from "./zones.ts";
 
-const COLUMN = 26;
+const section = (name: string, rows: readonly string[], said?: string): readonly string[] =>
+  rows.length === 0 ? [] : ["", ...tagged(name, said === undefined ? rows : [said, ...rows])];
 
-const section = (heading: string, rows: readonly string[]): readonly string[] =>
-  rows.length === 0 ? [] : ["", heading, ...rows];
-
-const BOUNDARIES = "boundaries — a zone may reach itself and what is listed here, and nothing else";
+const BOUNDARIES = "a zone may reach itself and what is listed here, and nothing else";
 const UNDER_IT = "; a name ending in /* is every zone under it";
 
 const boundarySection = (config: ResolvedConfig): readonly string[] => {
   const lines = reachLines(config);
-  return section(lines.some((line) => line.includes("/*")) ? BOUNDARIES + UNDER_IT : BOUNDARIES, lines);
+  return section("boundaries", lines, lines.some((line) => line.includes("/*")) ? BOUNDARIES + UNDER_IT : BOUNDARIES);
 };
 
 const seamLines = (config: ResolvedConfig): readonly string[] =>
   config.seams.map((rule) => {
-    const spared = rule.allow === undefined ? "" : `, except ${rule.allow.join(" · ")}`;
-    const shortest =
-      rule.minLiteralLength === undefined ? "" : `, literals from ${rule.minLiteralLength} characters`;
-    return `  ${rule.generic} may not name what ${rule.domain.join(" · ")} owns${spared}${shortest}`;
+    const spared = rule.allow === undefined ? "" : `, except ${spoken(rule.allow)}`;
+    const shortest = rule.minLiteralLength === undefined ? "" : `, literals from ${rule.minLiteralLength} characters`;
+    return `* ${rule.generic} may not name what ${spoken(rule.domain)} owns${spared}${shortest}`;
   });
 
 type Exception = NonNullable<ResolvedConfig["isolate"][number]["except"]>[number];
 
-const orderedLines = (except: readonly Exception[]): readonly string[] => {
-  const ordered = except.filter((exception) => typeof exception !== "string");
-  const width = Math.max(0, ...ordered.map((entry) => entry.shared.length));
-  return ordered.map((entry) => `    ${entry.shared.padEnd(width)} → ${listed(entry.allow ?? [])}`);
-};
+const orderedLines = (except: readonly Exception[]): readonly string[] =>
+  except.flatMap((entry) => {
+    if (typeof entry === "string") return [];
+    const reach = entry.allow === undefined || entry.allow.length === 0 ? "nothing" : spoken(entry.allow);
+    return [`   * ${entry.shared} may reach ${reach}`];
+  });
 
 const isolateLines = (config: ResolvedConfig): readonly string[] =>
   config.isolate.flatMap((rule) => {
     const names = (rule.except ?? []).map((one) => (typeof one === "string" ? one : one.shared));
-    const spared = rule.except === undefined ? "" : `, except ${names.join(" · ")}`;
-    const beside =
-      rule.wiring === undefined ? "" : `, and only ${rule.wiring.join(" · ")} may sit beside them`;
+    const spared = rule.except === undefined ? "" : `, except ${spoken(names)}`;
+    const beside = rule.wiring === undefined ? "" : `, and only ${spoken(rule.wiring)} may sit beside them`;
     const loose = rule.wiring?.length === 0 ? ", and nothing may sit beside them" : beside;
-    return [`  ${rule.siblings}${spared}${loose}`, ...orderedLines(rule.except ?? [])];
+    return [`* ${rule.siblings}${spared}${loose}`, ...orderedLines(rule.except ?? [])];
   });
 
 const limitLines = (config: ResolvedConfig, root: string): readonly string[] =>
-  config.directoryLimits.map(
-    (limit) => `  ${toPosix(relative(root, limit.within))} holds at most ${limit.max} files`,
-  );
-
-const counted = (value: number | undefined): string | undefined =>
-  value === undefined ? undefined : String(value);
-
-type Budget = NonNullable<ResolvedConfig["reviewable"]>;
-
-const capOf = (budget: Budget): string => `+${budget.additions} / -${budget.deletions}`;
-
-const budgetSaid = (budget: Budget | undefined): string | undefined => {
-  if (budget === undefined) return undefined;
-  const band = budget.nearing === undefined ? "" : `, warning from ${budget.nearing * 100}%`;
-  const bite = budget.severity === "error" ? "fails" : "warns";
-
-  return `${capOf(budget)} against ${budget.base ?? "main"}, ${bite} past it${band}`;
-};
+  config.directoryLimits.map((limit) => `* ${toPosix(relative(root, limit.within))} holds at most ${limit.max} files`);
 
 const standingIn = (config: ResolvedConfig, root: string): readonly string[] => {
   const budget = config.reviewable;
   if (budget === undefined) return [];
 
   const changed = (config.changes ?? gitChanges()).since(root, budget.base ?? "main");
-  if (changed.kind === "unmeasured") return [`  not measured, so nothing holds it: ${changed.reason}`];
+  if (changed.kind === "unmeasured") return ["", ...tagged("this-branch", `not measured, so nothing holds it: ${changed.reason}`)];
 
   const { added, removed } = changeSizeIn(changed.files, budget);
   const left = Math.max(0, budget.additions - added);
-  return [`  +${added} / -${removed} so far, ${plural(left, "addition")} left`];
-};
-
-const switched = (value: boolean | undefined): string | undefined => {
-  if (value === undefined) return undefined;
-  return value ? "on" : "off";
-};
-
-type Prose = NonNullable<ResolvedConfig["text"]>;
-
-const limited = (max: number | undefined, noun: string, per: string): string | null =>
-  max === undefined ? null : `${plural(max, noun)} ${per}`;
-
-const proseSaid = (text: Prose | undefined): string | undefined => {
-  if (text === undefined) return undefined;
-
-  const held = [
-    text.marks === undefined ? null : "marks",
-    text.words === undefined ? null : "words",
-    limited(text.maxSentenceWords, "word", "a sentence"),
-    limited(text.maxParagraphSentences, "sentence", "a paragraph"),
-    limited(text.maxInlineCodeWords, "word", "of inline code"),
-    text.links === true ? "link text" : null,
-    limited(text.maxSectionWordsWithoutExample, "word", "a section without an example"),
-  ].filter((name) => name !== null);
-
-  const read = [
-    ...text.files,
-    ...(text.comments === true ? ["every comment"] : []),
-    ...(text.strings ?? []).map((pattern) => `the prose in ${pattern}`),
-  ];
-  return held.length === 0 ? undefined : `${read.join(" · ")} held to ${held.join(" · ")}`;
-};
-
-const settingLines = (config: ResolvedConfig, read: number): readonly string[] => {
-  const values: readonly (readonly [string, string | undefined])[] = [
-    ["files read", String(read)],
-    ["members", config.members?.join(" · ")],
-    ["roots", config.include?.join(" · ")],
-    ["extensions", config.extensions?.join(" · ")],
-    ["externals", config.externals?.join(" · ")],
-    ["ignored directories", config.ignoreDirectories?.join(" · ")],
-    ["max files per directory", counted(config.maxFilesPerDirectory)],
-    [
-      "duplication",
-      config.duplication === undefined ? undefined : `declarations from ${config.duplication} characters`,
-    ],
-    ["reviewable", budgetSaid(config.reviewable)],
-    ["colocation", switched(config.colocation)],
-    ["readerships", switched(config.readerships)],
-    ["test internals", switched(config.testInternals)],
-    ["prose", proseSaid(config.text)],
-    [
-      "rulebook",
-      rulebookGuarded(config.protect)
-        ? "guarded, so an edit to it is ruled on"
-        : "unguarded, so an agent may edit it and switch off any check it fails",
-    ],
-    ["also protected", pathsIn(config.protect).join(" · ")],
-    ["also runs", config.runners?.map((runner) => runner.name).join(" · ")],
-    ["custom rules", config.rules.map((rule) => rule.name).join(" · ")],
-  ];
-
-  return values.flatMap(([label, value]) =>
-    value === undefined || value === "" ? [] : [`  ${label.padEnd(COLUMN)}${value}`],
-  );
+  return ["", ...tagged("this-branch", `+${added} / -${removed} so far, ${plural(left, "addition")} left`)];
 };
 
 export async function runActivate({ cwd, argv, write }: CommandInput): Promise<number> {
@@ -159,25 +75,30 @@ export async function runActivate({ cwd, argv, write }: CommandInput): Promise<n
   for (const line of [
     "## Architecture",
     "",
-    `${plural(project.files.length, "file")} in ${plural(config.zones.length, "zone")}, and every rule below is enforced.`,
+    ...tagged(
+      "summary",
+      `${plural(project.files.length, "file")} in ${plural(config.zones.length, "zone")}, and every rule below is enforced.`,
+    ),
     ...section(
-      "zones — a file belongs to the first zone whose patterns match it; a role or a shared mark changes what is expected of it",
+      "zones",
       [
         ...zoneLines(config, project),
-        ...(homeless.length === 0 ? [] : [`  and ${plural(homeless.length, "file")} in no zone at all`]),
+        ...(homeless.length === 0 ? [] : [`and ${plural(homeless.length, "file")} in no zone at all`]),
       ],
+      "a file belongs to the first zone whose patterns match it; a role or a shared mark changes what is expected of it",
     ),
     ...boundarySection(config),
-    ...section("seams — generic code may not use the vocabulary its domains own", seamLines(config)),
+    ...section("seams", seamLines(config), "generic code may not use the vocabulary its domains own"),
     ...section(
-      "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
+      "isolate",
       isolateLines(config),
+      "directories matched by one pattern are siblings, and a sibling may not reach another",
     ),
-    ...section("directory limits", limitLines(config, root)),
+    ...section("directory-limits", limitLines(config, root)),
     ...section("settings", settingLines(config, project.files.length)),
-    ...section("this branch", standingIn(config, root)),
+    ...standingIn(config, root),
     "",
-    ...adviceLines(config.command ?? DEFAULT_COMMAND),
+    ...tagged("advice", adviceLines(config.command ?? DEFAULT_COMMAND)),
   ]) {
     write(line);
   }

@@ -1,7 +1,6 @@
 import type { nameIn } from "../../main.ts";
 import { messageLines } from "../../report/lines.ts";
-import { items, listed, tagged } from "../tags.ts";
-import { spoken } from "./lines.ts";
+import { items, listed, spoken, tagged } from "../tags.ts";
 
 type About = ReturnType<typeof nameIn>;
 type Priced = NonNullable<About["cut"]>;

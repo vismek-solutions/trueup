@@ -1,7 +1,6 @@
 import { basename, dirname, join } from "node:path";
 import { reachOf, type HomesInput, type Rulebook } from "../../main.ts";
-import { items, listed, tagged } from "../tags.ts";
-import { spoken } from "./lines.ts";
+import { items, listed, spoken, tagged } from "../tags.ts";
 
 export interface Home {
   readonly zone: string;

@@ -1,6 +1,7 @@
 import { reachOf } from "../../main.ts";
 import type { ResolvedConfig } from "../../config/model.ts";
 import { plural } from "../render.ts";
+import { items, tagged } from "../tags.ts";
 
 type Zone = ResolvedConfig["zones"][number];
 
@@ -8,11 +9,7 @@ export interface Zoned {
   readonly filesIn: (zone: string) => readonly string[];
 }
 
-const TALLY = 9;
 const FEW = 4;
-
-export const listed = (names: readonly string[]): string =>
-  names.length === 0 ? "nothing" : names.join(" · ");
 
 const groupOf = (zone: string): string | null => {
   const cut = zone.indexOf("/");
@@ -59,38 +56,23 @@ const directoryOf = (run: Run): string => {
   return path === run.group || path.endsWith(`/${run.group}`) ? path : "";
 };
 
-interface Placed {
-  readonly run: Run;
-  readonly directory: string;
-}
-
-const linesFor = (place: Placed, width: number, project: Zoned): readonly string[] => {
-  const { directory } = place;
-  const indent = directory === "" ? "  " : "    ";
-  const column = directory === "" ? width : width - 2;
-
-  return place.run.zones.map((zone) => {
-    const held = plural(project.filesIn(zone.name).length, "file").padStart(TALLY);
-    const marks = [zone.role, zone.shared === true ? "shared" : undefined].filter((mark) => mark !== undefined);
-    const said = marks.length === 0 ? "" : `  (${marks.join(", ")})`;
-    const shown = zone.patterns.map((one) => (directory === "" ? one : one.slice(directory.length + 1)));
-    return `${indent}${zone.name.padEnd(column)}  ${held}  ${shown.join(" · ")}${said}`;
-  });
-};
-
-export const zoneLines = (config: ResolvedConfig, project: Zoned): readonly string[] => {
-  const placed = runsOf(config.zones).map((run) => ({ run, directory: directoryOf(run) }));
-  const width = Math.max(
-    ...placed.flatMap((place) =>
-      place.run.zones.map((zone) => zone.name.length + (place.directory === "" ? 0 : 2)),
-    ),
+const rowsFor = (run: Run, directory: string, project: Zoned): readonly string[] =>
+  items(
+    run.zones.map((zone) => {
+      const held = plural(project.filesIn(zone.name).length, "file");
+      const marks = [zone.role, zone.shared === true ? "shared" : undefined].filter((mark) => mark !== undefined);
+      const said = marks.length === 0 ? "" : ` (${marks.join(", ")})`;
+      const shown = zone.patterns.map((one) => (directory === "" ? one : one.slice(directory.length + 1)));
+      return `${zone.name}, ${held}, ${shown.join(", ")}${said}`;
+    }),
   );
 
-  return placed.flatMap((place) => [
-    ...(place.directory === "" ? [] : [`  ${place.directory}`]),
-    ...linesFor(place, width, project),
-  ]);
-};
+export const zoneLines = (config: ResolvedConfig, project: Zoned): readonly string[] =>
+  runsOf(config.zones).flatMap((run) => {
+    const directory = directoryOf(run);
+    const rows = rowsFor(run, directory, project);
+    return directory === "" ? rows : tagged("package", rows, { path: directory });
+  });
 
 const pairName = ([name]: readonly [string, number]): string => name;
 
@@ -120,18 +102,25 @@ const byGroup = (named: readonly string[], whole: ReadonlySet<string>): readonly
   });
 };
 
-const everything = (ruled: boolean): string =>
-  ruled ? "every other zone" : "every other zone, since no rule constrains it";
+interface Reach {
+  readonly from: string;
+  readonly named: readonly string[];
+  readonly others: readonly string[];
+  readonly ruled: boolean;
+}
 
-const reachedBy = (named: readonly string[], others: readonly string[], ruled: boolean): string => {
-  if (named.length === 0) return "nothing";
-  if (named.length === others.length) return everything(ruled);
+const reachRow = ({ from, named, others, ruled }: Reach): readonly string[] => {
+  const attributes = { from };
+  if (named.length === 0) return tagged("reach", "nothing", attributes);
+  if (named.length === others.length) {
+    return tagged("reach", ruled ? "every other zone" : "every other zone, since no rule constrains it", attributes);
+  }
 
   const grouped = byGroup(named, wholeGroups(named, others));
   const closed = others.filter((name) => !named.includes(name));
   return grouped.length > FEW && closed.length < grouped.length
-    ? `every other zone except ${listed(closed)}`
-    : listed(grouped);
+    ? tagged("reach-all-except", items(closed), attributes)
+    : tagged("reach", items(grouped), attributes);
 };
 
 export const reachLines = (config: ResolvedConfig): readonly string[] => {
@@ -139,13 +128,15 @@ export const reachLines = (config: ResolvedConfig): readonly string[] => {
   if (boundaries.length === 0) return [];
 
   const names = config.zones.map((zone) => zone.name);
-  const width = Math.max(...names.map((name) => name.length));
   const ruled = new Set(boundaries.map((rule) => rule.from));
 
-  return config.zones.map((zone) => {
+  return config.zones.flatMap((zone) => {
     const { mayReach } = reachOf({ zone: zone.name, zones: config.zones, boundaries });
-    const named = mayReach.filter((name) => name !== zone.name);
-    const others = names.filter((name) => name !== zone.name);
-    return `  ${zone.name.padEnd(width)} → ${reachedBy(named, others, ruled.has(zone.name))}`;
+    return reachRow({
+      from: zone.name,
+      named: mayReach.filter((name) => name !== zone.name),
+      others: names.filter((name) => name !== zone.name),
+      ruled: ruled.has(zone.name),
+    });
   });
 };
