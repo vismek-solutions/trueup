@@ -75,7 +75,7 @@ describe("finding the boundaries nobody wrote", () => {
         "<silent>",
         "* domain",
         "* shared",
-        "named by no boundary rule, so they may reach anything",
+        "no boundary rule starts from these, so they may reach anything",
         "</silent>",
         "",
       ].join("\n"),

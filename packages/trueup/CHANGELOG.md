@@ -11,6 +11,7 @@
 
 ### Fixed
 
+- The silent list in `trueup explain --ungoverned` says its zones are ones no boundary rule starts from. It said no rule named them, which a zone in an allow list contradicts.
 - Explaining a file that already exists no longer reads it as empty, which emptied the vocabulary a domain file contributes when it was explained beside a new file.
 
 ## 0.5.0

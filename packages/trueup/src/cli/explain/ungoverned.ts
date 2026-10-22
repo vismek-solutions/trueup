@@ -41,6 +41,6 @@ export const ungovernedLines = ({
     "silent",
     silentZones.length === 0
       ? "none"
-      : [...items(silentZones), "named by no boundary rule, so they may reach anything"],
+      : [...items(silentZones), "no boundary rule starts from these, so they may reach anything"],
   ),
 ];
