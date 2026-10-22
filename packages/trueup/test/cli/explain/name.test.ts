@@ -7,31 +7,35 @@ const cutting = (target: string) => saidBy(CUT, target);
 
 const landing = (target: string) => saidBy(LANDING, target);
 
-const standing = async (target: string): Promise<string[]> =>
-  (await saidBy(CLAIMED, target)).split("\n").filter((line) => /^ {4}\S/.test(line));
+const lines = (...said: string[]): string => said.join("\n");
+
+const standing = async (target: string): Promise<string[]> => {
+  const said = (await saidBy(CLAIMED, target)).split("\n");
+  return said.slice(said.indexOf("<claims>") + 1, said.indexOf("</claims>"));
+};
 
 describe("who reads one export", () => {
   it("names every file that reads it, through the declaring file rather than the module named", async () => {
     expect(await about("src/tools/three.ts#hammer")).toContain(
-      "read by     src/core/two.ts · src/web/one.ts",
+      lines("<read-by>", "* src/core/two.ts", "* src/web/one.ts", "</read-by>"),
     );
   });
 
   it("names the zones those readers sit in, since a move is a zone question", async () => {
-    expect(await about("src/tools/three.ts#hammer")).toContain("zones: core · web");
+    expect(await about("src/tools/three.ts#hammer")).toContain(lines("<reader-zones>", "* core", "* web"));
   });
 
   it("marks a reader zone the claim does not count, beside the claim still naming one consumer", async () => {
     const said = await saidBy(CLAIMED, "lib/one.ts#label");
 
-    expect(said).toContain("zones: app · lib · spec (tests)");
+    expect(said).toContain(lines("<reader-zones>", "* app", "* lib", "* spec (tests)"));
     expect(said).toContain("declares label, used outside its zone only by app/reader.ts, and inside its zone as well");
   });
 
   it("names the zone that keeps a reader it may not reach, rather than promising a move", async () => {
     const said = await saidBy(CLAIMED, "lib/one.ts#label");
 
-    expect(said).toContain("lib keeps a reader of this and may not reach app · spec");
+    expect(said).toContain("lib keeps a reader of this and may not reach app and spec");
     expect(said).not.toContain("so a split has somewhere to land");
   });
 
@@ -52,9 +56,7 @@ describe("who reads one export", () => {
   });
 
   it("calls the directory holding the file a dot, so a reader beside it still reads as somewhere", async () => {
-    const said = await cutting("lib.ts#label");
-
-    expect(said).toContain("directories: . · nested");
+    expect(await cutting("lib.ts#label")).toContain(lines("<reader-directories>", "* .", "* nested"));
   });
 
   it("does not count the directory it already lives in as somewhere a split could land", async () => {
@@ -65,80 +67,80 @@ describe("who reads one export", () => {
   });
 
   it("says a move has nowhere to go when every reader sits beside it already", async () => {
-    const said = await cutting("lib.ts#beside");
-
-    expect(said).toContain("directories: .");
-    expect(said).toContain("every reader sits in the directory it is declared in");
+    expect(await cutting("lib.ts#beside")).toContain(
+      lines("<reader-directories>", "* .", "every reader sits in the directory it is declared in"),
+    );
   });
 
   it("names the one directory rather than only counting it when the readers agree", async () => {
-    expect(await cutting("twin.ts#label")).toContain("directories: nested");
+    expect(await cutting("twin.ts#label")).toContain(lines("<reader-directories>", "* nested", "every"));
   });
 
   it("keeps two files declaring one name apart, since the reader belongs to the declaring file", async () => {
-    expect(await cutting("lib.ts#label")).toContain("read by     nested/deep.ts · reader.ts · stray.ts");
-    expect(await cutting("twin.ts#label")).toContain("read by     nested/twin-reader.ts");
+    expect(await cutting("lib.ts#label")).toContain(
+      lines("<read-by>", "* nested/deep.ts", "* reader.ts", "* stray.ts", "</read-by>"),
+    );
+    expect(await cutting("twin.ts#label")).toContain(lines("<read-by>", "* nested/twin-reader.ts", "</read-by>"));
   });
 
   it("counts a reader no zone claims among the files but names no zone for it", async () => {
-    const said = (await cutting("lib.ts#label")).split("\n");
+    const said = await cutting("lib.ts#label");
 
-    expect(said).toContain("read by     nested/deep.ts · reader.ts · stray.ts");
-    expect(said).toContain("            zones: app");
+    expect(said).toContain("* stray.ts");
+    expect(said).toContain(lines("<reader-zones>", "* app", "</reader-zones>"));
   });
 
   it("says nothing about declaring elsewhere for a name this file does declare", async () => {
-    expect(await cutting("lib.ts#label")).not.toContain("declared elsewhere");
+    expect(await cutting("lib.ts#label")).not.toContain("<declared>");
   });
 
-  it("says so when nothing reads the export, rather than printing an empty list", async () => {
-    expect(await cutting("lib.ts#other")).toContain("read by     nothing in this project");
+  it("says none when nothing reads the export, rather than printing an empty list", async () => {
+    expect(await cutting("lib.ts#other")).toContain("<read-by>none</read-by>");
   });
 });
 
 describe("pricing what one export would cost to move", () => {
   it("counts nothing as travelling when the export reaches nothing else in its file", async () => {
     expect(await about("src/tools/three.ts#hammer")).toContain(
-      "cut cost    travels 0 · promote 0 · follows 0 · import back 0",
+      "<cut-cost>travels 0, promote 0, follows 0, import back 0</cut-cost>",
     );
   });
 
   it("follows the chain out of the export, not just what it names directly", async () => {
-    expect(await cutting("lib.ts#label")).toContain("travels     clean · joinAll");
+    expect(await cutting("lib.ts#label")).toContain(lines("<travels>", "* clean", "* joinAll", "</travels>"));
   });
 
   it("keeps back a helper something staying behind also reads, since that one must be promoted", async () => {
-    const said = await cutting("lib.ts#label");
-
-    expect(said).toContain("promote     trim");
-    expect(said).toContain("cutting means promoting them first");
+    expect(await cutting("lib.ts#label")).toContain(
+      lines("<promote>", "* trim", "something else in this file reads these, so cutting means promoting them first"),
+    );
   });
 
   it("prices the whole cut in one line, with the numbers agreeing with the lists", async () => {
     expect(await cutting("lib.ts#label")).toContain(
-      "cut cost    travels 2 · promote 1 · follows 1 · import back 0",
+      "<cut-cost>travels 2, promote 1, follows 1, import back 0</cut-cost>",
     );
   });
 
   it("counts an import as following only when a travelling declaration reaches it", async () => {
-    expect(await cutting("lib.ts#label")).toContain("follows     node:path");
-    expect(await cutting("lib.ts#other")).toContain("follows     none");
+    expect(await cutting("lib.ts#label")).toContain(lines("<follows>", "* node:path"));
+    expect(await cutting("lib.ts#other")).toContain("<follows>none</follows>");
   });
 
   it("says nothing must be promoted when the export owns everything it reaches", async () => {
     const said = await cutting("lib.ts#bounce");
 
-    expect(said).toContain("promote     none");
+    expect(said).toContain(lines("<promote>", "none"));
     expect(said).not.toContain("cutting means promoting them first");
   });
 
   it("leaves out a name the file already exports, since a mover can import it as it stands", async () => {
-    expect(await cutting("lib.ts#grown")).toContain("promote     none");
+    expect(await cutting("lib.ts#grown")).toContain(lines("<promote>", "none"));
   });
 
   it("leaves out what is reached only through a name it does not have to promote", async () => {
     expect(await cutting("lib.ts#framed")).toContain(
-      "cut cost    travels 0 · promote 0 · follows 0 · import back 0",
+      "<cut-cost>travels 0, promote 0, follows 0, import back 0</cut-cost>",
     );
   });
 
@@ -149,24 +151,23 @@ describe("pricing what one export would cost to move", () => {
   });
 
   it("names what stays behind and reads it, since that is what the move would break", async () => {
-    const said = await cutting("lib.ts#seed");
-
-    expect(said).toContain("import back decorate");
-    expect(said).toContain("the cut is not free until they import it back");
+    expect(await cutting("lib.ts#seed")).toContain(
+      lines(
+        "<import-back>",
+        "* decorate",
+        "these stay in this file and read it, so the cut is not free until they import it back",
+      ),
+    );
   });
 
   it("counts a reader that stays in the price, so three zeroes cannot read as free", async () => {
     expect(await cutting("lib.ts#seed")).toContain(
-      "cut cost    travels 0 · promote 0 · follows 0 · import back 1",
+      "<cut-cost>travels 0, promote 0, follows 0, import back 1</cut-cost>",
     );
   });
 
-  it("finds a reader that stays even where nothing exported reaches it", async () => {
-    expect(await cutting("lib.ts#seed")).not.toContain("import back none");
-  });
-
   it("leaves out an import the declaration only sits above, rather than one it reaches", async () => {
-    expect(await cutting("lib.ts#seed")).toContain("follows     none");
+    expect(await cutting("lib.ts#seed")).toContain("<follows>none</follows>");
   });
 
   it("leaves out an import a declaration names in a string, which imports nothing", async () => {
@@ -174,28 +175,29 @@ describe("pricing what one export would cost to move", () => {
   });
 
   it("says nothing needs it back when what stays never reads it", async () => {
-    const said = await cutting("lib.ts#bounce");
-
-    expect(said).toContain("import back none");
-    expect(said).toContain("the file it leaves needs nothing back");
+    expect(await cutting("lib.ts#bounce")).toContain(
+      lines("<import-back>", "none", "nothing else in this file reads it, so the file it leaves needs nothing back"),
+    );
   });
 
   it("walks a cycle between two helpers once rather than forever", async () => {
-    expect(await cutting("lib.ts#bounce")).toContain("travels     ping · pong");
+    expect(await cutting("lib.ts#bounce")).toContain(lines("<travels>", "* ping", "* pong", "</travels>"));
   });
 
   it("names the import that would follow the export out of the file", async () => {
     const said = await about("src/core/two.ts#engine");
 
     expect(said).toContain("follows 1");
-    expect(said).toContain("follows     ../tools/three.js");
+    expect(said).toContain(lines("<follows>", "* ../tools/three.js"));
   });
 
   it("refuses to price a re-export rather than reporting zeroes that would read as free", async () => {
     const said = await cutting("barrel.ts#label");
 
-    expect(said).toContain("label  (exported here, declared elsewhere)");
-    expect(said).toContain("cut cost    not priced here, since what would move is declared in another file");
+    expect(said).toContain("<declared>elsewhere, and exported here</declared>");
+    expect(said).toContain(
+      "<cut-cost>not priced here, since what would move is declared in another file</cut-cost>",
+    );
     expect(said).not.toContain("travels");
     expect(said).not.toContain("promote");
   });
@@ -204,47 +206,49 @@ describe("pricing what one export would cost to move", () => {
 describe("what the imports that follow a move would cost where it lands", () => {
   it("names the import that would be left with one foreign reader, since that is a new finding", async () => {
     expect(await landing("src/lib/cart.ts#cartFor")).toContain(
-      "            once it lands these become findings of their own: sessionFor",
+      "once it lands these become findings of their own: sessionFor",
     );
   });
 
   it("says so when an import keeps a reader at home, so the move costs nothing there", async () => {
     expect(await landing("src/lib/cart.ts#stays")).toContain(
-      "            nothing it imports becomes a finding of its own once it lands",
+      "nothing it imports becomes a finding of its own once it lands",
     );
   });
 
   it("counts neither the zone that declares the import nor a zone with a role, and leaves alone one already read from a single zone", async () => {
     expect(await landing("src/lib/note.ts#note")).toContain(
-      "            once it lands these become findings of their own: markFor\n",
+      "once it lands these become findings of their own: markFor\n",
     );
   });
 
   it("counts the zone it leaves as a reader still, when a declaration staying behind reads the same import", async () => {
     expect(await landing("src/lib/basket.ts#basketFor")).toContain(
-      "            nothing it imports becomes a finding of its own once it lands",
+      "nothing it imports becomes a finding of its own once it lands",
     );
   });
 
   it("prices nothing for an import that declares no symbol here, a package or a whole module", async () => {
-    const said = await landing("src/lib/stamp.ts#stamp");
-
-    expect(said).toContain("follows     ../store/bag.js · node:os");
-    expect(said).toContain(
-      "            nothing it imports becomes a finding of its own once it lands",
+    expect(await landing("src/lib/stamp.ts#stamp")).toContain(
+      lines(
+        "<follows>",
+        "* ../store/bag.js",
+        "* node:os",
+        "nothing it imports becomes a finding of its own once it lands",
+      ),
     );
   });
 
   it("prices nothing where two zones read it, since there is no single destination to price against", async () => {
     expect(await landing("src/lib/shared.ts#shared")).toContain(
-      "            more than one zone reads this, so where it would land is not settled",
+      "more than one zone reads this, so where it would land is not settled",
     );
   });
 
   it("stays quiet when nothing follows, rather than pricing an empty list", async () => {
     const said = await landing("src/store/session.ts#tokenFor");
 
-    expect(said).toContain("follows     none");
+    expect(said).toContain("<follows>none</follows>");
     expect(said).not.toContain("once it lands");
   });
 });
@@ -252,17 +256,17 @@ describe("what the imports that follow a move would cost where it lands", () => 
 describe("what already stands against one export", () => {
   it("gathers a claim standing against the name, anchored where the violation is", async () => {
     expect(await about("src/tools/three.ts#hammer")).toContain(
-      "every-import-respects-its-zone-boundary  src/web/one.ts  is web and may not reach tools: hammer",
+      "* every-import-respects-its-zone-boundary  src/web/one.ts  is web and may not reach tools: hammer",
     );
   });
 
   it("says none stand against a name nothing has flagged, rather than printing an empty list", async () => {
-    expect(await about("src/tools/three.ts#wrench")).toContain("none stand against this name");
+    expect(await about("src/tools/three.ts#wrench")).toContain(lines("<claims>", "none"));
   });
 
   it("gathers a claim standing on the declaration itself, which no reader would name", async () => {
     expect(await standing("lib/one.ts#label")).toContain(
-      "    no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
+      "* no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
     );
   });
 
@@ -272,7 +276,7 @@ describe("what already stands against one export", () => {
 
   it("gathers a placement claim, so explain cannot say nothing stands while the check reports it", async () => {
     expect(await standing("lib/one.ts#label")).toContain(
-      "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well, while spec reads it too but is tests, so it does not count",
+      "* no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well, while spec reads it too but is tests, so it does not count",
     );
   });
 
@@ -281,10 +285,8 @@ describe("what already stands against one export", () => {
   });
 
   it("gathers a claim about the whole file against each of the names it covers", async () => {
-    const said = await standing("lib/three.ts#secondThing");
-
-    expect(said).toContain(
-      "    no-value-is-declared-away-from-its-only-consumer  lib/three.ts  declares 2 exports, all used only by app/reader.ts, so the file is in the wrong directory rather than the declarations",
+    expect(await standing("lib/three.ts#secondThing")).toContain(
+      "* no-value-is-declared-away-from-its-only-consumer  lib/three.ts  declares 2 exports, all used only by app/reader.ts, so the file is in the wrong directory rather than the declarations",
     );
   });
 
@@ -299,7 +301,9 @@ describe("what already stands against one export", () => {
   });
 
   it("says so plainly when the name is in neither the declarations nor the exports", async () => {
-    expect(await about("src/core/two.ts#absent")).toContain("absent is neither declared nor exported here");
+    expect(await about("src/core/two.ts#absent")).toContain(
+      "<not-found>absent is neither declared nor exported here, so there is nothing to say about it</not-found>",
+    );
   });
 
   it("reports a clean run, since pricing a move is a question and not a failure", async () => {
@@ -313,34 +317,50 @@ describe("what already stands against one export", () => {
     expect(output).toBe("no trueup.config.ts found\n");
   });
 
-  it("says the whole block for a name, spacing and all", async () => {
+  it("says the whole block for a name, tags and all", async () => {
     expect(await saidBy(CLAIMED, "lib/one.ts#label")).toBe(
-      [
-        "lib/one.ts#label",
+      lines(
+        "<answer>",
+        "<paths>",
+        "* lib/one.ts#label",
+        "</paths>",
+        "<read-by>",
+        "* app/reader.ts",
+        "* lib/four.ts",
+        "* spec/reads.ts",
+        "</read-by>",
+        "<reader-zones>",
+        "* app",
+        "* lib",
+        "* spec (tests)",
+        "a role changes what a claim expects of a zone: trueup docs zones",
+        "</reader-zones>",
+        "<reader-directories>",
+        "* app",
+        "* lib",
+        "* spec",
+        "lib keeps a reader of this and may not reach app and spec",
+        "</reader-directories>",
+        "<cut-cost>travels 0, promote 0, follows 0, import back 0</cut-cost>",
+        "<travels>none</travels>",
+        "<promote>",
+        "none",
+        "nothing else in this file reads what it reaches, so no one else has to agree",
+        "</promote>",
+        "<follows>none</follows>",
+        "<import-back>",
+        "none",
+        "nothing else in this file reads it, so the file it leaves needs nothing back",
+        "</import-back>",
+        "<claims>",
+        "* every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",
+        "* no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
+        "* no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well, while spec reads it too but is tests, so it does not count",
+        "delegated tools are not consulted here; run the check itself for those",
+        "</claims>",
+        "</answer>",
         "",
-        "label",
-        "",
-        "read by     app/reader.ts · lib/four.ts · spec/reads.ts",
-        "            zones: app · lib · spec (tests)",
-        "            a role changes what a claim expects of a zone: trueup docs zones",
-        "            directories: app · lib · spec",
-        "            lib keeps a reader of this and may not reach app · spec",
-        "",
-        "cut cost    travels 0 · promote 0 · follows 0 · import back 0",
-        "travels     none",
-        "promote     none",
-        "            nothing else in this file reads what it reaches, so no one else has to agree",
-        "follows     none",
-        "import back none",
-        "            nothing else in this file reads it, so the file it leaves needs nothing back",
-        "",
-        "claims      3",
-        "    every-import-respects-its-zone-boundary  app/reader.ts  is app and may not reach lib: label from lib/one.ts",
-        "    no-declaration-is-written-twice  lib/one.ts  declares label, which is written the same way in lib/two.ts",
-        "    no-value-is-declared-away-from-its-only-consumer  lib/one.ts  declares label, used outside its zone only by app/reader.ts, and inside its zone as well, while spec reads it too but is tests, so it does not count",
-        "            delegated tools are not consulted here; run the check itself for those",
-        "",
-      ].join("\n"),
+      ),
     );
   });
 });

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.0
+
+### Changed
+
+- `trueup explain` answers for every path it is given rather than the first alone, opening the project once. Paths that get the same answer share one block, and the custom rules that also run are named once at the end.
+- `trueup explain` prints its answer in tags, such as a may-reach tag around the zones a file may reach, with one item to a line. An agent reads where each part starts and ends instead of counting columns. The zones a file may not reach are left out, since they are everything the may-reach list leaves out, and zones that share a path prefix are nested under it. Every form of the command is tagged: a path, a name, a new file, and the ungoverned pairs.
+- `trueup explain` names a custom rule from a workspace member only when an explained path falls inside that member, since the rule sees nothing else. A rule in the root config is still named for every path.
+- `trueup explain` says a part of a sibling group is kept apart from every other part of it, rather than naming each one. The shared parts it may still reach are the only exception, and they keep their list.
+- `trueup activate` prints the session start block in the same tags. Each section, each zone's reach and each setting has a tag of its own. Every list holds one item to a line, where names used to be joined by dots in padded columns.
+- `trueup --dots`, `trueup --next` and a refusal from `trueup guard` print in the same tags. Each failing claim is a claim tag holding its findings, one to a line, and then its guidance. A ruled line and indentation used to separate them. The zones a refused file may reach are listed one to a line. The full report keeps its columns, since people read it.
+
+### Fixed
+
+- The dots report says 1 file and 1 edge where it said 1 files and 1 edges.
+- The silent list in `trueup explain --ungoverned` says its zones are ones no boundary rule starts from. It said no rule named them, which a zone in an allow list contradicts.
+- Explaining a file that already exists no longer reads it as empty, which emptied the vocabulary a domain file contributes when it was explained beside a new file.
+
 ## 0.5.0
 
 ### Added

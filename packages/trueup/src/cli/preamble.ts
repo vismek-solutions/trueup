@@ -24,7 +24,7 @@ export const readAsAsset = ({ root, config }: Analysable, path: string): boolean
 export const unanalysed = ({ root, config, roots }: Analysable, path: string): string | null => {
   const extensions = config.extensions ?? SOURCE_EXTENSIONS;
   if (!extensions.includes(extname(path)) && !readAsAsset({ root, config, roots }, path)) {
-    return `the analysis reads ${extensions.join(" · ")}, and this is not one of them`;
+    return `the analysis reads ${extensions.join(", ")}, and this is not one of them`;
   }
   if (!roots.some((entry) => path === entry || path.startsWith(`${entry}${sep}`))) {
     return "it sits outside the roots the analysis reads";

@@ -1,14 +1,15 @@
+import { existsSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
-import { check, homesFor, nameIn, placementOf, reachOf, siblingsIn, ungovernedIn } from "../../main.ts";
+import { check, homesFor, nameIn, placementOf, reachOf, ungovernedIn } from "../../main.ts";
 import { resolveInclude } from "../../config/load.ts";
 import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
-import { openedIn, readAsAsset, unanalysed, type Opened } from "../preamble.ts";
+import { openedIn, type Opened } from "../preamble.ts";
+import { items, tagged } from "../tags.ts";
 import { closesACycle, homeLines, probeFor, type Home } from "./homes.ts";
-import { list } from "./lines.ts";
 import { nameLines, type Blocked } from "./name.ts";
-import { siblingLines } from "./siblings.ts";
+import { placementLinesFor, ungovernedLinesFor } from "./path.ts";
 import { ungovernedLines } from "./ungoverned.ts";
 
 const UNGOVERNED = "--ungoverned";
@@ -18,17 +19,9 @@ const NEEDS = "--needs=";
 const READ_BY = "--read-by=";
 
 const USAGE = [
-  `usage: ${DEFAULT_COMMAND} explain <path>`,
+  `usage: ${DEFAULT_COMMAND} explain <path>[#<name>] [<path>...]`,
   `       ${DEFAULT_COMMAND} explain ${NEEDS}<path>[,<path>] [${READ_BY}<path>[,<path>]]`,
 ];
-
-const SAMPLE = 6;
-
-const sampleOf = (values: Iterable<string>): string => {
-  const sorted = [...values].sort();
-  const shown = sorted.slice(0, SAMPLE).join(" · ");
-  return sorted.length > SAMPLE ? `${shown} · and ${sorted.length - SAMPLE} more` : shown;
-};
 
 const ungovernedFor = async (cwd: string, write: (line: string) => void): Promise<number> => {
   const opened = await openedIn(cwd, write);
@@ -51,13 +44,12 @@ const refusedMove = (opened: Opened, path: string, about: ReturnType<typeof name
   return refused.length === 0 ? null : { from, zones: refused };
 };
 
-const nameFor = async (cwd: string, target: string, write: (line: string) => void): Promise<number> => {
-  const [where = "", name = ""] = target.split("#");
-  const path = isAbsolute(where) ? where : resolve(cwd, where);
+interface Target {
+  readonly path: string;
+  readonly name: string | null;
+}
 
-  const opened = await openedIn(cwd, write);
-  if (typeof opened === "number") return opened;
-
+const nameLinesFor = async (opened: Opened, path: string, name: string): Promise<readonly string[]> => {
   const { config, root, project, rulebooks } = opened;
   const report = await check({
     ...config,
@@ -78,16 +70,12 @@ const nameFor = async (cwd: string, target: string, write: (line: string) => voi
     }),
   );
 
-  write(`${relative(root, path)}#${name}`);
-  write("");
-  const said = nameLines({
+  return nameLines({
     about,
     against,
     command: config.command ?? DEFAULT_COMMAND,
     blocked: refusedMove(opened, path, about),
   });
-  for (const line of said) write(line);
-  return 0;
 };
 
 const pathsOf = (argv: readonly string[], flag: string): readonly string[] =>
@@ -138,8 +126,6 @@ const homesFrom = ({ opened, cwd, argv, write }: HomesFrom): number => {
   const homes: Home[] = homesFor({ ...rules, needs, readers }).map((zone) => ({ zone, where: whereIn(zone) }));
   const cycle = closesACycle({ ...rules, needs, readers });
 
-  write("a new file");
-  write("");
   for (const line of homeLines({ homes, needs, readers, cycle })) write(line);
   return 0;
 };
@@ -157,73 +143,54 @@ const refusedIn = (argv: readonly string[], write: (line: string) => void): numb
   return EXIT_BAD_USAGE;
 };
 
-const pathFor = async (cwd: string, target: string, write: (line: string) => void): Promise<number> => {
-  const path = isAbsolute(target) ? target : resolve(cwd, target);
-  const opened = await openedIn(cwd, write, new Map([[path, ""]]));
+interface Answer {
+  readonly heads: readonly string[];
+  readonly body: readonly string[];
+  readonly governed: boolean;
+}
+
+const targetOf = (cwd: string, entry: string): Target => {
+  const [where = "", name] = entry.split("#");
+  return { path: resolved(cwd, where), name: name ?? null };
+};
+
+const unwrittenIn = (targets: readonly Target[]): Map<string, string> =>
+  new Map(targets.filter((target) => target.name === null && !existsSync(target.path)).map((target) => [target.path, ""]));
+
+const answerFor = async (opened: Opened, { path, name }: Target): Promise<Answer> => {
+  const head = relative(opened.root, path);
+  if (name !== null) return { heads: [`${head}#${name}`], body: await nameLinesFor(opened, path, name), governed: false };
+
+  const ungoverned = ungovernedLinesFor(opened, path);
+  return { heads: [head], body: ungoverned ?? placementLinesFor(opened, path), governed: ungoverned === null };
+};
+
+const groupedByBody = (answers: readonly Answer[]): readonly Answer[] => {
+  const grouped = new Map<string, Answer>();
+  for (const answer of answers) {
+    const key = answer.body.join("\n");
+    const same = grouped.get(key);
+    grouped.set(key, same === undefined ? answer : { ...same, heads: [...same.heads, ...answer.heads] });
+  }
+  return [...grouped.values()];
+};
+
+const explainTargets = async (cwd: string, entries: readonly string[], write: (line: string) => void): Promise<number> => {
+  const targets = entries.map((entry) => targetOf(cwd, entry));
+  const opened = await openedIn(cwd, write, unwrittenIn(targets));
   if (typeof opened === "number") return opened;
 
-  const { config, root, project, rulebooks } = opened;
-  const zone = project.zoneOf(path);
-
-  write(relative(root, path));
-  write("");
-
-  if (rulebooks.includes(path)) {
-    write("zone        none");
-    write("            this is a rulebook, so it sits outside the analysis it configures");
-    write("            no zone, boundary or seam rule applies to it");
-    return 0;
+  const answers = await Promise.all(targets.map((target) => answerFor(opened, target)));
+  for (const [index, { heads, body }] of groupedByBody(answers).entries()) {
+    if (index > 0) write("");
+    for (const line of tagged("answer", [...tagged("paths", items(heads)), ...body])) write(line);
   }
 
-  const site = { root, config, roots: resolveInclude(root, config.include) };
-
-  if (readAsAsset(site, path)) {
-    write("zone        none");
-    write("            this is an asset, so it is read as text and never parsed");
-    write("            no zone, boundary or seam rule reaches it, and a rule may read what it says");
-    return 0;
-  }
-
-  const missing = unanalysed(site, path);
-  if (missing !== null) {
-    write(`zone        ${zone ?? "none"}`);
-    write("            this path is not analysed, so no claim applies to it");
-    write(`            ${missing}`);
-    return 0;
-  }
-
-  if (zone === null) {
-    write("zone        none");
-    write("            this path matches no zone, so writing here fails every-file-belongs-to-a-zone");
-    write("            put it under an existing zone, or declare one for it");
-    return 0;
-  }
-
-  const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries });
-
-  write(`zone        ${zone}`);
-  write(`may reach   ${list(placement.mayReach)}`);
-  write(`may not     ${list(placement.mayNotReach)}`);
-
-  const siblings = siblingLines(siblingsIn({ rules: config.isolate ?? [], root, project, path }));
-  if (siblings.length > 0) {
-    write("");
-    for (const line of siblings) write(line);
-  }
-
-  for (const seam of config.seams.filter((rule) => rule.generic === zone)) {
-    const vocabulary = project.vocabularyOf(seam.domain);
-    write("");
-    write(`vocabulary  ${list([...seam.domain])} owns names this file may not use:`);
-    write(`            ${sampleOf(vocabulary.names)}`);
-    write(`            and values it may not repeat:`);
-    write(`            ${sampleOf(vocabulary.literals)}`);
-  }
-
-  const named = config.rules.map((rule) => rule.name);
+  const governed = targets.filter((_, index) => answers[index]?.governed === true).map((target) => target.path);
+  const named = opened.config.rules.filter((rule) => governed.some(rule.covers)).map((rule) => rule.name);
   if (named.length > 0) {
     write("");
-    write(`also runs   ${list(named)}`);
+    for (const line of tagged("also-runs", items(named))) write(line);
   }
 
   return 0;
@@ -240,11 +207,10 @@ export async function runExplain({ cwd, argv, write }: CommandInput): Promise<nu
     return typeof opened === "number" ? opened : homesFrom({ opened, cwd, argv, write });
   }
 
-  const target = argv[0];
-  if (target === undefined) {
+  if (argv.length === 0) {
     for (const line of USAGE) write(line);
     return EXIT_BAD_USAGE;
   }
 
-  return target.includes("#") ? nameFor(cwd, target, write) : pathFor(cwd, target, write);
+  return explainTargets(cwd, argv, write);
 }

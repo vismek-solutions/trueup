@@ -46,16 +46,27 @@ You never list the words yourself. A domain zone owns two things: the names its 
 The explain command prints what a file may not name:
 
 ```
-src/components/StatusBadge.tsx
-
-zone        components
-may reach   components · hooks · api
-may not     spec · domain · app · server
-
-vocabulary  domain owns names this file may not use:
-            Order · OrderStatus · isSettled
-            and values it may not repeat:
-            awaiting_payment · refunded · shipped
+<answer>
+<paths>
+* src/components/StatusBadge.tsx
+</paths>
+<zone>components</zone>
+<may-reach>
+* components
+* hooks
+* api
+</may-reach>
+<may-not-name owner="domain">
+* Order
+* OrderStatus
+* isSettled
+</may-not-name>
+<may-not-repeat owner="domain">
+* awaiting_payment
+* refunded
+* shipped
+</may-not-repeat>
+</answer>
 ```
 
 ## Fixing one

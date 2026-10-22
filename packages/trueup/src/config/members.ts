@@ -2,7 +2,6 @@ import { existsSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import picomatch from "picomatch";
 import type { BoundaryRule } from "../claims/boundary.ts";
-import type { Rule } from "../claims/custom.ts";
 import type { IsolationRule } from "../claims/isolation/siblings.ts";
 import type { ApiSurface } from "../claims/members/api-surface.ts";
 import type { MemberGrants } from "../claims/members/grants.ts";
@@ -13,8 +12,8 @@ import type { Project } from "../project/model.ts";
 import type { ZoneDefinition } from "../zones/model.ts";
 import { exportedFilesIn } from "./exports.ts";
 import { manifestIn, type Manifest } from "./manifest.ts";
-import type { MemberConfig } from "./model.ts";
-import { scopedTo } from "./scoped.ts";
+import type { MemberConfig, ScopedRule } from "./model.ts";
+import { inside, scopedTo } from "./scoped.ts";
 
 const CONFIG_NAMES = ["trueup.config.ts", "trueup.config.js", "trueup.config.mjs"];
 
@@ -159,7 +158,7 @@ export const seamsOf = (members: readonly Member[]): readonly SeamRule[] =>
     })),
   );
 
-export const rulesOf = (members: readonly Member[], root: string): readonly Rule[] =>
+export const rulesOf = (members: readonly Member[], root: string): readonly ScopedRule[] =>
   members.flatMap((member) => {
     const scope = { directory: join(root, member.directory), prefix: `${member.name}/` };
 
@@ -167,6 +166,7 @@ export const rulesOf = (members: readonly Member[], root: string): readonly Rule
       ...rule,
       name: qualified(member, rule.name),
       check: (project: Project) => rule.check(scopedTo(project, scope)),
+      covers: (path: string) => inside(scope.directory, path),
     }));
   });
 

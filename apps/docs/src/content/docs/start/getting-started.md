@@ -124,11 +124,21 @@ npx trueup explain src/components/CartRow.test.ts
 ```
 
 ```
-src/components/CartRow.test.ts
-
-zone        spec
-may reach   spec · components · hooks · api · domain · app · server
-may not     none
+<answer>
+<paths>
+* src/components/CartRow.test.ts
+</paths>
+<zone>spec</zone>
+<may-reach>
+* spec
+* components
+* hooks
+* api
+* domain
+* app
+* server
+</may-reach>
+</answer>
 ```
 
 The boundaries here say that components may reach hooks and the api, hooks may reach the api, and the api may reach nothing at all. A zone can always reach itself, so it never has to say so. And a zone with no rule of its own is unrestricted, which here means the catch all zone, the server zone and the test zone. That is what lets you add rules one zone at a time instead of all at once.
@@ -140,11 +150,17 @@ npx trueup explain src/components/CartRow.tsx
 ```
 
 ```
-src/components/CartRow.tsx
-
-zone        components
-may reach   components · hooks · api
-may not     spec · domain · app · server
+<answer>
+<paths>
+* src/components/CartRow.tsx
+</paths>
+<zone>components</zone>
+<may-reach>
+* components
+* hooks
+* api
+</may-reach>
+</answer>
 ```
 
 ## What it will not complain about

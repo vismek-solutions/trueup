@@ -354,7 +354,7 @@ describe("adopting the ratchet from the command line", () => {
     const { output } = await runIn(["--next"]);
 
     expect(output).toContain("nothing failing");
-    expect(output).toContain("baseline  1 of 1 accepted");
+    expect(output).toContain("<baseline>1 of 1 accepted</baseline>");
     expect(output).toContain("may not reach domain");
     expect(output).toContain("`trueup --update-baseline` to drop its entry");
   });

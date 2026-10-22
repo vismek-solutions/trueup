@@ -51,13 +51,17 @@ export interface ArchitectureConfig extends Settings {
   readonly protect?: Protection | undefined;
 }
 
-export type ResolvedConfig = ArchitectureConfig & {
+export type ScopedRule = Rule & {
+  readonly covers: (path: string) => boolean;
+};
+
+export type ResolvedConfig = Omit<ArchitectureConfig, "rules"> & {
   readonly zones: readonly ZoneDefinition[];
   readonly assets: readonly string[];
   readonly boundaries: readonly BoundaryRule[];
   readonly seams: readonly SeamRule[];
   readonly isolate: readonly IsolationRule[];
-  readonly rules: readonly Rule[];
+  readonly rules: readonly ScopedRule[];
   readonly directoryLimits: readonly DirectoryLimit[];
   readonly apiSurfaces: readonly ApiSurface[];
   readonly grants: readonly MemberGrants[];

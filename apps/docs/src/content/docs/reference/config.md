@@ -215,7 +215,7 @@ The rulebook is the config file holding the rules, whether at the root or inside
 | `npx trueup --update-baseline` | record current violations |
 | `npx trueup --config=<path>` | use a specific config |
 | `npx trueup --help` | this list, printed by the tool itself |
-| `npx trueup explain <path>` | what a file may reach |
+| `npx trueup explain <path>...` | what each file may reach, once for files that share an answer |
 | `npx trueup explain <path>#<name>` | who reads one name, and what moving it would cost |
 | `npx trueup explain --needs=<paths>` | [where a new file may live](/concepts/zones/#asking-where-a-new-file-may-live) |
 | `npx trueup explain --read-by=<paths>` | narrows that answer to what may be reached from its readers |

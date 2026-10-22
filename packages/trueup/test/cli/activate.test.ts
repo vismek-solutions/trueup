@@ -13,8 +13,10 @@ const capture = async (cwd: string, argv: readonly string[] = []): Promise<strin
 };
 
 const ADVICE = [
-  "- `trueup explain <file>` — run this **before** creating or moving a file. It reports the zone that",
-  "  path falls into, which zones it may and may not reach, and the vocabulary it may not name.",
+  "<advice>",
+  "- `trueup explain <file> <file>` — run this **before** creating or moving files, naming them all in",
+  "  one call. It reports the zone each path falls into, which zones it may reach, and the",
+  "  vocabulary it may not name.",
   "- `trueup explain --needs=<file>,<file>` — where a new file may live, given what it must import.",
   "  Add `--read-by=<file>` for what will import it. When no zone can hold it, it says what to split.",
   "- `trueup --dots` — check the whole project. Run it before calling a change done. It prints",
@@ -33,10 +35,12 @@ const ADVICE = [
   "A correct fix often makes the count go up, because removing one violation exposes the ones",
   "standing behind it. Those problems were already there. Read the new findings and work through",
   "them rather than reverting a change that was right.",
+  "</advice>",
 ];
 
-const ZONE_HEADING =
-  "zones — a file belongs to the first zone whose patterns match it; a role or a shared mark changes what is expected of it";
+const ZONE_SAID =
+  "a file belongs to the first zone whose patterns match it; a role or a shared mark changes what is expected of it";
+const ISOLATE_SAID = "directories matched by one pattern are siblings, and a sibling may not reach another";
 
 describe("the block an agent reads at the start of a session", () => {
   it("gives every zone, rule and setting a project set", async () => {
@@ -44,41 +48,71 @@ describe("the block an agent reads at the start of a session", () => {
       [
         "## Architecture",
         "",
-        "6 files in 4 zones, and every rule below is enforced.",
+        "<summary>6 files in 4 zones, and every rule below is enforced.</summary>",
         "",
-        ZONE_HEADING,
-        "  engine    2 files  src/engine/** · src/machinery/**",
-        "  domain     1 file  src/domain/**  (api)",
-        "  shared     1 file  src/shared/**",
-        "  ui         1 file  src/ui/**",
-        "  and 1 file in no zone at all",
+        "<zones>",
+        ZONE_SAID,
+        "* engine, 2 files, src/engine/**, src/machinery/**",
+        "* domain, 1 file, src/domain/** (api)",
+        "* shared, 1 file, src/shared/**",
+        "* ui, 1 file, src/ui/**",
+        "and 1 file in no zone at all",
+        "</zones>",
         "",
-        "boundaries — a zone may reach itself and what is listed here, and nothing else",
-        "  engine → shared · ui",
-        "  domain → every other zone, since no rule constrains it",
-        "  shared → every other zone, since no rule constrains it",
-        "  ui     → every other zone, since no rule constrains it",
+        "<boundaries>",
+        "a zone may reach itself and what is listed here, and nothing else",
+        '<reach from="engine">',
+        "* shared",
+        "* ui",
+        "</reach>",
+        '<reach from="domain">every other zone, since no rule constrains it</reach>',
+        '<reach from="shared">every other zone, since no rule constrains it</reach>',
+        '<reach from="ui">every other zone, since no rule constrains it</reach>',
+        "</boundaries>",
         "",
-        "seams — generic code may not use the vocabulary its domains own",
-        "  engine may not name what domain · ui owns, except warrant · table, literals from 6 characters",
-        "  shared may not name what domain owns",
+        "<seams>",
+        "generic code may not use the vocabulary its domains own",
+        "* engine may not name what domain and ui owns, except warrant and table, literals from 6 characters",
+        "* shared may not name what domain owns",
+        "</seams>",
         "",
-        "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
-        "  src/*, except shared · ui",
-        "  src/engine/*",
+        "<isolate>",
+        ISOLATE_SAID,
+        "* src/*, except shared and ui",
+        "* src/engine/*",
+        "</isolate>",
         "",
-        "settings",
-        "  files read                6",
-        "  extensions                .ts · .mts",
-        "  externals                 virtual:* · remote:*",
-        "  ignored directories       node_modules · dist",
-        "  max files per directory   4",
-        "  duplication               declarations from 80 characters",
-        "  colocation                off",
-        "  rulebook                  guarded, so an edit to it is ruled on",
-        "  also protected            trueup.config.ts · .trueup-baseline.json",
-        "  also runs                 a-delegated-tool · another-delegated-tool",
-        "  custom rules              a-named-custom-rule · another-custom-rule",
+        "<settings>",
+        "<files-read>6</files-read>",
+        "<extensions>",
+        "* .ts",
+        "* .mts",
+        "</extensions>",
+        "<externals>",
+        "* virtual:*",
+        "* remote:*",
+        "</externals>",
+        "<ignored-directories>",
+        "* node_modules",
+        "* dist",
+        "</ignored-directories>",
+        "<max-files-per-directory>4</max-files-per-directory>",
+        "<duplication>declarations from 80 characters</duplication>",
+        "<colocation>off</colocation>",
+        "<rulebook>guarded, so an edit to it is ruled on</rulebook>",
+        "<also-protected>",
+        "* trueup.config.ts",
+        "* .trueup-baseline.json",
+        "</also-protected>",
+        "<also-runs>",
+        "* a-delegated-tool",
+        "* another-delegated-tool",
+        "</also-runs>",
+        "<custom-rules>",
+        "* a-named-custom-rule",
+        "* another-custom-rule",
+        "</custom-rules>",
+        "</settings>",
         "",
         ...ADVICE,
       ].join("\n"),
@@ -90,15 +124,21 @@ describe("the block an agent reads at the start of a session", () => {
       [
         "## Architecture",
         "",
-        "2 files in 1 zone, and every rule below is enforced.",
+        "<summary>2 files in 1 zone, and every rule below is enforced.</summary>",
         "",
-        ZONE_HEADING,
-        "  all    2 files  src/** · lib/**",
+        "<zones>",
+        ZONE_SAID,
+        "* all, 2 files, src/**, lib/**",
+        "</zones>",
         "",
-        "settings",
-        "  files read                2",
-        "  roots                     src · lib",
-        "  rulebook                  unguarded, so an agent may edit it and switch off any check it fails",
+        "<settings>",
+        "<files-read>2</files-read>",
+        "<roots>",
+        "* src",
+        "* lib",
+        "</roots>",
+        "<rulebook>unguarded, so an agent may edit it and switch off any check it fails</rulebook>",
+        "</settings>",
         "",
         ...ADVICE,
       ].join("\n"),
@@ -110,27 +150,38 @@ describe("the block an agent reads at the start of a session", () => {
       [
         "## Architecture",
         "",
-        "6 files in 2 zones, and every rule below is enforced.",
+        "<summary>6 files in 2 zones, and every rule below is enforced.</summary>",
         "",
-        ZONE_HEADING,
-        "  web/app        5 files  apps/web/src/**",
-        "  kit/widgets     1 file  libs/kit/src/**",
+        "<zones>",
+        ZONE_SAID,
+        "* web/app, 5 files, apps/web/src/**",
+        "* kit/widgets, 1 file, libs/kit/src/**",
+        "</zones>",
         "",
-        "boundaries — a zone may reach itself and what is listed here, and nothing else",
-        "  web/app     → nothing",
-        "  kit/widgets → nothing",
+        "<boundaries>",
+        "a zone may reach itself and what is listed here, and nothing else",
+        '<reach from="web/app">nothing</reach>',
+        '<reach from="kit/widgets">nothing</reach>',
+        "</boundaries>",
         "",
-        "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
-        "  apps/web/src/routes/*, except shared, and only apps/web/src/routes/index.ts may sit beside them",
+        "<isolate>",
+        ISOLATE_SAID,
+        "* apps/web/src/routes/*, except shared, and only apps/web/src/routes/index.ts may sit beside them",
+        "</isolate>",
         "",
-        "directory limits",
-        "  apps/web holds at most 2 files",
+        "<directory-limits>",
+        "* apps/web holds at most 2 files",
+        "</directory-limits>",
         "",
-        "settings",
-        "  files read                6",
-        "  members                   apps/* · libs/*",
-        "  colocation                on",
-        "  rulebook                  guarded, so an edit to it is ruled on",
+        "<settings>",
+        "<files-read>6</files-read>",
+        "<members>",
+        "* apps/*",
+        "* libs/*",
+        "</members>",
+        "<colocation>on</colocation>",
+        "<rulebook>guarded, so an edit to it is ruled on</rulebook>",
+        "</settings>",
         "",
         ...ADVICE,
       ].join("\n"),
@@ -140,24 +191,39 @@ describe("the block an agent reads at the start of a session", () => {
   it("says a bare review budget only warns, so the agent knows it will not be stopped", async () => {
     const said = await capture(fixtureAt("explained-budget"));
 
-    expect(said).toContain("  reviewable                +90 / -40 against trunk, warns past it");
+    expect(said).toContain("<reviewable>+90 / -40 against trunk, warns past it</reviewable>");
     expect(said).not.toContain("warning from");
   });
 
   it("gives each prose limit its number, since an agent cannot honour one it is not told", async () => {
     expect(await capture(fixtureAt("guarded-text"))).toContain(
-      "  prose                     docs/**/*.md held to marks · words · 12 words a sentence · 2 sentences a paragraph · 3 words of inline code · link text · 20 words a section without an example",
+      [
+        "<prose>",
+        "<reads>",
+        "* docs/**/*.md",
+        "</reads>",
+        "<holds>",
+        "* marks",
+        "* words",
+        "* 12 words a sentence",
+        "* 2 sentences a paragraph",
+        "* 3 words of inline code",
+        "* link text",
+        "* 20 words a section without an example",
+        "</holds>",
+        "</prose>",
+      ].join("\n"),
     );
   });
 
   it("says when the comments in the code are read too, since that is where an agent writes most", async () => {
     expect(await capture(fixtureAt("guarded-comments"))).toContain(
-      "  prose                     docs/**/*.md · every comment held to marks · words · 12 words a sentence",
+      ["<reads>", "* docs/**/*.md", "* every comment", "</reads>"].join("\n"),
     );
   });
 
   it("marks a zone written to serve the layer above it, so a quiet component is explained", async () => {
-    expect(await capture(fixtureAt("activated-switches"))).toContain("  lib     1 file  src/lib/**  (shared)");
+    expect(await capture(fixtureAt("activated-switches"))).toContain("* lib, 1 file, src/lib/** (shared)");
   });
 
   it("names every switch a project turned on, and who may sit beside a sibling", async () => {
@@ -165,26 +231,30 @@ describe("the block an agent reads at the start of a session", () => {
       [
         "## Architecture",
         "",
-        "2 files in 2 zones, and every rule below is enforced.",
+        "<summary>2 files in 2 zones, and every rule below is enforced.</summary>",
         "",
-        ZONE_HEADING,
-        "  app     1 file  src/app/**",
-        "  lib     1 file  src/lib/**  (shared)",
+        "<zones>",
+        ZONE_SAID,
+        "* app, 1 file, src/app/**",
+        "* lib, 1 file, src/lib/** (shared)",
+        "</zones>",
         "",
-        "isolate — directories matched by one pattern are siblings, and a sibling may not reach another",
-        "  src/*, and nothing may sit beside them",
-        "  src/app/*, and only src/app/index.ts · src/app/main.ts may sit beside them",
+        "<isolate>",
+        ISOLATE_SAID,
+        "* src/*, and nothing may sit beside them",
+        "* src/app/*, and only src/app/index.ts and src/app/main.ts may sit beside them",
+        "</isolate>",
         "",
-        "settings",
-        "  files read                2",
-        "  reviewable                +600 / -400 against main, fails past it, warning from 80%",
-        "  colocation                on",
-        "  readerships               on",
-        "  test internals            on",
-        "  rulebook                  guarded, so an edit to it is ruled on",
+        "<settings>",
+        "<files-read>2</files-read>",
+        "<reviewable>+600 / -400 against main, fails past it, warning from 80%</reviewable>",
+        "<colocation>on</colocation>",
+        "<readerships>on</readerships>",
+        "<test-internals>on</test-internals>",
+        "<rulebook>guarded, so an edit to it is ruled on</rulebook>",
+        "</settings>",
         "",
-        "this branch",
-        "  +120 / -30 so far, 480 additions left",
+        "<this-branch>+120 / -30 so far, 480 additions left</this-branch>",
         "",
         ...ADVICE,
       ].join("\n"),
@@ -194,23 +264,23 @@ describe("the block an agent reads at the start of a session", () => {
   it("gives each shared directory that stands in an order its reach, under the rule", async () => {
     expect(await capture(fixtureAt("shared-layers"))).toContain(
       [
-        "  src/routes/*, except _ui · _state · _root",
-        "    _state → nothing",
-        "    _root  → _state",
+        "* src/routes/*, except _ui, _state and _root",
+        "   * _state may reach nothing",
+        "   * _root may reach _state",
       ].join("\n"),
     );
   });
 
   it("puts a package above its zones, so the path it owns is said once", async () => {
     expect(await capture(fixtureAt("grouped-zones"))).toContain(
-      ["  lib", "    lib/read      1 file  read/**", "    lib/write     1 file  write/**"].join("\n"),
+      ['<package path="lib">', "* lib/read, 1 file, read/**", "* lib/write, 1 file, write/**", "</package>"].join("\n"),
     );
   });
 
   it("says a whole package once, rather than every zone in it", async () => {
     const said = await capture(fixtureAt("grouped-zones"));
 
-    expect(said).toContain("  app/pages   → lib/*");
+    expect(said).toContain(['<reach from="app/pages">', "* lib/*", "</reach>"].join("\n"));
     expect(said).toContain("nothing else; a name ending in /* is every zone under it");
   });
 
@@ -219,22 +289,23 @@ describe("the block an agent reads at the start of a session", () => {
   });
 
   it("names what a wide reach leaves out, rather than listing most of the project", async () => {
-    expect(await capture(fixtureAt("wide-reach"))).toContain("  a → every other zone except g");
+    expect(await capture(fixtureAt("wide-reach"))).toContain(
+      ['<reach-all-except from="a">', "* g", "</reach-all-except>"].join("\n"),
+    );
   });
 
   it("keeps a short reach a list, even where naming what it leaves out would be shorter", async () => {
-    expect(await capture(fixtureAt("wide-reach"))).toContain("  b → c · d · e · f");
+    expect(await capture(fixtureAt("wide-reach"))).toContain(
+      ['<reach from="b">', "* c", "* d", "* e", "* f", "</reach>"].join("\n"),
+    );
   });
 
   it("says nothing about the branch where no budget was set", async () => {
-    expect(await capture(ACTIVATED)).not.toContain("this branch");
+    expect(await capture(ACTIVATED)).not.toContain("this-branch");
   });
 
   it("says the branch was not measured rather than reading silence as room left", async () => {
-    const said = await capture(fixtureAt("explained-budget"));
-
-    expect(said).toContain("this branch");
-    expect(said).toContain("  not measured, so nothing holds it:");
+    expect(await capture(fixtureAt("explained-budget"))).toContain("<this-branch>not measured, so nothing holds it:");
   });
 
   it("refuses an argument it does not know rather than ignoring it", async () => {

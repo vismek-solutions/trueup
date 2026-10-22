@@ -1,31 +1,48 @@
 import { relative } from "node:path";
 import type { Decision } from "../ports/proposal.ts";
-import type { Finding, Report } from "../report/model.ts";
+import type { Report } from "../report/model.ts";
 import { nested } from "./nesting.ts";
 
 const ALLOW: Decision = { verdict: "allow", reasons: [] };
+
+export interface RefusedFinding {
+  readonly file: string | null;
+  readonly message: string;
+}
+
+export interface Refusal {
+  readonly claim: string;
+  readonly file: string | null;
+  readonly findings: readonly RefusedFinding[];
+  readonly guidance: string;
+}
+
+export type ReasonOf = (refusal: Refusal) => string;
+
+const findingText = ({ file, message }: RefusedFinding): string => {
+  const [first = "", ...rest] = message.split("\n");
+
+  return nested([`${file === null ? "" : `${file}  `}${first}`, ...rest.map((line) => `  ${line}`)].join("\n"));
+};
+
+const plainReason: ReasonOf = ({ claim, file, findings, guidance }) =>
+  [file === null ? claim : `${claim}  ${file}`, ...findings.map(findingText), "  ────────", nested(guidance)].join(
+    "\n",
+  );
 
 export interface DecideInput {
   readonly report: Report;
   readonly path: string | null;
   readonly root: string;
   readonly arriving?: boolean | undefined;
+  readonly reasonOf?: ReasonOf | undefined;
 }
 
 const RELOCATED = "no-declaration-is-written-twice";
 
 const shortened = (root: string, file: string): string => relative(root, file) || file;
 
-const lineOf = (root: string, scoped: boolean, hit: Finding): string => {
-  const where = scoped || hit.file === null ? "" : `${shortened(root, hit.file)}  `;
-  const [first = "", ...rest] = hit.message.split("\n");
-
-  return nested([`${where}${first}`, ...rest.map((line) => `  ${line}`)].join("\n"));
-};
-
-export function decideOnProposal({ report, path, root, arriving = false }: DecideInput): Decision {
-  const scoped = path !== null;
-
+export function decideOnProposal({ report, path, root, arriving = false, reasonOf = plainReason }: DecideInput): Decision {
   const reasons = report.claims.flatMap((claim) => {
     if (arriving && claim.claim === RELOCATED) return [];
 
@@ -34,9 +51,17 @@ export function decideOnProposal({ report, path, root, arriving = false }: Decid
     );
     if (hits.length === 0) return [];
 
-    const header = path === null ? claim.claim : `${claim.claim}  ${shortened(root, path)}`;
-    const lines = hits.map((hit) => lineOf(root, scoped, hit));
-    return [[header, ...lines, "  ────────", nested(claim.guidance)].join("\n")];
+    return [
+      reasonOf({
+        claim: claim.claim,
+        file: path === null ? null : shortened(root, path),
+        findings: hits.map((hit) => ({
+          file: path !== null || hit.file === null ? null : shortened(root, hit.file),
+          message: hit.message,
+        })),
+        guidance: claim.guidance,
+      }),
+    ];
   });
 
   return reasons.length === 0 ? ALLOW : { verdict: "deny", reasons };

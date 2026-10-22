@@ -1,35 +1,32 @@
 import type { siblingsIn } from "../../main.ts";
-import { list } from "./lines.ts";
+import { listed, tagged } from "../tags.ts";
 
 type Placement = ReturnType<typeof siblingsIn>[number];
 
-const said = (placement: Placement): string => {
-  if (placement.group === null) {
-    return placement.assembles
-      ? `assembles \`${placement.siblings}\`, so it may reach every part of it`
-      : `sits beside \`${placement.siblings}\` rather than in one of its parts`;
-  }
-  if (placement.apart.length === 0) {
-    return `${placement.group}, one part of \`${placement.siblings}\`, and every other part is shared`;
-  }
-  return `${placement.group}, which \`${placement.siblings}\` keeps apart from ${list(placement.apart)}`;
+const apartSaid = (placement: Placement): string => {
+  if (placement.apart.length === 0) return "none";
+  const reachable = placement.shared.length === 0 ? "" : ", except the ones in may-reach-shared";
+  return `every other part of ${placement.siblings}${reachable}`;
 };
 
-const alsoShared = (placement: Placement): string[] =>
-  placement.shared.length === 0
-    ? []
-    : [`            it may still reach ${list(placement.shared)}, which the group shares`];
+const partLines = (placement: Placement): readonly string[] => [
+  ...tagged("kept-apart-from", apartSaid(placement)),
+  ...(placement.shared.length === 0 ? [] : listed("may-reach-shared", placement.shared)),
+  ...(placement.withheld.length === 0 ? [] : listed("may-not-reach-shared", placement.withheld)),
+];
 
-const heldBack = (placement: Placement): string[] =>
-  placement.withheld.length === 0
-    ? []
-    : [
-        `            it may not reach ${list(placement.withheld)}, though the group shares ${placement.withheld.length === 1 ? "it" : "them"}`,
-      ];
+const siblingsOf = (placement: Placement): readonly string[] => {
+  const group = { group: placement.siblings };
+  if (placement.group !== null) return tagged("siblings", partLines(placement), { ...group, part: placement.group });
 
-export const siblingLines = (placements: ReturnType<typeof siblingsIn>): string[] =>
-  placements.flatMap((placement) => [
-    `siblings    ${said(placement)}`,
-    ...alsoShared(placement),
-    ...heldBack(placement),
-  ]);
+  return tagged(
+    "siblings",
+    placement.assembles
+      ? "assembles the group, so it may reach every part of it"
+      : "sits beside the group rather than in one of its parts",
+    group,
+  );
+};
+
+export const siblingLines = (placements: ReturnType<typeof siblingsIn>): readonly string[] =>
+  placements.flatMap(siblingsOf);

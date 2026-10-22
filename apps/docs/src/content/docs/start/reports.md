@@ -73,12 +73,13 @@ Under that list, past a short rule that marks where the findings end, sits the g
 npx trueup --dots
 ```
 
-One character per claim, then nothing else unless something failed.
+One character per claim and the counts, then nothing else unless something failed.
 
 ```
-................  80 files · 496 edges · 0 unresolved
+<marks>...........</marks>
+<coverage>3 files, 0 edges, 0 unresolved</coverage>
 
-16 claims · 0 errors · 0 warnings
+<summary>11 claims, 0 errors, 0 warnings</summary>
 ```
 
 | | |
@@ -90,20 +91,25 @@ One character per claim, then nothing else unless something failed.
 Only the claims with real errors are explained, and only their errors. Warnings stay in the tally.
 
 ```
-........E...!...  80 files · 496 edges · 0 unresolved
-baseline  2 known · 0 stale
+<marks>....!...E..</marks>
+<coverage>5 files, 2 edges, 0 unresolved</coverage>
+<baseline>2 known, 0 stale</baseline>
 
-every-import-respects-its-zone-boundary  1 error
-    src/engine/table.ts:14:9  is engine and may not reach domain: Warrant from src/domain/warrant.ts
-    ────────
-    Code in one zone reached a symbol declared in a zone it may not reach. …
+<claim name="every-import-respects-its-zone-boundary" errors="1">
+<findings>
+* src/engine/table.ts:1:10 is engine and may not reach domain: Warrant from src/domain/warrant.ts
+</findings>
+<guidance>
+Code in one zone reached a symbol declared in a zone it may not reach. …
+</guidance>
+</claim>
 
-16 claims · 1 error · 2 warnings
+<summary>11 claims, 1 error, 2 warnings</summary>
 ```
 
-The counts stay on the first line even here. A short report still has to show you that something was checked.
+The counts stay at the top even here. A short report still has to show you that something was checked.
 
-This is the mode to hand to an agent that checks after every change it makes. A green run costs it two lines instead of twenty.
+This is the mode to hand to an agent that checks after every change it makes. A green run costs it four lines instead of twenty. Each part sits in a tag of its own, so the agent can tell where the findings end and the guidance starts.
 
 ## When you want one thing to fix
 
@@ -114,14 +120,18 @@ npx trueup --next
 One problem, then stop.
 
 ```
-problem 1 of 12 · 16 claims · 12 errors · 0 warnings
+<summary>problem 1 of 1, 11 claims, 3 errors, 0 warnings</summary>
 
-no-declaration-is-written-twice  3 errors
-    src/zones/assign.ts:11:6      declares toPosix, which is written the same way in …
-    src/claims/isolation.ts:17:6  declares posix, which is written the same way in …
-    src/guard/protected.ts:26:6   declares posix, which is written the same way in …
-    ────────
-    The same declaration was written more than once, in files that could have shared it. …
+<claim name="no-declaration-is-written-twice" errors="3">
+<findings>
+* src/claims/isolation.ts:3:7 declares posix, which is written the same way in …
+* src/guard/protected.ts:3:7 declares posix, which is written the same way in …
+* src/zones/assign.ts:3:7 declares toPosix, which is written the same way in …
+</findings>
+<guidance>
+The same declaration was written more than once, in files that could have shared it. …
+</guidance>
+</claim>
 ```
 
 A problem is not the same as a finding. Findings that share one cause arrive together, because you cannot fix one copy of a duplicated declaration without seeing the others. Everything else is one finding, one problem.

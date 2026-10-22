@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { renderNext } from "../../src/cli/render.ts";
+import { renderNext } from "../../src/cli/reports/tagged.ts";
 import type { Finding, Report } from "../../src/report/model.ts";
 import { fixtureAt } from "../support/fixtures.ts";
 import { COPIES, error, kept, MIXED, reportOf, warning } from "../support/sample-report.ts";
@@ -32,13 +32,16 @@ describe("the next report, to the character", () => {
   it("writes exactly this, showing the errors and leaving the warnings alone", () => {
     expect(renderNext(MIXED, "/p")).toBe(
       [
-        "problem 1 of 1 · 3 claims · 1 error · 2 warnings",
+        "<summary>problem 1 of 1, 3 claims, 1 error, 2 warnings</summary>",
         "",
-        "a-mixed-claim  1 error",
-        "    a.ts  an error here",
-        "    ────────",
-        "    alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar",
-        "    papa quebec romeo",
+        '<claim name="a-mixed-claim" errors="1">',
+        "<findings>",
+        "* a.ts an error here",
+        "</findings>",
+        "<guidance>",
+        "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo",
+        "</guidance>",
+        "</claim>",
       ].join("\n"),
     );
   });
@@ -46,14 +49,18 @@ describe("the next report, to the character", () => {
   it("offers what the baseline accepted once nothing is failing, rather than stopping there", () => {
     expect(renderNext(ACCEPTED, "/p", { ratchet: { known: 1, stale: 0 } })).toBe(
       [
-        "nothing failing · 2 claims · 0 errors · 2 warnings",
-        "baseline  1 of 1 accepted",
+        "<summary>nothing failing, 2 claims, 0 errors, 2 warnings</summary>",
+        "<baseline>1 of 1 accepted</baseline>",
         "",
-        "every-import-respects-its-zone-boundary  1 accepted",
-        "    d.ts  is app and may not reach domain",
-        "    ────────",
-        "    Move the code to a zone that may reach the target.",
-        "    Fixing this one also needs `trueup --update-baseline` to drop its entry.",
+        '<claim name="every-import-respects-its-zone-boundary" accepted="1">',
+        "<findings>",
+        "* d.ts is app and may not reach domain",
+        "</findings>",
+        "<guidance>",
+        "Move the code to a zone that may reach the target.",
+        "</guidance>",
+        "<after-fixing>Run `trueup --update-baseline` to drop its entry.</after-fixing>",
+        "</claim>",
       ].join("\n"),
     );
   });
@@ -68,7 +75,7 @@ describe("the next report, to the character", () => {
 
   it("counts the stale entries beside the accepted one, since both are baseline work", () => {
     expect(renderNext(ACCEPTED, "/p", { ratchet: { known: 1, stale: 2 } })).toContain(
-      "baseline  1 of 1 accepted · 2 stale",
+      "<baseline>1 of 1 accepted, 2 stale</baseline>",
     );
   });
 
@@ -79,12 +86,16 @@ describe("the next report, to the character", () => {
 
     expect(renderNext(nowhere, "/p")).toBe(
       [
-        "problem 1 of 1 · 1 claim · 1 error · 0 warnings",
+        "<summary>problem 1 of 1, 1 claim, 1 error, 0 warnings</summary>",
         "",
-        "the-analysis-reached-files  1 error",
-        "    no files",
-        "    ────────",
-        "    g",
+        '<claim name="the-analysis-reached-files" errors="1">',
+        "<findings>",
+        "* no files",
+        "</findings>",
+        "<guidance>",
+        "g",
+        "</guidance>",
+        "</claim>",
       ].join("\n"),
     );
   });
@@ -97,18 +108,18 @@ describe("the next report, to the character", () => {
   });
 
   it("still leads with a live error over anything the baseline accepted", () => {
-    expect(renderNext(STILL_FAILING, "/p")).toContain("problem 1 of 1 · ");
+    expect(renderNext(STILL_FAILING, "/p")).toContain("<summary>problem 1 of 1, ");
   });
 
   it("names only the stale count when there is nothing left, since known is not a task", () => {
     expect(renderNext(reportOf([]), "/p", { ratchet: { known: 2, stale: 3 } })).toBe(
-      "nothing left to fix · 0 claims · 0 errors · 0 warnings\nbaseline  3 stale",
+      "<summary>nothing left to fix, 0 claims, 0 errors, 0 warnings</summary>\n<baseline>3 stale</baseline>",
     );
   });
 
   it("stays silent about a baseline with nothing stale in it", () => {
     expect(renderNext(reportOf([]), "/p", { ratchet: { known: 2, stale: 0 } })).toBe(
-      "nothing left to fix · 0 claims · 0 errors · 0 warnings",
+      "<summary>nothing left to fix, 0 claims, 0 errors, 0 warnings</summary>",
     );
   });
 
@@ -121,7 +132,7 @@ describe("the next report, to the character", () => {
       },
     ]);
 
-    expect(renderNext(missing, "/p")).toContain("    gone.ts  m");
+    expect(renderNext(missing, "/p")).toContain("* gone.ts m");
   });
 
   it("gives a finding with no offset no position, even where the file could be read", () => {
@@ -136,7 +147,7 @@ describe("the next report, to the character", () => {
       },
     ]);
 
-    expect(renderNext(whole, root)).toContain("    src/routes/b/thing.ts  m");
+    expect(renderNext(whole, root)).toContain("* src/routes/b/thing.ts m");
   });
 
   it("turns an offset into a line and column against the file it names", () => {
@@ -153,47 +164,23 @@ describe("the next report, to the character", () => {
 
     expect(renderNext(positioned, root)).toBe(
       [
-        "problem 1 of 1 · 1 claim · 1 error · 0 warnings",
+        "<summary>problem 1 of 1, 1 claim, 1 error, 0 warnings</summary>",
         "",
-        "a-placed-claim  1 error",
-        "    src/routes/b/thing.ts:1:8  here",
-        "    ────────",
-        "    g",
+        '<claim name="a-placed-claim" errors="1">',
+        "<findings>",
+        "* src/routes/b/thing.ts:1:8 here",
+        "</findings>",
+        "<guidance>",
+        "g",
+        "</guidance>",
+        "</claim>",
       ].join("\n"),
     );
   });
 });
 
-const guidanceOf = (guidance: string): Report =>
-  reportOf([{ claim: "c", guidance, findings: [error("m", "/p/a.ts")] }]);
-
-const wrapped = (guidance: string): string[] =>
-  renderNext(guidanceOf(guidance), "/p")
-    .split("\n")
-    .filter((line) => line.startsWith("    "));
-
-describe("wrapping the guidance", () => {
-  it("keeps a line that lands exactly on the width", () => {
-    expect(wrapped(`${"a".repeat(50)} ${"b".repeat(45)}`)).toEqual([
-      "    a.ts  m",
-      "    ────────",
-      `    ${"a".repeat(50)} ${"b".repeat(45)}`,
-    ]);
-  });
-
-  it("breaks the line that would pass the width by one", () => {
-    expect(wrapped(`${"a".repeat(50)} ${"b".repeat(46)}`)).toEqual([
-      "    a.ts  m",
-      "    ────────",
-      `    ${"a".repeat(50)}`,
-      `    ${"b".repeat(46)}`,
-    ]);
-  });
-});
-
 describe("telling one finding from another", () => {
-  const twice = (claims: Report["claims"]): string =>
-    renderNext(reportOf(claims), "/p").split(" · ")[0] ?? "";
+  const twice = (claims: Report["claims"]): string => renderNext(reportOf(claims), "/p").split(",")[0] ?? "";
 
   it("counts the same message in two files as two problems", () => {
     expect(
@@ -204,7 +191,7 @@ describe("telling one finding from another", () => {
           findings: [error("same words", "/p/a.ts"), error("same words", "/p/b.ts")],
         },
       ]),
-    ).toBe("problem 1 of 2");
+    ).toBe("<summary>problem 1 of 2");
   });
 
   it("counts the same message at two offsets in one file as two problems", () => {
@@ -219,7 +206,7 @@ describe("telling one finding from another", () => {
           ],
         },
       ]),
-    ).toBe("problem 1 of 2");
+    ).toBe("<summary>problem 1 of 2");
   });
 
   it("counts the same message in two claims as two problems", () => {
@@ -228,21 +215,21 @@ describe("telling one finding from another", () => {
         { claim: "one", guidance: "g", findings: [error("same words", "/p/a.ts")] },
         { claim: "two", guidance: "g", findings: [error("same words", "/p/a.ts")] },
       ]),
-    ).toBe("problem 1 of 2");
+    ).toBe("<summary>problem 1 of 2");
   });
 });
 
 describe("picking which problem to see first", () => {
   it("shows the named claim rather than whichever came first", () => {
     expect(renderNext(MIXED, "/p", { only: "a-mixed" })).toContain(
-      "problem 1 of 1 in `a-mixed` · 3 claims · 1 error · 2 warnings",
+      "<summary>problem 1 of 1 in `a-mixed`, 3 claims, 1 error, 2 warnings</summary>",
     );
   });
 
   it("counts problems within the filter but keeps the tally of the whole run", () => {
     const both = renderNext(COPIES, "/p", { only: "twice" });
 
-    expect(both.split("\n")[0]).toBe("problem 1 of 2 in `twice` · 2 claims · 4 errors · 0 warnings");
+    expect(both.split("\n")[0]).toBe("<summary>problem 1 of 2 in `twice`, 2 claims, 4 errors, 0 warnings</summary>");
   });
 
   it("matches on any part of the name, so the whole claim need not be typed", () => {
@@ -275,10 +262,11 @@ describe("picking which problem to see first", () => {
   it("says so loudly when the filter matches no claim, and names the ones there are", () => {
     expect(renderNext(COPIES, "/p", { only: "bondary" })).toBe(
       [
-        "no claim matches `bondary` · 2 claims · 4 errors · 0 warnings",
-        "",
-        "    no-declaration-is-written-twice",
-        "    every-import-respects-its-zone-boundary",
+        "<summary>no claim matches `bondary`, 2 claims, 4 errors, 0 warnings</summary>",
+        "<claims>",
+        "* no-declaration-is-written-twice",
+        "* every-import-respects-its-zone-boundary",
+        "</claims>",
       ].join("\n"),
     );
   });
@@ -288,8 +276,8 @@ describe("picking which problem to see first", () => {
       { claim: "generic-code-names-no-domain-concept", setting: "seams", guidance: "g", findings: [] },
     ]);
 
-    expect(renderNext(seams, "/p", { only: "seam" }).split("\n").at(-1)).toBe(
-      "    generic-code-names-no-domain-concept        seams",
+    expect(renderNext(seams, "/p", { only: "seam" })).toContain(
+      "* generic-code-names-no-domain-concept, turned on by seams",
     );
   });
 
@@ -300,7 +288,7 @@ describe("picking which problem to see first", () => {
     ]);
 
     expect(renderNext(clean, "/p", { only: "passing" })).toBe(
-      "nothing left to fix in `passing` · 2 claims · 1 error · 0 warnings",
+      "<summary>nothing left to fix in `passing`, 2 claims, 1 error, 0 warnings</summary>",
     );
   });
 });
@@ -311,7 +299,7 @@ describe("showing one problem at a time", () => {
 
     expect(output).toContain("a.ts");
     expect(output).toContain("b.ts");
-    expect(output).toContain("2 errors");
+    expect(output).toContain('errors="2"');
   });
 
   it("leaves the unrelated copy for a later pass", () => {

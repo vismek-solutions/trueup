@@ -6,7 +6,7 @@ export interface Scope {
   readonly prefix: string;
 }
 
-const inside = (directory: string, path: string): boolean => {
+export const inside = (directory: string, path: string): boolean => {
   const step = relative(directory, path);
   return !step.startsWith("..") && !isAbsolute(step);
 };

@@ -82,7 +82,9 @@ This asks which pairs those are:
 npx trueup explain --ungoverned
 ```
 
-The answer sorts every pair of zones into three lists, heaviest traffic first. Pairs no rule refuses come first, and they are the ones to read: a heavy pair there is either the architecture nobody wrote down, or a hole nobody noticed. Only looking tells you which. Then come the pairs some rule permits, where somebody did decide. Last are the pairs with no traffic between them at all.
+The answer has three lists. The first two hold pairs of zones that import from each other, heaviest traffic first. Pairs no rule speaks about come first, and they are the ones to read: a heavy pair there is either the architecture nobody wrote down, or a hole nobody noticed. Only looking tells you which. Then come the pairs some rule permits, where somebody did decide.
+
+The last list holds zones rather than pairs. These are the zones no boundary rule starts from, so they may reach anything, whether or not they do today.
 
 Nothing here is a violation. It is a reading list for the day you sit down to write the boundaries you have been putting off.
 

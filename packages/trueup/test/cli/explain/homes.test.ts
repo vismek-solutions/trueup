@@ -15,12 +15,17 @@ describe("placing a file that does not exist yet", () => {
 
     expect(output).toBe(
       [
-        "a new file",
-        "",
-        "reaches     domain",
-        "read by     ui",
-        "",
-        "may live    api  src/api",
+        "<new-file>",
+        "<reaches>",
+        "* domain",
+        "</reaches>",
+        "<read-by>",
+        "* ui",
+        "</read-by>",
+        "<may-live>",
+        "* api, at src/api",
+        "</may-live>",
+        "</new-file>",
         "",
       ].join("\n"),
     );
@@ -31,16 +36,19 @@ describe("placing a file that does not exist yet", () => {
 
     expect(output).toBe(
       [
-        "a new file",
-        "",
-        "reaches     domain",
-        "read by     nothing yet",
-        "",
-        "may live    entry",
-        "            api     src/api",
-        "            store   src/store",
-        "            domain  src/domain",
-        "            mail",
+        "<new-file>",
+        "<reaches>",
+        "* domain",
+        "</reaches>",
+        "<read-by>none</read-by>",
+        "<may-live>",
+        "* entry",
+        "* api, at src/api",
+        "* store, at src/store",
+        "* domain, at src/domain",
+        "* mail",
+        "</may-live>",
+        "</new-file>",
         "",
       ].join("\n"),
     );
@@ -49,12 +57,12 @@ describe("placing a file that does not exist yet", () => {
   it("names a zone with no directory beside it rather than inventing one it cannot verify", async () => {
     const { output } = await explain(DOMAIN);
 
-    expect(output).toContain("may live    entry\n");
-    expect(output).toContain("            mail\n");
+    expect(output).toContain("* entry\n");
+    expect(output).toContain("* mail\n");
   });
 
   it("picks the shallowest directory a zone holds, not the first one discovery returns", async () => {
-    expect((await explain(DOMAIN)).output).toContain("store   src/store\n");
+    expect((await explain(DOMAIN)).output).toContain("* store, at src/store\n");
   });
 
   it("exits clean, since a question about a file is not a finding", async () => {
@@ -62,15 +70,17 @@ describe("placing a file that does not exist yet", () => {
   });
 
   it("takes several needs from one flag, comma separated", async () => {
-    expect((await explain("--needs=src/api/client.ts,src/store/db.ts")).output).toContain("reaches     api · store");
+    expect((await explain("--needs=src/api/client.ts,src/store/db.ts")).output).toContain(
+      ["<reaches>", "* api", "* store", "</reaches>"].join("\n"),
+    );
   });
 
   it("answers from the readers alone when nothing is named that it needs", async () => {
     const { output } = await explain("--read-by=src/ui/screen.ts");
 
-    expect(output).toContain("reaches     none");
-    expect(output).toContain("may live    ui   src/ui\n");
-    expect(output).toContain("            api  src/api\n");
+    expect(output).toContain("<reaches>none</reaches>");
+    expect(output).toContain("* ui, at src/ui\n");
+    expect(output).toContain("* api, at src/api\n");
   });
 });
 
@@ -80,14 +90,18 @@ describe("a file no zone can hold", () => {
 
     expect(output).toBe(
       [
-        "a new file",
-        "",
-        "reaches     api · store",
-        "read by     nothing yet",
-        "",
-        "may live    nowhere",
-        "            No zone may reach api · store at once, and a zone that may would close no",
-        "            cycle. Declare one, named for what it holds rather than for being shared.",
+        "<new-file>",
+        "<reaches>",
+        "* api",
+        "* store",
+        "</reaches>",
+        "<read-by>none</read-by>",
+        "<may-live>",
+        "nowhere",
+        "no zone may reach api and store at once, and a zone that may would close no cycle",
+        "declare one, named for what it holds rather than for being shared",
+        "</may-live>",
+        "</new-file>",
         "",
       ].join("\n"),
     );
@@ -98,15 +112,19 @@ describe("a file no zone can hold", () => {
 
     expect(output).toBe(
       [
-        "a new file",
-        "",
-        "reaches     ui",
-        "read by     domain",
-        "",
-        "may live    nowhere",
-        "            A zone reaching ui and read by domain would close a cycle,",
-        "            because ui already reaches domain. This is two files rather",
-        "            than one: split it along the zones it reaches.",
+        "<new-file>",
+        "<reaches>",
+        "* ui",
+        "</reaches>",
+        "<read-by>",
+        "* domain",
+        "</read-by>",
+        "<may-live>",
+        "nowhere",
+        "a zone reaching ui and read by domain would close a cycle, because ui already reaches domain",
+        "this is two files rather than one: split it along the zones it reaches",
+        "</may-live>",
+        "</new-file>",
         "",
       ].join("\n"),
     );

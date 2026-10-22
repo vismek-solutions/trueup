@@ -15,12 +15,12 @@ describe("reporting as dots", () => {
   it("says almost nothing when every claim holds", async () => {
     const output = await dots(CLEAN);
 
-    expect(output.split("\n")[0]).toMatch(/^\.+ {2}\d+ files/);
+    expect(output.split("\n")[0]).toMatch(/^<marks>\.+<\/marks>$/);
     expect(output).toContain("0 errors");
   });
 
   it("still counts what was analysed, so silence cannot mean nothing ran", async () => {
-    expect(await dots(CLEAN)).toMatch(/\d+ files · \d+ edges · 0 unresolved/);
+    expect(await dots(CLEAN)).toMatch(/<coverage>\d+ files, \d+ edges, 0 unresolved<\/coverage>/);
   });
 
   it("marks the failing claim in the strip and explains only that one", async () => {
