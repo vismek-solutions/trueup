@@ -12,15 +12,19 @@ const isolated = async (path: string): Promise<string> => (await explainIn(ISOLA
 const lines = (...said: string[]): string => said.join("\n");
 
 describe("explaining a path a rule keeps apart from its siblings", () => {
-  it("names the part it belongs to and the siblings it may not reach", async () => {
-    expect(await isolated("apps/web/src/routes/a/page.ts")).toContain(
-      lines('<siblings group="apps/web/src/routes/*" part="a">', "<kept-apart-from>", "* b", "</kept-apart-from>"),
+  it("keeps a part from every other part, naming the shared ones as the exception it may still reach", async () => {
+    expect(await saidBy(fixtureAt("activated-switches"), "src/app/one.ts")).toContain(
+      lines('<siblings group="src/*" part="app">', "<kept-apart-from>every other part of src/*</kept-apart-from>"),
     );
-  });
-
-  it("names the parts the group shares, since those it may still reach", async () => {
     expect(await isolated("apps/web/src/routes/a/page.ts")).toContain(
-      lines("<may-reach-shared>", "* shared", "</may-reach-shared>"),
+      lines(
+        '<siblings group="apps/web/src/routes/*" part="a">',
+        "<kept-apart-from>every other part of apps/web/src/routes/*, except the ones in may-reach-shared</kept-apart-from>",
+        "<may-reach-shared>",
+        "* shared",
+        "</may-reach-shared>",
+        "</siblings>",
+      ),
     );
   });
 
@@ -70,6 +74,7 @@ describe("explaining a shared directory that stands in an order", () => {
 
     expect(said).toContain(lines("<may-not-reach-shared>", "* _root", "* _ui", "</may-not-reach-shared>"));
     expect(said).not.toContain("<may-reach-shared>");
+    expect(said).toContain("<kept-apart-from>every other part of src/routes/*</kept-apart-from>");
   });
 
   it("keeps an island reaching every shared directory, whatever the order among them", async () => {

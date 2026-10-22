@@ -110,10 +110,7 @@ npx trueup explain src/routes/account/orders/history.ts
 * app
 </may-reach>
 <siblings group="src/routes/*" part="account">
-<kept-apart-from>
-* catalog
-* checkout
-</kept-apart-from>
+<kept-apart-from>every other part of src/routes/*, except the ones in may-reach-shared</kept-apart-from>
 <may-reach-shared>
 * _shared
 </may-reach-shared>
@@ -154,11 +151,7 @@ The explain command shows the same order from the file's side.
 
 ```
 <siblings group="src/routes/*" part="_state">
-<kept-apart-from>
-* account
-* catalog
-* checkout
-</kept-apart-from>
+<kept-apart-from>every other part of src/routes/*</kept-apart-from>
 <may-not-reach-shared>
 * _shared
 </may-not-reach-shared>

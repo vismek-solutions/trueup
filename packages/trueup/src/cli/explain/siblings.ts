@@ -3,8 +3,14 @@ import { listed, tagged } from "../tags.ts";
 
 type Placement = ReturnType<typeof siblingsIn>[number];
 
+const apartSaid = (placement: Placement): string => {
+  if (placement.apart.length === 0) return "none";
+  const reachable = placement.shared.length === 0 ? "" : ", except the ones in may-reach-shared";
+  return `every other part of ${placement.siblings}${reachable}`;
+};
+
 const partLines = (placement: Placement): readonly string[] => [
-  ...listed("kept-apart-from", placement.apart),
+  ...tagged("kept-apart-from", apartSaid(placement)),
   ...(placement.shared.length === 0 ? [] : listed("may-reach-shared", placement.shared)),
   ...(placement.withheld.length === 0 ? [] : listed("may-not-reach-shared", placement.withheld)),
 ];
