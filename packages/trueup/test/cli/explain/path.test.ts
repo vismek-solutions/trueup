@@ -286,3 +286,20 @@ describe("a project that configured no rules of its own", () => {
     expect(output).not.toContain("also-runs");
   });
 });
+
+describe("a rule a member defines", () => {
+  const FEDERATED = fixtureAt("federated-extras");
+
+  it("is named only beside a path inside that member, since it cannot see the rest", async () => {
+    expect(await saidBy(FEDERATED, "packages/core/src/engine/run.ts")).not.toContain("also-runs");
+    expect(await saidBy(FEDERATED, "packages/core/src/engine/run.ts", "packages/ui/src/view/chip.ts")).toContain(
+      lines(
+        "<also-runs>",
+        "* ui/one-declaration-per-file",
+        "* ui/sees-only-its-own-package",
+        "* ui/reports-what-the-scope-lets-it-see",
+        "</also-runs>",
+      ),
+    );
+  });
+});

@@ -157,7 +157,7 @@ npx trueup explain src/engine/newThing.ts src/engine/otherThing.ts src/shared/fo
 </also-runs>
 ```
 
-The last block names the [custom rules](/checks/custom-rules/) your config adds. They run over every file, so they are named once at the end.
+The last block names the [custom rules](/checks/custom-rules/) that can reach these paths, once for all of them. A rule in the root config runs over every file. A rule a workspace member defines sees only that member, so it is named only when one of the paths falls inside it.
 
 Add a name to the path and the question changes. Instead of where this file may reach, you are asking who reads this one thing, and what it would cost to move it somewhere else:
 

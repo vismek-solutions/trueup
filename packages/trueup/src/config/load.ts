@@ -120,7 +120,7 @@ const withMembers = (
     ],
     seams: [...seamsOf(members), ...(config.seams ?? [])],
     isolate: [...isolateOf(members), ...(config.isolate ?? [])],
-    rules: [...rulesOf(members, root), ...(config.rules ?? [])],
+    rules: [...rulesOf(members, root), ...(config.rules ?? []).map((rule) => ({ ...rule, covers: () => true }))],
     directoryLimits: directoryLimitsOf(members, root),
     apiSurfaces: apiSurfaces(members, root),
     grants: grantsOf(members, root),

@@ -186,8 +186,9 @@ const explainTargets = async (cwd: string, entries: readonly string[], write: (l
     for (const line of tagged("answer", [...tagged("paths", items(heads)), ...body])) write(line);
   }
 
-  const named = opened.config.rules.map((rule) => rule.name);
-  if (answers.some((answer) => answer.governed) && named.length > 0) {
+  const governed = targets.filter((_, index) => answers[index]?.governed === true).map((target) => target.path);
+  const named = opened.config.rules.filter((rule) => governed.some(rule.covers)).map((rule) => rule.name);
+  if (named.length > 0) {
     write("");
     for (const line of tagged("also-runs", items(named))) write(line);
   }
