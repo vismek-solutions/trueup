@@ -1,6 +1,7 @@
 import { basename, dirname, join } from "node:path";
 import { reachOf, type HomesInput, type Rulebook } from "../../main.ts";
-import { list } from "./lines.ts";
+import { items, listed, tagged } from "../tags.ts";
+import { spoken } from "./lines.ts";
 
 export interface Home {
   readonly zone: string;
@@ -47,20 +48,7 @@ export const probeFor = (files: readonly string[]): string | null => {
   return join(dirname(file), `probe${name.slice(name.indexOf("."))}`);
 };
 
-const WIDTH = 12;
-
-const labelled = (label: string, value: string): string => `${label.padEnd(WIDTH)}${value}`;
-
-const placed = (homes: readonly Home[]): readonly string[] => {
-  const column = Math.max(...homes.map((home) => home.zone.length)) + 2;
-
-  return homes.map((home, at) =>
-    labelled(
-      at === 0 ? "may live" : "",
-      home.where === null ? home.zone : `${home.zone.padEnd(column)}${home.where}`,
-    ),
-  );
-};
+const placed = (home: Home): string => (home.where === null ? home.zone : `${home.zone}, at ${home.where}`);
 
 export interface DeadEndInput {
   readonly needs: readonly string[];
@@ -69,18 +57,16 @@ export interface DeadEndInput {
 }
 
 const deadEnd = ({ needs, readers, cycle }: DeadEndInput): readonly string[] => {
-  const indent = " ".repeat(WIDTH);
   if (!cycle) {
     return [
-      `${indent}No zone may reach ${list(needs)} at once, and a zone that may would close no`,
-      `${indent}cycle. Declare one, named for what it holds rather than for being shared.`,
+      `no zone may reach ${spoken(needs)} at once, and a zone that may would close no cycle`,
+      "declare one, named for what it holds rather than for being shared",
     ];
   }
 
   return [
-    `${indent}A zone reaching ${list(needs)} and read by ${list(readers)} would close a cycle,`,
-    `${indent}because ${list(needs)} already reaches ${list(readers)}. This is two files rather`,
-    `${indent}than one: split it along the zones it reaches.`,
+    `a zone reaching ${spoken(needs)} and read by ${spoken(readers)} would close a cycle, because ${spoken(needs)} already reaches ${spoken(readers)}`,
+    "this is two files rather than one: split it along the zones it reaches",
   ];
 };
 
@@ -88,9 +74,9 @@ export interface HomeLinesInput extends DeadEndInput {
   readonly homes: readonly Home[];
 }
 
-export const homeLines = ({ homes, needs, readers, cycle }: HomeLinesInput): readonly string[] => [
-  labelled("reaches", list([...needs])),
-  labelled("read by", readers.length === 0 ? "nothing yet" : list([...readers])),
-  "",
-  ...(homes.length > 0 ? placed(homes) : [labelled("may live", "nowhere"), ...deadEnd({ needs, readers, cycle })]),
-];
+export const homeLines = ({ homes, needs, readers, cycle }: HomeLinesInput): readonly string[] =>
+  tagged("new-file", [
+    ...listed("reaches", needs),
+    ...listed("read-by", readers),
+    ...tagged("may-live", homes.length > 0 ? items(homes.map(placed)) : ["nowhere", ...deadEnd({ needs, readers, cycle })]),
+  ]);

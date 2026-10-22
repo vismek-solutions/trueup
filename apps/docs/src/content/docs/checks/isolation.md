@@ -101,24 +101,36 @@ npx trueup explain src/routes/account/orders/history.ts
 ```
 
 ```
-zone        app
-may reach   app
-may not     none
-
-siblings    account, which `src/routes/*` keeps apart from catalog · checkout
-            it may still reach _shared, which the group shares
+<answer>
+<paths>
+* src/routes/account/orders/history.ts
+</paths>
+<zone>app</zone>
+<may-reach>
+* app
+</may-reach>
+<siblings group="src/routes/*" part="account">
+<kept-apart-from>
+* catalog
+* checkout
+</kept-apart-from>
+<may-reach-shared>
+* _shared
+</may-reach-shared>
+</siblings>
+</answer>
 ```
 
-The zone answer and the siblings answer are separate questions, and both bind. Every route here sits in the same zone, so the zone lines on their own would have said this file may reach anything it can see.
+The zone answer and the siblings answer are separate questions, and both bind. Every route here sits in the same zone, so the zone on its own would have said this file may reach anything it can see.
 
 A file beside the group gets one line instead, and which line depends on whether the wiring list covers it.
 
 ```
-siblings    sits beside `src/routes/*` rather than in one of its parts
+<siblings group="src/routes/*">sits beside the group rather than in one of its parts</siblings>
 ```
 
 ```
-siblings    assembles `src/routes/*`, so it may reach every part of it
+<siblings group="src/routes/*">assembles the group, so it may reach every part of it</siblings>
 ```
 
 ## An order among the shared directories
@@ -141,8 +153,16 @@ no-sibling-directory-reaches-another        1 error
 The explain command shows the same order from the file's side.
 
 ```
-siblings    _state, which `src/routes/*` keeps apart from account · catalog · checkout
-            it may not reach _shared, though the group shares it
+<siblings group="src/routes/*" part="_state">
+<kept-apart-from>
+* account
+* catalog
+* checkout
+</kept-apart-from>
+<may-not-reach-shared>
+* _shared
+</may-not-reach-shared>
+</siblings>
 ```
 
 When a directory matches more than one entry, the first one wins, as with zones. Put a narrow object entry before a wide pattern, or the wide pattern quietly gives it the full reach.

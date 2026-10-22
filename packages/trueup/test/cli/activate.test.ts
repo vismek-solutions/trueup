@@ -14,7 +14,7 @@ const capture = async (cwd: string, argv: readonly string[] = []): Promise<strin
 
 const ADVICE = [
   "- `trueup explain <file> <file>` — run this **before** creating or moving files, naming them all in",
-  "  one call. It reports the zone each path falls into, which zones it may and may not reach, and the",
+  "  one call. It reports the zone each path falls into, which zones it may reach, and the",
   "  vocabulary it may not name.",
   "- `trueup explain --needs=<file>,<file>` — where a new file may live, given what it must import.",
   "  Add `--read-by=<file>` for what will import it. When no zone can hold it, it says what to split.",

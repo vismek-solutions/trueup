@@ -5,6 +5,7 @@
 ### Changed
 
 - `trueup explain` answers for every path it is given rather than the first alone, opening the project once. Paths that get the same answer share one block, and the custom rules that also run are named once at the end.
+- `trueup explain` prints its answer in tags, such as a may-reach tag around the zones a file may reach, with one item to a line. An agent reads where each part starts and ends instead of counting columns. The zones a file may not reach are left out, since they are everything the may-reach list leaves out, and zones that share a path prefix are nested under it. Every form of the command is tagged: a path, a name, a new file, and the ungoverned pairs.
 
 ### Fixed
 

@@ -6,8 +6,8 @@ import { DEFAULT_COMMAND } from "../../report/invocation.ts";
 
 import { EXIT_BAD_USAGE, type CommandInput } from "../command.ts";
 import { openedIn, type Opened } from "../preamble.ts";
+import { items, tagged } from "../tags.ts";
 import { closesACycle, homeLines, probeFor, type Home } from "./homes.ts";
-import { list } from "./lines.ts";
 import { nameLines, type Blocked } from "./name.ts";
 import { placementLinesFor, ungovernedLinesFor } from "./path.ts";
 import { ungovernedLines } from "./ungoverned.ts";
@@ -70,13 +70,12 @@ const nameLinesFor = async (opened: Opened, path: string, name: string): Promise
     }),
   );
 
-  const said = nameLines({
+  return nameLines({
     about,
     against,
     command: config.command ?? DEFAULT_COMMAND,
     blocked: refusedMove(opened, path, about),
   });
-  return [`${relative(root, path)}#${name}`, "", ...said];
 };
 
 const pathsOf = (argv: readonly string[], flag: string): readonly string[] =>
@@ -127,8 +126,6 @@ const homesFrom = ({ opened, cwd, argv, write }: HomesFrom): number => {
   const homes: Home[] = homesFor({ ...rules, needs, readers }).map((zone) => ({ zone, where: whereIn(zone) }));
   const cycle = closesACycle({ ...rules, needs, readers });
 
-  write("a new file");
-  write("");
   for (const line of homeLines({ homes, needs, readers, cycle })) write(line);
   return 0;
 };
@@ -161,32 +158,21 @@ const unwrittenIn = (targets: readonly Target[]): Map<string, string> =>
   new Map(targets.filter((target) => target.name === null && !existsSync(target.path)).map((target) => [target.path, ""]));
 
 const answerFor = async (opened: Opened, { path, name }: Target): Promise<Answer> => {
-  if (name !== null) return { heads: [], body: await nameLinesFor(opened, path, name), governed: false };
+  const head = relative(opened.root, path);
+  if (name !== null) return { heads: [`${head}#${name}`], body: await nameLinesFor(opened, path, name), governed: false };
 
   const ungoverned = ungovernedLinesFor(opened, path);
-  return {
-    heads: [relative(opened.root, path)],
-    body: ungoverned ?? placementLinesFor(opened, path),
-    governed: ungoverned === null,
-  };
+  return { heads: [head], body: ungoverned ?? placementLinesFor(opened, path), governed: ungoverned === null };
 };
 
 const groupedByBody = (answers: readonly Answer[]): readonly Answer[] => {
-  const grouped: Answer[] = [];
-  const at = new Map<string, number>();
+  const grouped = new Map<string, Answer>();
   for (const answer of answers) {
     const key = answer.body.join("\n");
-    const index = answer.heads.length === 0 ? undefined : at.get(key);
-    const same = index === undefined ? undefined : grouped[index];
-    if (index !== undefined && same !== undefined) {
-      grouped[index] = { ...same, heads: [...same.heads, ...answer.heads] };
-      continue;
-    }
-
-    if (answer.heads.length > 0) at.set(key, grouped.length);
-    grouped.push(answer);
+    const same = grouped.get(key);
+    grouped.set(key, same === undefined ? answer : { ...same, heads: [...same.heads, ...answer.heads] });
   }
-  return grouped;
+  return [...grouped.values()];
 };
 
 const explainTargets = async (cwd: string, entries: readonly string[], write: (line: string) => void): Promise<number> => {
@@ -197,14 +183,13 @@ const explainTargets = async (cwd: string, entries: readonly string[], write: (l
   const answers = await Promise.all(targets.map((target) => answerFor(opened, target)));
   for (const [index, { heads, body }] of groupedByBody(answers).entries()) {
     if (index > 0) write("");
-    for (const line of heads.length > 0 ? [...heads, ""] : []) write(line);
-    for (const line of body) write(line);
+    for (const line of tagged("answer", [...tagged("paths", items(heads)), ...body])) write(line);
   }
 
   const named = opened.config.rules.map((rule) => rule.name);
   if (answers.some((answer) => answer.governed) && named.length > 0) {
     write("");
-    write(`also runs   ${list(named)}`);
+    for (const line of tagged("also-runs", items(named))) write(line);
   }
 
   return 0;

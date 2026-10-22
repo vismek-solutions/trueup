@@ -5,98 +5,78 @@ import { fixtureAt } from "../../support/fixtures.ts";
 
 const gaps = (cwd: string) => saidBy(cwd, "--ungoverned");
 
-describe("finding the boundaries nobody wrote", () => {
-  it("ranks the pairs no rule speaks about, heaviest first", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-    const from = said.indexOf("ungoverned  no rule speaks about these pairs");
+const itemsIn = async (cwd: string, tag: string): Promise<string[]> => {
+  const said = (await gaps(cwd)).split("\n");
+  return said.slice(said.indexOf(`<${tag}>`) + 1, said.indexOf(`</${tag}>`)).filter((line) => line.startsWith("* "));
+};
 
-    expect(said.slice(from + 1, from + 5)).toEqual([
-      "    loose → core     3",
-      "    core → tools     2",
-      "    extra → core     1",
-      "    extra → tools    1",
+describe("finding the boundaries nobody wrote", () => {
+  it("ranks the pairs no rule speaks about, heaviest first, settling two pairs from one zone by where they reach", async () => {
+    expect(await itemsIn(UNRULED, "ungoverned")).toEqual([
+      "* loose → core, 3 edges",
+      "* core → tools, 2 edges",
+      "* extra → core, 1 edge",
+      "* extra → tools, 1 edge",
     ]);
   });
 
-  it("settles two pairs from one zone by where they reach, not by the order they were found", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-    const core = said.indexOf("    extra → core     1");
-
-    expect(said[core + 1]).toBe("    extra → tools    1");
+  it("sorts what a rule permits too, so neither list drifts run to run", async () => {
+    expect(await itemsIn(UNRULED, "allowed")).toEqual(["* aardvark → core, 1 edge", "* web → core, 1 edge"]);
   });
 
-  it("sorts what a rule permits too, so neither list drifts run to run", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-    const from = said.indexOf("allowed     a rule permits these, so someone decided");
+  it("says what each list means after the pairs it holds", async () => {
+    const said = await gaps(UNRULED);
 
-    expect(said.slice(from + 1, from + 3)).toEqual(["    aardvark → core  1", "    web → core       1"]);
+    expect(said).toContain("* extra → tools, 1 edge\nno rule speaks about these pairs\n</ungoverned>");
+    expect(said).toContain("* web → core, 1 edge\na rule permits these, so someone decided\n</allowed>");
   });
 
   it("counts nothing for a zone reaching itself, which every zone may always do", async () => {
     expect(await gaps(UNRULED)).not.toContain("core → core");
   });
 
-  it("counts nothing for an edge leaving a file no zone claims", async () => {
+  it("counts nothing for an edge leaving a file no zone claims, nor for a reach into something no zone declares", async () => {
     const said = (await gaps(UNRULED)).split("\n");
 
     expect(said.filter((line) => line.includes("→ core"))).toEqual([
-      "    loose → core     3",
-      "    extra → core     1",
-      "    aardvark → core  1",
-      "    web → core       1",
+      "* loose → core, 3 edges",
+      "* extra → core, 1 edge",
+      "* aardvark → core, 1 edge",
+      "* web → core, 1 edge",
     ]);
-  });
-
-  it("counts nothing for a reach into something no zone declares, like a builtin", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-
-    expect(said.filter((line) => line.startsWith("    core →"))).toEqual(["    core → tools     2"]);
+    expect(said.filter((line) => line.startsWith("* core →"))).toEqual(["* core → tools, 2 edges"]);
   });
 
   it("leaves out a pair a rule already refuses, since that is a violation and not a gap", async () => {
     expect(await gaps(UNRULED)).not.toContain("web → tools");
   });
 
-  it("keeps a pair some rule permits apart from one nothing governs", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-    const from = said.indexOf("allowed     a rule permits these, so someone decided");
-
-    expect(said.slice(from + 1, from + 3)).toContain("    web → core       1");
-    expect(said.slice(0, from)).not.toContain("    web → core       1");
-  });
-
   it("counts a pair as ungoverned when the rule naming that zone judges only other zones", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-    const governed = said.indexOf("allowed     a rule permits these, so someone decided");
-
-    expect(said.slice(0, governed)).toContain("    loose → core     3");
+    expect(await itemsIn(UNRULED, "ungoverned")).toContain("* loose → core, 3 edges");
   });
 
   it("names every zone no boundary rule mentions, and only those", async () => {
-    const said = (await gaps(UNRULED)).split("\n");
-    const from = said.indexOf("silent      named by no boundary rule, so they may reach anything");
-
-    expect(said.slice(from + 1).filter((line) => line !== "")).toEqual([
-      "    core",
-      "    tools",
-      "    extra",
-    ]);
+    expect(await itemsIn(UNRULED, "silent")).toEqual(["* core", "* tools", "* extra"]);
   });
 
-  it("says the whole block for a project where every claim holds, spacing and all", async () => {
+  it("says the whole block for a project where every claim holds, tags and all", async () => {
     expect(await gaps(EXPLAINED)).toBe(
       [
+        "<about>",
         "Every pair below carries traffic that no boundary rule refuses, so none of it is a violation.",
         "A heavy pair is either the architecture nobody wrote down or a hole nobody noticed, and only",
         "reading it tells you which. Counted by the zone that declares the symbol, not the module named.",
+        "</about>",
         "",
-        "ungoverned  none",
+        "<ungoverned>none</ungoverned>",
         "",
-        "allowed     none",
+        "<allowed>none</allowed>",
         "",
-        "silent      named by no boundary rule, so they may reach anything",
-        "    domain",
-        "    shared",
+        "<silent>",
+        "* domain",
+        "* shared",
+        "named by no boundary rule, so they may reach anything",
+        "</silent>",
         "",
       ].join("\n"),
     );
@@ -121,40 +101,28 @@ describe("finding the boundaries nobody wrote", () => {
   });
 });
 
-const pairsIn = (said: string): string[] => {
-  const lines = said.split("\n");
-  const from = lines.findIndex((line) => line.startsWith("ungoverned "));
-  return lines.slice(from + 1, lines.indexOf("", from));
-};
-
 describe("more pairs than the block will print", () => {
-  const wide = () => gaps(fixtureAt("ungoverned-wide"));
+  const wide = fixtureAt("ungoverned-wide");
 
-  it("shows the first twenty in order and counts the rest, so the block stays readable", async () => {
-    const pairs = pairsIn(await wide());
+  it("shows the first twenty in order and counts only what it withheld", async () => {
+    const pairs = await itemsIn(wide, "ungoverned");
 
-    expect(pairs[0]).toBe("    a → c  1");
-    expect(pairs[19]).toBe("    e → d  1");
-    expect(pairs[20]).toBe("    and 4 more");
-  });
-
-  it("counts only what it withheld, not the whole list over again", async () => {
-    expect(pairsIn(await wide())).toHaveLength(21);
+    expect(pairs[0]).toBe("* a → c, 1 edge");
+    expect(pairs[19]).toBe("* e → d, 1 edge");
+    expect(pairs[20]).toBe("* and 4 more");
+    expect(pairs).toHaveLength(21);
   });
 
   it("says none for a project where every zone is named by some rule", async () => {
-    expect(await wide()).toContain("silent      none");
+    expect(await gaps(wide)).toContain("<silent>none</silent>");
   });
 });
 
 describe("exactly as many pairs as the block will print", () => {
-  const brim = () => gaps(fixtureAt("ungoverned-brim"));
+  const brim = fixtureAt("ungoverned-brim");
 
   it("shows all of them, with nothing counted after", async () => {
-    expect(pairsIn(await brim())).toHaveLength(20);
-  });
-
-  it("says nothing about more, since there are none", async () => {
-    expect(await brim()).not.toContain("more");
+    expect(await itemsIn(brim, "ungoverned")).toHaveLength(20);
+    expect(await gaps(brim)).not.toContain("more");
   });
 });

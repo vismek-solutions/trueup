@@ -9,46 +9,44 @@ const explain = (...argv: string[]) => explainIn(EXPLAINED, argv);
 
 const isolated = async (path: string): Promise<string> => (await explainIn(ISOLATED, [path])).output;
 
+const lines = (...said: string[]): string => said.join("\n");
+
 describe("explaining a path a rule keeps apart from its siblings", () => {
   it("names the part it belongs to and the siblings it may not reach", async () => {
     expect(await isolated("apps/web/src/routes/a/page.ts")).toContain(
-      "siblings    a, which `apps/web/src/routes/*` keeps apart from b",
+      lines('<siblings group="apps/web/src/routes/*" part="a">', "<kept-apart-from>", "* b", "</kept-apart-from>"),
     );
   });
 
   it("names the parts the group shares, since those it may still reach", async () => {
     expect(await isolated("apps/web/src/routes/a/page.ts")).toContain(
-      "it may still reach shared, which the group shares",
+      lines("<may-reach-shared>", "* shared", "</may-reach-shared>"),
     );
   });
 
   it("says a file at the parent sits beside the group rather than in one of its parts", async () => {
-    const said = await isolated("apps/web/src/routes/stray.ts");
-
-    expect(said.endsWith("siblings    sits beside `apps/web/src/routes/*` rather than in one of its parts\n")).toBe(
-      true,
+    expect(await isolated("apps/web/src/routes/stray.ts")).toContain(
+      '<siblings group="apps/web/src/routes/*">sits beside the group rather than in one of its parts</siblings>',
     );
   });
 
   it("says a file wiring covers assembles the group, so it reaches every part", async () => {
     expect(await isolated("apps/web/src/routes/index.ts")).toContain(
-      "siblings    assembles `apps/web/src/routes/*`, so it may reach every part of it",
+      '<siblings group="apps/web/src/routes/*">assembles the group, so it may reach every part of it</siblings>',
     );
   });
 
-  it("says every other part is shared when nothing is kept apart from it, rather than listing none", async () => {
-    expect(await saidBy(fixtureAt("shared-only"), "src/routes/a/page.ts")).toBe(
-      [
-        "src/routes/a/page.ts",
-        "",
-        "zone        app",
-        "may reach   app",
-        "may not     none",
-        "",
-        "siblings    a, one part of `src/routes/*`, and every other part is shared",
-        "            it may still reach _state · _ui, which the group shares",
-        "",
-      ].join("\n"),
+  it("says none is kept apart when every other part is shared, and lists the shared parts", async () => {
+    expect(await saidBy(fixtureAt("shared-only"), "src/routes/a/page.ts")).toContain(
+      lines(
+        '<siblings group="src/routes/*" part="a">',
+        "<kept-apart-from>none</kept-apart-from>",
+        "<may-reach-shared>",
+        "* _state",
+        "* _ui",
+        "</may-reach-shared>",
+        "</siblings>",
+      ),
     );
   });
 
@@ -62,145 +60,121 @@ describe("explaining a shared directory that stands in an order", () => {
     (await explainIn(fixtureAt("shared-layers"), [path])).output;
 
   it("names the shared siblings it may still reach, and the ones held back from it", async () => {
-    const said = await layered("src/routes/_root/mount.ts");
-
-    expect(said).toContain("it may still reach _state, which the group shares");
-    expect(said).toContain("it may not reach _ui, though the group shares it");
+    expect(await layered("src/routes/_root/mount.ts")).toContain(
+      lines("<may-reach-shared>", "* _state", "</may-reach-shared>", "<may-not-reach-shared>", "* _ui"),
+    );
   });
 
   it("says only what is held back when it may reach none of them, and nothing more", async () => {
-    expect(await layered("src/routes/_state/store.ts")).toBe(
-      [
-        "src/routes/_state/store.ts",
-        "",
-        "zone        app",
-        "may reach   app",
-        "may not     none",
-        "",
-        "siblings    _state, which `src/routes/*` keeps apart from a · b",
-        "            it may not reach _root · _ui, though the group shares them",
-        "",
-      ].join("\n"),
-    );
+    const said = await layered("src/routes/_state/store.ts");
+
+    expect(said).toContain(lines("<may-not-reach-shared>", "* _root", "* _ui", "</may-not-reach-shared>"));
+    expect(said).not.toContain("<may-reach-shared>");
   });
 
   it("keeps an island reaching every shared directory, whatever the order among them", async () => {
-    expect(await layered("src/routes/a/page.ts")).toBe(
-      [
-        "src/routes/a/page.ts",
-        "",
-        "zone        app",
-        "may reach   app",
-        "may not     none",
-        "",
-        "siblings    a, which `src/routes/*` keeps apart from b",
-        "            it may still reach _root · _state · _ui, which the group shares",
-        "",
-      ].join("\n"),
-    );
+    const said = await layered("src/routes/a/page.ts");
+
+    expect(said).toContain(lines("<may-reach-shared>", "* _root", "* _state", "* _ui", "</may-reach-shared>"));
+    expect(said).not.toContain("<may-not-reach-shared>");
   });
 });
 
 describe("explaining a path before writing it", () => {
-  it("names the zone a file that does not exist yet would fall into", async () => {
-    const { output } = await explain("src/engine/notYetWritten.ts");
-    expect(output).toContain("zone        engine");
+  it("says the whole block for a file with a seam over it: its zone, what it may reach, and the vocabulary it may not use", async () => {
+    expect((await explain("src/engine/notYetWritten.ts")).output).toBe(
+      lines(
+        "<answer>",
+        "<paths>",
+        "* src/engine/notYetWritten.ts",
+        "</paths>",
+        "<zone>engine</zone>",
+        "<may-reach>",
+        "* engine",
+        "* shared",
+        "</may-reach>",
+        '<may-not-name owner="domain">',
+        "* Warrant",
+        "* WarrantKind",
+        "* warrantKinds",
+        "</may-not-name>",
+        '<may-not-repeat owner="domain">',
+        "* search",
+        "* testimony",
+        "</may-not-repeat>",
+        "</answer>",
+        "",
+        "<also-runs>",
+        "* a-named-custom-rule",
+        "</also-runs>",
+        "",
+      ),
+    );
   });
 
-  it("says which zones it may and may not reach", async () => {
-    const { output } = await explain("src/engine/notYetWritten.ts");
-    expect(output).toContain("may reach   engine · shared");
-    expect(output).toContain("may not     domain");
+  it("names only the zones it may reach, never the ones it may not", async () => {
+    expect((await explain("src/engine/notYetWritten.ts")).output).not.toContain("<may-not-reach>");
   });
 
-  it("lists the vocabulary the domain owns, without being told the words", async () => {
-    const { output } = await explain("src/engine/notYetWritten.ts");
-    expect(output).toContain("Warrant · WarrantKind · warrantKinds");
-    expect(output).toContain("search · testimony");
-  });
-
-  it("names the custom rules that also run", async () => {
-    expect((await explain("src/engine/notYetWritten.ts")).output).toContain("a-named-custom-rule");
+  it("nests the zones it may reach by their path, keeping a zone that is also a group head unsplit", async () => {
+    expect(await saidBy(fixtureAt("explained-tree"), "src/tools/new.ts")).toContain(
+      lines("<may-reach>", "* app/ui", "* app", "* lib", "   * data", "   * net", "      * http", "* tools", "</may-reach>"),
+    );
   });
 
   it("says nothing about vocabulary for a zone no seam rule covers", async () => {
     const { output } = await explain("src/shared/other.ts");
-    expect(output).toContain("zone        shared");
-    expect(output).not.toContain("vocabulary");
-  });
-
-  it("says the whole block for a file with a seam over it, spacing and all", async () => {
-    const { output } = await explain("src/engine/notYetWritten.ts");
-
-    expect(output).toBe(
-      [
-        "src/engine/notYetWritten.ts",
-        "",
-        "zone        engine",
-        "may reach   engine · shared",
-        "may not     domain",
-        "",
-        "vocabulary  domain owns names this file may not use:",
-        "            Warrant · WarrantKind · warrantKinds",
-        "            and values it may not repeat:",
-        "            search · testimony",
-        "",
-        "also runs   a-named-custom-rule",
-        "",
-      ].join("\n"),
-    );
+    expect(output).toContain("<zone>shared</zone>");
+    expect(output).not.toContain("may-not-name");
   });
 
   it("warns that a path in no zone would fail the check, and says what to do about it", async () => {
-    const { output } = await explain("src/loose.ts");
-
-    expect(output).toBe(
-      [
-        "src/loose.ts",
+    expect((await explain("src/loose.ts")).output).toBe(
+      lines(
+        "<answer>",
+        "<paths>",
+        "* src/loose.ts",
+        "</paths>",
+        "<zone>none</zone>",
+        "<no-zone>",
+        "this path matches no zone, so writing here fails every-file-belongs-to-a-zone",
+        "put it under an existing zone, or declare one for it",
+        "</no-zone>",
+        "</answer>",
         "",
-        "zone        none",
-        "            this path matches no zone, so writing here fails every-file-belongs-to-a-zone",
-        "            put it under an existing zone, or declare one for it",
-        "",
-      ].join("\n"),
+      ),
     );
   });
 
   it("names no check for a path outside the roots, since nothing there is analysed", async () => {
-    const { output } = await explain("docs/notes.ts");
-
-    expect(output).toBe(
-      [
-        "docs/notes.ts",
-        "",
-        "zone        none",
-        "            this path is not analysed, so no claim applies to it",
-        "            it sits outside the roots the analysis reads",
-        "",
-      ].join("\n"),
+    expect((await explain("docs/notes.ts")).output).toContain(
+      lines(
+        "<zone>none</zone>",
+        "<not-analysed>",
+        "this path is not analysed, so no claim applies to it",
+        "it sits outside the roots the analysis reads",
+        "</not-analysed>",
+      ),
     );
   });
 
   it("says an extension the analysis never reads is not governed, whatever zone it falls in", async () => {
     const { output } = await explain("src/engine/theme.css");
 
-    expect(output).toContain("zone        engine");
+    expect(output).toContain("<zone>engine</zone>");
     expect(output).toContain("this path is not analysed, so no claim applies to it");
-    expect(output).not.toContain("may reach");
+    expect(output).not.toContain("may-reach");
   });
 
   it("says a rulebook sits outside the analysis, rather than naming a check it cannot fail", async () => {
-    const { output } = await explain("trueup.config.ts");
-
-    expect(output).toBe(
-      [
-        "trueup.config.ts",
-        "",
-        "zone        none",
-        "            this is a rulebook, so it sits outside the analysis it configures",
-        "            no zone, boundary or seam rule applies to it",
-        "",
-      ].join("\n"),
+    expect((await explain("trueup.config.ts")).output).toContain(
+      lines(
+        "<zone>none</zone>",
+        "<rulebook>",
+        "this is a rulebook, so it sits outside the analysis it configures",
+        "no zone, boundary or seam rule applies to it",
+        "</rulebook>",
+      ),
     );
   });
 
@@ -209,35 +183,46 @@ describe("explaining a path before writing it", () => {
 
     expect(code).toBe(0);
     expect(output).toBe(
-      [
-        "src/shared/other.ts",
-        "src/shared/another.ts",
+      lines(
+        "<answer>",
+        "<paths>",
+        "* src/shared/other.ts",
+        "* src/shared/another.ts",
+        "</paths>",
+        "<zone>shared</zone>",
+        "<may-reach>",
+        "* engine",
+        "* domain",
+        "* shared",
+        "</may-reach>",
+        "</answer>",
         "",
-        "zone        shared",
-        "may reach   engine · domain · shared",
-        "may not     none",
+        "<answer>",
+        "<paths>",
+        "* src/loose.ts",
+        "</paths>",
+        "<zone>none</zone>",
+        "<no-zone>",
+        "this path matches no zone, so writing here fails every-file-belongs-to-a-zone",
+        "put it under an existing zone, or declare one for it",
+        "</no-zone>",
+        "</answer>",
         "",
-        "src/loose.ts",
+        "<also-runs>",
+        "* a-named-custom-rule",
+        "</also-runs>",
         "",
-        "zone        none",
-        "            this path matches no zone, so writing here fails every-file-belongs-to-a-zone",
-        "            put it under an existing zone, or declare one for it",
-        "",
-        "also runs   a-named-custom-rule",
-        "",
-      ].join("\n"),
+      ),
     );
   });
 
   it("keeps the names an existing domain file declares when it is explained beside a new file", async () => {
-    const { output } = await explain("src/domain/warrant.ts", "src/engine/notYetWritten.ts");
-
-    expect(output).toContain("Warrant · WarrantKind · warrantKinds");
+    expect((await explain("src/domain/warrant.ts", "src/engine/notYetWritten.ts")).output).toContain("* WarrantKind");
   });
 
   it("accepts an absolute path", async () => {
     const { output } = await explain(join(EXPLAINED, "src/engine/notYetWritten.ts"));
-    expect(output).toContain("zone        engine");
+    expect(output).toContain("<zone>engine</zone>");
   });
 
   it("refuses a missing path as bad usage rather than as a missing rulebook", async () => {
@@ -246,10 +231,10 @@ describe("explaining a path before writing it", () => {
     expect(output).toContain("usage");
   });
 
-  it("leads with the path it is explaining, written relative to the project", async () => {
-    const { output } = await explain("src/engine/notYetWritten.ts");
-
-    expect(output.split("\n")[0]).toBe("src/engine/notYetWritten.ts");
+  it("names the path it is explaining, written relative to the project", async () => {
+    expect((await explain("src/engine/notYetWritten.ts")).output).toContain(
+      lines("<paths>", "* src/engine/notYetWritten.ts", "</paths>"),
+    );
   });
 
   it("refuses a flag rather than reading it as a path", async () => {
@@ -271,33 +256,25 @@ describe("explaining a path before writing it", () => {
     expect(code).toBe(3);
     expect(output).toBe("no trueup.config.ts found\n");
   });
-
-  it("says none where a zone is held back from nothing, rather than leaving the line blank", async () => {
-    expect((await explain("src/domain/x.ts")).output).toContain("may not     none");
-  });
 });
 
 describe("a vocabulary too long to print", () => {
   const wide = () => saidBy(fixtureAt("explained-wide"), "src/engine/x.ts");
 
-  it("shows the first few in order and counts the rest, so the block stays readable", async () => {
-    expect(await wide()).toContain("alpha · bravo · charlie · delta · echo · foxtrot · and 2 more");
-  });
+  it("shows the first few in order and counts the rest, for names and values alike", async () => {
+    const said = await wide();
 
-  it("counts the values it withheld the same way", async () => {
-    expect(await wide()).toContain("eight · five · four · one · seven · six · and 2 more");
+    expect(said).toContain(lines("* echo", "* foxtrot", "* and 2 more", "</may-not-name>"));
+    expect(said).toContain(lines("* seven", "* six", "* and 2 more", "</may-not-repeat>"));
   });
 });
 
 describe("a vocabulary exactly as long as it will print", () => {
-  const brim = () => saidBy(fixtureAt("explained-brim"), "src/engine/x.ts");
-
   it("shows all of it, with nothing counted after", async () => {
-    expect(await brim()).toContain("alpha · bravo · charlie · delta · echo · foxtrot\n");
-  });
+    const said = await saidBy(fixtureAt("explained-brim"), "src/engine/x.ts");
 
-  it("says nothing about more, since there are none", async () => {
-    expect(await brim()).not.toContain("more");
+    expect(said).toContain(lines("* foxtrot", "</may-not-name>"));
+    expect(said).not.toContain("more");
   });
 });
 
@@ -305,7 +282,7 @@ describe("a project that configured no rules of its own", () => {
   it("says nothing about what also runs, rather than an empty list", async () => {
     const output = await saidBy(fixtureAt("project"), "src/engine/x.ts");
 
-    expect(output).toContain("zone        engine");
-    expect(output).not.toContain("also runs");
+    expect(output).toContain("<zone>engine</zone>");
+    expect(output).not.toContain("also-runs");
   });
 });

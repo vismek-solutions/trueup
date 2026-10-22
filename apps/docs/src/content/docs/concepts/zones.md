@@ -85,21 +85,32 @@ npx trueup explain src/engine/newThing.ts
 ```
 
 ```
-src/engine/newThing.ts
-
-zone        engine
-may reach   engine · shared
-may not     domain
-
-vocabulary  domain owns names this file may not use:
-            Warrant · WarrantKind · warrantKinds
-            and values it may not repeat:
-            search · testimony
+<answer>
+<paths>
+* src/engine/newThing.ts
+</paths>
+<zone>engine</zone>
+<may-reach>
+* engine
+* shared
+</may-reach>
+<may-not-name owner="domain">
+* Warrant
+* WarrantKind
+* warrantKinds
+</may-not-name>
+<may-not-repeat owner="domain">
+* search
+* testimony
+</may-not-repeat>
+</answer>
 ```
+
+The answer is tagged so a coding assistant reads each part without guessing where it ends. Where zone names share a prefix, the zones it may reach are nested under that prefix.
 
 Useful when you are deciding where something goes. It is useful to an agent too, a coding assistant that writes code in your project, if you tell it to run this before it creates a file. A path in no zone is reported as such, which is the answer you want before you make a directory nothing covers.
 
-The vocabulary block only appears when a [seam rule](/checks/seams/) covers the file. A seam is the line between reusable code and code that knows your business. Without such a rule, the zone and its reach are the whole answer.
+The vocabulary only appears when a [seam rule](/checks/seams/) covers the file. A seam is the line between reusable code and code that knows your business. Without such a rule, the zone and its reach are the whole answer.
 
 Name every file you are about to write in one call. Files that get the same answer share one block, so a directory of new files costs about as much to ask about as one file:
 
@@ -108,28 +119,45 @@ npx trueup explain src/engine/newThing.ts src/engine/otherThing.ts src/shared/fo
 ```
 
 ```
-src/engine/newThing.ts
-src/engine/otherThing.ts
+<answer>
+<paths>
+* src/engine/newThing.ts
+* src/engine/otherThing.ts
+</paths>
+<zone>engine</zone>
+<may-reach>
+* engine
+* shared
+</may-reach>
+<may-not-name owner="domain">
+* Warrant
+* WarrantKind
+* warrantKinds
+</may-not-name>
+<may-not-repeat owner="domain">
+* search
+* testimony
+</may-not-repeat>
+</answer>
 
-zone        engine
-may reach   engine · shared
-may not     domain
+<answer>
+<paths>
+* src/shared/format.ts
+</paths>
+<zone>shared</zone>
+<may-reach>
+* engine
+* domain
+* shared
+</may-reach>
+</answer>
 
-vocabulary  domain owns names this file may not use:
-            Warrant · WarrantKind · warrantKinds
-            and values it may not repeat:
-            search · testimony
-
-src/shared/format.ts
-
-zone        shared
-may reach   engine · domain · shared
-may not     none
-
-also runs   a-named-custom-rule
+<also-runs>
+* a-named-custom-rule
+</also-runs>
 ```
 
-The last line names the [custom rules](/checks/custom-rules/) your config adds. They run over every file, so they are named once at the end.
+The last block names the [custom rules](/checks/custom-rules/) your config adds. They run over every file, so they are named once at the end.
 
 Add a name to the path and the question changes. Instead of where this file may reach, you are asking who reads this one thing, and what it would cost to move it somewhere else:
 
@@ -158,12 +186,17 @@ npx trueup explain --needs=src/domain/thing.ts --read-by=src/ui/screen.ts
 ```
 
 ```
-a new file
-
-reaches     domain
-read by     ui
-
-may live    api  src/api
+<new-file>
+<reaches>
+* domain
+</reaches>
+<read-by>
+* ui
+</read-by>
+<may-live>
+* api, at src/api
+</may-live>
+</new-file>
 ```
 
 The first list names the files it must import. The second names the files that will import it. Both take several paths, separated by commas.
@@ -177,14 +210,18 @@ npx trueup explain --needs=src/api/client.ts,src/store/db.ts
 ```
 
 ```
-a new file
-
-reaches     api · store
-read by     nothing yet
-
-may live    nowhere
-            No zone may reach api · store at once, and a zone that may would close no
-            cycle. Declare one, named for what it holds rather than for being shared.
+<new-file>
+<reaches>
+* api
+* store
+</reaches>
+<read-by>none</read-by>
+<may-live>
+nowhere
+no zone may reach api and store at once, and a zone that may would close no cycle
+declare one, named for what it holds rather than for being shared
+</may-live>
+</new-file>
 ```
 
 That is a gap in the rules. Nothing yet describes a part of the project allowed to see both of those, and writing one down is ordinary work.
@@ -196,15 +233,19 @@ npx trueup explain --needs=src/ui/screen.ts --read-by=src/domain/thing.ts
 ```
 
 ```
-a new file
-
-reaches     ui
-read by     domain
-
-may live    nowhere
-            A zone reaching ui and read by domain would close a cycle,
-            because ui already reaches domain. This is two files rather
-            than one: split it along the zones it reaches.
+<new-file>
+<reaches>
+* ui
+</reaches>
+<read-by>
+* domain
+</read-by>
+<may-live>
+nowhere
+a zone reaching ui and read by domain would close a cycle, because ui already reaches domain
+this is two files rather than one: split it along the zones it reaches
+</may-live>
+</new-file>
 ```
 
 No zone can help here, because any zone that could hold the file would complete a loop. The file is doing two jobs, and you know that before writing a line of it.
