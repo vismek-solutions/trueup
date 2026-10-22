@@ -2,7 +2,8 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
-import { render, renderDots } from "../../src/cli/render.ts";
+import { render } from "../../src/cli/render.ts";
+import { renderDots } from "../../src/cli/reports/tagged.ts";
 import type { Report } from "../../src/report/model.ts";
 import { COVERAGE, error, MIXED, reportOf } from "../support/sample-report.ts";
 
@@ -38,18 +39,23 @@ describe("a claim whose name outgrows the column", () => {
     );
   });
 
-  it("widens the dots column too, and indents a finding that names no file", () => {
+  it("lists a finding that names no file as an item of its own in the dots report", () => {
     expect(renderDots(WIDE, "/p")).toBe(
       [
-        "E  3 files · 2 edges · 0 unresolved",
+        "<marks>E</marks>",
+        "<coverage>3 files, 2 edges, 0 unresolved</coverage>",
         "",
-        `${LONG}  2 errors`,
-        "    a.ts  said with a file",
-        "    said with no file",
-        "    ────────",
-        "    g",
+        `<claim name="${LONG}" errors="2">`,
+        "<findings>",
+        "* a.ts said with a file",
+        "* said with no file",
+        "</findings>",
+        "<guidance>",
+        "g",
+        "</guidance>",
+        "</claim>",
         "",
-        "1 claim · 2 errors · 0 warnings",
+        "<summary>1 claim, 2 errors, 0 warnings</summary>",
       ].join("\n"),
     );
   });
@@ -87,8 +93,8 @@ describe("a finding whose message runs to several lines", () => {
     );
   });
 
-  it("indents in the dots report too, which lists findings by a path of its own", () => {
-    expect(renderDots(LISTED, "/p")).toContain("    a.ts  serves 2 readerships:\n        - alpha from src/one");
+  it("keeps a finding one item in the dots report, its later lines indented under the first", () => {
+    expect(renderDots(LISTED, "/p")).toContain("* a.ts serves 2 readerships:\n  - alpha from src/one");
   });
 });
 
@@ -142,26 +148,54 @@ describe("the dots report, to the character", () => {
   it("writes exactly this, one mark per claim and detail only for the failures", () => {
     expect(renderDots(MIXED, "/p")).toBe(
       [
-        ".E!  3 files · 2 edges · 0 unresolved",
+        "<marks>.E!</marks>",
+        "<coverage>3 files, 2 edges, 0 unresolved</coverage>",
         "",
-        "a-mixed-claim                               1 error",
-        "    a.ts  an error here",
-        "    ────────",
-        "    alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar",
-        "    papa quebec romeo",
+        '<claim name="a-mixed-claim" errors="1">',
+        "<findings>",
+        "* a.ts an error here",
+        "</findings>",
+        "<guidance>",
+        "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo",
+        "</guidance>",
+        "</claim>",
         "",
-        "3 claims · 1 error · 2 warnings",
+        "<summary>3 claims, 1 error, 2 warnings</summary>",
       ].join("\n"),
     );
   });
 
   it("marks a claim that only warns apart from one that passed and one that failed", () => {
-    expect(renderDots(MIXED, "/p").split("  ")[0]).toBe(".E!");
+    expect(renderDots(MIXED, "/p").split("\n")[0]).toBe("<marks>.E!</marks>");
   });
 
   it("adds a baseline line only when there is a baseline", () => {
-    expect(renderDots(MIXED, "/p", { known: 4, stale: 0 })).toContain("baseline  4 known · 0 stale");
+    expect(renderDots(MIXED, "/p", { known: 4, stale: 0 })).toContain("<baseline>4 known, 0 stale</baseline>");
     expect(renderDots(MIXED, "/p")).not.toContain("baseline");
+  });
+});
+
+describe("wrapping the guidance in the full report", () => {
+  const wrapped = (guidance: string): string[] =>
+    render(reportOf([{ claim: "c", guidance, findings: [error("m", "/p/a.ts")] }]), "/p")
+      .split("\n")
+      .filter((line) => line.startsWith("    "));
+
+  it("keeps a line that lands exactly on the width", () => {
+    expect(wrapped(`${"a".repeat(50)} ${"b".repeat(45)}`)).toEqual([
+      "    a.ts  m",
+      "    ────────",
+      `    ${"a".repeat(50)} ${"b".repeat(45)}`,
+    ]);
+  });
+
+  it("breaks the line that would pass the width by one", () => {
+    expect(wrapped(`${"a".repeat(50)} ${"b".repeat(46)}`)).toEqual([
+      "    a.ts  m",
+      "    ────────",
+      `    ${"a".repeat(50)}`,
+      `    ${"b".repeat(46)}`,
+    ]);
   });
 });
 

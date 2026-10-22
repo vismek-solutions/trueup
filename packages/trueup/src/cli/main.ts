@@ -9,9 +9,10 @@ import { type ClaimResult, countOf, type Report } from "../report/model.ts";
 import { renderAcceptance } from "./acceptance.ts";
 import { helpLines } from "./help.ts";
 import { rulebookAt } from "./preamble.ts";
-import { answering, render, renderDots, renderNext, type RatchetSummary } from "./render.ts";
+import { render, type RatchetSummary } from "./render.ts";
 import { renderGithub } from "./reports/github.ts";
 import { renderGitlab } from "./reports/gitlab.ts";
+import { answering, renderDots, renderNext } from "./reports/tagged.ts";
 
 const REPORT_FLAGS = [
   "--json",

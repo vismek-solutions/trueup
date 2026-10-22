@@ -46,7 +46,7 @@ describe("guarding a proposed write", () => {
     const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));
     const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
 
-    expect(reason).toContain("every-import-respects-its-zone-boundary  src/engine/added.ts");
+    expect(reason).toContain('<claim name="every-import-respects-its-zone-boundary" file="src/engine/added.ts"');
     expect(reason.split("src/engine/added.ts").length - 1).toBe(1);
     expect(reason).not.toContain(PROJECT);
   });
@@ -71,15 +71,14 @@ describe("guarding a proposed write", () => {
     const { output } = await guard(writing(join(PROJECT, "src/domain/gap.ts"), gap));
     const reason = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
 
-    expect(reason).toContain("domain may reach engine · domain");
+    expect(reason).toContain('<reach from="domain">\n* engine\n* domain\n</reach>');
   });
 
   it("says what the file may reach, so the next attempt is not a guess", async () => {
     const { output } = await guard(writing(NEW_FILE, REACHES_DOMAIN));
     const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
 
-    expect(reason).toContain("engine may reach engine");
-    expect(reason).not.toContain("engine may reach engine · domain");
+    expect(reason).toContain('<reach from="engine">\n* engine\n</reach>');
   });
 
   it("allows a proposal that breaks nothing, despite an existing violation elsewhere", async () => {

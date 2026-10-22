@@ -16,17 +16,16 @@ describe("guarding a replacement proposed through Serena", () => {
     const { output } = await guard(replacing({ needle: "export const run", repl: "export const start" }));
     const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
 
-    expect(reason).toContain(`every-import-respects-its-zone-boundary  ${RUNNER}`);
+    expect(reason).toContain(`<claim name="every-import-respects-its-zone-boundary" file="${RUNNER}"`);
     expect(reason).toContain("may not reach domain");
   });
 
-  it("nests the whole remedy under the claim, so its bullets do not read as a new block", async () => {
+  it("keeps the whole remedy inside the guidance tag, so its bullets do not read as a new block", async () => {
     const { output } = await guard(replacing({ needle: "export const run", repl: "export const start" }));
     const reason: string = JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
-    const body = reason.split(`every-import-respects-its-zone-boundary  ${RUNNER}\n`)[1] ?? "";
+    const guidance = reason.split("<guidance>\n")[1]?.split("</guidance>")[0] ?? "";
 
-    expect(body).toContain("\n  Do this:");
-    expect(body).toContain("\n  - Move the code to a zone that may reach the target.");
+    expect(guidance).toContain("\nDo this:\n- Move the code to a zone that may reach the target.");
   });
 
   it("allows a replacement that removes the violation", async () => {
@@ -53,7 +52,9 @@ describe("reviewing an edit Serena has already written", () => {
 
     expect(result.hookEventName).toBe("PostToolUse");
     expect(result.permissionDecision).toBeUndefined();
-    expect(result.additionalContext).toContain(`every-import-respects-its-zone-boundary  ${RUNNER}`);
+    expect(result.additionalContext).toContain(
+      `<claim name="every-import-respects-its-zone-boundary" file="${RUNNER}"`,
+    );
   });
 
   it("names each offending file when the tool touched files it did not name", async () => {
@@ -62,8 +63,8 @@ describe("reviewing an edit Serena has already written", () => {
     );
     const context: string = JSON.parse(output).hookSpecificOutput.additionalContext;
 
-    expect(context).toContain("every-import-respects-its-zone-boundary\n");
-    expect(context).toContain(`  ${RUNNER}  `);
+    expect(context).toContain('<claim name="every-import-respects-its-zone-boundary" errors="1">');
+    expect(context).toContain(`* ${RUNNER} is engine`);
   });
 
   it("stays quiet about a file that breaks nothing", async () => {

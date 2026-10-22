@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { fixtureAt } from "../../support/fixtures.ts";
 import { claimIn } from "../../support/report.ts";
 import { PROJECT_ZONES as ZONES } from "../../support/zones.ts";
-import { renderNext } from "../../../src/cli/render.ts";
+import { renderNext } from "../../../src/cli/reports/tagged.ts";
 import { check } from "../../../src/main.ts";
 import type { Report } from "../../../src/report/model.ts";
 import type { ZoneDefinition } from "../../../src/zones/model.ts";
@@ -272,14 +272,14 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("states the move, rather than listing the symbols and leaving the reader to draw it", async () => {
-    expect(await next()).toContain("no-value-is-declared-away-from-its-only-consumer  1 error");
+    expect(await next()).toContain('<claim name="no-value-is-declared-away-from-its-only-consumer" errors="1">');
     expect(await next()).toContain(
       "declares 2 exports, all used only by src/web/detail.ts, so the file is in the wrong directory",
     );
   });
 
   it("counts a file as one problem, not one per symbol it declares", async () => {
-    expect((await next()).split("\n")[0]).toContain("problem 1 of 10 · 11 claims · 14 errors");
+    expect((await next()).split("\n")[0]).toContain("problem 1 of 10, 11 claims, 14 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", async () => {

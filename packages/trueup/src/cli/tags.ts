@@ -11,7 +11,7 @@ export const tagged = (name: string, body: string | readonly string[], attribute
     : [opening(name, attributes), ...body, `</${name}>`];
 
 export const items = (values: readonly string[]): readonly string[] =>
-  values.length === 0 ? ["none"] : values.map((value) => `* ${value}`);
+  values.length === 0 ? ["none"] : values.map((value) => `* ${value.replaceAll("\n", "\n  ")}`);
 
 export const spoken = (values: readonly string[]): string =>
   values.length < 2 ? values.join("") : `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;

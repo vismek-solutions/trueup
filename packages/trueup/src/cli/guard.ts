@@ -5,14 +5,16 @@ import { parseModule } from "../adapters/oxc-parse.ts";
 import { check, placementOf } from "../main.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
 import type { ResolvedConfig } from "../config/model.ts";
-import { decideOnProposal } from "../guard/decide.ts";
+import { decideOnProposal, type ReasonOf } from "../guard/decide.ts";
 import { protectionOf } from "../guard/protected.ts";
 import type { Protection } from "../ports/protection.ts";
 import type { Decision, HookRequest } from "../ports/proposal.ts";
 import { applyBaseline } from "../ratchet/apply.ts";
 import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
 import type { Finding, Report } from "../report/model.ts";
+import { items, tagged } from "./tags.ts";
 import { type Analysable, rulebookAt, unanalysed } from "./preamble.ts";
+import { claimTag } from "./reports/tagged.ts";
 
 export interface RunGuardInput {
   readonly cwd: string;
@@ -47,9 +49,16 @@ const withReach = (decision: Decision, path: string | null, { root, config }: Si
   const placement = placementOf({ root, path, zones: config.zones, boundaries: config.boundaries });
   if (placement.zone === null) return decision;
 
-  const footer = `${placement.zone} may reach ${placement.mayReach.join(" · ")}`;
+  const footer = tagged("reach", items(placement.mayReach), { from: placement.zone }).join("\n");
   return { ...decision, reasons: [...decision.reasons, footer] };
 };
+
+const taggedReason: ReasonOf = ({ claim, file, findings, guidance }) =>
+  claimTag({
+    attributes: { name: claim, ...(file === null ? {} : { file }), errors: String(findings.length) },
+    findings: findings.map((finding) => (finding.file === null ? finding.message : `${finding.file} ${finding.message}`)),
+    guidance,
+  }).join("\n");
 
 interface Answer {
   readonly request: HookRequest;
@@ -213,6 +222,7 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     path: checked,
     root,
     arriving: arrivingAt(request, checked),
+    reasonOf: taggedReason,
   });
   const reach = withReach(decision, checked, { root, config });
   const output = answerTo({ request, decision: reach, spread, notes: noticesIn(effective) });

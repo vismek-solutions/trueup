@@ -37,15 +37,22 @@ The agent gets the refusal as its tool result, carrying the same explanation the
 A refusal ends with what the file may reach, not only with what it may not.
 
 ```
-every-import-respects-its-zone-boundary  src/engine/table.ts
-  is engine and may not reach domain: Warrant from src/domain/warrant.ts
-  ────────
-  Code in one zone reached a symbol declared in a zone it may not reach. …
+<claim name="every-import-respects-its-zone-boundary" file="src/engine/table.ts" errors="1">
+<findings>
+* is engine and may not reach domain: Warrant from src/domain/warrant.ts
+</findings>
+<guidance>
+Code in one zone reached a symbol declared in a zone it may not reach. …
+</guidance>
+</claim>
 
-engine may reach engine · shared
+<reach from="engine">
+* shared
+* engine
+</reach>
 ```
 
-An agent that hears only no will guess at where the code should go instead. That one line of allowed zones saves it the guess.
+An agent that hears only no will guess at where the code should go instead. That list of allowed zones saves it the guess.
 
 The second block is there only for [Serena](https://github.com/oraios/serena), an MCP server that edits code through a language server. If you have not deliberately installed it, you do not have it, so drop that block. The first matcher, the one covering Write and Edit, covers everything else.
 

@@ -9,9 +9,11 @@
 - `trueup explain` names a custom rule from a workspace member only when an explained path falls inside that member, since the rule sees nothing else. A rule in the root config is still named for every path.
 - `trueup explain` says a part of a sibling group is kept apart from every other part of it, rather than naming each one. The shared parts it may still reach are the only exception, and they keep their list.
 - `trueup activate` prints the session start block in the same tags. Each section, each zone's reach and each setting has a tag of its own. Every list holds one item to a line, where names used to be joined by dots in padded columns.
+- `trueup --dots`, `trueup --next` and a refusal from `trueup guard` print in the same tags. Each failing claim is a claim tag holding its findings, one to a line, and then its guidance. A ruled line and indentation used to separate them. The zones a refused file may reach are listed one to a line. The full report keeps its columns, since people read it.
 
 ### Fixed
 
+- The dots report says 1 file and 1 edge where it said 1 files and 1 edges.
 - The silent list in `trueup explain --ungoverned` says its zones are ones no boundary rule starts from. It said no rule named them, which a zone in an allow list contradicts.
 - Explaining a file that already exists no longer reads it as empty, which emptied the vocabulary a domain file contributes when it was explained beside a new file.
 
