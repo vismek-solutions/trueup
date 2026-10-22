@@ -16,8 +16,9 @@ Here is what it appends.
 
 This project's structure is enforced. Zones: spec, components, hooks, api, domain, app, server.
 
-- `trueup explain <file>` — run this **before** creating or moving a file. It reports the zone that
-  path falls into, which zones it may and may not reach, and the vocabulary it may not name.
+- `trueup explain <file> <file>` — run this **before** creating or moving files, naming them all in
+  one call. It reports the zone each path falls into, which zones it may and may not reach, and the
+  vocabulary it may not name.
 - `trueup explain --needs=<file>,<file>` — where a new file may live, given what it must import.
   Add `--read-by=<file>` for what will import it. When no zone can hold it, it says what to split.
 - `trueup --dots` — check the whole project. Run it before calling a change done. It prints

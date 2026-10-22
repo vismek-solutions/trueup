@@ -204,6 +204,37 @@ describe("explaining a path before writing it", () => {
     );
   });
 
+  it("answers for every path it is given, once for paths that share an answer, naming what also runs at the end", async () => {
+    const { code, output } = await explain("src/shared/other.ts", "src/loose.ts", "src/shared/another.ts");
+
+    expect(code).toBe(0);
+    expect(output).toBe(
+      [
+        "src/shared/other.ts",
+        "src/shared/another.ts",
+        "",
+        "zone        shared",
+        "may reach   engine · domain · shared",
+        "may not     none",
+        "",
+        "src/loose.ts",
+        "",
+        "zone        none",
+        "            this path matches no zone, so writing here fails every-file-belongs-to-a-zone",
+        "            put it under an existing zone, or declare one for it",
+        "",
+        "also runs   a-named-custom-rule",
+        "",
+      ].join("\n"),
+    );
+  });
+
+  it("keeps the names an existing domain file declares when it is explained beside a new file", async () => {
+    const { output } = await explain("src/domain/warrant.ts", "src/engine/notYetWritten.ts");
+
+    expect(output).toContain("Warrant · WarrantKind · warrantKinds");
+  });
+
   it("accepts an absolute path", async () => {
     const { output } = await explain(join(EXPLAINED, "src/engine/notYetWritten.ts"));
     expect(output).toContain("zone        engine");

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `trueup explain` answers for every path it is given rather than the first alone, opening the project once. Paths that get the same answer share one block, and the custom rules that also run are named once at the end.
+
+### Fixed
+
+- Explaining a file that already exists no longer reads it as empty, which emptied the vocabulary a domain file contributes when it was explained beside a new file.
+
 ## 0.5.0
 
 ### Added

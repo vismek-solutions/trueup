@@ -101,6 +101,36 @@ Useful when you are deciding where something goes. It is useful to an agent too,
 
 The vocabulary block only appears when a [seam rule](/checks/seams/) covers the file. A seam is the line between reusable code and code that knows your business. Without such a rule, the zone and its reach are the whole answer.
 
+Name every file you are about to write in one call. Files that get the same answer share one block, so a directory of new files costs about as much to ask about as one file:
+
+```sh
+npx trueup explain src/engine/newThing.ts src/engine/otherThing.ts src/shared/format.ts
+```
+
+```
+src/engine/newThing.ts
+src/engine/otherThing.ts
+
+zone        engine
+may reach   engine · shared
+may not     domain
+
+vocabulary  domain owns names this file may not use:
+            Warrant · WarrantKind · warrantKinds
+            and values it may not repeat:
+            search · testimony
+
+src/shared/format.ts
+
+zone        shared
+may reach   engine · domain · shared
+may not     none
+
+also runs   a-named-custom-rule
+```
+
+The last line names the [custom rules](/checks/custom-rules/) your config adds. They run over every file, so they are named once at the end.
+
 Add a name to the path and the question changes. Instead of where this file may reach, you are asking who reads this one thing, and what it would cost to move it somewhere else:
 
 ```sh
