@@ -163,3 +163,35 @@ You still edit these files yourself, directly. The hook only sees what an agent 
 The guard has to know what the file would look like after the edit. A find and replace is something it can reproduce exactly, so edits of that kind are checked before the write and refused. An edit such as "replace this function's body" depends on the language server's idea of where the function ends. Those are checked immediately after the write and come back as a correction. The guard never guesses at how another tool's edits work.
 
 Delegated tools do not run here. A runner hands a job to another tool you already use, and starting a whole-repo lint on every edit would cost far more than it catches.
+
+## Edits in another worktree
+
+A git worktree is a second checkout of the same repository in a directory of its own, often used so that several agents can work side by side. An edit to a file in one is judged by that worktree's own rulebook and baseline. Those are the ones its own check reads before the work lands, so the guard and that check agree.
+
+Write and Edit need nothing extra. They name the file by its full path, and the guard asks git which worktree holds it, following a link to that directory if the path goes through one.
+
+A Serena server needs more care, because it names files relative to the project it was started on and the hook is never told which project that was. A server bound to a worktree therefore gets a hook of its own that starts in that worktree. Claude Code lets a subagent file carry hooks that run only while that subagent does, which suits an agent given its own server.
+
+```yaml
+---
+name: builder-1
+mcpServers:
+  - serena-wt:
+      type: stdio
+      command: serena
+      args: ["start-mcp-server", "--context", "claude-code", "--project", "/work/slots/1"]
+hooks:
+  PreToolUse:
+    - matcher: "mcp__serena-wt__replace_content"
+      hooks:
+        - type: command
+          command: cd /work/slots/1 && npx trueup guard
+  PostToolUse:
+    - matcher: "mcp__serena-wt__(replace_content|replace_symbol_body|replace_in_files|insert_after_symbol|insert_before_symbol|rename_symbol|safe_delete_symbol)"
+      hooks:
+        - type: command
+          command: cd /work/slots/1 && npx trueup guard
+---
+```
+
+The guard reads the tool name that follows the server's, so a server registered under any name is checked the same way. The project's own hooks in .claude/settings.json should keep naming only the main server. They start in the main checkout, so they would read a worktree server's paths as files of the main checkout and judge the wrong file.

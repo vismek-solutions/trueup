@@ -1,5 +1,6 @@
 import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
-import { contextFor, modeOf, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
+import { contextFor, modeOf, rebased, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
+import { checkoutHolding } from "../adapters/git/worktrees.ts";
 import { readSource } from "../adapters/node-files.ts";
 import { parseModule } from "../adapters/oxc-parse.ts";
 import { check, placementOf } from "../main.ts";
@@ -56,7 +57,9 @@ const withReach = (decision: Decision, path: string | null, { root, config }: Si
 const taggedReason: ReasonOf = ({ claim, file, findings, guidance }) =>
   claimTag({
     attributes: { name: claim, ...(file === null ? {} : { file }), errors: String(findings.length) },
-    findings: findings.map((finding) => (finding.file === null ? finding.message : `${finding.file} ${finding.message}`)),
+    findings: findings.map((finding) =>
+      finding.file === null ? finding.message : `${finding.file} ${finding.message}`,
+    ),
     guidance,
   }).join("\n");
 
@@ -146,23 +149,26 @@ const arrivingAt = (request: HookRequest, path: string | null): boolean => {
   }
 };
 
-export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<number> {
-  let payload: unknown;
-  try {
-    payload = JSON.parse(stdin);
-  } catch {
-    return 0;
-  }
+type At = Omit<RunGuardInput, "stdin">;
 
+async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boolean): Promise<void> {
   const found = findConfig(cwd);
-  if (found === null) return 0;
+  if (found === null) return;
 
   const loaded = await rulebookAt(found, write);
-  if (loaded === null) return 0;
+  if (loaded === null) return;
 
   const { config, root, memberConfigs } = loaded;
-  const request = requestFrom(payload, root);
-  if (request === null) return 0;
+  const asked = requestFrom(payload, root);
+  if (asked === null) return;
+
+  const named = targetOf(asked);
+  const home = named === null ? null : checkoutHolding(root, named);
+  if (home !== null && home.root !== root) {
+    if (followsWorktrees) await judge({ cwd: home.root, write }, payload, false);
+    return;
+  }
+  const request = home === null ? asked : rebased(asked, home.path);
 
   const rulebooks = [found, ...memberConfigs];
   const target = targetOf(request);
@@ -177,14 +183,14 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
 
   if (refusal !== null) {
     write(refusal);
-    return 0;
+    return;
   }
 
   const spread = spreadIn(request);
   const checked = spread ? null : target;
 
   const roots = resolveInclude(root, config.include);
-  if (!analysed({ root, config, roots }, checked)) return 0;
+  if (!analysed({ root, config, roots }, checked)) return;
 
   const report = withCommand(
     await check({
@@ -227,5 +233,16 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
   const reach = withReach(decision, checked, { root, config });
   const output = answerTo({ request, decision: reach, spread, notes: noticesIn(effective) });
   if (output !== null) write(output);
+}
+
+export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<number> {
+  let payload: unknown;
+  try {
+    payload = JSON.parse(stdin);
+  } catch {
+    return 0;
+  }
+
+  await judge({ cwd, write }, payload, true);
   return 0;
 }
