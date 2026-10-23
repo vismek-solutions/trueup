@@ -109,6 +109,16 @@ describe("reading a replacement proposed through Serena", () => {
     expect(proposalOf(serena, input)).toEqual({ path: PATH, text: "two two one\n" });
   });
 
+  it("reads the replacement whatever name the Serena server is registered under", () => {
+    const input = { relative_path: NAME, mode: "literal", needle: "one", repl: "two" };
+
+    expect(proposalOf("mcp__serena-wt__replace_content", input)).toEqual({
+      path: PATH,
+      text: "two two one\n",
+    });
+    expect(proposalOf("mcp__serena-wt__replace_symbol_body", input)).toBeNull();
+  });
+
   it("keeps an absolute relative_path as it stands", () => {
     const input = { relative_path: PATH, mode: "literal", needle: "one", repl: "two" };
 
@@ -178,6 +188,7 @@ describe("reading a payload that is not a proposal", () => {
       path: PATH,
       spread: true,
     });
+    expect(reviewing("mcp__serena-wt__rename_symbol", { file_path: PATH })).toMatchObject({ spread: true });
   });
 
   it("looks past the file a symbol deletion named, for the same reason", () => {

@@ -3,13 +3,14 @@ import { isAbsolute, join } from "node:path";
 import type { Decision, HookRequest, Proposal } from "../ports/proposal.ts";
 import { stringOf } from "./tool-output.ts";
 
-const SERENA_REPLACE = "mcp__serena__replace_content";
+const MCP_TOOL = /^mcp__.+?__(.+)$/;
 
-const EDITS_BEYOND_ITS_PATH = new Set([
-  "mcp__serena__rename_symbol",
-  "mcp__serena__safe_delete_symbol",
-  "mcp__serena__replace_in_files",
-]);
+const SERENA_REPLACE = "replace_content";
+
+const EDITS_BEYOND_ITS_PATH = new Set(["rename_symbol", "safe_delete_symbol", "replace_in_files"]);
+
+// the hook's matcher picks the server, so any server name carries the same tool
+const mcpToolOf = (tool: string): string | null => MCP_TOOL.exec(tool)?.[1] ?? null;
 
 interface HookPayload {
   readonly hook_event_name?: unknown;
@@ -65,7 +66,7 @@ const proposalIn = (tool: string, input: Record<string, unknown>, root: string):
     return replacementIn(path, { from: stringOf(input.old_string), to: stringOf(input.new_string), all });
   }
 
-  if (tool === SERENA_REPLACE && input.mode === "literal") {
+  if (mcpToolOf(tool) === SERENA_REPLACE && input.mode === "literal") {
     const all = input.allow_multiple_occurrences === true;
     return replacementIn(path, { from: stringOf(input.needle), to: stringOf(input.repl), all });
   }
@@ -80,12 +81,16 @@ export function requestFrom(payload: unknown, root: string): HookRequest | null 
 
   if (event === "PostToolUse") {
     const path = fileIn(root, input);
-    return { kind: "review", path, spread: path === null || EDITS_BEYOND_ITS_PATH.has(tool) };
+    const spread = path === null || EDITS_BEYOND_ITS_PATH.has(mcpToolOf(tool) ?? tool);
+    return { kind: "review", path, spread };
   }
 
   const proposal = proposalIn(tool, input, root);
   return proposal === null ? null : { kind: "propose", proposal };
 }
+
+export const rebased = (request: HookRequest, path: string): HookRequest =>
+  request.kind === "propose" ? { ...request, proposal: { ...request.proposal, path } } : { ...request, path };
 
 export function modeOf(payload: unknown): string | null {
   if (payload === null || typeof payload !== "object") return null;
