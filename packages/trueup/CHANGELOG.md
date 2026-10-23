@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0
+
+### Fixed
+
+- `trueup guard` judges an edit to a file in another git worktree of the project by that worktree's own rulebook and baseline. Such a file sat outside the project the guard had found, so the edit was let through unchecked. A link to the worktree, such as a slot directory, reaches it too.
+- `trueup guard` reads a Serena tool under any server name, so a second server bound to a worktree is checked like the first. Its replacement went unread before the write, and its rename and bulk replace were reviewed on the named file alone.
+
 ## 0.6.0
 
 ### Changed
