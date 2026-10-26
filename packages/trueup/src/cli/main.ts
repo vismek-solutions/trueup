@@ -87,6 +87,15 @@ const presenterFor = ({ argv, rulebook, command, only }: Asked): Present => {
   return argv.includes("--dots") ? renderDots : render;
 };
 
+const UNGUARDED = "the rulebook is unguarded: an agent may edit this config and the baseline";
+
+const unmatchedDeferrals = (deferred: readonly string[] | undefined, report: Report): string[] => {
+  const ran = new Set(report.claims.map((claim) => claim.claim));
+  return (deferred ?? [])
+    .filter((name) => !ran.has(name))
+    .map((name) => `deferAtWrite names ${name}, which matches no claim this run makes, so the guard still refuses it`);
+};
+
 const refusalIn = (argv: readonly string[]): string | null => {
   const unknown = unknownArgumentsIn(argv, REPORT_FLAGS);
   if (unknown.length > 0) return `unrecognised: ${unknown.join(" ")}`;
@@ -162,9 +171,11 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
 
   const baselinePath = baselinePathIn(root);
   const previous = readBaseline(baselinePath);
-  const noticed = rulebookGuarded(config.protect)
-    ? report
-    : { ...report, notices: ["the rulebook is unguarded: an agent may edit this config and the baseline"] };
+  const notices = [
+    ...(rulebookGuarded(config.protect) ? [] : [UNGUARDED]),
+    ...unmatchedDeferrals(config.deferAtWrite, report),
+  ];
+  const noticed = notices.length === 0 ? report : { ...report, notices };
 
   if (updating) {
     const baseline = baselineOf(report, root);

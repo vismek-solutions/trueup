@@ -228,6 +228,7 @@ async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boo
     path: checked,
     root,
     arriving: arrivingAt(request, checked),
+    deferred: config.deferAtWrite,
     reasonOf: taggedReason,
   });
   const reach = withReach(decision, checked, { root, config });

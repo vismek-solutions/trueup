@@ -82,6 +82,26 @@ So the write lands, and [the duplication check](/checks/duplication/) keeps fail
 
 When the guard cannot make sense of the situation, it stands aside and lets the write happen. An edit it cannot read, a missing config, a file type you do not analyse: each of those allows the write. A guard that fell over on surprises would block every edit rather than the wrong ones.
 
+## Claims that can wait for the full check
+
+Some findings are true while work is in flight and gone once it is finished. A component can name a class before its stylesheet exists, or a file can import one that is written next. Refusing those edits forces an order on the agent that the work itself does not need.
+
+You can name the claims that may wait, and the guard lets them through on every write, to a new file or an existing one.
+
+```ts
+deferAtWrite: ["every-import-resolves", "every-imported-name-is-exported"]
+```
+
+The full check still reports them, so the work cannot be called done while one is left. Every claim you leave out still refuses at write time. The block an agent reads at session start lists the deferred claims too, so it knows a write that lands is not the last word.
+
+Deferring an import has one cost worth knowing. An import that does not resolve gives the analysis no edge, so the boundary and isolation rules have nothing to judge in it. Once the file it names exists, those findings show at the full check rather than at the write.
+
+A name that matches no claim the run makes changes nothing, and the guard keeps refusing that claim. The report says so, which is how a misspelt name shows up.
+
+```
+notice    deferAtWrite names every-import-resolve, which matches no claim this run makes, so the guard still refuses it
+```
+
 ## The rulebook goes through you
 
 Your rulebook is the file your rules are read from, either at the root of the project or inside one package. Any rule on this site can be switched off by editing it.
