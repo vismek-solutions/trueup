@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { runGuard } from "../../src/cli/guard.ts";
+import { runGuard } from "../../src/cli/guard/run.ts";
 import { fixtureAt } from "./fixtures.ts";
 
 export const GUARDED_FOR_SERENA = fixtureAt("guarded-serena");

@@ -13,6 +13,8 @@ It reads the edit the agent is proposing, applies it to a copy of the file in me
 
 The settings go in .claude/settings.json in your project root. Create the file if it is not there. If it already has a hooks key, merge these entries into it rather than replacing them.
 
+Cursor runs the hooks in this file too, as long as its Third-Party Imports setting is on, which it is by default. Keep the entries in this one file. A copy in .cursor/hooks.json runs the guard a second time on every edit.
+
 ```json
 {
   "hooks": {
@@ -136,7 +138,7 @@ Copy the hook settings entry at least. Without it, the shortest way past the gua
 
 ## When nobody is there to answer
 
-A prompt is a gate only while someone is at the keyboard. In the permission modes that ask you nothing, acceptEdits, auto, dontAsk and bypassPermissions, the prompt becomes a refusal on its own. You do not configure that. An unanswered prompt never turns into an approval either, because waiting would be a way past the guard.
+A prompt is a gate only while someone is at the keyboard. In the permission modes that ask you nothing, acceptEdits, auto, dontAsk and bypassPermissions, the prompt becomes a refusal on its own. Cursor lets a write through when a hook asks for approval, so under Cursor the prompt is always a refusal. You do not configure that. An unanswered prompt never turns into an approval either, because waiting would be a way past the guard.
 
 That leaves default mode with nobody at the desk. The prompt waits, and so does the agent. If that costs you more than agent-driven setup is worth, ask for a refusal outright.
 

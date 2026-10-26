@@ -9,11 +9,16 @@ const SERENA_REPLACE = "replace_content";
 
 const EDITS_BEYOND_ITS_PATH = new Set(["rename_symbol", "safe_delete_symbol", "replace_in_files"]);
 
+const REVIEW_EVENTS = new Set(["PostToolUse", "postToolUse"]);
+
+export type Host = "claude" | "cursor";
+
 // the hook's matcher picks the server, so any server name carries the same tool
 const mcpToolOf = (tool: string): string | null => MCP_TOOL.exec(tool)?.[1] ?? null;
 
 interface HookPayload {
   readonly hook_event_name?: unknown;
+  readonly cursor_version?: unknown;
   readonly permission_mode?: unknown;
   readonly tool_name?: unknown;
   readonly tool_input?: Record<string, unknown>;
@@ -79,7 +84,7 @@ export function requestFrom(payload: unknown, root: string): HookRequest | null 
   const { hook_event_name: event, tool_name: tool, tool_input: input } = payload as HookPayload;
   if (input === undefined || typeof tool !== "string") return null;
 
-  if (event === "PostToolUse") {
+  if (typeof event === "string" && REVIEW_EVENTS.has(event)) {
     const path = fileIn(root, input);
     const spread = path === null || EDITS_BEYOND_ITS_PATH.has(mcpToolOf(tool) ?? tool);
     return { kind: "review", path, spread };
@@ -92,9 +97,16 @@ export function requestFrom(payload: unknown, root: string): HookRequest | null 
 export const rebased = (request: HookRequest, path: string): HookRequest =>
   request.kind === "propose" ? { ...request, proposal: { ...request.proposal, path } } : { ...request, path };
 
+// Cursor accepts ask on preToolUse without asking anyone
 export function modeOf(payload: unknown): string | null {
+  if (hostOf(payload) === "cursor") return "dontAsk";
   if (payload === null || typeof payload !== "object") return null;
   return stringOf((payload as HookPayload).permission_mode);
+}
+
+export function hostOf(payload: unknown): Host {
+  if (payload === null || typeof payload !== "object") return "claude";
+  return stringOf((payload as HookPayload).cursor_version) === null ? "claude" : "cursor";
 }
 
 export function verdictFor(decision: Decision): string | null {
@@ -122,16 +134,18 @@ const headlineFor = (broke: boolean, spread: boolean): string => {
     : "That edit broke one of the project's architecture rules. Repair it before moving on.";
 };
 
-export function contextFor(
-  decision: Decision,
-  spread: boolean,
-  notes: readonly string[] = [],
-): string | null {
+export interface Framing {
+  readonly spread: boolean;
+  readonly notes?: readonly string[];
+  readonly host?: Host;
+}
+
+export function contextFor(decision: Decision, { spread, notes = [], host = "claude" }: Framing): string | null {
   const broke = decision.verdict !== "allow";
   if (!broke && notes.length === 0) return null;
 
-  const said = [headlineFor(broke, spread), ...decision.reasons, ...notes];
-  return JSON.stringify({
-    hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: said.join("\n\n") },
-  });
+  const said = [headlineFor(broke, spread), ...decision.reasons, ...notes].join("\n\n");
+  const claude = { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: said } };
+  // Cursor reads only a top-level additional_context after a tool runs
+  return JSON.stringify(host === "cursor" ? { additional_context: said, ...claude } : claude);
 }
