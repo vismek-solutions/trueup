@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { runGuard } from "../../src/cli/guard.ts";
+import { runGuard } from "../../src/cli/guard/run.ts";
 import { loadConfig, resolveInclude } from "../../src/config/load.ts";
 import { memberDirectories } from "../../src/config/members.ts";
 import { check, type Overlay } from "../../src/main.ts";

@@ -199,11 +199,12 @@ describe("refusing to let the rules be edited", () => {
       tool_name: "mcp__serena__replace_symbol_body",
       tool_input: { relative_path: "trueup.config.ts" },
     });
-    const { hookSpecificOutput: result } = JSON.parse(output);
+    const { hookSpecificOutput: result, additional_context: cursorContext } = JSON.parse(output);
 
     expect(result.hookEventName).toBe("PostToolUse");
     expect(result.permissionDecision).toBeUndefined();
     expect(result.additionalContext).toContain(CLAIM);
+    expect(cursorContext, "a key Claude does not know could fail its schema").toBeUndefined();
   });
 
   it("blames the edit itself, since a protected file is the one the tool named", async () => {

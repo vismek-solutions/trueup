@@ -4,7 +4,7 @@ import { runAgentInstructions } from "./agent-instructions.ts";
 import type { CommandInput } from "./command.ts";
 import { runDocs } from "./docs/run.ts";
 import { runExplain } from "./explain/run.ts";
-import { runGuard } from "./guard.ts";
+import { runGuard } from "./guard/run.ts";
 import { runInit } from "./init/run.ts";
 import { runCli } from "./main.ts";
 import { runText } from "./text/run.ts";

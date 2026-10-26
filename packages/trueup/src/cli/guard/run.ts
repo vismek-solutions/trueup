@@ -1,21 +1,29 @@
-import { baselinePathIn, readBaseline } from "../adapters/baseline-file.ts";
-import { contextFor, modeOf, rebased, requestFrom, verdictFor } from "../adapters/claude-code-hook.ts";
-import { checkoutHolding } from "../adapters/git/worktrees.ts";
-import { readSource } from "../adapters/node-files.ts";
-import { parseModule } from "../adapters/oxc-parse.ts";
-import { check, placementOf } from "../main.ts";
-import { findConfig, resolveInclude } from "../config/load.ts";
-import type { ResolvedConfig } from "../config/model.ts";
-import { decideOnProposal, type ReasonOf } from "../guard/decide.ts";
-import { protectionOf } from "../guard/protected.ts";
-import type { Protection } from "../ports/protection.ts";
-import type { Decision, HookRequest } from "../ports/proposal.ts";
-import { applyBaseline } from "../ratchet/apply.ts";
-import { DEFAULT_COMMAND, withCommand } from "../report/invocation.ts";
-import type { Finding, Report } from "../report/model.ts";
-import { items, tagged } from "./tags.ts";
-import { type Analysable, rulebookAt, unanalysed } from "./preamble.ts";
-import { claimTag } from "./reports/tagged.ts";
+import { baselinePathIn, readBaseline } from "../../adapters/baseline-file.ts";
+import {
+  contextFor,
+  type Host,
+  hostOf,
+  modeOf,
+  rebased,
+  requestFrom,
+  verdictFor,
+} from "../../adapters/claude-code-hook.ts";
+import { checkoutHolding } from "../../adapters/git/worktrees.ts";
+import { readSource } from "../../adapters/node-files.ts";
+import { check, placementOf } from "../../main.ts";
+import { findConfig, resolveInclude } from "../../config/load.ts";
+import type { ResolvedConfig } from "../../config/model.ts";
+import { decideOnProposal, type ReasonOf } from "../../guard/decide.ts";
+import { protectionOf } from "../../guard/protected.ts";
+import type { Protection } from "../../ports/protection.ts";
+import type { Decision, HookRequest } from "../../ports/proposal.ts";
+import { applyBaseline } from "../../ratchet/apply.ts";
+import { DEFAULT_COMMAND, withCommand } from "../../report/invocation.ts";
+import type { Report } from "../../report/model.ts";
+import { items, tagged } from "../tags.ts";
+import { type Analysable, rulebookAt, unanalysed } from "../preamble.ts";
+import { claimTag } from "../reports/tagged.ts";
+import { forgivingReWordings, markingPriorFailures } from "./prior.ts";
 
 export interface RunGuardInput {
   readonly cwd: string;
@@ -34,6 +42,7 @@ interface Rulebook {
   readonly baseline: string;
   readonly protect: Protection | undefined;
   readonly mode: string | null;
+  readonly host: Host;
 }
 
 const targetOf = (request: HookRequest): string | null =>
@@ -67,11 +76,12 @@ interface Answer {
   readonly request: HookRequest;
   readonly decision: Decision;
   readonly spread: boolean;
+  readonly host: Host;
   readonly notes?: readonly string[] | undefined;
 }
 
-const answerTo = ({ request, decision, spread, notes = [] }: Answer): string | null =>
-  request.kind === "propose" ? verdictFor(decision) : contextFor(decision, spread, notes);
+const answerTo = ({ request, decision, spread, host, notes = [] }: Answer): string | null =>
+  request.kind === "propose" ? verdictFor(decision) : contextFor(decision, { spread, notes, host });
 
 const noticesIn = (report: Report): string[] =>
   report.claims.flatMap((claim) =>
@@ -91,48 +101,7 @@ const refusalOver = (request: HookRequest, path: string | null, rulebook: Rulebo
     mode: rulebook.mode,
   });
 
-  return decision.verdict === "allow" ? null : answerTo({ request, decision, spread: false });
-};
-
-const ALREADY = " — already unresolved before this edit";
-
-const importedBefore = (path: string): ReadonlySet<string> => {
-  try {
-    return new Set(parseModule(path, readSource(path)).imports.map((entry) => entry.specifier));
-  } catch {
-    return new Set<string>();
-  }
-};
-
-const markingPriorFailures = (report: Report, request: HookRequest, path: string | null): Report => {
-  if (request.kind !== "propose" || path === null) return report;
-
-  const before = importedBefore(path);
-  if (before.size === 0) return report;
-
-  return {
-    ...report,
-    claims: report.claims.map((claim) => ({
-      ...claim,
-      findings: claim.findings.map((finding) =>
-        finding.file === path && finding.specifier !== undefined && before.has(finding.specifier)
-          ? { ...finding, message: `${finding.message}${ALREADY}` }
-          : finding,
-      ),
-    })),
-  };
-};
-
-const forgivingReWordings = (report: Report, request: HookRequest): Report => {
-  if (request.kind !== "propose") return report;
-
-  const kept = (finding: Finding): Finding =>
-    finding.reworded === true ? { ...finding, severity: "warning" } : finding;
-
-  return {
-    ...report,
-    claims: report.claims.map((claim) => ({ ...claim, findings: claim.findings.map(kept) })),
-  };
+  return decision.verdict === "allow" ? null : answerTo({ request, decision, spread: false, host: rulebook.host });
 };
 
 const analysed = (site: Analysable, path: string | null): boolean =>
@@ -173,12 +142,14 @@ async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boo
   const rulebooks = [found, ...memberConfigs];
   const target = targetOf(request);
   const baseline = baselinePathIn(root);
+  const host = hostOf(payload);
   const refusal = refusalOver(request, target, {
     root,
     rulebooks,
     baseline,
     protect: config.protect,
     mode: modeOf(payload),
+    host,
   });
 
   if (refusal !== null) {
@@ -232,7 +203,7 @@ async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boo
     reasonOf: taggedReason,
   });
   const reach = withReach(decision, checked, { root, config });
-  const output = answerTo({ request, decision: reach, spread, notes: noticesIn(effective) });
+  const output = answerTo({ request, decision: reach, spread, host, notes: noticesIn(effective) });
   if (output !== null) write(output);
 }
 

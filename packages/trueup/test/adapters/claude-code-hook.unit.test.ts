@@ -280,7 +280,7 @@ describe("answering the hook before the write", () => {
 
 describe("answering the hook after the write", () => {
   it("hands back context rather than a verdict, since the write already happened", () => {
-    expect(JSON.parse(contextFor(decision("deny"), false) ?? "")).toEqual({
+    expect(JSON.parse(contextFor(decision("deny"), { spread: false }) ?? "")).toEqual({
       hookSpecificOutput: {
         hookEventName: "PostToolUse",
         additionalContext:
@@ -290,7 +290,7 @@ describe("answering the hook after the write", () => {
   });
 
   it("says the findings may pre-date a change that could have touched any file", () => {
-    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput.additionalContext;
+    const said = JSON.parse(contextFor(decision("deny"), { spread: true }) ?? "").hookSpecificOutput.additionalContext;
 
     expect(said.split("\n")[0]).toBe(
       "That change could have touched any file, so this is the whole project. Some of it may pre-date the change; repair what the change caused.",
@@ -298,13 +298,13 @@ describe("answering the hook after the write", () => {
   });
 
   it("does not blame the change for findings it cannot have caused", () => {
-    const said = JSON.parse(contextFor(decision("deny"), true) ?? "").hookSpecificOutput.additionalContext;
+    const said = JSON.parse(contextFor(decision("deny"), { spread: true }) ?? "").hookSpecificOutput.additionalContext;
 
     expect(said).not.toContain("That edit broke");
   });
 
   it("stays silent on an allowance", () => {
-    expect(contextFor(decision("allow"), false)).toBeNull();
-    expect(contextFor(decision("allow"), true)).toBeNull();
+    expect(contextFor(decision("allow"), { spread: false })).toBeNull();
+    expect(contextFor(decision("allow"), { spread: true })).toBeNull();
   });
 });
