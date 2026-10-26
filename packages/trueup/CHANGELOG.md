@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0
+
+### Added
+
+- The root config takes `deferAtWrite`, a list of claim names that `trueup guard` lets through on every write, to a new file or an existing one. Work in flight is no longer refused for an order it does not need, such as a component written before its stylesheet or a file before the one it imports. The full check still reports every deferred claim.
+- A name in `deferAtWrite` that matches no claim the run makes is reported in a notice, since the guard keeps refusing that claim. `trueup activate` lists the deferred claims among its settings.
+
 ## 0.7.0
 
 ### Fixed
