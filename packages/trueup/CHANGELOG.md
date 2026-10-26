@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0
+
+### Fixed
+
+- `trueup guard` reviews a write Cursor has already made. Cursor names the event in camelCase, so the guard judged the finished write as a new one and answered with a refusal Cursor never reads. The findings now reach the agent in the field Cursor reads after a tool runs.
+- `trueup guard` refuses an edit to the rulebook under Cursor. Cursor lets a write through when a hook asks for approval, so the approval request let the edit land. Under Cursor it is now a refusal, as in the Claude Code modes that ask nobody.
+
 ## 0.8.0
 
 ### Added
