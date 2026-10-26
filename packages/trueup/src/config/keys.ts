@@ -6,6 +6,7 @@ const ROOT: Record<keyof ArchitectureConfig, true> = {
   changes: true,
   colocation: true,
   command: true,
+  deferAtWrite: true,
   duplication: true,
   extensions: true,
   externals: true,

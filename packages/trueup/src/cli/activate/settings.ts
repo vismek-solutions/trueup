@@ -77,6 +77,7 @@ export const settingLines = (config: ResolvedConfig, read: number): readonly str
         : "unguarded, so an agent may edit it and switch off any check it fails",
     ],
     ["also-protected", itemsOf(pathsIn(config.protect))],
+    ["deferred-at-write", itemsOf(config.deferAtWrite)],
     ["also-runs", itemsOf(config.runners?.map((runner) => runner.name))],
     ["custom-rules", itemsOf(config.rules.map((rule) => rule.name))],
   ];

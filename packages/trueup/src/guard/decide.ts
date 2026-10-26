@@ -35,6 +35,7 @@ export interface DecideInput {
   readonly path: string | null;
   readonly root: string;
   readonly arriving?: boolean | undefined;
+  readonly deferred?: readonly string[] | undefined;
   readonly reasonOf?: ReasonOf | undefined;
 }
 
@@ -42,9 +43,17 @@ const RELOCATED = "no-declaration-is-written-twice";
 
 const shortened = (root: string, file: string): string => relative(root, file) || file;
 
-export function decideOnProposal({ report, path, root, arriving = false, reasonOf = plainReason }: DecideInput): Decision {
+export function decideOnProposal({
+  report,
+  path,
+  root,
+  arriving = false,
+  deferred = [],
+  reasonOf = plainReason,
+}: DecideInput): Decision {
+  const passing = new Set(arriving ? [...deferred, RELOCATED] : deferred);
   const reasons = report.claims.flatMap((claim) => {
-    if (arriving && claim.claim === RELOCATED) return [];
+    if (passing.has(claim.claim)) return [];
 
     const hits = claim.findings.filter(
       (finding) => finding.severity === "error" && (path === null || finding.file === path),

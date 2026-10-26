@@ -46,6 +46,7 @@ export interface Settings {
 
 export interface ArchitectureConfig extends Settings {
   readonly command?: string | undefined;
+  readonly deferAtWrite?: readonly string[] | undefined;
   readonly include?: readonly string[] | undefined;
   readonly members?: readonly string[] | undefined;
   readonly protect?: Protection | undefined;
