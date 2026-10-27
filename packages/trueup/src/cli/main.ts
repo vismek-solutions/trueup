@@ -1,6 +1,5 @@
 import { relative } from "node:path";
-import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baseline-file.ts";
-import { check } from "../main.ts";
+import { baselinePathIn, readBaseline, writeBaseline } from "../adapters/baseline-file.ts";import { check } from "../main.ts";
 import { findConfig, resolveInclude } from "../config/load.ts";
 import { rulebookGuarded } from "../guard/protected.ts";
 import { acceptanceOf, applyBaseline, baselineOf } from "../ratchet/apply.ts";
@@ -120,7 +119,7 @@ const usageIn = (argv: readonly string[], write: (line: string) => void): number
   return asked ? EXIT_CLEAN : EXIT_BAD_USAGE;
 };
 
-export async function runCli({ cwd, argv, write }: CommandInput): Promise<number> {
+export async function runCli({ cwd, argv, write, parsingIn }: CommandInput): Promise<number> {
   const usage = usageIn(argv, write);
   if (usage !== null) return usage;
 
@@ -167,6 +166,7 @@ export async function runCli({ cwd, argv, write }: CommandInput): Promise<number
     ignoreDirectories: config.ignoreDirectories,
     assets: config.assets,
     ignoreFiles: rulebooks,
+    parseSources: parsingIn?.(root),
   });
 
   const baselinePath = baselinePathIn(root);

@@ -1,5 +1,5 @@
 import { readSource } from "../../adapters/node-files.ts";
-import { parseModule } from "../../adapters/oxc-parse.ts";
+import { parseModule } from "../../adapters/parse/oxc-parse.ts";
 import type { HookRequest } from "../../ports/proposal.ts";
 import type { Finding, Report } from "../../report/model.ts";
 

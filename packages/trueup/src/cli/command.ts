@@ -1,7 +1,12 @@
+import type { ParseSources } from "../ports/module-record.ts";
+
+export type ParsingIn = (root: string) => ParseSources;
+
 export interface CommandInput {
   readonly cwd: string;
   readonly argv: readonly string[];
   readonly write: (line: string) => void;
+  readonly parsingIn?: ParsingIn | undefined;
 }
 
 export const EXIT_CLEAN = 0;

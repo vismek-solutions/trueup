@@ -10,6 +10,7 @@ import {
 } from "../../adapters/claude-code-hook.ts";
 import { checkoutHolding } from "../../adapters/git/worktrees.ts";
 import { readSource } from "../../adapters/node-files.ts";
+import type { ParsingIn } from "../command.ts";
 import { check, placementOf } from "../../main.ts";
 import { findConfig, resolveInclude } from "../../config/load.ts";
 import type { ResolvedConfig } from "../../config/model.ts";
@@ -29,6 +30,7 @@ export interface RunGuardInput {
   readonly cwd: string;
   readonly stdin: string;
   readonly write: (line: string) => void;
+  readonly parsingIn?: ParsingIn | undefined;
 }
 
 interface Site {
@@ -120,7 +122,8 @@ const arrivingAt = (request: HookRequest, path: string | null): boolean => {
 
 type At = Omit<RunGuardInput, "stdin">;
 
-async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boolean): Promise<void> {
+async function judge(at: At, payload: unknown, followsWorktrees: boolean): Promise<void> {
+  const { cwd, write, parsingIn } = at;
   const found = findConfig(cwd);
   if (found === null) return;
 
@@ -134,7 +137,7 @@ async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boo
   const named = targetOf(asked);
   const home = named === null ? null : checkoutHolding(root, named);
   if (home !== null && home.root !== root) {
-    if (followsWorktrees) await judge({ cwd: home.root, write }, payload, false);
+    if (followsWorktrees) await judge({ ...at, cwd: home.root }, payload, false);
     return;
   }
   const request = home === null ? asked : rebased(asked, home.path);
@@ -186,6 +189,7 @@ async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boo
       assets: config.assets,
       ignoreFiles: rulebooks,
       overlay: overlayOf(request),
+      parseSources: parsingIn?.(root),
     }),
     config.command ?? DEFAULT_COMMAND,
   );
@@ -207,7 +211,7 @@ async function judge({ cwd, write }: At, payload: unknown, followsWorktrees: boo
   if (output !== null) write(output);
 }
 
-export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<number> {
+export async function runGuard({ stdin, ...at }: RunGuardInput): Promise<number> {
   let payload: unknown;
   try {
     payload = JSON.parse(stdin);
@@ -215,6 +219,6 @@ export async function runGuard({ cwd, stdin, write }: RunGuardInput): Promise<nu
     return 0;
   }
 
-  await judge({ cwd, write }, payload, true);
+  await judge(at, payload, true);
   return 0;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildLexicon } from "../../src/lexicon/build.ts";
 import type { Lexicon } from "../../src/lexicon/model.ts";
-import type { ModuleRecord, ReadDeclarations, ReadMentions } from "../../src/ports/module-record.ts";
+import type { ModuleRecord, ReadProse } from "../../src/ports/module-record.ts";
 
 const FILE = "/p/a.ts";
 const UNREAD = "/p/never-read.ts";
@@ -29,52 +29,37 @@ interface Counted {
 
 const counting = (): Counted => {
   let parses = 0;
-  const readDeclarations: ReadDeclarations = () => {
+  const readProse: ReadProse = () => {
     parses += 1;
-    return [{ name: "kept", text: " = 1", start: 6, end: 14 }];
-  };
-  const readMentions: ReadMentions = () => {
-    parses += 1;
-    return [{ text: "kept", form: "name", start: 6 }];
+    return { strings: [{ text: "kept", start: 6, end: 10 }], joined: [] };
   };
 
   return {
     lexicon: buildLexicon({
-      modules: [record],
+      facts: new Map([
+        [
+          FILE,
+          {
+            record,
+            mentions: [{ text: "kept", form: "name", start: 6 }],
+            declarations: [{ name: "kept", text: " = 1", start: 6, end: 14 }],
+            comments: [],
+          },
+        ],
+      ]),
       sources: new Map([[FILE, "const kept = 1"]]),
-      readMentions,
-      readDeclarations,
-      readComments: () => [],
-      readProse: () => ({ strings: [], joined: [] }),
+      readProse,
     }),
     parses: () => parses,
   };
 };
 
-describe("reading a file more than once", () => {
-  it("parses its declarations once, however many rules ask", () => {
+describe("reading a file's prose more than once", () => {
+  it("parses it once, however many rules ask, and gives the same answer the second time", () => {
     const { lexicon, parses } = counting();
 
-    lexicon.declarationsIn(FILE);
-    lexicon.declarationsIn(FILE);
-
+    expect(lexicon.proseIn(FILE)).toEqual(lexicon.proseIn(FILE));
     expect(parses()).toBe(1);
-  });
-
-  it("parses its mentions once too, and keeps the two apart", () => {
-    const { lexicon, parses } = counting();
-
-    lexicon.mentionsIn(FILE);
-    lexicon.mentionsIn(FILE);
-
-    expect(parses()).toBe(1);
-  });
-
-  it("gives the same answer the second time", () => {
-    const { lexicon } = counting();
-
-    expect(lexicon.declarationsIn(FILE)).toEqual(lexicon.declarationsIn(FILE));
-    expect(lexicon.mentionsIn(FILE)).toEqual(lexicon.mentionsIn(FILE));
   });
 });
 
@@ -90,9 +75,7 @@ describe("asking about a file the analysis never read", () => {
   it("parses nothing at all for it", () => {
     const { lexicon, parses } = counting();
 
-    lexicon.declarationsIn(UNREAD);
-    lexicon.mentionsIn(UNREAD);
-
+    expect(lexicon.proseIn(UNREAD)).toEqual({ strings: [], joined: [] });
     expect(parses()).toBe(0);
   });
 

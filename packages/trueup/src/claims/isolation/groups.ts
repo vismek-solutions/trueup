@@ -6,13 +6,23 @@ export type GroupOf = (file: string) => string | null;
 
 export const groupReader = (root: string, pattern: string): GroupOf => {
   const expression = picomatch.makeRe(`${pattern}/**`, { dot: true, capture: true });
+  const answered = new Map<string, string | null>();
 
-  return (file) => {
+  const read = (file: string): string | null => {
     const captured = expression.exec(toPosix(relative(root, file)));
     if (captured === null) return null;
 
     const segments = captured.slice(1, -1).filter((segment) => segment !== undefined);
     return segments.length === 0 ? null : segments.join("/");
+  };
+
+  return (file) => {
+    const known = answered.get(file);
+    if (known !== undefined) return known;
+
+    const group = read(file);
+    answered.set(file, group);
+    return group;
   };
 };
 

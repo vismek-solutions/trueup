@@ -10,9 +10,10 @@ import {
   type Mention,
   type ModuleRecord,
   type ParseModule,
-  type ReadDeclarations,
-  type ReadMentions,
-} from "../ports/module-record.ts";
+  type ParseSource,
+  type ParseSources,
+} from "../../ports/module-record.ts";
+import { commentsOf } from "../text/comments.ts";
 
 interface AstNode {
   readonly type?: unknown;
@@ -208,18 +209,13 @@ const declarationsOf = (raw: AstNode, text: string, into: Declaration[]): void =
   if (found !== null) into.push(found);
 };
 
-export const readMentions: ReadMentions = (path, text) => collectMentions(parseSync(path, text).program);
-
-export const readDeclarations: ReadDeclarations = (path, text) => {
-  const body = parseSync(path, text).program.body as unknown as AstNode[];
+const collectDeclarations = (body: readonly AstNode[], text: string): Declaration[] => {
   const found: Declaration[] = [];
   for (const node of body) declarationsOf(node, text, found);
   return found;
 };
 
-export const parseModule: ParseModule = (path, text): ModuleRecord => {
-  const { module } = parseSync(path, text);
-
+const recordOf = (path: string, text: string, module: Module): ModuleRecord => {
   const exports = module.staticExports
     .flatMap((statement) => statement.entries.map(exportEntryOf))
     .filter((entry): entry is ExportEntry => entry !== null);
@@ -231,3 +227,20 @@ export const parseModule: ParseModule = (path, text): ModuleRecord => {
 
   return { path, imports, exports, esm: module.hasModuleSyntax };
 };
+
+export const parseModule: ParseModule = (path, text) => recordOf(path, text, parseSync(path, text).module);
+
+const parseSource: ParseSource = (path, text) => {
+  const parsed = parseSync(path, text);
+  const program = parsed.program;
+
+  return {
+    record: recordOf(path, text, parsed.module),
+    mentions: collectMentions(program),
+    declarations: collectDeclarations(program.body as unknown as AstNode[], text),
+    comments: commentsOf(parsed.comments, text),
+  };
+};
+
+export const parseEach: ParseSources = (sources) =>
+  new Map([...sources].map(([path, text]) => [path, parseSource(path, text)]));

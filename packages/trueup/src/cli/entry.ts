@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { cachedParse } from "../adapters/parse/facts-cache.ts";
 import { runActivate } from "./activate/run.ts";
 import { runAgentInstructions } from "./agent-instructions.ts";
 import type { CommandInput } from "./command.ts";
@@ -37,7 +38,7 @@ const named = COMMANDS[argv[0] ?? ""];
 if (named !== undefined) {
   process.exitCode = await named({ cwd, argv: argv.slice(1), write });
 } else if (argv[0] === "guard") {
-  process.exitCode = await runGuard({ cwd, stdin: await read(), write });
+  process.exitCode = await runGuard({ cwd, stdin: await read(), write, parsingIn: cachedParse });
 } else {
-  process.exitCode = await runCli({ cwd, argv, write });
+  process.exitCode = await runCli({ cwd, argv, write, parsingIn: cachedParse });
 }
