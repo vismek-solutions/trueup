@@ -65,8 +65,6 @@ export interface ModuleRecord {
 
 export type ParseModule = (path: string, text: string) => ModuleRecord;
 
-export type ReadMentions = (path: string, text: string) => readonly Mention[];
-
 export interface Declaration {
   readonly name: string;
   readonly text: string;
@@ -74,10 +72,16 @@ export interface Declaration {
   readonly end: number;
 }
 
-export type ReadDeclarations = (path: string, text: string) => readonly Declaration[];
+export interface SourceFacts {
+  readonly record: ModuleRecord;
+  readonly mentions: readonly Mention[];
+  readonly declarations: readonly Declaration[];
+  readonly comments: readonly Span[];
+}
 
-// a comment's text keeps the source's length, its markers blanked, so an index into it indexes the file
-export type ReadComments = (path: string, text: string) => readonly Span[];
+export type ParseSource = (path: string, text: string) => SourceFacts;
+
+export type ParseSources = (sources: ReadonlyMap<string, string>) => ReadonlyMap<string, SourceFacts>;
 
 export interface JoinedProse {
   readonly parts: readonly Span[];

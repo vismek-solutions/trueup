@@ -1,12 +1,11 @@
 import { readSets, readSources, type DiscoverFilesOptions } from "../adapters/node-files.ts";
-import { parseModule, readDeclarations, readMentions } from "../adapters/oxc-parse.ts";
-import { readComments } from "../adapters/text/comments.ts";
+import { parseEach, parseModule } from "../adapters/parse/oxc-parse.ts";
 import { readProse } from "../adapters/text/prose.ts";
 import { createResolver } from "../adapters/oxc-resolve.ts";
 import { buildSymbolGraph } from "../graph/build.ts";
 import type { SymbolGraph } from "../graph/model.ts";
 import { buildLexicon } from "../lexicon/build.ts";
-import type { ModuleRecord, ParseModule } from "../ports/module-record.ts";
+import type { ModuleRecord, ParseModule, ParseSources } from "../ports/module-record.ts";
 import { buildProject } from "../project/build.ts";
 import type { Project } from "../project/model.ts";
 import { assignZones } from "../zones/assign.ts";
@@ -38,24 +37,20 @@ export interface InspectOptions {
   readonly ignoreFiles?: readonly string[] | undefined;
   readonly assets?: readonly string[] | undefined;
   readonly overlay?: Overlay | undefined;
+  readonly parseSources?: ParseSources | undefined;
 }
 
 export const analyseProject = (options: InspectOptions) => {
   const { root, roots, zones, extensions, externals, ignoreDirectories, ignoreFiles, overlay } = options;
+  const { parseSources = parseEach } = options;
   const roughly = { roots: roots ?? [root], extensions, ignoreDirectories, ignoreFiles };
   // an asset is never parsed, never in the graph and never zoned, so a stylesheet owes no zone
   const { sources, assets } = readSets({ root, ...roughly, assets: options.assets }, overlay);
-  const modules = parseAll(sources, parseModule);
+  const facts = parseSources(sources);
+  const modules = [...facts.values()].map((parsed) => parsed.record);
   const graph = buildSymbolGraph({ modules, resolve: createResolver({ externals }) });
   const assignment = assignZones({ root, files: [...graph.files], zones });
-  const lexicon = buildLexicon({
-    modules,
-    sources,
-    readMentions,
-    readDeclarations,
-    readComments,
-    readProse,
-  });
+  const lexicon = buildLexicon({ facts, sources, readProse });
 
   return {
     graph,

@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import picomatch from "picomatch";
 import { toPosix } from "../paths/posix.ts";
+import { CACHE_DIRECTORY } from "./parse/facts-cache.ts";
 
 export const namedAsset = (root: string, patterns: readonly string[]): ((path: string) => boolean) => {
   if (patterns.length === 0) return () => false;
@@ -21,6 +22,7 @@ export const IGNORED_DIRECTORIES = [
   "coverage",
   ".next",
   ".turbo",
+  CACHE_DIRECTORY,
 ];
 
 export interface DiscoverFilesOptions {

@@ -28,6 +28,7 @@ import { runClaims } from "../claims/run.ts";
 import { seamClaim, seamZoneReferences } from "../claims/seam.ts";
 import { zoneReferencesExistClaim } from "../claims/zone-references.ts";
 import type { Settings } from "../config/model.ts";
+import type { ParseSources } from "../ports/module-record.ts";
 import { withoutDuplicates, type Report } from "../report/model.ts";
 import { textClaims } from "../text/claims.ts";
 import type { ZoneDefinition, ZoneRole } from "../zones/model.ts";
@@ -43,6 +44,7 @@ export interface CheckOptions extends Settings {
   readonly doorNotes?: RefusalNotes | undefined;
   readonly overlay?: Overlay | undefined;
   readonly ignoreFiles?: readonly string[] | undefined;
+  readonly parseSources?: ParseSources | undefined;
 }
 
 const namesOf = (zones: readonly ZoneDefinition[], role: ZoneRole): string[] =>

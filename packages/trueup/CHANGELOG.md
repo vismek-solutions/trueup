@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0
+
+### Changed
+
+- `trueup guard` and the full check keep what they learn from each file in a `.trueup-cache` folder at the project root. A file is parsed again only once its text changes. On a project of about 2,900 files a guarded edit went from about 3.1 seconds to about 1.35.
+- Each file is parsed once per run rather than once for each kind of fact a claim asks about.
+- `.trueup-cache` joins the directories the analysis never walks into. A rulebook that sets `ignoreDirectories` replaces that list and should name it too.
+
 ## 0.9.0
 
 ### Fixed

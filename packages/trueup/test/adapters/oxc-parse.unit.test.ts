@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseModule, readDeclarations, readMentions } from "../../src/adapters/oxc-parse.ts";
+import { parseEach, parseModule } from "../../src/adapters/parse/oxc-parse.ts";
 import type { ImportStatement } from "../../src/ports/module-record.ts";
 
 const importsIn = (source: string): readonly ImportStatement[] => parseModule("/p/a.ts", source).imports;
@@ -8,10 +8,12 @@ const bindingsIn = (source: string) => importsIn(source)[0]?.bindings ?? [];
 
 const exportsIn = (source: string) => parseModule("/p/a.ts", source).exports;
 
-const declaredIn = (source: string) => readDeclarations("/p/a.ts", source);
+const factsOf = (source: string, path = "/p/a.ts") => parseEach(new Map([[path, source]])).get(path);
+
+const declaredIn = (source: string) => factsOf(source)?.declarations ?? [];
 
 const mentionedIn = (source: string, path = "/p/a.ts") =>
-  readMentions(path, source).map((mention) => `${mention.form}:${mention.text}`);
+  (factsOf(source, path)?.mentions ?? []).map((mention) => `${mention.form}:${mention.text}`);
 
 describe("what an import statement binds", () => {
   it("calls a default import by the name every default goes by", () => {
@@ -241,6 +243,6 @@ describe("the names and strings a file mentions", () => {
   });
 
   it("carries the position of each mention, so a finding can point at it", () => {
-    expect(readMentions("/p/a.ts", "const name = 1;\n")[0]?.start).toBe(6);
+    expect(factsOf("const name = 1;\n")?.mentions[0]?.start).toBe(6);
   });
 });

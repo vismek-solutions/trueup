@@ -16,6 +16,15 @@ const stripped = (prefix: string, zone: string | null): string | null =>
 
 export const scopedTo = (project: Project, { directory, prefix }: Scope): Project => {
   const qualify = (zone: string): string => `${prefix}${zone}`;
+  const answered = new Map<string, boolean>();
+  const within = (path: string): boolean => {
+    const known = answered.get(path);
+    if (known !== undefined) return known;
+
+    const found = inside(directory, path);
+    answered.set(path, found);
+    return found;
+  };
 
   const narrow = (entry: ResolvedImport): ResolvedImport => ({
     ...entry,
@@ -27,12 +36,12 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
   return {
     root: project.root,
     relative: project.relative,
-    files: project.files.filter((file) => inside(directory, file)),
-    assets: project.assets.filter((file) => inside(directory, file)),
+    files: project.files.filter(within),
+    assets: project.assets.filter(within),
     zoneNames: project.zoneNames
       .filter((zone) => zone.startsWith(prefix))
       .map((zone) => zone.slice(prefix.length)),
-    zoneOf: (file) => (inside(directory, file) ? stripped(prefix, project.zoneOf(file)) : null),
+    zoneOf: (file) => (within(file) ? stripped(prefix, project.zoneOf(file)) : null),
     roleOf: (zone) => project.roleOf(qualify(zone)),
     filesIn: (zone) => project.filesIn(qualify(zone)),
     imports: (query?: ImportQuery) =>
@@ -42,7 +51,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
           ...(query?.fromZone === undefined ? {} : { fromZone: qualify(query.fromZone) }),
           ...(query?.declaredZone === undefined ? {} : { declaredZone: qualify(query.declaredZone) }),
         })
-        .filter((entry) => inside(directory, entry.from))
+        .filter((entry) => within(entry.from))
         .map(narrow),
     exportsOf: project.exportsOf,
     sourceOf: project.sourceOf,
@@ -52,7 +61,7 @@ export const scopedTo = (project: Project, { directory, prefix }: Scope): Projec
     proseIn: project.proseIn,
     referencesIn: project.referencesIn,
     importsWithin: (file, names) =>
-      inside(directory, file) ? project.importsWithin(file, names).map(narrow) : [],
+      within(file) ? project.importsWithin(file, names).map(narrow) : [],
     reachedWithin: project.reachedWithin,
     vocabularyOf: (zones) => project.vocabularyOf(zones.map(qualify)),
   };

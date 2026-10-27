@@ -186,6 +186,12 @@ The guard has to know what the file would look like after the edit. A find and r
 
 Delegated tools do not run here. A runner hands a job to another tool you already use, and starting a whole-repo lint on every edit would cost far more than it catches.
 
+## What the guard keeps between edits
+
+The guard checks the whole project on every edit, so reading each file again would cost every edit the same parse. What it learns from a file is kept in a `.trueup-cache` folder at the project root and reused while the file's text is unchanged. The full check writes and reads the same folder, so a run in your gate keeps the guard's next edit quick.
+
+The folder carries its own ignore file, so git never shows it. Deleting it is always safe. The next run parses every file once and writes it again.
+
 ## Edits in another worktree
 
 A git worktree is a second checkout of the same repository in a directory of its own, often used so that several agents can work side by side. An edit to a file in one is judged by that worktree's own rulebook and baseline. Those are the ones its own check reads before the work lands, so the guard and that check agree.
