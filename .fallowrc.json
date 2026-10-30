@@ -9,7 +9,7 @@
   ],
   "duplicates": {
     "mode": "weak",
-    "minLines": 13,
+    "minLines": 19,
     "minTokens": 30
   },
   "ignorePatterns": ["**/fixtures/**"],

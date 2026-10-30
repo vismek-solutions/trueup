@@ -4,7 +4,8 @@ import { createOffsetReader, type OffsetOf } from "./source-offset.ts";
 import { absoluteIn, numberOf, objectOf, stringOf } from "./tool-output.ts";
 import { jsonRunner, readToolJson } from "./tool-process.ts";
 
-const FALLOW_CHECK_SCHEMA = 9;
+// 10 only added a policy rule kind, so every field read here is the same in both
+const FALLOW_CHECK_SCHEMAS: ReadonlySet<unknown> = new Set([9, 10]);
 
 const FALLOW_CATEGORY_RULES: Readonly<Record<string, string>> = {
   unused_files: "unused-files",
@@ -120,10 +121,10 @@ const readPayload = (report: Record<string, unknown>): Payload => {
   if (check === null) return { kind: "failed", reason: "output carried no check section" };
 
   const schema = (check as { schema_version?: unknown }).schema_version;
-  if (schema !== FALLOW_CHECK_SCHEMA) {
+  if (!FALLOW_CHECK_SCHEMAS.has(schema)) {
     return {
       kind: "failed",
-      reason: `check schema ${String(schema)} is not the expected ${FALLOW_CHECK_SCHEMA}`,
+      reason: `check schema ${String(schema)} is not one of the expected ${[...FALLOW_CHECK_SCHEMAS].join(", ")}`,
     };
   }
 
