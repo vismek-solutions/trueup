@@ -35,7 +35,7 @@ if (mode === "old-schema") {
 }
 
 const check = {
-  schema_version: 9,
+  schema_version: mode === "schema-9" ? 9 : 10,
   unused_exports: [{ path: "src/engine/runner.ts", export_name: "run", line: 3, col: 13 }],
   circular_dependencies: [{ cycle: ["a.ts", "b.ts"] }],
   a_category_fallow_added: [{}],

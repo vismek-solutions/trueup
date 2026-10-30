@@ -276,8 +276,11 @@ describe("refusing to trust a delegated tool", () => {
     expect(fallowRunner().name).toBe("fallow");
   });
 
-  it("fails when the output schema is not the one it was written against", async () => {
-    expect(reasonOf(await runWith("old-schema"))).toContain("is not the expected 9");
+  it("reads the check schemas it was written against and fails on any other", async () => {
+    const ten = await runWith("ok", ["unused_exports"]);
+    expect(findingsOf(await runWith("schema-9", ["unused_exports"])), "schema 9").toEqual(findingsOf(ten));
+    expect(findingsOf(ten), "schema 10").toHaveLength(1);
+    expect(reasonOf(await runWith("old-schema"))).toContain("check schema 1 is not one of the expected 9, 10");
   });
 
   it("fails when the output carries no check section", async () => {
