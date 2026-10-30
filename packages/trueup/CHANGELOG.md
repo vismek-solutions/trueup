@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.0
+
+### Fixed
+
+- The fallow runner reads the output of fallow 3.32.0 and later. Those versions mark their check output as schema 10, and the runner refused anything but 9, so every run failed. Schema 10 only adds a policy rule kind, so the runner reads both and reports the same findings from each.
+
 ## 0.10.0
 
 ### Changed
