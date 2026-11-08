@@ -19,7 +19,7 @@ export function zoneReferencesExistClaim(references: readonly ZoneReference[]): 
             file: null,
             start: null,
           })),
-        guidance: `A rule names a zone that is not declared, so the rule never fires and the boundary it describes is not enforced.
+        guidance: `A rule names a zone that is not declared, so it does not enforce what it says.
 
 Do this:
 - Correct the name in the rule.

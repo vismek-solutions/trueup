@@ -8,12 +8,10 @@ const theAnalysisReachedFiles: Claim = {
       graph.files.size > 0
         ? []
         : [{ severity: "error", message: "no files were analysed", file: null, start: null }],
-    guidance: `No file matched the configured roots and extensions, so every other claim passed on nothing.
+    guidance: `No file matched the configured roots and extensions, so nothing was checked.
 
 Do this:
-- Fix \`include\` or \`extensions\` in the config.
-
-An empty analysis fails rather than warns, so a mis-scoped config cannot report success.`,
+- Fix \`include\` or \`extensions\` in the config.`,
   }),
 };
 
@@ -27,12 +25,10 @@ const everyImportResolves: Claim = {
       start: entry.start,
       specifier: entry.specifier,
     })),
-    guidance: `A specifier did not resolve, so its edges are absent from the graph and no rule could judge them.
+    guidance: `A specifier did not resolve, so no rule can judge its edges.
 
 Do this:
-- Fix the path, the tsconfig paths, or the package exports.
-
-This fails rather than warns, because a rule that cannot see an edge silently passes it.`,
+- Fix the path, the tsconfig paths, or the package exports.`,
   }),
 };
 
@@ -73,7 +69,7 @@ const everyImportedNameIsUnambiguous = edgesEndingIn({
   name: "every-imported-name-is-unambiguous",
   kind: "ambiguous",
   fault: "which re-exports it from more than one module",
-  guidance: `Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from.
+  guidance: `Two star re-exports supply the same name, so no rule can say where it came from.
 
 Do this:
 - Export it from one place.

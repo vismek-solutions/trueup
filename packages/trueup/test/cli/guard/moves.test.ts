@@ -34,6 +34,11 @@ const refusalFor = async (path: string, content: string): Promise<string> => {
   return JSON.parse(output).hookSpecificOutput.permissionDecisionReason;
 };
 
+const landing = async (path: string, content: string): Promise<void> => {
+  expect((await proposing(path, content)).output).toBe("");
+  writeFileSync(join(PROJECT, path), content);
+};
+
 describe("a declaration on its way from one file to another", () => {
   it("lets the new file through, since a move looks like a copy until the old one is gone", async () => {
     const { output } = await proposing("src/shared.ts", COPIED);
@@ -43,6 +48,18 @@ describe("a declaration on its way from one file to another", () => {
 
   it("still refuses a second copy landing in a file that already exists", async () => {
     expect(await refusalFor("src/two.ts", COPIED)).toContain("no-declaration-is-written-twice");
+  });
+
+  it("moves into an existing file when the copy goes first and the import last", async () => {
+    const caller = 'export const joined = label(["a"]);\n';
+    const importing = `import { label } from "./two.js";\n\n${caller}`;
+    writeFileSync(join(PROJECT, "src/one.ts"), `${COPIED}${caller}`);
+
+    expect(await refusalFor("src/one.ts", importing)).toContain("every-imported-name-is-exported");
+
+    await landing("src/one.ts", caller);
+    await landing("src/two.ts", `${COPIED}export const kept = 1;\n`);
+    await landing("src/one.ts", importing);
   });
 
   it("holds every other rule over the new file, so this is one claim and not a way in", async () => {

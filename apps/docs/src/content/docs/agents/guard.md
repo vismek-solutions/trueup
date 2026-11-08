@@ -118,12 +118,11 @@ The default is a permission prompt, not a refusal.
 This edit needs your approval under the project's architecture rules.
 
 no-edit-changes-the-rules-themselves  trueup.config.ts
-  An agent is asking to change a file the project's rules are read from.
+  An agent is asking to change a protected file.
 
-  Approve it if this is setup, or a change to the rules you meant to make.
+  Approve it if this is setup, or a change you meant to make.
 
-  Refuse it if a check was failing just before this. Editing the rulebook is how a failing check
-  gets switched off, and it leaves no trace that it ever failed.
+  Refuse it if a check was failing just before this. Editing this file is how a failing check gets switched off.
 ```
 
 That keeps setup work possible. An agent can draft your zones, add one for a new directory, or wire up the hooks, and you approve each one. What it cannot do is quietly widen a rule that is failing right now, because the request reaches you along with the reason to look twice.

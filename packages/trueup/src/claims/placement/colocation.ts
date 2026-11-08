@@ -167,16 +167,22 @@ const misplaced = (group: readonly Reported[], readBy: ReadonlySet<string>, read
 
   const units = new Set(group.map(({ unit }) => unit));
   const wholeFile = units.size === 1 && readBy.size === 1 && readBy.has(first.unit);
-  if (group.length === 1 || !wholeFile) return eachDeclaration(group, first.reach.declaredIn, reading);
+  const onlyExport = group.length === 1 && reading.project.exportsOf(first.reach.declaredIn).length === 1;
+  if (!wholeFile || (group.length === 1 && !onlyExport)) {
+    return eachDeclaration(group, first.reach.declaredIn, reading);
+  }
 
   const where = consumerOf(group, first, reading);
   const silenced = [...new Set(group.flatMap((entry) => entry.silenced))].sort();
+  const reads = onlyExport
+    ? `declares ${first.reach.symbol}, used only by ${where}, so the file is in the wrong directory rather than the declaration`
+    : `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations`;
 
   return {
     findings: [
       {
         severity: "error" as const,
-        message: `declares ${group.length} exports, all used only by ${where}, so the file is in the wrong directory rather than the declarations${uncounted(silenced, reading.project)}`,
+        message: `${reads}${uncounted(silenced, reading.project)}`,
         file: first.reach.declaredIn,
         start: null,
         symbols: group.map(({ reach }) => reach.symbol).sort(),

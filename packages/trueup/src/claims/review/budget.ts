@@ -4,16 +4,21 @@ import type { Severity } from "../../ports/severity.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 
-const GUIDANCE = `A change this size is reviewed by skimming, and skimming is not reviewing.
+const GUIDANCE = `This change is too large to review.
 
 Do this:
-- Find a seam in what you have already done, a move or a rename or a new module with its tests, and land that on its own before going further.
-- Split at a point where the whole tree is green, not by file at the end. Changes carved out afterwards do not each stand up, and a reviewer gains nothing from reading half a refactor.
-- If a generated, vendored or lock file is what grew, name it in \`except\` rather than moving the cap.
+- Land part of what is already done on its own, such as a move, a rename or a new module with its tests.
+- Split where the whole tree is green, not by file at the end.
+- If a generated, vendored or lock file grew, name it in \`except\`.
 
-Not the fix: raising the budget because the work is nearly done. The number says what a person can hold in their head, and that does not change because this change is inconvenient to stop.
+Not the fix: raising the budget because the work is nearly done.
 
-This claim is never recorded in the baseline, since accepting it once would switch the budget off for good.`;
+This claim is never recorded in the baseline.`;
+
+const UNMEASURED = `Nothing was held to the review budget, because the change could not be measured.
+
+Do this:
+- Fix the cause the finding names.`;
 
 const REVIEW_CLAIM = "no-change-outgrows-its-review";
 
@@ -95,9 +100,13 @@ const budgetFindings = (budget: ReviewBudget, changed: ChangeSet): readonly Find
 export function reviewClaim(budget: ReviewBudget, changes: Changes): Claim {
   return {
     name: REVIEW_CLAIM,
-    check: ({ root }) => ({
-      findings: budgetFindings(budget, changes.since(root, budget.base ?? DEFAULT_BASE)),
-      guidance: GUIDANCE,
-    }),
+    check: ({ root }) => {
+      const changed = changes.since(root, budget.base ?? DEFAULT_BASE);
+
+      return {
+        findings: budgetFindings(budget, changed),
+        guidance: changed.kind === "unmeasured" ? UNMEASURED : GUIDANCE,
+      };
+    },
   };
 }

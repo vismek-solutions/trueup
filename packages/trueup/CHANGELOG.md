@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.11.1
+
+### Fixed
+
+- The guidance on `no-declaration-is-written-twice` told an agent to write the shared file first, which the guard refuses when that file already exists. It now gives the order for each case: a new file is written before the copies go, and an existing file receives the declaration after they are gone.
+- Guidance that described the tool wrongly now matches it. Renaming a copy does not close a duplicate finding, a re-export does not close a boundary finding, and `doorsFromExports` needs the api zones removed in the same edit.
+- A change the review budget could not measure and a project with no `tests` zone each print their own remedy.
+- `no-value-is-declared-away-from-its-only-consumer` reported a type imported without the `type` keyword, so the result depended on how the import was written. An interface or a type alias now counts as a type however it is imported. A name declared as both a value and a type still counts as the value.
+- Setting `doorsFromExports` on a member that still declares an api zone now names the fix in its error.
+
+### Changed
+
+- Every claim's guidance now says what is wrong, what to do and which fix to avoid, and leaves out the history and the reasoning.
+- A file whose only export has one consumer now gets the finding that moves the whole file, as a file with several exports already did. The message is part of the baseline key, so an accepted finding of that shape reports as new until it is accepted again.
+
 ## 0.11.0
 
 ### Fixed

@@ -23,63 +23,64 @@ export interface TextSettings {
   readonly maxSectionWordsWithoutExample?: number | undefined;
 }
 
-const MARKS = `A mark the project banned stands in for a pause, which hides which of a full stop, a comma or a colon the sentence actually needed.
+const MARKS = `A mark the project banned stands in for a pause.
 
 Do this:
-- Split the sentence where the mark stands, or put a comma, a colon or a joining word there.
+- Split the sentence where the mark stands, or use a comma, a colon or a joining word.
 - Put a genuine range or a compound word in inline code, which this check does not read.
 
-Not the fix: swapping one dash for a narrower one. Every mark the rulebook lists is off, whatever its width.`;
+Not the fix: swapping one dash for a narrower one.`;
 
-const WORDS = `A word the project banned is in the prose, with a plainer one named beside it in the rulebook.
-
-Do this:
-- Use the replacement the rulebook names.
-- Say the sentence a different way, if the replacement does not fit it.
-
-Not the fix: dropping the word from the list so this passes. The list is what holds the guides to one voice.`;
-
-const LIMITS = `A sentence or a paragraph runs past the limit this project set. No study establishes a length threshold, so the number is a house convention rather than a standard.
+const WORDS = `A word the project banned is in the prose.
 
 Do this:
-- Cut what the sentence does not need. Shortening on its own is measured to buy nothing, so removing a clause beats moving it.
-- Keep the joining word if you do split. Deleting it drops the relation the sentence was carrying.
+- Use the replacement the rulebook names, or say the sentence another way.
+
+Not the fix: dropping the word from the list.`;
+
+const LIMITS = `A sentence or a paragraph runs past the project's limit.
+
+Do this:
+- Cut what the sentence does not need, rather than moving it.
+- If you split, keep the joining word, which carries the relation.
 - Break the paragraph where the subject changes, or move the extra sentences into a list.
 
-Not the fix: raising the limit. The number exists to force the question of what the sentence is for.`;
+Not the fix: raising the limit.`;
 
-const INLINE = `Inline code holds a phrase of plain words. Inline code is for a path, a command or a symbol, because a terminal makes those clickable, and a sentence inside it reads as neither code nor prose.
+const INLINE = `Inline code holds a phrase of plain words. It is for a path, a command or a symbol.
 
 Do this:
-- Take the backticks off and let the words sit in the sentence.
-- Give it its own block, if the text really is something to run or open.
+- Take the backticks off.
+- Give it its own block, if it is something to run or open.
 
-Not the fix: raising the word limit. A path, a command and a symbol all sit under it already.`;
+Not the fix: raising the word limit.`;
 
-const LINKS = `A link says nothing about where it goes. Somebody reading with a screen reader can pull up a page's links as a list, out of the sentences around them. A list of "here" and "this page" leads nowhere, and WCAG 2.4.4 puts this at the strictest level.
+const LINKS = `A link's text does not say where it goes, and a screen reader can list links without their sentences.
 
 Do this:
 - Name the destination in the link text: the page, the command or the setting it explains.
-- Move the link onto the words already naming that thing, so the sentence keeps its shape.
+- Move the link onto the words already naming that thing.
 
-Not the fix: writing "click here to read about seams". The link text is read on its own, so the rest of the sentence is not there to carry it.`;
+Not the fix: writing "click here to read about seams".`;
 
-const EXAMPLES = `A section explains something at length with nothing to look at. A worked example is the part a reader takes away, and the measured gain from concrete framing is larger than from any wording rule here.
+const EXAMPLES = `A section explains something at length with nothing to look at.
 
 Do this:
-- Show the thing: the config that switches it on, the report it prints, or the code before and after.
-- Capture the block by running the tool, since output written from memory is wrong more often than not.
+- Show the config that switches it on, the report it prints, or the code before and after.
+- Capture output by running the tool, never from memory.
 - Split the section where the subject changes, if each half stands on its own.
 
-Not the fix: a block that repeats the prose beside it. This warns rather than fails, so a section that genuinely has nothing to show can stay as it is.`;
+Not the fix: a block that repeats the prose beside it.
 
-const ASSEMBLED = `A passage is built from parts and joined when the code runs, so no reader of the source sees the text a person will read. The separator is a value rather than something written down, which is why nothing can judge the pieces as one passage.
+This is a warning, so a section with nothing to show can stay.`;
+
+const ASSEMBLED = `A passage is joined from parts when the code runs, so nothing can check it as one passage.
 
 Do this:
-- Write the passage as one template literal, keeping its blank lines and its list where they stand.
-- Build a list of separate messages as an array if that is what it is, and leave the prose out of it.
+- Write the passage as one template literal, keeping its blank lines and its list.
+- Build separate messages as an array, with no prose joined between them.
 
-Not the fix: joining with a different separator. The pieces are the problem, not the character between them.`;
+Not the fix: joining with a different separator.`;
 
 type IssuesOf = (document: Document) => readonly TextIssue[];
 

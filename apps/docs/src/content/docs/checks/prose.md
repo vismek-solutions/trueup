@@ -43,31 +43,25 @@ Now the run says so:
 no-prose-uses-a-banned-mark                 1 error
     docs/setup.md:3:29  uses "—" where a full stop, a comma, a colon or a joining word would do
     ────────
-    A mark the project banned stands in for a pause, which hides which of a full stop, a comma or a
-    colon the sentence actually needed.
+    A mark the project banned stands in for a pause.
 
     Do this:
-    - Split the sentence where the mark stands, or put a comma, a colon or a joining word there.
+    - Split the sentence where the mark stands, or use a comma, a colon or a joining word.
     - Put a genuine range or a compound word in inline code, which this check does not read.
 
-    Not the fix: swapping one dash for a narrower one. Every mark the rulebook lists is off,
-    whatever its width.
+    Not the fix: swapping one dash for a narrower one.
 
 no-passage-runs-past-its-limit              1 error
     docs/setup.md:5:1  runs to 35 words in one sentence, more than the 30 allowed
     ────────
-    A sentence or a paragraph runs past the limit this project set. No study establishes a length
-    threshold, so the number is a house convention rather than a standard.
+    A sentence or a paragraph runs past the project's limit.
 
     Do this:
-    - Cut what the sentence does not need. Shortening on its own is measured to buy nothing, so
-      removing a clause beats moving it.
-    - Keep the joining word if you do split. Deleting it drops the relation the sentence was
-      carrying.
+    - Cut what the sentence does not need, rather than moving it.
+    - If you split, keep the joining word, which carries the relation.
     - Break the paragraph where the subject changes, or move the extra sentences into a list.
 
-    Not the fix: raising the limit. The number exists to force the question of what the sentence is
-    for.
+    Not the fix: raising the limit.
 ```
 
 ## What gets read

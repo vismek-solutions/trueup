@@ -42,7 +42,7 @@ const counting = (): Counted => {
           {
             record,
             mentions: [{ text: "kept", form: "name", start: 6 }],
-            declarations: [{ name: "kept", text: " = 1", start: 6, end: 14 }],
+            declarations: [{ name: "kept", kind: "value", text: " = 1", start: 6, end: 14 }],
             comments: [],
           },
         ],

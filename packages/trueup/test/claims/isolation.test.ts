@@ -358,7 +358,7 @@ describe("a file sitting beside a group rather than in one", () => {
   it("tells the reader that parking an undecided file in the list is not the fix", async () => {
     const claim = claimIn(await runWith({ siblings: "src/routes/*", wiring: [] }), LOOSE);
 
-    expect(claim?.guidance).toContain("not for the one you would like to allow today");
+    expect(claim?.guidance).toContain("because you have not decided where it belongs");
   });
 
   it("reads a member's `wiring` against the member's own directory, as it does `siblings`", async () => {
