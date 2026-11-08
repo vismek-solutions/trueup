@@ -159,11 +159,10 @@ export function applyBaseline({ report, baseline, root }: ApplyBaselineInput): R
     guidance: `These baseline entries match nothing any more.
 
 Do this:
-- Run \`{trueup} --update-baseline\` to drop them.
+- Fix any finding standing now, because the update accepts those too.
+- Then run \`{trueup} --update-baseline\` to drop the entries.
 
-An entry saying the claim still reports on that file is not a fix. The same problem is standing under different words, it is failing now, and updating the baseline records the new wording rather than dropping anything.
-
-Left in place they become permanent exemptions nobody audits.`,
+An entry saying the claim still reports on that file may be the same problem under different words. Read that finding first.`,
     findings: stale.map((entry) => ({
       severity: "warning" as const,
       message: saidOf(entry, reworded),

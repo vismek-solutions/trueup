@@ -67,6 +67,7 @@ export type ParseModule = (path: string, text: string) => ModuleRecord;
 
 export interface Declaration {
   readonly name: string;
+  readonly kind: BindingKind;
   readonly text: string;
   readonly start: number;
   readonly end: number;

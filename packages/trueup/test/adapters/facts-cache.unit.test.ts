@@ -10,6 +10,7 @@ const SOURCE = [
   "// the greeting a player sees",
   'export function greet(name: string) { return "hello " + name; }',
   "const twice = greet;",
+  "interface Greeting { readonly text: string }",
   "",
 ].join("\n");
 

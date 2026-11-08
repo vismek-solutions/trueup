@@ -121,12 +121,12 @@ describe("switching it on", () => {
   });
 
   it("names dissolving the group as the answer, and rehousing it as the mistake", async () => {
-    expect(claimIn(await runWith(), CLAIM)?.guidance).toContain("dissolve it rather than rehousing it");
+    expect(claimIn(await runWith(), CLAIM)?.guidance).toContain("dissolve it into its caller");
   });
 
   it("sends the reader to the named part rather than back to the file", async () => {
     expect(claimIn(await runWith(), CLAIM)?.guidance).toContain(
-      "Move that one, and opening the file will not give you a better answer",
+      "`and only <name> can leave without taking anything else with it`, move that one",
     );
   });
 });

@@ -38,7 +38,7 @@ describe("keeping a value with its only consumer", () => {
 
   it("tells the reader when a shared package is right even though the finding stands", async () => {
     expect(claimIn(await runWith(), CLAIM)?.guidance).toContain(
-      "Reach for the shared home anyway when the consumer named must not own the value",
+      "Use one anyway when the consumer must not own the value",
     );
   });
 
@@ -49,18 +49,18 @@ describe("keeping a value with its only consumer", () => {
   it("names the thing to move from the shape of the finding, rather than sending the reader to the file", async () => {
     const guidance = claimIn(await runWith(), CLAIM)?.guidance ?? "";
 
-    expect(guidance).toContain("The shape of the finding decides what moves");
-    expect(guidance).toContain("`declares <name>, used only by ...`");
+    expect(guidance).toContain("The finding's shape decides what moves");
+    expect(guidance).toContain("`... so the file is in the wrong directory ...`");
   });
 
   it("leaves out the branches for shapes it did not report", async () => {
     const guidance = claimIn(await runWith(), CLAIM)?.guidance ?? "";
 
-    expect(guidance).not.toContain("`declares N exports, all used only by ...`");
+    expect(guidance).not.toContain("`declares <name>, used only by ...`");
     expect(guidance).not.toContain("`declares <name>, used outside its zone only by ...`");
     expect(guidance).not.toContain("`... and by this file as well`");
     expect(guidance).not.toContain("reads it too but is <role>");
-    expect(guidance).not.toContain("A type is never reported");
+    expect(guidance).not.toContain("A list under the finding names what each reader imports");
   });
 });
 
@@ -101,7 +101,7 @@ describe("an export that exists only for its test", () => {
   it("names the fix that would make the codebase worse", async () => {
     const claim = (await sharedReport()).claims.find((entry) => entry.claim === TEST_ONLY);
     expect(claim?.guidance).toContain(
-      "Not the fix: adding a production caller so the export has a real consumer",
+      "Not the fix: adding a production caller so the export has a consumer",
     );
   });
 
@@ -137,13 +137,12 @@ describe("what the shared fixture reports, in full", () => {
   it("carries a branch for every shape standing in the report", async () => {
     const guidance = claimIn(await sharedReport(), CLAIM)?.guidance ?? "";
 
-    expect(guidance).toContain("`declares N exports, all used only by ...`");
+    expect(guidance).toContain("`... so the file is in the wrong directory ...`");
     expect(guidance).toContain("`declares <name>, used only by ...`");
     expect(guidance).toContain("`declares <name>, used outside its zone only by ...`");
     expect(guidance).toContain("`... and by this file as well`");
     expect(guidance).toContain("A list under the finding names what each reader imports");
-    expect(guidance).toContain("Moving the declaration anywhere but into the consumer named closes nothing");
-    expect(guidance).toContain("A type is never reported");
+    expect(guidance).toContain("Moving the value anywhere else closes nothing");
   });
 
   it("reports exactly these misplacements, ordered by the file that declares them", async () => {
@@ -162,6 +161,7 @@ describe("what the shared fixture reports, in full", () => {
       "declares wrapsAlone, used only by src/server/handler.ts",
       "declares aloneAtHome, used only by src/web/detail.ts, and by this file as well",
       "declares usedInProduction, used only by src/web/detail.ts, while spec reads it too but is tests, so it does not count",
+      "declares CompanionWebReads, used only by src/web/list.ts",
       "declares forWebOnly, used only by web (2 files)",
     ]);
   });
@@ -172,6 +172,14 @@ describe("what the shared fixture reports, in full", () => {
 
   it("says nothing about a type only one zone names, which can be used without importing it", async () => {
     expect((await messagesFor(CLAIM)).join()).not.toContain("OnlyWebNamesThis");
+  });
+
+  it("judges a type by its declaration, so leaving out the type keyword reports nothing", async () => {
+    expect((await messagesFor(CLAIM)).join()).not.toContain("WebImportsWithoutTheKeyword");
+  });
+
+  it("keeps a name declared as a value and a type counted as the value", async () => {
+    expect(await messagesFor(CLAIM)).toContain("declares CompanionWebReads, used only by src/web/list.ts");
   });
 
   it("says nothing about an import that resolves to no file of ours", async () => {
@@ -279,7 +287,7 @@ describe("showing a misplaced file rather than a scatter of symbols", () => {
   });
 
   it("counts a file as one problem, not one per symbol it declares", async () => {
-    expect((await next()).split("\n")[0]).toContain("problem 1 of 10, 11 claims, 14 errors");
+    expect((await next()).split("\n")[0]).toContain("problem 1 of 11, 11 claims, 15 errors");
   });
 
   it("keeps two files apart, since only one of them can be the misplaced one", async () => {

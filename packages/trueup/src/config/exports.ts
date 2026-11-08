@@ -61,7 +61,9 @@ export const withDerivedDoors = (config: MemberConfig, directory: string): Membe
   if (config.doorsFromExports !== true) return config;
 
   if (config.zones.some((zone) => zone.role === "api")) {
-    throw new Error(`${directory} sets \`doorsFromExports\` and also declares an api zone`);
+    throw new Error(
+      `${directory} sets \`doorsFromExports\` and also declares an api zone. Remove the api zone, because \`doorsFromExports\` derives it`,
+    );
   }
 
   const exported = exportedFilesIn(directory);

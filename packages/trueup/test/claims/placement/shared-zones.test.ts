@@ -7,6 +7,7 @@ import type { Report } from "../../../src/report/model.ts";
 
 const PLACEMENT = "no-value-is-declared-away-from-its-only-consumer";
 const LAYERED = fixtureAt("layered");
+const WHOLE_FILE = ", so the file is in the wrong directory rather than the declaration";
 const ISLANDS: readonly IsolationRule[] = [{ siblings: "src/routes/*" }];
 
 const layeredReport = (shared: boolean, isolate: readonly IsolationRule[] = []): Promise<Report> =>
@@ -26,12 +27,12 @@ const layered = async (shared: boolean, isolate: readonly IsolationRule[] = []):
 describe("a layer written to serve the layer above it", () => {
   it("reports every declaration while the zone has not said so", async () => {
     expect(await layered(false, ISLANDS)).toEqual([
-      "declares renderBadge, used only by src/routes/home/page.ts",
-      "declares renderButton, used only by routes (2 files)",
-      "declares renderChip, used only by routes (2 files)",
-      "declares renderLayout, used only by routes (3 files)",
+      `declares renderBadge, used only by src/routes/home/page.ts${WHOLE_FILE}`,
+      `declares renderButton, used only by routes (2 files)${WHOLE_FILE}`,
+      `declares renderChip, used only by routes (2 files)${WHOLE_FILE}`,
+      `declares renderLayout, used only by routes (3 files)${WHOLE_FILE}`,
       "declares 2 exports, all used only by routes (2 files), so the file is in the wrong directory rather than the declarations",
-      "declares renderUserCard, used only by routes (2 files)",
+      `declares renderUserCard, used only by routes (2 files)${WHOLE_FILE}`,
     ]);
   });
 
@@ -42,13 +43,13 @@ describe("a layer written to serve the layer above it", () => {
 
   it("names the island rather than the zone when every reader sits in one", async () => {
     expect(await layered(true, ISLANDS)).toContain(
-      "declares renderUserCard, used only by src/routes/users (2 files)",
+      `declares renderUserCard, used only by src/routes/users (2 files)${WHOLE_FILE}`,
     );
   });
 
   it("names the file itself when the island holding the readers holds one", async () => {
     expect(await layered(true, ISLANDS)).toContain(
-      "declares renderBadge, used only by src/routes/home/page.ts",
+      `declares renderBadge, used only by src/routes/home/page.ts${WHOLE_FILE}`,
     );
   });
 
@@ -64,7 +65,9 @@ describe("a layer written to serve the layer above it", () => {
 
   it("falls to counting files when no rule groups the readers", async () => {
     expect((await layered(true)).join()).not.toContain("renderUserCard");
-    expect(await layered(true)).toContain("declares renderBadge, used only by src/routes/home/page.ts");
+    expect(await layered(true)).toContain(
+      `declares renderBadge, used only by src/routes/home/page.ts${WHOLE_FILE}`,
+    );
   });
 
   it("keeps a file's exports apart when they go to different parts, since no one move holds them", async () => {
@@ -78,13 +81,13 @@ describe("a layer written to serve the layer above it", () => {
 
   it("tells the reader the consumer named is a part, so a second part would have closed it", async () => {
     expect(claimIn(await layeredReport(true, ISLANDS), PLACEMENT)?.guidance).toContain(
-      "The consumer named is a directory or a file rather than a zone",
+      "The consumer named is a directory or a file",
     );
   });
 
   it("leaves that branch out for a zone that never said it serves one layer", async () => {
     expect(claimIn(await layeredReport(false, ISLANDS), PLACEMENT)?.guidance).not.toContain(
-      "The consumer named is a directory or a file rather than a zone",
+      "The consumer named is a directory or a file",
     );
   });
 

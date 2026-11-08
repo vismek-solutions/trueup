@@ -34,7 +34,7 @@ describe("switching the budget on", () => {
   it("names splitting as the answer, and raising the cap as the mistake", async () => {
     const guidance = claimIn(await reportOf(CAP, measured()), CLAIM)?.guidance ?? "";
 
-    expect(guidance).toContain("Find a seam in what you have already done");
+    expect(guidance).toContain("Land part of what is already done on its own");
     expect(guidance).toContain("Not the fix: raising the budget because the work is nearly done.");
   });
 });
@@ -160,6 +160,7 @@ describe("a change it could not measure", () => {
 
   it("says so rather than passing quietly, since a budget measuring nothing enforces nothing", async () => {
     expect((await said(CAP, unmeasured))[0]).toContain("could not be measured");
+    expect(claimIn(await reportOf(CAP, unmeasured), CLAIM)?.guidance).toContain("Fix the cause the finding names");
   });
 
   it("repeats what git said, so a shallow clone is recognisable", async () => {

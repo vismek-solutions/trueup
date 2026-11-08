@@ -36,7 +36,7 @@ Start around 60 and read what comes back. A lower number finds more real duplica
 
 On that repository, 60 reports 28 and 100 reports 4. There is no default, because the right number depends on how much of your test setup you consider worth sharing.
 
-Two kinds of finding are not bugs. Fixture path constants repeated across test files genuinely are the same declaration, and you may decide that is fine. And two types can be structurally identical while meaning different things. When that happens they were two ideas wearing one shape, and the fix is to name them apart rather than to merge them.
+Two kinds of finding are not bugs. Fixture path constants repeated across test files genuinely are the same declaration, and you may decide that is fine. And two types can be structurally identical while meaning different things. When that happens they stay apart. Renaming them will not close the finding, because the name is not compared, so it is one for a person to accept.
 
 ## Where a shared copy may live
 
@@ -56,17 +56,25 @@ That is a missing zone rather than a dead end. Declare one that every copy may r
 
 ## Fixing one
 
-The order below only matters once you have installed [the write-time guard](/agents/guard/). The guard inspects an edit before it is saved and can refuse it, and it would refuse an import of a module that does not exist yet. Running the check on its own, any order works, and only the end state is judged.
+The order below only matters once you have installed [the write-time guard](/agents/guard/). The guard inspects an edit before it is saved and can refuse it, and it would refuse an import of a name that its module does not export yet. Running the check on its own, any order works, and only the end state is judged.
+
+To move the declaration into a new file:
 
 1. Create the shared module. A file that does not exist yet is allowed to hold declarations that still stand elsewhere, because a move looks exactly like a copy until the old one is gone.
 2. In each file that held a copy, replace the declaration with an import of the new module.
+
+A file that already exists takes a different order. It gets no such allowance, so it is refused for as long as a copy stands anywhere else:
+
+1. Delete the declaration from every file that held a copy, leaving any use of it in place.
+2. Add the declaration to the file you chose.
+3. Import it wherever a copy was used.
 
 The check keeps failing through the middle of that, which is the point. It stops the moment the last copy is gone.
 
 A shared helper needs a zone every caller may reach. A zone is a name you give to a group of files, chosen by where the files sit. Make that one a leaf: named for what it holds, never for being miscellaneous, and forbidden from reaching anything. A general util zone is the drawer that the [directory-size rule](/checks/placement/#directory-size) exists to prevent.
 
 :::caution
-One fix here we would ask you to avoid: writing the shared copy in a different shape on purpose, so the rule stops matching it. The guidance printed with the finding asks for the opposite. Keep one copy, put it where every caller may reach it, and delete the rest.
+One fix here we would ask you to avoid: writing the shared copy in a different shape on purpose, so the rule stops matching it. The guidance printed with the finding asks for the opposite. Keep one copy where every caller may reach it, and delete the rest.
 :::
 
 ## This is not a copy-paste detector

@@ -78,7 +78,7 @@ describe("deriving the doors from package.json", () => {
 
   it("refuses a member that both derives its doors and declares one", async () => {
     await expect(loadConfig(join(fixtureAt("doors-conflict"), "trueup.config.ts"))).rejects.toThrow(
-      /also declares an api zone/,
+      /also declares an api zone\. Remove the api zone/,
     );
   });
 

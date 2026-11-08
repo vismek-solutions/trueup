@@ -26,11 +26,11 @@ Turn it on in the shop project from [getting started](/start/getting-started/) a
 ```
 no-value-is-declared-away-from-its-only-consumer  3 errors
     src/api/money.ts  declares 2 exports, all used only by src/components/CartRow.tsx, so the file is in the wrong directory rather than the declarations
-    src/components/CartRow.tsx  declares CartRow, used only by src/hooks/useCart.ts
+    src/components/CartRow.tsx  declares CartRow, used only by src/hooks/useCart.ts, so the file is in the wrong directory rather than the declaration
     src/domain/order.ts  declares isSettled, used only by server/routes.ts
 ```
 
-There are three shapes this check prints, and which one you get decides what to move. A finding that counts the exports means nothing outside that one consumer reads the file at all, its own zone included. The file is what moves, and all of them close together. A finding that names one declaration means something else still reads the file, so the file stays and only that declaration is in question.
+There are three shapes this check prints, and which one you get decides what to move. A finding that says the file is in the wrong directory means nothing outside that one consumer reads the file at all, its own zone included. The file is what moves, and everything on it closes together. A finding that names one declaration and stops there means the file holds something else as well, so the file stays and only that declaration is in question.
 
 The third shape is the one worth slowing down for. Both lines below name a reader that stays behind:
 
@@ -69,7 +69,7 @@ A type's own readers are left out as well. A type can be used constantly without
 record.exports[0].form
 ```
 
-Counting imports tells the truth about values and lies about types, so counting a type's readers would name one customer where there are several.
+Counting imports tells the truth about values and lies about types, so counting a type's readers would name one customer where there are several. An interface or a type alias is left out however the import is written. A name declared as both a value and a type counts as the value.
 
 A type import does count in the other direction, as a reader of the value the type is built from:
 
@@ -121,12 +121,12 @@ Some projects split by kind rather than by feature. Components sit in one folder
 
 ```
 no-value-is-declared-away-from-its-only-consumer  6 errors
-    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts
-    src/components/button.ts  declares renderButton, used only by routes (2 files)
-    src/components/chip.ts  declares renderChip, used only by routes (2 files)
-    src/components/layout.ts  declares renderLayout, used only by routes (3 files)
+    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts, so the file is in the wrong directory rather than the declaration
+    src/components/button.ts  declares renderButton, used only by routes (2 files), so the file is in the wrong directory rather than the declaration
+    src/components/chip.ts  declares renderChip, used only by routes (2 files), so the file is in the wrong directory rather than the declaration
+    src/components/layout.ts  declares renderLayout, used only by routes (3 files), so the file is in the wrong directory rather than the declaration
     src/components/pair.ts  declares 2 exports, all used only by routes (2 files), so the file is in the wrong directory rather than the declarations
-    src/components/user-card.ts  declares renderUserCard, used only by routes (2 files)
+    src/components/user-card.ts  declares renderUserCard, used only by routes (2 files), so the file is in the wrong directory rather than the declaration
 ```
 
 No role fits here. The routes zone owns real code, so calling it wiring or tests would be untrue, and it would stop that zone counting as a customer of everything else as well.
@@ -145,12 +145,12 @@ isolate: [{ siblings: "src/routes/*" }],
 
 ```
 no-value-is-declared-away-from-its-only-consumer  3 errors
-    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts
+    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts, so the file is in the wrong directory rather than the declaration
     src/components/pair.ts  declares 2 exports, all used only by src/routes/users (2 files), so the file is in the wrong directory rather than the declarations
-    src/components/user-card.ts  declares renderUserCard, used only by src/routes/users (2 files)
+    src/components/user-card.ts  declares renderUserCard, used only by src/routes/users (2 files), so the file is in the wrong directory rather than the declaration
 ```
 
-The components that more than one part reads have dropped off, and what stands is worth reading. The renderUserCard export is read twice and never leaves the users route, so it belongs inside it. Both exports of the pair file go the same way, so the file moves rather than its declarations.
+The components that more than one part reads have dropped off, and what stands is worth reading. The user card file is read twice and never leaves the users route, so it belongs inside it. Both exports of the pair file go the same way, so that file moves too.
 
 renderChip dropped off for a different reason. Its two readers sit directly in the routes folder rather than in any route, so no rule groups them and each counts as a part of its own.
 
@@ -158,7 +158,7 @@ When nothing groups the readers, the floor is the file. The same project without
 
 ```
 no-value-is-declared-away-from-its-only-consumer  3 errors
-    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts
+    src/components/badge.ts  declares renderBadge, used only by src/routes/home/page.ts, so the file is in the wrong directory rather than the declaration
     src/components/pair.ts  declares renderPairFoot, used only by src/routes/users/detail/row.ts
     src/components/pair.ts  declares renderPairHead, used only by src/routes/users/list/page.ts
 ```
@@ -279,15 +279,13 @@ no-directory-holds-too-many-files           2 errors
     src/adapters  holds 12 files, more than the 8 allowed
     src/claims  holds 11 files, more than the 8 allowed
     ────────
-    A directory holds more files than the limit, which is how a folder stops being one idea and
-    turns into a drawer.
+    A directory holds more files than the limit.
 
     Do this:
-    - Group the related files into a subdirectory that names what they share.
+    - Group related files into a subdirectory that names what they share.
     - Move out the ones that never belonged here.
 
-    Not the fix: raising the limit. The number exists to force the question of what this directory
-    is for.
+    Not the fix: raising the limit.
 ```
 
 The count includes every file the analysis read, unclassified ones included. A directory nothing has claimed is the likeliest dumping ground.

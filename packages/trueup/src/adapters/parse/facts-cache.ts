@@ -62,13 +62,33 @@ const encode = (hash: string, facts: SourceFacts): Entry => {
 
   const declarations: number[] = [];
   for (const declaration of facts.declarations) {
-    declarations.push(indexOf(declaration.name), declaration.start, declaration.end, declaration.text.length);
+    declarations.push(
+      indexOf(declaration.name),
+      declaration.start,
+      declaration.end,
+      declaration.text.length,
+      declaration.kind === "type" ? 1 : 0,
+    );
   }
 
   const comments: number[] = [];
   for (const comment of facts.comments) comments.push(comment.start, comment.end);
 
   return { hash, record: facts.record, names, mentions, declarations, comments };
+};
+
+const decodeDeclarations = ({ declarations: packed, names }: Entry, text: string): Declaration[] => {
+  // a declaration's text runs from the end of its name to its own end
+  const declarations: Declaration[] = [];
+  for (let at = 0; at < packed.length; at += 5) {
+    const end = packed[at + 2] ?? 0;
+    const length = packed[at + 3] ?? 0;
+    const name = names[packed[at] ?? 0] ?? "";
+    const kind = packed[at + 4] === 1 ? "type" : "value";
+    declarations.push({ name, kind, text: text.slice(end - length, end), start: packed[at + 1] ?? 0, end });
+  }
+
+  return declarations;
 };
 
 const decode = (entry: Entry, text: string): SourceFacts => {
@@ -81,21 +101,17 @@ const decode = (entry: Entry, text: string): SourceFacts => {
     mentions.push({ text: names[code >> 1] ?? "", form, start: entry.mentions[at + 1] ?? 0 });
   }
 
-  // a declaration's text runs from the end of its name to its own end
-  const declarations: Declaration[] = [];
-  for (let at = 0; at < entry.declarations.length; at += 4) {
-    const end = entry.declarations[at + 2] ?? 0;
-    const length = entry.declarations[at + 3] ?? 0;
-    const name = names[entry.declarations[at] ?? 0] ?? "";
-    declarations.push({ name, text: text.slice(end - length, end), start: entry.declarations[at + 1] ?? 0, end });
-  }
-
   const bounds: Pick<Span, "start" | "end">[] = [];
   for (let at = 0; at < entry.comments.length; at += 2) {
     bounds.push({ start: entry.comments[at] ?? 0, end: entry.comments[at + 1] ?? 0 });
   }
 
-  return { record: entry.record, mentions, declarations, comments: commentsOf(bounds, text) };
+  return {
+    record: entry.record,
+    mentions,
+    declarations: decodeDeclarations(entry, text),
+    comments: commentsOf(bounds, text),
+  };
 };
 
 const readStore = (path: string, parser: string): Store["files"] => {

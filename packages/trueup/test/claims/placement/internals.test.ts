@@ -86,7 +86,10 @@ describe("holding a test to the surface its subject already has", () => {
   it("keeps that a warning, since a project may simply have no tests zone yet", async () => {
     const untested: readonly ZoneDefinition[] = [{ name: "all", patterns: ["src/**"] }];
 
-    expect(claimIn(await runWith(untested), CLAIM)?.findings[0]?.severity).toBe("warning");
+    const claim = claimIn(await runWith(untested), CLAIM);
+
+    expect(claim?.findings[0]?.severity).toBe("warning");
+    expect(claim?.guidance).toContain("Give the zone holding the tests the `tests` role");
   });
 
   it("names the two fixes that would leave the codebase worse", async () => {

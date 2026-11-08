@@ -3,7 +3,7 @@ import type { Project } from "../../project/model.ts";
 import type { Finding } from "../../report/model.ts";
 import type { Claim } from "../model.ts";
 import { type SymbolReach, everyConsumer } from "./reach.ts";
-import { FOR_TESTS, INTERNALS } from "./remedies.ts";
+import { FOR_TESTS, INTERNALS, NO_TESTS } from "./remedies.ts";
 
 export interface TestInternalsInput {
   readonly testZones: readonly string[];
@@ -53,7 +53,7 @@ export function testInternalsClaim({ testZones, apiZones, wiringZones }: TestInt
   return {
     name: "no-test-reaches-an-internal",
     check: ({ project }) => {
-      if (tests.size === 0) return { findings: [NO_TEST_ZONE], guidance: INTERNALS };
+      if (tests.size === 0) return { findings: [NO_TEST_ZONE], guidance: NO_TESTS };
       const published = publishedBy(project, apiZones);
 
       const findings: readonly Finding[] = everyConsumer(project.imports())

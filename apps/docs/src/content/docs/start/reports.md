@@ -22,12 +22,11 @@ every-rule-names-a-declared-zone            ok
 every-import-respects-its-zone-boundary     1 error
     src/engine/table.ts:14:9  is engine and may not reach domain: Warrant from src/domain/warrant.ts through src/shared/index.ts
     ────────
-    Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its
-    declaring file, so a barrel in between does not excuse it.
+    Code in one zone reached a symbol declared in a zone it may not reach.
 
     Do this:
     - Move the code to a zone that may reach the target.
-    - Or have the target expose what the caller needs through a zone the caller may reach.
+    - Or move what the caller needs to a zone the caller may reach.
     - Run `trueup explain <file>` to see what a file may reach.
 
     Not the fix: widening the rule so the edge becomes legal.
@@ -129,7 +128,7 @@ One problem, then stop.
 * src/zones/assign.ts:3:7 declares toPosix, which is written the same way in …
 </findings>
 <guidance>
-The same declaration was written more than once, in files that could have shared it. …
+The same declaration is written in more than one file. …
 </guidance>
 </claim>
 ```
@@ -153,7 +152,7 @@ The whole report, claims in the order they ran, each with its findings. A claim 
   "claims": [
     {
       "claim": "every-imported-name-is-unambiguous",
-      "guidance": "Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule can say where it came from.\n\nDo this:\n- Export it from one place.\n- Or re-export it by name rather than through a star.",
+      "guidance": "Two star re-exports supply the same name, so no rule can say where it came from.\n\nDo this:\n- Export it from one place.\n- Or re-export it by name rather than through a star.",
       "findings": [
         {
           "severity": "error",
@@ -191,7 +190,7 @@ The same findings in GitLab's Code Quality format, which puts each one on its li
 ```json
 [
   {
-    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it.\n\nlib has an api zone, so every other package reaches it through lib/api and nowhere else. That closes lib/domain.\n\nDo this:\n- Move the code to a zone that may reach the target. …",
+    "description": "is web/pages and may not reach lib/domain: isSettled from packages/lib/src/domain/order.ts — Code in one zone reached a symbol declared in a zone it may not reach.\n\nlib has an api zone, so every other package reaches it through lib/api and nowhere else. That closes lib/domain.\n\nDo this:\n- Move the code to a zone that may reach the target. …",
     "check_name": "every-import-respects-its-zone-boundary",
     "fingerprint": "a6336074136ec154dc9fcaa5bf72dacab993d46e2b1fe6d2ad64dd52a09be576",
     "severity": "major",
@@ -243,7 +242,7 @@ The same findings as SARIF, which is the format GitHub code scanning reads. Uplo
             {
               "id": "every-import-respects-its-zone-boundary",
               "shortDescription": {
-                "text": "Code in one zone reached a symbol declared in a zone it may not reach. The edge is named by its declaring file, so a barrel in between does not excuse it."
+                "text": "Code in one zone reached a symbol declared in a zone it may not reach."
               },
               "fullDescription": { "text": "Code in one zone reached a symbol declared in a zone it may not reach. …" },
               "help": {

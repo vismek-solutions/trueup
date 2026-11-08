@@ -72,12 +72,37 @@ const builtFrom = (project: Project): ((file: string, name: string) => readonly 
   };
 };
 
-const alsoThroughTypes = (project: Project, reaches: readonly SymbolReach[]): readonly SymbolReach[] => {
+const typeOnlyNamesIn = (project: Project, file: string): ReadonlySet<string> => {
+  const declarations = project.declarationsIn(file);
+  const values = new Set(declarations.filter(({ kind }) => kind === "value").map(({ name }) => name));
+
+  return new Set(declarations.filter(({ name }) => !values.has(name)).map(({ name }) => name));
+};
+
+const readsOnlyAType = (project: Project): ((edge: ResolvedImport) => boolean) => {
+  const cached = new Map<string, ReadonlySet<string>>();
+
+  return (edge) => {
+    if (edge.kind === "type") return true;
+    if (edge.declaredIn === null || edge.symbol === null) return false;
+
+    const names = cached.get(edge.declaredIn) ?? typeOnlyNamesIn(project, edge.declaredIn);
+    cached.set(edge.declaredIn, names);
+
+    return names.has(edge.symbol);
+  };
+};
+
+const alsoThroughTypes = (
+  project: Project,
+  reaches: readonly SymbolReach[],
+  isTypeRead: (edge: ResolvedImport) => boolean,
+): readonly SymbolReach[] => {
   const standing = new Map(reaches.map((reach) => [`${reach.declaredIn}\0${reach.symbol}`, reach]));
   const namesFrom = builtFrom(project);
 
   for (const edge of project.imports()) {
-    if (edge.kind !== "type" || !named(edge) || edge.fromZone === edge.declaredZone) continue;
+    if (!isTypeRead(edge) || !named(edge) || edge.fromZone === edge.declaredZone) continue;
 
     for (const name of namesFrom(edge.declaredIn, edge.symbol)) {
       const reach = standing.get(`${edge.declaredIn}\0${name}`);
@@ -92,8 +117,12 @@ const alsoThroughTypes = (project: Project, reaches: readonly SymbolReach[]): re
   return reaches;
 };
 
-export const acrossZones = (project: Project): readonly SymbolReach[] =>
-  alsoThroughTypes(project, gather(project.imports(), false));
+export const acrossZones = (project: Project): readonly SymbolReach[] => {
+  const isTypeRead = readsOnlyAType(project);
+  const valueReads = project.imports().filter((edge) => !isTypeRead(edge));
+
+  return alsoThroughTypes(project, gather(valueReads, false), isTypeRead);
+};
 
 export const everyConsumer = (imports: readonly ResolvedImport[]): SymbolReach[] => gather(imports, true);
 
@@ -120,10 +149,11 @@ export const unitsReadingEach = (
 export const alsoReadAtHome = (project: Project): ReadonlySet<string> => {
   const keys = new Set<string>();
   const namesFrom = builtFrom(project);
+  const isTypeRead = readsOnlyAType(project);
 
   for (const edge of project.imports()) {
     if (!named(edge) || edge.fromZone !== edge.declaredZone || edge.from === edge.declaredIn) continue;
-    if (edge.kind !== "type") keys.add(`${edge.declaredIn}\0${edge.symbol}`);
+    if (!isTypeRead(edge)) keys.add(`${edge.declaredIn}\0${edge.symbol}`);
     for (const name of namesFrom(edge.declaredIn, edge.symbol)) keys.add(`${edge.declaredIn}\0${name}`);
   }
 

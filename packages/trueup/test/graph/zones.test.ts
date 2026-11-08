@@ -146,7 +146,7 @@ describe("a check run", () => {
     expect(unzoned).toContain("- Move it under an existing zone.");
     expect(empty).toContain("A declared zone matches nothing, which silently disables every rule naming it.");
     expect(empty).toContain("- Fix its patterns.");
-    expect(dead).toContain("A pattern matches nothing, so it is a rule you believe you have and do not.");
+    expect(dead).toContain("A zone pattern matches nothing.");
     expect(dead).toContain("- Fix the pattern, or delete it.");
   });
 

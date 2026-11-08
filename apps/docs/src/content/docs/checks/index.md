@@ -83,8 +83,7 @@ every-imported-name-is-exported             1 error
 every-imported-name-is-unambiguous          1 error
     src/checkout/total.ts:1:10  imports price from ../pricing/index.js, which re-exports it from more than one module
     ────────
-    Two star re-exports supply the same name, so which one a consumer gets is undefined and no rule
-    can say where it came from.
+    Two star re-exports supply the same name, so no rule can say where it came from.
 
     Do this:
     - Export it from one place.

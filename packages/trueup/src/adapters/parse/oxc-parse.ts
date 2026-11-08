@@ -159,6 +159,8 @@ const NAMED_DECLARATIONS = new Set([
   "TSModuleDeclaration",
 ]);
 
+const TYPE_ONLY_DECLARATIONS = new Set(["TSTypeAliasDeclaration", "TSInterfaceDeclaration"]);
+
 const spanOf = (node: AstNode): { start: number; end: number } | null =>
   typeof node.start === "number" && typeof node.end === "number"
     ? { start: node.start, end: node.end }
@@ -182,7 +184,8 @@ const namedOf = (node: AstNode, text: string): Declaration | null => {
   const body = bodyAfterName(node, id, text);
   const span = spanOf(node);
   if (body === null || span === null) return null;
-  return { name: id.name as string, text: body, start: span.start, end: span.end };
+  const kind = TYPE_ONLY_DECLARATIONS.has(node.type as string) ? "type" : "value";
+  return { name: id.name as string, kind, text: body, start: span.start, end: span.end };
 };
 
 const unwrapped = (node: AstNode): AstNode => {

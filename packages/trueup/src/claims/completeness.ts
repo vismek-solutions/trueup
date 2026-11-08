@@ -44,11 +44,11 @@ const everyZonePatternMatchesAFile: Claim = {
       file: null,
       start: null,
     })),
-    guidance: `A pattern matches nothing, so it is a rule you believe you have and do not.
+    guidance: `A zone pattern matches nothing.
 
 Do this:
-- Fix the pattern, or delete it.
-- Check the zones above it first. Zones match first-match-wins, so an earlier zone may already have taken these files.`,
+- Check the zones above it first: a file belongs to the first zone that matches it.
+- Fix the pattern, or delete it.`,
   }),
 };
 
